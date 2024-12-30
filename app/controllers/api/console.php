@@ -3,6 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -29,8 +30,12 @@ App::get('/v1/console/variables')
         name: 'variables',
         description: '/docs/references/console/variables.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_CONSOLE_VARIABLES,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CONSOLE_VARIABLES,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -70,8 +75,12 @@ App::post('/v1/console/assistant')
         name: 'chat',
         description: '/docs/references/assistant/chat.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::TEXT
     ))
     ->label('abuse-limit', 15)

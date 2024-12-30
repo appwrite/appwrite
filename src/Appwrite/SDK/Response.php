@@ -6,22 +6,22 @@ class Response
 {
     /**
      * @param int $code
-     * @param string $model
+     * @param string|array $model
      * @param string $description
      */
-    function __construct(
+    public function __construct(
         private int $code,
-        private string $model,
+        private string|array $model,
         private string $description = '',
-    )
-    {}
+    ) {
+    }
 
     public function getCode(): int
     {
         return $this->code;
     }
 
-    public function getModel(): string
+    public function getModel(): string|array
     {
         return $this->model;
     }

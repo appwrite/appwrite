@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
@@ -174,9 +175,13 @@ App::get('/v1/avatars/credit-cards/:code')
         description: '/docs/references/avatars/get-credit-card.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE_PNG,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE_PNG
     ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -197,9 +202,13 @@ App::get('/v1/avatars/browsers/:code')
         description: '/docs/references/avatars/get-browser.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE_PNG,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE_PNG
     ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -220,9 +229,13 @@ App::get('/v1/avatars/flags/:code')
         description: '/docs/references/avatars/get-flag.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE_PNG,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE_PNG
     ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -243,9 +256,13 @@ App::get('/v1/avatars/image')
         description: '/docs/references/avatars/get-image.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE
     ))
     ->param('url', '', new URL(['http', 'https']), 'Image URL which you want to crop.')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000. Defaults to 400.', true)
@@ -309,9 +326,13 @@ App::get('/v1/avatars/favicon')
         description: '/docs/references/avatars/get-favicon.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE
     ))
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
@@ -455,9 +476,13 @@ App::get('/v1/avatars/qr')
         description: '/docs/references/avatars/get-qr.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE_PNG,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE_PNG
     ))
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
     ->param('size', 400, new Range(1, 1000), 'QR code size. Pass an integer between 1 to 1000. Defaults to 400.', true)
@@ -499,9 +524,13 @@ App::get('/v1/avatars/initials')
         description: '/docs/references/avatars/get-initials.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         methodType: MethodType::LOCATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::IMAGE_PNG,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::IMAGE_PNG
     ))
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
     ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)

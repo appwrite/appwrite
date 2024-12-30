@@ -142,7 +142,6 @@ class OpenAPI3 extends Format
 
             $desc = (!empty($sdk->getDescription())) ? \realpath(__DIR__ . '/../../../../' . $sdk->getDescription()) : null;
             $produces = ($sdk->getResponseType())->value;
-            $model = $sdk->getResponseModel() ?? 'none';
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
 
@@ -210,68 +209,74 @@ class OpenAPI3 extends Format
                 }
             }
 
-            foreach ($this->models as $value) {
-                if (\is_array($model)) {
-                    $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
-                } else {
-                    if ($value->getType() === $model) {
-                        $model = $value;
-                        break;
+            // Handle response models
+            foreach ($sdk->getResponses() as $response) {
+                /** @var \Appwrite\SDK\Response $response */
+                $model = $response->getModel();
+
+                foreach ($this->models as $value) {
+                    if (\is_array($model)) {
+                        $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
+                    } else {
+                        if ($value->getType() === $model) {
+                            $model = $value;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!(\is_array($model)) && $model->isNone()) {
-                $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                    'description' => in_array($produces, [
-                        'image/*',
-                        'image/jpeg',
-                        'image/gif',
-                        'image/png',
-                        'image/webp',
-                        'image/svg-x',
-                        'image/x-icon',
-                        'image/bmp',
-                    ]) ? 'Image' : 'File',
-                ];
-            } else {
-                if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
-
-                    // model has multiple possible responses, we will use oneOf
-                    foreach ($model as $m) {
-                        $usedModels[] = $m->getType();
-                    }
-
-                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                        'description' => $modelDescription,
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
-                                ],
-                            ],
-                        ],
+                if (!(\is_array($model)) && $model->isNone()) {
+                    $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                        'description' => in_array($produces, [
+                            'image/*',
+                            'image/jpeg',
+                            'image/gif',
+                            'image/png',
+                            'image/webp',
+                            'image/svg-x',
+                            'image/x-icon',
+                            'image/bmp',
+                        ]) ? 'Image' : 'File',
                     ];
                 } else {
-                    // Response definition using one type
-                    $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                        'description' => $model->getName(),
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    '$ref' => '#/components/schemas/' . $model->getType(),
+                    if (\is_array($model)) {
+                        $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+
+                        // model has multiple possible responses, we will use oneOf
+                        foreach ($model as $m) {
+                            $usedModels[] = $m->getType();
+                        }
+
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $modelDescription,
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
+                                    ],
                                 ],
                             ],
-                        ],
-                    ];
+                        ];
+                    } else {
+                        // Response definition using one type
+                        $usedModels[] = $model->getType();
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $model->getName(),
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        '$ref' => '#/components/schemas/' . $model->getType(),
+                                    ],
+                                ],
+                            ],
+                        ];
+                    }
                 }
-            }
 
-            if (($sdk->getResponseCode() ?? 500) === 204) {
-                $temp['responses'][(string)$sdk->getResponseCode() ?? '500']['description'] = 'No content';
-                unset($temp['responses'][(string)$sdk->getResponseCode() ?? '500']['schema']);
+                if (($response->getCode() ?? 500) === 204) {
+                    $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
+                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                }
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope

@@ -197,8 +197,12 @@ App::get('/v1/health/queue')
         namespace: 'health',
         name: 'getQueue',
         description: '/docs/references/health/get-queue.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -256,8 +260,12 @@ App::get('/v1/health/pubsub')
         namespace: 'health',
         name: 'getPubSub',
         description: '/docs/references/health/get-pubsub.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -316,8 +324,12 @@ App::get('/v1/health/time')
         namespace: 'health',
         name: 'getTime',
         description: '/docs/references/health/get-time.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_TIME,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_TIME,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -375,8 +387,12 @@ App::get('/v1/health/queue/webhooks')
         namespace: 'health',
         name: 'getQueueWebhooks',
         description: '/docs/references/health/get-queue-webhooks.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -404,8 +420,12 @@ App::get('/v1/health/queue/logs')
         namespace: 'health',
         name: 'getQueueLogs',
         description: '/docs/references/health/get-queue-logs.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -433,8 +453,12 @@ App::get('/v1/health/certificate')
         namespace: 'health',
         name: 'getCertificate',
         description: '/docs/references/health/get-certificate.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_CERTIFICATE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_CERTIFICATE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
@@ -485,8 +509,12 @@ App::get('/v1/health/queue/certificates')
         namespace: 'health',
         name: 'getQueueCertificates',
         description: '/docs/references/health/get-queue-certificates.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -514,8 +542,12 @@ App::get('/v1/health/queue/builds')
         namespace: 'health',
         name: 'getQueueBuilds',
         description: '/docs/references/health/get-queue-builds.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -543,8 +575,12 @@ App::get('/v1/health/queue/databases')
         namespace: 'health',
         name: 'getQueueDatabases',
         description: '/docs/references/health/get-queue-databases.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
@@ -573,8 +609,12 @@ App::get('/v1/health/queue/deletes')
         namespace: 'health',
         name: 'getQueueDeletes',
         description: '/docs/references/health/get-queue-deletes.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -602,8 +642,12 @@ App::get('/v1/health/queue/mails')
         namespace: 'health',
         name: 'getQueueMails',
         description: '/docs/references/health/get-queue-mails.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -631,8 +675,12 @@ App::get('/v1/health/queue/messaging')
         namespace: 'health',
         name: 'getQueueMessaging',
         description: '/docs/references/health/get-queue-messaging.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -660,8 +708,12 @@ App::get('/v1/health/queue/migrations')
         namespace: 'health',
         name: 'getQueueMigrations',
         description: '/docs/references/health/get-queue-migrations.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -689,8 +741,12 @@ App::get('/v1/health/queue/functions')
         namespace: 'health',
         name: 'getQueueFunctions',
         description: '/docs/references/health/get-queue-functions.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -718,8 +774,12 @@ App::get('/v1/health/queue/usage')
         namespace: 'health',
         name: 'getQueueUsage',
         description: '/docs/references/health/get-queue-usage.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -747,8 +807,12 @@ App::get('/v1/health/queue/usage-dump')
         namespace: 'health',
         name: 'getQueueUsageDump',
         description: '/docs/references/health/get-queue-usage-dump.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -776,8 +840,12 @@ App::get('/v1/health/storage/local')
         namespace: 'health',
         name: 'getStorageLocal',
         description: '/docs/references/health/get-storage-local.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -821,8 +889,12 @@ App::get('/v1/health/storage')
         namespace: 'health',
         name: 'getStorage',
         description: '/docs/references/health/get-storage.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -864,8 +936,12 @@ App::get('/v1/health/anti-virus')
         namespace: 'health',
         name: 'getAntivirus',
         description: '/docs/references/health/get-storage-anti-virus.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_ANTIVIRUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_ANTIVIRUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -905,8 +981,12 @@ App::get('/v1/health/queue/failed/:name')
         namespace: 'health',
         name: 'getFailedJobs',
         description: '/docs/references/health/get-failed-queue-jobs.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_QUEUE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('name', '', new WhiteList([

@@ -17,6 +17,7 @@ use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -150,9 +151,12 @@ App::post('/v1/functions')
         name: 'create',
         description: '/docs/references/functions/create-function.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_FUNCTION,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_FUNCTION,
+            )
+        ],
     ))
     ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
@@ -413,9 +417,12 @@ App::get('/v1/functions')
         name: 'list',
         description: '/docs/references/functions/list-functions.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_FUNCTION_LIST,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -476,9 +483,12 @@ App::get('/v1/functions/runtimes')
         name: 'listRuntimes',
         description: '/docs/references/functions/list-runtimes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_RUNTIME_LIST,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_RUNTIME_LIST,
+            )
+        ]
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -512,9 +522,12 @@ App::get('/v1/functions/specifications')
         name: 'listSpecifications',
         description: '/docs/references/functions/list-specifications.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_SPECIFICATION_LIST,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SPECIFICATION_LIST,
+            )
+        ]
     ))
     ->inject('response')
     ->inject('plan')
@@ -551,9 +564,12 @@ App::get('/v1/functions/:functionId')
         name: 'get',
         description: '/docs/references/functions/get-function.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_FUNCTION,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
@@ -578,9 +594,12 @@ App::get('/v1/functions/:functionId/usage')
         name: 'getFunctionUsage',
         description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_FUNCTION,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTION,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
@@ -686,9 +705,12 @@ App::get('/v1/functions/usage')
         name: 'getUsage',
         description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_FUNCTIONS,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTIONS,
+            )
+        ]
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -792,9 +814,12 @@ App::put('/v1/functions/:functionId')
         name: 'update',
         description: '/docs/references/functions/update-function.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_FUNCTION,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
@@ -994,8 +1019,12 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         name: 'getDeploymentDownload',
         description: '/docs/references/functions/get-deployment-download.md',
         auth: [AuthType::KEY, AuthType::JWT],
-        responseModel: Response::MODEL_NONE,
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::ANY,
         methodType: MethodType::LOCATION
     ))
@@ -1086,9 +1115,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         name: 'updateDeployment',
         description: '/docs/references/functions/update-function-deployment.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_FUNCTION,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1151,8 +1183,12 @@ App::delete('/v1/functions/:functionId')
         name: 'delete',
         description: '/docs/references/functions/delete-function.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
@@ -1201,10 +1237,13 @@ App::post('/v1/functions/:functionId/deployments')
         name: 'createDeployment',
         description: '/docs/references/functions/create-deployment.md',
         auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_DEPLOYMENT,
+            )
+        ],
         requestType: 'multipart/form-data',
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_DEPLOYMENT,
-        responseType: ResponseType::JSON,
         methodType: MethodType::UPLOAD,
         packaging: true,
     ))
@@ -1420,9 +1459,12 @@ App::get('/v1/functions/:functionId/deployments')
         name: 'listDeployments',
         description: '/docs/references/functions/list-deployments.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DEPLOYMENT_LIST,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT_LIST,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
@@ -1506,9 +1548,12 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         name: 'getDeployment',
         description: '/docs/references/functions/get-deployment.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DEPLOYMENT,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1555,8 +1600,12 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         name: 'deleteDeployment',
         description: '/docs/references/functions/delete-deployment.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1623,8 +1672,12 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
         name: 'createBuild',
         description: '/docs/references/functions/create-deployment-build.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1694,9 +1747,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
         name: 'updateDeploymentBuild',
         description: '/docs/references/functions/update-deployment-build.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_BUILD,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BUILD,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1786,9 +1842,13 @@ App::post('/v1/functions/:functionId/executions')
         name: 'createExecution',
         description: '/docs/references/functions/create-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_EXECUTION,
+            )
+        ],
         responseType: ResponseType::MULTIPART,
-        responseModel: Response::MODEL_EXECUTION,
         requestType: 'application/json',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
@@ -2190,9 +2250,12 @@ App::get('/v1/functions/:functionId/executions')
         name: 'listExecutions',
         description: '/docs/references/functions/list-executions.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_EXECUTION_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION_LIST,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
@@ -2280,9 +2343,12 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         name: 'getExecution',
         description: '/docs/references/functions/get-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_EXECUTION
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
@@ -2333,8 +2399,12 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         name: 'deleteExecution',
         description: '/docs/references/functions/delete-execution.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
@@ -2405,9 +2475,12 @@ App::post('/v1/functions/:functionId/variables')
         name: 'createVariable',
         description: '/docs/references/functions/create-variable.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_VARIABLE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
@@ -2471,9 +2544,12 @@ App::get('/v1/functions/:functionId/variables')
             name: 'listVariables',
             description: '/docs/references/functions/list-variables.md',
             auth: [AuthType::KEY],
-            responseCode: Response::STATUS_CODE_OK,
-            responseType: ResponseType::JSON,
-            responseModel: Response::MODEL_VARIABLE_LIST
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_VARIABLE_LIST,
+                )
+            ],
         )
     )
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
@@ -2504,9 +2580,12 @@ App::get('/v1/functions/:functionId/variables/:variableId')
             name: 'getVariable',
             description: '/docs/references/functions/get-variable.md',
             auth: [AuthType::KEY],
-            responseCode: Response::STATUS_CODE_OK,
-            responseType: ResponseType::JSON,
-            responseModel: Response::MODEL_VARIABLE
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_VARIABLE,
+                )
+            ],
         )
     )
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
@@ -2549,9 +2628,12 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         name: 'updateVariable',
         description: '/docs/references/functions/update-variable.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_VARIABLE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
@@ -2613,8 +2695,12 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         name: 'deleteVariable',
         description: '/docs/references/functions/delete-variable.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
@@ -2662,9 +2748,12 @@ App::get('/v1/functions/templates')
         name: 'listTemplates',
         description: '/docs/references/functions/list-templates.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TEMPLATE_FUNCTION_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION_LIST,
+            )
+        ]
     ))
     ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
     ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
@@ -2702,9 +2791,12 @@ App::get('/v1/functions/templates/:templateId')
         name: 'getTemplate',
         description: '/docs/references/functions/get-template.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TEMPLATE_FUNCTION
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION,
+            )
+        ]
     ))
     ->param('templateId', '', new Text(128), 'Template ID.')
     ->inject('response')

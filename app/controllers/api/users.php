@@ -17,7 +17,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
@@ -200,9 +200,12 @@ App::post('/v1/users')
         name: 'create',
         description: '/docs/references/users/create-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', null, new Email(), 'User email.', true)
@@ -231,9 +234,12 @@ App::post('/v1/users/bcrypt')
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -262,9 +268,12 @@ App::post('/v1/users/md5')
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -293,9 +302,12 @@ App::post('/v1/users/argon2')
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -324,9 +336,12 @@ App::post('/v1/users/sha')
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -362,9 +377,12 @@ App::post('/v1/users/phpass')
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -393,9 +411,12 @@ App::post('/v1/users/scrypt')
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -437,9 +458,12 @@ App::post('/v1/users/scrypt-modified')
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -472,9 +496,12 @@ App::post('/v1/users/:userId/targets')
         name: 'createTarget',
         description: '/docs/references/users/create-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_TARGET,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TARGET,
+            )
+        ]
     ))
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('userId', '', new UID(), 'User ID.')
@@ -560,9 +587,12 @@ App::get('/v1/users')
         name: 'list',
         description: '/docs/references/users/list-users.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -622,9 +652,12 @@ App::get('/v1/users/:userId')
         name: 'get',
         description: '/docs/references/users/get-user.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -649,9 +682,12 @@ App::get('/v1/users/:userId/prefs')
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PREFERENCES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -678,9 +714,12 @@ App::get('/v1/users/:userId/targets/:targetId')
         name: 'getTarget',
         description: '/docs/references/users/get-user-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TARGET,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
@@ -712,9 +751,12 @@ App::get('/v1/users/:userId/sessions')
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_SESSION_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION_LIST,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -755,9 +797,12 @@ App::get('/v1/users/:userId/memberships')
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MEMBERSHIP_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP_LIST,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -796,9 +841,12 @@ App::get('/v1/users/:userId/logs')
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOG_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -887,9 +935,12 @@ App::get('/v1/users/:userId/targets')
         name: 'listTargets',
         description: '/docs/references/users/list-user-targets.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TARGET_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET_LIST,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
@@ -949,9 +1000,12 @@ App::get('/v1/users/identities')
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_IDENTITY_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_IDENTITY_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -1015,9 +1069,12 @@ App::patch('/v1/users/:userId/status')
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
@@ -1052,9 +1109,12 @@ App::put('/v1/users/:userId/labels')
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
@@ -1091,9 +1151,12 @@ App::patch('/v1/users/:userId/verification/phone')
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
@@ -1129,9 +1192,12 @@ App::patch('/v1/users/:userId/name')
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('name', '', new Text(128, 0), 'User name. Max length: 128 chars.')
@@ -1168,9 +1234,12 @@ App::patch('/v1/users/:userId/password')
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
@@ -1247,9 +1316,12 @@ App::patch('/v1/users/:userId/email')
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('email', '', new Email(allowEmpty: true), 'User email.')
@@ -1343,9 +1415,12 @@ App::patch('/v1/users/:userId/phone')
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
@@ -1429,9 +1504,12 @@ App::patch('/v1/users/:userId/verification')
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
@@ -1463,9 +1541,12 @@ App::patch('/v1/users/:userId/prefs')
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PREFERENCES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
@@ -1500,9 +1581,12 @@ App::patch('/v1/users/:userId/targets/:targetId')
         name: 'updateTarget',
         description: '/docs/references/users/update-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TARGET,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
@@ -1601,9 +1685,12 @@ App::patch('/v1/users/:userId/mfa')
         name: 'updateMfa',
         description: '/docs/references/users/update-user-mfa.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
@@ -1637,9 +1724,12 @@ App::get('/v1/users/:userId/mfa/factors')
         name: 'listMfaFactors',
         description: '/docs/references/users/list-mfa-factors.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MFA_FACTORS,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_FACTORS,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -1672,9 +1762,12 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/users/get-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -1713,9 +1806,12 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/users/create-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -1761,9 +1857,12 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/users/update-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -1808,9 +1907,12 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/users/delete-mfa-authenticator.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
@@ -1851,9 +1953,12 @@ App::post('/v1/users/:userId/sessions')
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_SESSION,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->inject('request')
@@ -1922,9 +2027,12 @@ App::post('/v1/users/:userId/tokens')
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_TOKEN,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
@@ -1981,9 +2089,12 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('sessionId', '', new UID(), 'Session ID.')
@@ -2027,9 +2138,12 @@ App::delete('/v1/users/:userId/sessions')
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -2072,9 +2186,12 @@ App::delete('/v1/users/:userId')
         name: 'delete',
         description: '/docs/references/users/delete.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -2117,9 +2234,12 @@ App::delete('/v1/users/:userId/targets/:targetId')
         name: 'deleteTarget',
         description: '/docs/references/users/delete-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
@@ -2170,9 +2290,12 @@ App::delete('/v1/users/identities/:identityId')
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
@@ -2205,9 +2328,12 @@ App::post('/v1/users/:userId/jwts')
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_JWT,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
@@ -2257,9 +2383,12 @@ App::get('/v1/users/usage')
         name: 'getUsage',
         description: '',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_USERS,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_USERS,
+            )
+        ]
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')

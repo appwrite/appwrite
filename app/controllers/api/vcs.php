@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
@@ -278,8 +279,12 @@ App::get('/v1/vcs/github/authorize')
         name: 'createGitHubInstallation',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_NONE,
-        responseCode: Response::STATUS_CODE_MOVED_PERMANENTLY,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::HTML,
         methodType: MethodType::WEBAUTH,
         hide: true,
@@ -480,9 +485,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         name: 'getRepositoryContents',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_VCS_CONTENT_LIST,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VCS_CONTENT_LIST,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
@@ -543,9 +551,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         name: 'createRepositoryDetection',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_DETECTION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DETECTION,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
@@ -617,9 +628,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         name: 'listRepositories',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_PROVIDER_REPOSITORY_LIST,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY_LIST,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -714,9 +728,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         name: 'createRepository',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_PROVIDER_REPOSITORY,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('name', '', new Text(256), 'Repository name (slug)')
@@ -817,9 +834,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         name: 'getRepository',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_PROVIDER_REPOSITORY,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
@@ -868,9 +888,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         name: 'listRepositoryBranches',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_BRANCH_LIST,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BRANCH_LIST,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
@@ -1058,9 +1081,12 @@ App::get('/v1/vcs/installations')
         name: 'listInstallations',
         description: '/docs/references/vcs/list-installations.md',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_INSTALLATION_LIST,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -1126,9 +1152,12 @@ App::get('/v1/vcs/installations/:installationId')
         name: 'getInstallation',
         description: '/docs/references/vcs/get-installation.md',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_INSTALLATION,
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
@@ -1157,8 +1186,12 @@ App::delete('/v1/vcs/installations/:installationId')
         name: 'deleteInstallation',
         description: '/docs/references/vcs/delete-installation.md',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_NONE,
-        responseCode: Response::STATUS_CODE_NOCONTENT
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
@@ -1192,8 +1225,12 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         name: 'updateExternalDeployments',
         description: '',
         auth: [AuthType::ADMIN],
-        responseModel: Response::MODEL_NONE,
-        responseCode: Response::STATUS_CODE_NOCONTENT
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('repositoryId', '', new Text(256), 'VCS Repository Id')

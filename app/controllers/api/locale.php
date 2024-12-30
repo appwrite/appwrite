@@ -2,7 +2,7 @@
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -20,9 +20,12 @@ App::get('/v1/locale')
         name: 'get',
         description: '/docs/references/locale/get-locale.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOCALE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE,
+            )
+        ],
         offlineKey: 'current',
         offlineModel: '/localed',
     ))
@@ -82,9 +85,12 @@ App::get('/v1/locale/codes')
         name: 'listCodes',
         description: '/docs/references/locale/list-locale-codes.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOCALE_CODE_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE_CODE_LIST,
+            )
+        ],
         offlineKey: 'current',
         offlineModel: '/locale/localeCode',
     ))
@@ -106,9 +112,12 @@ App::get('/v1/locale/countries')
         name: 'listCountries',
         description: '/docs/references/locale/list-countries.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_COUNTRY_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ],
         offlineModel: '/locale/countries',
         offlineResponseKey: 'code'
     ))
@@ -141,9 +150,12 @@ App::get('/v1/locale/countries/eu')
         name: 'listCountriesEU',
         description: '/docs/references/locale/list-countries-eu.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_COUNTRY_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ],
         offlineModel: '/locale/countries/eu',
         offlineResponseKey: 'code'
     ))
@@ -178,9 +190,12 @@ App::get('/v1/locale/countries/phones')
         name: 'listCountriesPhones',
         description: '/docs/references/locale/list-countries-phones.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PHONE_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PHONE_LIST,
+            )
+        ],
         offlineModel: '/locale/countries/phones',
         offlineResponseKey: 'countryCode'
     ))
@@ -214,9 +229,12 @@ App::get('/v1/locale/continents')
         name: 'listContinents',
         description: '/docs/references/locale/list-continents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_CONTINENT_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CONTINENT_LIST,
+            )
+        ],
         offlineModel: '/locale/continents',
         offlineResponseKey: 'code'
     ))
@@ -248,9 +266,12 @@ App::get('/v1/locale/currencies')
         name: 'listCurrencies',
         description: '/docs/references/locale/list-currencies.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_CURRENCY_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CURRENCY_LIST,
+            )
+        ],
         offlineModel: '/locale/currencies',
         offlineResponseKey: 'code'
     ))
@@ -273,9 +294,12 @@ App::get('/v1/locale/languages')
         name: 'listLanguages',
         description: '/docs/references/locale/list-languages.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LANGUAGE_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LANGUAGE_LIST,
+            )
+        ],
         offlineModel: '/locale/languages',
         offlineResponseKey: 'code'
     ))

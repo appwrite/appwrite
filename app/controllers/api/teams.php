@@ -13,7 +13,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -61,9 +61,12 @@ App::post('/v1/teams')
         name: 'create',
         description: '/docs/references/teams/create-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_TEAM,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TEAM,
+            )
+        ]
     ))
     ->param('teamId', '', new CustomId(), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
@@ -148,9 +151,12 @@ App::get('/v1/teams')
         name: 'list',
         description: '/docs/references/teams/list-teams.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TEAM_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM_LIST,
+            )
+        ],
         offlineModel: '/teams',
     ))
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
@@ -214,9 +220,12 @@ App::get('/v1/teams/:teamId')
         name: 'get',
         description: '/docs/references/teams/get-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TEAM,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM,
+            )
+        ],
         offlineModel: '/teams',
         offlineKey: '{teamId}',
     ))
@@ -243,9 +252,12 @@ App::get('/v1/teams/:teamId/prefs')
         name: 'getPrefs',
         description: '/docs/references/teams/get-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PREFERENCES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ],
         offlineModel: '/teams/{teamId}/prefs',
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
@@ -276,9 +288,12 @@ App::put('/v1/teams/:teamId')
         name: 'updateName',
         description: '/docs/references/teams/update-team-name.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_TEAM,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM,
+            )
+        ],
         offlineModel: '/teams',
         offlineKey: '{teamId}',
     ))
@@ -322,9 +337,12 @@ App::put('/v1/teams/:teamId/prefs')
         name: 'updatePrefs',
         description: '/docs/references/teams/update-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PREFERENCES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ],
         offlineModel: '/teams/{teamId}/prefs',
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
@@ -359,8 +377,12 @@ App::delete('/v1/teams/:teamId')
         name: 'delete',
         description: '/docs/references/teams/delete-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
@@ -412,9 +434,12 @@ App::post('/v1/teams/:teamId/memberships')
         name: 'createMembership',
         description: '/docs/references/teams/create-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_MEMBERSHIP,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
     ))
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
@@ -739,9 +764,12 @@ App::get('/v1/teams/:teamId/memberships')
         name: 'listMemberships',
         description: '/docs/references/teams/list-team-members.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MEMBERSHIP_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP_LIST,
+            )
+        ],
         offlineModel: '/teams/{teamId}/memberships',
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
@@ -872,9 +900,12 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         name: 'getMembership',
         description: '/docs/references/teams/get-team-member.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MEMBERSHIP,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ],
         offlineModel: '/teams/{teamId}/memberships',
         offlineKey: '{membershipId}',
     ))
@@ -955,9 +986,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         name: 'updateMembership',
         description: '/docs/references/teams/update-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MEMBERSHIP,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
@@ -1040,9 +1074,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         name: 'updateMembershipStatus',
         description: '/docs/references/teams/update-team-membership-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_MEMBERSHIP,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
@@ -1179,9 +1216,12 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         name: 'deleteMembership',
         description: '/docs/references/teams/delete-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
@@ -1245,9 +1285,12 @@ App::get('/v1/teams/:teamId/logs')
         name: 'listLogs',
         description: '/docs/references/teams/get-team-logs.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOG_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)

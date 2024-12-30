@@ -8,7 +8,7 @@ use Appwrite\GraphQL\Schema;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -48,9 +48,12 @@ App::get('/v1/graphql')
         auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         hide: true,
         description: '/docs/references/graphql/get.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_ANY
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
@@ -90,9 +93,12 @@ App::post('/v1/graphql/mutation')
         name: 'mutation',
         auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_ANY,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
         methodType: MethodType::GRAPHQL,
         parameters: [
             'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
@@ -137,9 +143,12 @@ App::post('/v1/graphql')
         name: 'query',
         auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_ANY,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
         methodType: MethodType::GRAPHQL,
         parameters: [
             'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],

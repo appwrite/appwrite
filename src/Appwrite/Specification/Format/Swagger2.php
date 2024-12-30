@@ -138,7 +138,6 @@ class Swagger2 extends Format
 
             $desc = (!empty($sdk->getDescription())) ? \realpath(__DIR__ . '/../../../../' . $sdk->getDescription()) : null;
             $produces = ($sdk->getResponseType())->value;
-            $model = $sdk->getResponseModel() ?? 'none';
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
 
@@ -212,63 +211,70 @@ class Swagger2 extends Format
                 }
             }
 
-            foreach ($this->models as $value) {
-                if (\is_array($model)) {
-                    $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
-                } else {
-                    if ($value->getType() === $model) {
-                        $model = $value;
-                        break;
+            // Handle Responses
+
+            foreach ($sdk->getResponses() as $response) {
+                /** @var \Appwrite\SDK\Response $response */
+                $model = $response->getModel();
+
+                foreach ($this->models as $value) {
+                    if (\is_array($model)) {
+                        $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
+                    } else {
+                        if ($value->getType() === $model) {
+                            $model = $value;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!(\is_array($model)) &&  $model->isNone()) {
-                $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                    'description' => in_array($produces, [
-                        'image/*',
-                        'image/jpeg',
-                        'image/gif',
-                        'image/png',
-                        'image/webp',
-                        'image/svg-x',
-                        'image/x-icon',
-                        'image/bmp',
-                    ]) ? 'Image' : 'File',
-                    'schema' => [
-                        'type' => 'file'
-                    ],
-                ];
-            } else {
-                if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
-                    // model has multiple possible responses, we will use oneOf
-                    foreach ($model as $m) {
-                        $usedModels[] = $m->getType();
-                    }
-                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                        'description' => $modelDescription,
+                if (!(\is_array($model)) &&  $model->isNone()) {
+                    $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                        'description' => in_array($produces, [
+                            'image/*',
+                            'image/jpeg',
+                            'image/gif',
+                            'image/png',
+                            'image/webp',
+                            'image/svg-x',
+                            'image/x-icon',
+                            'image/bmp',
+                        ]) ? 'Image' : 'File',
                         'schema' => [
-                            'x-oneOf' => \array_map(function ($m) {
-                                return ['$ref' => '#/definitions/' . $m->getType()];
-                            }, $model)
+                            'type' => 'file'
                         ],
                     ];
                 } else {
-                    // Response definition using one type
-                    $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
-                        'description' => $model->getName(),
-                        'schema' => [
-                            '$ref' => '#/definitions/' . $model->getType(),
-                        ],
-                    ];
+                    if (\is_array($model)) {
+                        $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+                        // model has multiple possible responses, we will use oneOf
+                        foreach ($model as $m) {
+                            $usedModels[] = $m->getType();
+                        }
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $modelDescription,
+                            'schema' => [
+                                'x-oneOf' => \array_map(function ($m) {
+                                    return ['$ref' => '#/definitions/' . $m->getType()];
+                                }, $model)
+                            ],
+                        ];
+                    } else {
+                        // Response definition using one type
+                        $usedModels[] = $model->getType();
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $model->getName(),
+                            'schema' => [
+                                '$ref' => '#/definitions/' . $model->getType(),
+                            ],
+                        ];
+                    }
                 }
-            }
 
-            if (in_array($sdk->getResponseCode() ?? 500, [204, 301, 302, 308], true)) {
-                $temp['responses'][(string)$sdk->getResponseCode() ?? '500']['description'] = 'No content';
-                unset($temp['responses'][(string)$sdk->getResponseCode() ?? '500']['schema']);
+                if (in_array($response->getCode() ?? 500, [204, 301, 302, 308], true)) {
+                    $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
+                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                }
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope

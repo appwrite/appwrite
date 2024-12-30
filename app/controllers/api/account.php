@@ -24,6 +24,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
@@ -288,8 +289,12 @@ App::post('/v1/account')
         name: 'create',
         description: '/docs/references/account/create.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_USER,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
@@ -427,8 +432,12 @@ App::get('/v1/account')
         name: 'get',
         description: '/docs/references/account/get.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USER,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/account',
         offlineKey: 'current'
@@ -454,8 +463,12 @@ App::delete('/v1/account')
         name: 'delete',
         description: '/docs/references/account/delete.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('user')
@@ -502,8 +515,12 @@ App::get('/v1/account/sessions')
         name: 'listSessions',
         description: '/docs/references/account/list-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_SESSION_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/account/sessions'
     ))
@@ -548,8 +565,12 @@ App::delete('/v1/account/sessions')
         name: 'deleteSessions',
         description: '/docs/references/account/delete-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 100)
@@ -613,8 +634,12 @@ App::get('/v1/account/sessions/:sessionId')
         name: 'getSession',
         description: '/docs/references/account/get-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/account/sessions',
         offlineKey: '{sessionId}'
@@ -664,8 +689,12 @@ App::delete('/v1/account/sessions/:sessionId')
         name: 'deleteSession',
         description: '/docs/references/account/delete-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 100)
@@ -748,8 +777,12 @@ App::patch('/v1/account/sessions/:sessionId')
         name: 'updateSession',
         description: '/docs/references/account/update-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
@@ -828,8 +861,12 @@ App::post('/v1/account/sessions/email')
         name: 'createEmailPasswordSession',
         description: '/docs/references/account/create-session-email-password.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
@@ -964,8 +1001,12 @@ App::post('/v1/account/sessions/anonymous')
         name: 'createAnonymousSession',
         description: '/docs/references/account/create-session-anonymous.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 50)
@@ -1103,8 +1144,12 @@ App::post('/v1/account/sessions/token')
         name: 'createSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
@@ -1133,9 +1178,13 @@ App::get('/v1/account/sessions/oauth2/:provider')
         description: '/docs/references/account/create-session-oauth2.md',
         methodType: MethodType::WEBAUTH,
         auth: [],
-        responseCode: Response::STATUS_CODE_MOVED_PERMANENTLY,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::HTML,
-        responseModel: Response::MODEL_NONE,
         hide: [APP_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
@@ -1725,9 +1774,13 @@ App::get('/v1/account/tokens/oauth2/:provider')
         name: 'createOAuth2Token',
         description: '/docs/references/account/create-token-oauth2.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_MOVED_PERMANENTLY,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
         responseType: ResponseType::HTML,
-        responseModel: Response::MODEL_NONE,
         methodType: MethodType::WEBAUTH,
     ))
     ->label('abuse-limit', 50)
@@ -1801,9 +1854,13 @@ App::post('/v1/account/tokens/magic-url')
         name: 'createMagicURLToken',
         description: '/docs/references/account/create-token-magic-url.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
@@ -2046,9 +2103,13 @@ App::post('/v1/account/tokens/email')
         name: 'createEmailToken',
         description: '/docs/references/account/create-token-email.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
@@ -2277,9 +2338,13 @@ App::put('/v1/account/sessions/magic-url')
         name: 'updateMagicURLSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SESSION,
         deprecated: true,
     ))
     ->label('abuse-limit', 10)
@@ -2310,9 +2375,13 @@ App::put('/v1/account/sessions/phone')
         name: 'updatePhoneSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SESSION,
         deprecated: true,
     ))
     ->label('abuse-limit', 10)
@@ -2344,9 +2413,13 @@ App::post('/v1/account/tokens/phone')
         name: 'createPhoneToken',
         description: '/docs/references/account/create-token-phone.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
@@ -2524,9 +2597,13 @@ App::post('/v1/account/jwts')
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_JWT,
     ))
     ->label('abuse-limit', 100)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -2568,9 +2645,13 @@ App::get('/v1/account/prefs')
         name: 'getPrefs',
         description: '/docs/references/account/get-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PREFERENCES,
         offlineModel: '/account/prefs',
         offlineKey: 'current',
     ))
@@ -2592,9 +2673,13 @@ App::get('/v1/account/logs')
         name: 'listLogs',
         description: '/docs/references/account/list-logs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_LOG_LIST,
     ))
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -2662,9 +2747,13 @@ App::patch('/v1/account/name')
         name: 'updateName',
         description: '/docs/references/account/update-name.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -2698,9 +2787,13 @@ App::patch('/v1/account/password')
         name: 'updatePassword',
         description: '/docs/references/account/update-password.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -2769,9 +2862,13 @@ App::patch('/v1/account/email')
         name: 'updateEmail',
         description: '/docs/references/account/update-email.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -2863,9 +2960,13 @@ App::patch('/v1/account/phone')
         name: 'updatePhone',
         description: '/docs/references/account/update-phone.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -2946,9 +3047,13 @@ App::patch('/v1/account/prefs')
         name: 'updatePrefs',
         description: '/docs/references/account/update-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account/prefs',
         offlineKey: 'current',
     ))
@@ -2981,9 +3086,13 @@ App::patch('/v1/account/status')
         name: 'updateStatus',
         description: '/docs/references/account/update-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER
     ))
     ->inject('requestTimestamp')
     ->inject('request')
@@ -3027,9 +3136,13 @@ App::post('/v1/account/recovery')
         name: 'createRecovery',
         description: '/docs/references/account/create-recovery.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
@@ -3209,9 +3322,13 @@ App::put('/v1/account/recovery')
         name: 'updateRecovery',
         description: '/docs/references/account/update-recovery.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
@@ -3295,9 +3412,13 @@ App::post('/v1/account/verification')
         name: 'createVerification',
         description: '/docs/references/account/create-email-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -3462,9 +3583,13 @@ App::put('/v1/account/verification')
         name: 'updateVerification',
         description: '/docs/references/account/update-email-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
@@ -3524,9 +3649,13 @@ App::post('/v1/account/verification/phone')
         name: 'createPhoneVerification',
         description: '/docs/references/account/create-phone-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},userId:{userId}', 'url:{url},ip:{ip}'])
@@ -3653,9 +3782,13 @@ App::put('/v1/account/verification/phone')
         name: 'updatePhoneVerification',
         description: '/docs/references/account/update-phone-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOKEN,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{param-userId}')
@@ -3714,9 +3847,13 @@ App::patch('/v1/account/mfa')
         name: 'updateMFA',
         description: '/docs/references/account/update-mfa.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -3765,9 +3902,13 @@ App::get('/v1/account/mfa/factors')
         name: 'listMfaFactors',
         description: '/docs/references/account/list-mfa-factors.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_FACTORS,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_FACTORS,
         offlineKey: 'current',
         offlineModel: '/account'
     ))
@@ -3803,9 +3944,13 @@ App::post('/v1/account/mfa/authenticators/:type')
         name: 'createMfaAuthenticator',
         description: '/docs/references/account/create-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_TYPE,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_TYPE,
         offlineModel: '/account',
         offlineKey: 'current'
     ))
@@ -3877,9 +4022,13 @@ App::put('/v1/account/mfa/authenticators/:type')
         name: 'updateMfaAuthenticator',
         description: '/docs/references/account/update-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_USER,
         offlineModel: '/account',
         offlineKey: 'current'
     ))
@@ -3944,9 +4093,13 @@ App::post('/v1/account/mfa/recovery-codes')
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/account/create-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -3988,9 +4141,13 @@ App::patch('/v1/account/mfa/recovery-codes')
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/account/update-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -4027,9 +4184,13 @@ App::get('/v1/account/mfa/recovery-codes')
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/account/get-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MFA_RECOVERY_CODES,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_RECOVERY_CODES,
         offlineModel: '/account',
         offlineKey: 'current',
     ))
@@ -4063,8 +4224,13 @@ App::delete('/v1/account/mfa/authenticators/:type')
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/account/delete-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON,
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
@@ -4103,9 +4269,13 @@ App::post('/v1/account/mfa/challenge')
         name: 'createMfaChallenge',
         description: '/docs/references/account/create-mfa-challenge.md',
         auth: [],
-        responseCode: Response::STATUS_CODE_CREATED,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MFA_CHALLENGE,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MFA_CHALLENGE,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -4293,9 +4463,13 @@ App::put('/v1/account/mfa/challenge')
         name: 'updateMfaChallenge',
         description: '/docs/references/account/update-mfa-challenge.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SESSION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SESSION,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
@@ -4382,9 +4556,13 @@ App::post('/v1/account/targets/push')
         name: 'createPushTarget',
         description: '/docs/references/account/create-push-target.md',
         auth: [AuthType::SESSION],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TARGET,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TARGET,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
@@ -4458,9 +4636,13 @@ App::put('/v1/account/targets/:targetId/push')
         name: 'updatePushTarget',
         description: '/docs/references/account/update-push-target.md',
         auth: [AuthType::SESSION],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TARGET,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
@@ -4518,8 +4700,13 @@ App::delete('/v1/account/targets/:targetId/push')
         name: 'deletePushTarget',
         description: '/docs/references/account/delete-push-target.md',
         auth: [AuthType::SESSION],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON,
     ))
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
@@ -4563,9 +4750,13 @@ App::get('/v1/account/identities')
         name: 'listIdentities',
         description: '/docs/references/account/list-identities.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_IDENTITY_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_IDENTITY_LIST,
         offlineModel: '/account/identities',
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
@@ -4631,8 +4822,13 @@ App::delete('/v1/account/identities/:identityId')
         name: 'deleteIdentity',
         description: '/docs/references/account/delete-identity.md',
         auth: [AuthType::SESSION, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON,
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')

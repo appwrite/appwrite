@@ -3,7 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -28,9 +28,12 @@ App::get('/v1/project/usage')
         name: 'getUsage',
         description: '/docs/references/project/get-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_PROJECT,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_PROJECT,
+            )
+        ]
     ))
     ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
     ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
@@ -324,9 +327,12 @@ App::post('/v1/project/variables')
         name: 'createVariable',
         description: '/docs/references/project/create-variable.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_VARIABLE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
     ))
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
@@ -380,9 +386,12 @@ App::get('/v1/project/variables')
         name: 'listVariables',
         description: '/docs/references/project/list-variables.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_VARIABLE_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VARIABLE_LIST,
+            )
+        ]
     ))
     ->inject('response')
     ->inject('dbForProject')
@@ -407,9 +416,12 @@ App::get('/v1/project/variables/:variableId')
         name: 'getVariable',
         description: '/docs/references/project/get-variable.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_VARIABLE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
@@ -433,9 +445,12 @@ App::put('/v1/project/variables/:variableId')
         name: 'updateVariable',
         description: '/docs/references/project/update-variable.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_VARIABLE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
@@ -481,8 +496,12 @@ App::delete('/v1/project/variables/:variableId')
         name: 'deleteVariable',
         description: '/docs/references/project/delete-variable.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('project')

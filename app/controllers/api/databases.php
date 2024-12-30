@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Multiplex;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
@@ -457,8 +458,12 @@ App::post('/v1/databases')
         name: 'create',
         description: '/docs/references/databases/create.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_DATABASE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -535,8 +540,12 @@ App::get('/v1/databases')
         name: 'list',
         description: '/docs/references/databases/list.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DATABASE_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE_LIST,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
@@ -593,8 +602,12 @@ App::get('/v1/databases/:databaseId')
         name: 'get',
         description: '/docs/references/databases/get.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DATABASE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -621,8 +634,12 @@ App::get('/v1/databases/:databaseId/logs')
         name: 'listLogs',
         description: '/docs/references/databases/get-logs.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOG_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -718,8 +735,12 @@ App::put('/v1/databases/:databaseId')
         name: 'update',
         description: '/docs/references/databases/update.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DATABASE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -759,8 +780,13 @@ App::delete('/v1/databases/:databaseId')
         name: 'delete',
         description: '/docs/references/databases/delete.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
@@ -810,8 +836,12 @@ App::post('/v1/databases/:databaseId/collections')
         name: 'createCollection',
         description: '/docs/references/databases/create-collection.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_COLLECTION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -877,8 +907,12 @@ App::get('/v1/databases/:databaseId/collections')
         name: 'listCollections',
         description: '/docs/references/databases/list-collections.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_COLLECTION_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION_LIST,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -945,8 +979,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
         name: 'getCollection',
         description: '/docs/references/databases/get-collection.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_COLLECTION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -982,8 +1020,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         name: 'listCollectionLogs',
         description: '/docs/references/databases/get-collection-logs.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOG_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1083,8 +1125,12 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         name: 'updateCollection',
         description: '/docs/references/databases/update-collection.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_COLLECTION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1153,8 +1199,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         name: 'deleteCollection',
         description: '/docs/references/databases/delete-collection.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -1211,9 +1262,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
         name: 'createStringAttribute',
         description: '/docs/references/databases/create-string-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_STRING,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_STRING
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1270,9 +1324,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
         name: 'createEmailAttribute',
         description: '/docs/references/databases/create-email-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_EMAIL,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_EMAIL,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1315,9 +1372,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
         name: 'createEnumAttribute',
         description: '/docs/references/databases/create-attribute-enum.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_ENUM,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_ENUM,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1365,9 +1425,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
         name: 'createIpAttribute',
         description: '/docs/references/databases/create-ip-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_IP,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_IP,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1410,9 +1473,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
         name: 'createUrlAttribute',
         description: '/docs/references/databases/create-url-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_URL,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_URL,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1455,9 +1521,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
         name: 'createIntegerAttribute',
         description: '/docs/references/databases/create-integer-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_INTEGER,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_INTEGER,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1529,9 +1598,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
         name: 'createFloatAttribute',
         description: '/docs/references/databases/create-float-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_FLOAT,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_FLOAT,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1601,9 +1673,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
         name: 'createBooleanAttribute',
         description: '/docs/references/databases/create-boolean-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_BOOLEAN,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_BOOLEAN,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1645,9 +1720,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
         name: 'createDatetimeAttribute',
         description: '/docs/references/databases/create-datetime-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_DATETIME,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_DATETIME,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1692,9 +1770,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         name: 'createRelationshipAttribute',
         description: '/docs/references/databases/create-relationship-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1820,9 +1901,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         name: 'listAttributes',
         description: '/docs/references/databases/list-attributes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_LIST,
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_LIST
+            )
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1903,20 +1987,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         name: 'getAttribute',
         description: '/docs/references/databases/get-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: [
-            Response::MODEL_ATTRIBUTE_BOOLEAN,
-            Response::MODEL_ATTRIBUTE_INTEGER,
-            Response::MODEL_ATTRIBUTE_FLOAT,
-            Response::MODEL_ATTRIBUTE_EMAIL,
-            Response::MODEL_ATTRIBUTE_ENUM,
-            Response::MODEL_ATTRIBUTE_URL,
-            Response::MODEL_ATTRIBUTE_IP,
-            Response::MODEL_ATTRIBUTE_DATETIME,
-            Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-            Response::MODEL_ATTRIBUTE_STRING
-        ],
-        responseType: ResponseType::JSON
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: [
+                    Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_INTEGER,
+                    Response::MODEL_ATTRIBUTE_FLOAT,
+                    Response::MODEL_ATTRIBUTE_EMAIL,
+                    Response::MODEL_ATTRIBUTE_ENUM,
+                    Response::MODEL_ATTRIBUTE_URL,
+                    Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_DATETIME,
+                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+                    Response::MODEL_ATTRIBUTE_STRING
+                ]
+            ),
+        ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1984,8 +2071,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
         name: 'updateStringAttribute',
         description: '/docs/references/databases/update-string-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_STRING,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_STRING,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2031,8 +2122,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
         name: 'updateEmailAttribute',
         description: '/docs/references/databases/update-email-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_EMAIL,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_EMAIL,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2076,8 +2171,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
         name: 'updateEnumAttribute',
         description: '/docs/references/databases/update-enum-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_ENUM,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_ENUM,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2123,8 +2222,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
         name: 'updateIpAttribute',
         description: '/docs/references/databases/update-ip-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_IP,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_IP,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2168,8 +2271,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
         name: 'updateUrlAttribute',
         description: '/docs/references/databases/update-url-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_URL,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_URL,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2213,8 +2320,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
         name: 'updateIntegerAttribute',
         description: '/docs/references/databases/update-integer-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_INTEGER,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_INTEGER,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2268,8 +2379,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
         name: 'updateFloatAttribute',
         description: '/docs/references/databases/update-float-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_FLOAT,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_FLOAT,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2323,8 +2438,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
         name: 'updateBooleanAttribute',
         description: '/docs/references/databases/update-boolean-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_BOOLEAN,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_BOOLEAN,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2367,8 +2486,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
         name: 'updateDatetimeAttribute',
         description: '/docs/references/databases/update-datetime-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_DATETIME,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_DATETIME,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2411,8 +2534,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         name: 'updateRelationshipAttribute',
         description: '/docs/references/databases/update-relationship-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2472,8 +2599,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         name: 'deleteAttribute',
         description: '/docs/references/databases/delete-attribute.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2588,8 +2720,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         name: 'createIndex',
         description: '/docs/references/databases/create-index.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_ACCEPTED,
-        responseModel: Response::MODEL_INDEX,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_INDEX,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2758,8 +2894,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         name: 'listIndexes',
         description: '/docs/references/databases/list-indexes.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_INDEX_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INDEX_LIST,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2836,8 +2976,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         name: 'getIndex',
         description: '/docs/references/databases/get-index.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_INDEX,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INDEX,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2881,8 +3025,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         name: 'deleteIndex',
         description: '/docs/references/databases/delete-index.md',
         auth: [AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2952,8 +3101,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             name: 'createDocument',
             description: '/docs/references/databases/create-document.md',
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-            responseCode: Response::STATUS_CODE_CREATED,
-            responseModel: Response::MODEL_DOCUMENT,
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_DOCUMENT,
+                )
+            ],
             responseType: ResponseType::JSON,
             offlineKey: '{documentId}',
             offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
@@ -3260,8 +3413,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         name: 'listDocuments',
         description: '/docs/references/databases/list-documents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DOCUMENT_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
     ))
@@ -3417,8 +3574,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         name: 'getDocument',
         description: '/docs/references/databases/get-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DOCUMENT,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
@@ -3512,8 +3673,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         name: 'listDocumentLogs',
         description: '/docs/references/databases/get-document-logs.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_LOG_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -3625,8 +3790,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         name: 'updateDocument',
         description: '/docs/references/databases/update-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DOCUMENT,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
@@ -3864,8 +4033,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         name: 'updateDocuments',
         description: '/docs/references/databases/update-documents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DOCUMENT_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
     ))
@@ -4003,8 +4176,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         name: 'deleteDocument',
         description: '/docs/references/databases/delete-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
     ))
@@ -4123,8 +4301,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         name: 'deleteDocuments',
         description: '/docs/references/databases/delete-documents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_DOCUMENT_LIST,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ],
         responseType: ResponseType::JSON,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
@@ -4229,9 +4411,13 @@ App::get('/v1/databases/usage')
         name: 'getUsage',
         description: '/docs/references/databases/get-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_DATABASES,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_DATABASES,
+            )
+        ],
+        responseType: ResponseType::JSON
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
@@ -4314,8 +4500,12 @@ App::get('/v1/databases/:databaseId/usage')
         name: 'getDatabaseUsage',
         description: '/docs/references/databases/get-database-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_DATABASE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_DATABASE,
+            )
+        ],
         responseType: ResponseType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -4405,8 +4595,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         name: 'getCollectionUsage',
         description: '/docs/references/databases/get-collection-usage.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_USAGE_COLLECTION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_COLLECTION,
+            )
+        ],
         responseType: ResponseType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')

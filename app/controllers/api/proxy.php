@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -36,9 +36,12 @@ App::post('/v1/proxy/rules')
         name: 'createRule',
         description: '/docs/references/proxy/create-rule.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseModel: Response::MODEL_PROXY_RULE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROXY_RULE,
+            )
+        ]
     ))
     ->param('domain', null, new ValidatorDomain(), 'Domain name.')
     ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function"')
@@ -160,9 +163,12 @@ App::get('/v1/proxy/rules')
         name: 'listRules',
         description: '/docs/references/proxy/list-rules.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PROXY_RULE_LIST,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROXY_RULE_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Rules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Rules::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -231,9 +237,12 @@ App::get('/v1/proxy/rules/:ruleId')
         name: 'getRule',
         description: '/docs/references/proxy/get-rule.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PROXY_RULE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROXY_RULE,
+            )
+        ]
     ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
@@ -265,8 +274,12 @@ App::delete('/v1/proxy/rules/:ruleId')
         name: 'deleteRule',
         description: '/docs/references/proxy/delete-rule.md',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
@@ -304,9 +317,12 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         name: 'updateRuleVerification',
         description: '',
         auth: [AuthType::ADMIN],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_PROXY_RULE,
-        responseType: ResponseType::JSON,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROXY_RULE,
+            )
+        ]
     ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')

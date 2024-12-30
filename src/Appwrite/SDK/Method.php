@@ -87,12 +87,16 @@ class Method
         $this->validateAuthTypes($auth);
         // Disabled for now, will be enabled later
         // $this->validateDesc($description);
-        $this->validateResponseModel($responseModel);
 
-        // No content check
-        if ($responseCode === 204) {
-            if ($responseModel !== Response::MODEL_NONE) {
-                throw new \Exception("Error with {$this->getDebugName()} method: Response code 204 must have response model 'none'");
+        foreach ($responses as $response) {
+            /** @var \Appwrite\SDK\Response $response */
+            $this->validateResponseModel($response->getModel());
+
+            // No content check
+            if ($response->getCode() === 204) {
+                if ($response->getModel() !== Response::MODEL_NONE) {
+                    throw new \Exception("Error with {$this->getDebugName()} method: Response code 204 must have response model 'none'");
+                }
             }
         }
     }
@@ -176,14 +180,9 @@ class Method
         return $this->auth;
     }
 
-    public function getResponseCode(): int
+    public function getResponses(): array
     {
-        return $this->responseCode;
-    }
-
-    public function getResponseModel(): string|array
-    {
-        return $this->responseModel;
+        return $this->responses;
     }
 
     public function getResponseType(): ResponseType

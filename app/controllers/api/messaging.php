@@ -13,7 +13,7 @@ use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -65,9 +65,12 @@ App::post('/v1/messaging/providers/mailgun')
         name: 'createMailgunProvider',
         description: '/docs/references/messaging/create-mailgun-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -155,9 +158,12 @@ App::post('/v1/messaging/providers/sendgrid')
         name: 'createSendgridProvider',
         description: '/docs/references/messaging/create-sendgrid-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -233,9 +239,12 @@ App::post('/v1/messaging/providers/smtp')
         name: 'createSmtpProvider',
         description: '/docs/references/messaging/create-smtp-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -324,9 +333,12 @@ App::post('/v1/messaging/providers/msg91')
         name: 'createMsg91Provider',
         description: '/docs/references/messaging/create-msg91-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -403,9 +415,12 @@ App::post('/v1/messaging/providers/telesign')
         name: 'createTelesignProvider',
         description: '/docs/references/messaging/create-telesign-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -483,9 +498,12 @@ App::post('/v1/messaging/providers/textmagic')
         name: 'createTextmagicProvider',
         description: '/docs/references/messaging/create-textmagic-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -563,9 +581,12 @@ App::post('/v1/messaging/providers/twilio')
         name: 'createTwilioProvider',
         description: '/docs/references/messaging/create-twilio-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -643,9 +664,12 @@ App::post('/v1/messaging/providers/vonage')
         name: 'createVonageProvider',
         description: '/docs/references/messaging/create-vonage-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -723,9 +747,12 @@ App::post('/v1/messaging/providers/fcm')
         name: 'createFcmProvider',
         description: '/docs/references/messaging/create-fcm-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -789,9 +816,12 @@ App::post('/v1/messaging/providers/apns')
         name: 'createApnsProvider',
         description: '/docs/references/messaging/create-apns-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
@@ -875,9 +905,12 @@ App::get('/v1/messaging/providers')
         name: 'listProviders',
         description: '/docs/references/messaging/list-providers.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -934,9 +967,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
         name: 'listProviderLogs',
         description: '/docs/references/messaging/list-provider-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_LOG_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -1025,9 +1061,12 @@ App::get('/v1/messaging/providers/:providerId')
         name: 'getProvider',
         description: '/docs/references/messaging/get-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
@@ -1055,9 +1094,12 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         name: 'updateMailgunProvider',
         description: '/docs/references/messaging/update-mailgun-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1164,9 +1206,12 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
         name: 'updateSendgridProvider',
         description: '/docs/references/messaging/update-sendgrid-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1258,9 +1303,12 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
         name: 'updateSmtpProvider',
         description: '/docs/references/messaging/update-smtp-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1383,9 +1431,12 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
         name: 'updateMsg91Provider',
         description: '/docs/references/messaging/update-msg91-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1466,9 +1517,12 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         name: 'updateTelesignProvider',
         description: '/docs/references/messaging/update-telesign-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1551,9 +1605,12 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         name: 'updateTextmagicProvider',
         description: '/docs/references/messaging/update-textmagic-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1636,9 +1693,12 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
         name: 'updateTwilioProvider',
         description: '/docs/references/messaging/update-twilio-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1721,9 +1781,12 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
         name: 'updateVonageProvider',
         description: '/docs/references/messaging/update-vonage-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1806,9 +1869,12 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
         name: 'updateFcmProvider',
         description: '/docs/references/messaging/update-fcm-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1878,9 +1944,12 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         name: 'updateApnsProvider',
         description: '/docs/references/messaging/update-apns-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_PROVIDER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1976,9 +2045,12 @@ App::delete('/v1/messaging/providers/:providerId')
         name: 'deleteProvider',
         description: '/docs/references/messaging/delete-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('queueForEvents')
@@ -2014,9 +2086,12 @@ App::post('/v1/messaging/topics')
         name: 'createTopic',
         description: '/docs/references/messaging/create-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOPIC
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
     ))
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
@@ -2057,9 +2132,12 @@ App::get('/v1/messaging/topics')
         name: 'listTopics',
         description: '/docs/references/messaging/list-topics.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOPIC_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC_LIST,
+            )
+        ]
     ))
     ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -2116,9 +2194,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
         name: 'listTopicLogs',
         description: '/docs/references/messaging/list-topic-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_LOG_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -2208,9 +2289,12 @@ App::get('/v1/messaging/topics/:topicId')
         name: 'getTopic',
         description: '/docs/references/messaging/get-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOPIC
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
@@ -2239,9 +2323,12 @@ App::patch('/v1/messaging/topics/:topicId')
         name: 'updateTopic',
         description: '/docs/references/messaging/update-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TOPIC
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', null, new Text(128), 'Topic Name.', true)
@@ -2286,9 +2373,12 @@ App::delete('/v1/messaging/topics/:topicId')
         name: 'deleteTopic',
         description: '/docs/references/messaging/delete-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('queueForEvents')
@@ -2329,9 +2419,12 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
         name: 'createSubscriber',
         description: '/docs/references/messaging/create-subscriber.md',
         auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SUBSCRIBER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SUBSCRIBER,
+            )
+        ]
     ))
     ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID to subscribe to.')
@@ -2425,9 +2518,12 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         name: 'listSubscribers',
         description: '/docs/references/messaging/list-subscribers.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SUBSCRIBER_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SUBSCRIBER_LIST,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
@@ -2507,9 +2603,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         name: 'listSubscriberLogs',
         description: '/docs/references/messaging/list-subscriber-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_LOG_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
     ))
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -2599,9 +2698,12 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
         name: 'getSubscriber',
         description: '/docs/references/messaging/get-subscriber.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_SUBSCRIBER
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SUBSCRIBER,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
@@ -2644,9 +2746,12 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
         name: 'deleteSubscriber',
         description: '/docs/references/messaging/delete-subscriber.md',
         auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
@@ -2706,9 +2811,12 @@ App::post('/v1/messaging/messages/email')
         name: 'createEmail',
         description: '/docs/references/messaging/create-email.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('subject', '', new Text(998), 'Email Subject.')
@@ -2861,9 +2969,12 @@ App::post('/v1/messaging/messages/sms')
         name: 'createSms',
         description: '/docs/references/messaging/create-sms.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('content', '', new Text(64230), 'SMS Content.')
@@ -2980,9 +3091,12 @@ App::post('/v1/messaging/messages/push')
         name: 'createPush',
         description: '/docs/references/messaging/create-push.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_CREATED,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('title', '', new Text(256), 'Title for push notification.')
@@ -3156,9 +3270,12 @@ App::get('/v1/messaging/messages')
         name: 'listMessages',
         description: '/docs/references/messaging/list-messages.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE_LIST,
+            )
+        ],
     ))
     ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -3215,9 +3332,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
         name: 'listMessageLogs',
         description: '/docs/references/messaging/list-message-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_LOG_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -3307,9 +3427,12 @@ App::get('/v1/messaging/messages/:messageId/targets')
         name: 'listTargets',
         description: '/docs/references/messaging/list-message-targets.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_TARGET_LIST
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET_LIST,
+            )
+        ],
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
@@ -3380,9 +3503,12 @@ App::get('/v1/messaging/messages/:messageId')
         name: 'getMessage',
         description: '/docs/references/messaging/get-message.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
@@ -3410,9 +3536,12 @@ App::patch('/v1/messaging/messages/email/:messageId')
         name: 'updateEmail',
         description: '/docs/references/messaging/update-email.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
@@ -3613,9 +3742,12 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         name: 'updateSms',
         description: '/docs/references/messaging/update-sms.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
@@ -3771,9 +3903,12 @@ App::patch('/v1/messaging/messages/push/:messageId')
         name: 'updatePush',
         description: '/docs/references/messaging/update-push.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_OK,
-        responseType: ResponseType::JSON,
-        responseModel: Response::MODEL_MESSAGE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
@@ -4012,8 +4147,12 @@ App::delete('/v1/messaging/messages/:messageId')
         name: 'delete',
         description: '/docs/references/messaging/delete-message.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
-        responseCode: Response::STATUS_CODE_NOCONTENT,
-        responseModel: Response::MODEL_NONE
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
