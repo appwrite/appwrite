@@ -59,7 +59,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '13.1.0',
+                'version' => '13.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -134,7 +134,7 @@ return [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.5.0',
+                'version' => '0.6.0',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
