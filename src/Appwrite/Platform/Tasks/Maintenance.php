@@ -66,7 +66,6 @@ class Maintenance extends Action
     {
         $this->notifyDeleteTargets($queueForDeletes);
         $this->notifyDeleteExecutionLogs($queueForDeletes);
-        $this->notifyDeleteAbuseLogs($queueForDeletes);
         $this->notifyDeleteAuditLogs($queueForDeletes);
         $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
         $this->notifyDeleteExpiredSessions($queueForDeletes);
@@ -103,13 +102,6 @@ class Maintenance extends Action
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_EXECUTIONS)
-            ->trigger();
-    }
-
-    private function notifyDeleteAbuseLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_ABUSE)
             ->trigger();
     }
 

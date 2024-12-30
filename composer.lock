@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db3b63ba1be2561ee4a112e5b9c6bd53",
+    "content-hash": "786a6c2f9aa130c673f8a39a18a28e3c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2403,12 +2403,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "3.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -2884,12 +2884,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "3.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.45.0",
+            "version": "0.46.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "54a58355df1eb26c9be7834738debe6754e5581d"
+                "reference": "bef426a9a28b3e71b08216bcbe310455f588c11b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/54a58355df1eb26c9be7834738debe6754e5581d",
-                "reference": "54a58355df1eb26c9be7834738debe6754e5581d",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/bef426a9a28b3e71b08216bcbe310455f588c11b",
+                "reference": "bef426a9a28b3e71b08216bcbe310455f588c11b",
                 "shasum": ""
             },
             "require": {
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.45.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.46.0"
             },
-            "time": "2024-12-20T16:18:52+00:00"
+            "time": "2024-12-27T17:46:08+00:00"
         },
         {
             "name": "utopia-php/analytics",
