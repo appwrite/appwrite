@@ -2,6 +2,8 @@ name: "Build and Publish Appwrite Images for Cloud"
 
 on:
   workflow_dispatch:
+    branches:
+      - dev
   push:
     tags:
       - cl-*
