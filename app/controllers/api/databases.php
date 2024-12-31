@@ -3254,7 +3254,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         /**
-         * Add count relations here for $count
+         * Add $count relations metrics here
          */
 
         $response->dynamic(new Document([
@@ -3314,8 +3314,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
+        $count = 1;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$count) {
             if ($document->isEmpty()) {
                 return;
             }
@@ -3330,6 +3332,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                var_dump('=============');
+                var_dump($relationship->getAttribute('key'));
+                var_dump(\gettype($related));
+                var_dump($count);
+
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $count++;
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3352,6 +3363,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         };
 
         $processDocument($collection, $document);
+
+        /**
+         * Add $count relations metrics here
+         */
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
