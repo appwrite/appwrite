@@ -1607,6 +1607,17 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('group'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('region'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1673,6 +1684,13 @@ $commonCollections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
+            [
+                '$id' => ID::custom('group'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => [ID::custom('group')],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ]
         ],
     ],
 
