@@ -3167,8 +3167,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
         $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
 
+        $count = 1;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$count): bool {
             if ($document->isEmpty()) {
                 return false;
             }
@@ -3185,6 +3187,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $count++;
+                }
+
                 if (empty($related)) {
                     continue;
                 }
@@ -3195,6 +3201,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                // todo: Use local cache for this getDocument
                 $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
@@ -3245,6 +3252,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
             }
         }
+
+        /**
+         * Add count relations here for $count
+         */
 
         $response->dynamic(new Document([
             'total' => $total,
