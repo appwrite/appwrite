@@ -3333,11 +3333,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                var_dump('=============');
-                var_dump($relationship->getAttribute('key'));
-                var_dump(\gettype($related));
-                var_dump($count);
-
                 if (\in_array(\gettype($related), ['array', 'object'])) {
                     $count++;
                 }
