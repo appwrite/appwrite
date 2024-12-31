@@ -19,7 +19,6 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -184,7 +183,7 @@ App::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
@@ -192,7 +191,7 @@ App::init()
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -284,8 +283,8 @@ App::init()
                     $accessedAt = $key->getAttribute('accessedAt', '');
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                         $key->setAttribute('accessedAt', DateTime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
 
                     $sdkValidator = new WhiteList($servers, true);
@@ -298,8 +297,8 @@ App::init()
 
                             /** Update access time as well */
                             $key->setAttribute('accessedAt', Datetime::now());
-                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                            $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
                 }
@@ -343,7 +342,7 @@ App::init()
             $accessedAt = $project->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
             }
         }
 
@@ -358,7 +357,7 @@ App::init()
                 if (APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForConsole->updateDocument('users', $user->getId(), $user);
+                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
                 }
             }
         }
@@ -420,8 +419,9 @@ App::init()
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
     ->inject('dbForProject')
+    ->inject('timelimit')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $timelimit, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -444,7 +444,7 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
@@ -472,7 +472,7 @@ App::init()
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
             $limit = $timeLimit->limit();
-            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+            $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;

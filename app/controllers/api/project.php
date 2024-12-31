@@ -325,8 +325,8 @@ App::post('/v1/project/variables')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variableId = ID::unique();
 
         $variable = new Document([
@@ -429,8 +429,8 @@ App::put('/v1/project/variables/:variableId')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variable = $dbForProject->getDocument('variables', $variableId);
         if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);

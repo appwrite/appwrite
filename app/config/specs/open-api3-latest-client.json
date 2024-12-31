@@ -5766,7 +5766,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 382,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5851,7 +5851,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 386,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,

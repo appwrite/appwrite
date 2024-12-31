@@ -11,7 +11,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '16.0.2',
+                'version' => '16.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -59,7 +59,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '13.0.0',
+                'version' => '13.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -77,7 +77,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '7.0.0',
+                'version' => '7.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -112,7 +112,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '6.0.0',
+                'version' => '6.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -134,7 +134,7 @@ return [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.5.0',
+                'version' => '0.6.0',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,

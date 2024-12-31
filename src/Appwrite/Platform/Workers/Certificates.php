@@ -43,21 +43,21 @@ class Certificates extends Action
         $this
             ->desc('Certificates worker')
             ->inject('message')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
             ->inject('certificates')
             ->callback(
-                fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates) =>
-                    $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates)
+                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates) =>
+                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates)
             );
     }
 
     /**
      * @param Message $message
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
@@ -67,7 +67,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates): void
+    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -81,12 +81,12 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates, $skipRenewCheck);
+        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates, $skipRenewCheck);
     }
 
     /**
      * @param Domain $domain
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
@@ -96,7 +96,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -128,7 +128,7 @@ class Certificates extends Action
          */
 
         // Get current certificate
-        $certificate = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
+        $certificate = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
         if ($certificate->isEmpty()) {
@@ -185,7 +185,7 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForFunctions);
         }
     }
 
@@ -195,7 +195,7 @@ class Certificates extends Action
      * @param string $domain Domain name that certificate is for
      * @param Document $certificate Certificate document that we need to save
      * @param bool $success
-     * @param Database $dbForConsole Database connection for console
+     * @param Database $dbForPlatform Database connection for console
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @return void
@@ -204,21 +204,21 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions): void
     {
         // Check if update or insert required
-        $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
+        $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
-            $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
+            $certificate = $dbForPlatform->updateDocument('certificates', $certificate->getId(), $certificate);
         } else {
             $certificate->removeAttribute('$internalId');
-            $certificate = $dbForConsole->createDocument('certificates', $certificate);
+            $certificate = $dbForPlatform->createDocument('certificates', $certificate);
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForFunctions);
     }
 
     /**
@@ -337,13 +337,13 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions): void
     {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = $dbForConsole->getDocument('rules', md5($domain));
+            $rule = $dbForPlatform->getDocument('rules', md5($domain));
         } else {
-            $rule = $dbForConsole->findOne('rules', [
+            $rule = $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
             ]);
         }
@@ -351,7 +351,7 @@ class Certificates extends Action
         if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'unverified');
-            $dbForConsole->updateDocument('rules', $rule->getId(), $rule);
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
 
             $projectId = $rule->getAttribute('projectId');
 
@@ -360,7 +360,7 @@ class Certificates extends Action
                 return;
             }
 
-            $project = $dbForConsole->getDocument('projects', $projectId);
+            $project = $dbForPlatform->getDocument('projects', $projectId);
 
             if ($project->isEmpty()) {
                 return;
