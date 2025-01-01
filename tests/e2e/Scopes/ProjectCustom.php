@@ -76,6 +76,8 @@ trait ProjectCustom
                 'buckets.write',
                 'functions.read',
                 'functions.write',
+                'sites.read',
+                'sites.write',
                 'execution.read',
                 'execution.write',
                 'locale.read',
