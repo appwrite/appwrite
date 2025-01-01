@@ -3036,8 +3036,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $operations = 1;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3048,6 +3050,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3656,8 +3662,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $operations = 1;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3668,6 +3676,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3773,8 +3785,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $operations = 1;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3785,6 +3799,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
 
                 if (empty($related)) {
                     continue;
