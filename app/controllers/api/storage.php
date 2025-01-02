@@ -1016,16 +1016,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        foreach ([$width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output] as $parameter) {
-            if (!empty($parameter)) {
-                $queueForUsage
-                     ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-                     ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
-                ;
-                break;
-            }
-        }
-
+        $queueForUsage
+            ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
+            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
+        ;
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
