@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -886,7 +887,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('queueForUsage')
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, Usage $queueForUsage) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1013,6 +1015,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $data = $image->output($output, $quality);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
+
+        foreach([$width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output] as $param){
+               if(!empty($param)){
+                   $queueForUsage
+                        ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
+                        ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
+                       ;
+                   break;
+               }
+        }
+
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
