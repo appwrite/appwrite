@@ -3265,7 +3265,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queueForUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
-        ;
+            ;
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -3372,7 +3372,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $queueForUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
-        ;
+            ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
