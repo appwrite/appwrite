@@ -232,8 +232,8 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_DATABASE_API_READ  = 'database.api.events.read';
-const METRIC_DATABASE_API_WRITE  = 'database.api.events.write';
+const METRIC_DATABASE_OPERATIONS_READS  = 'databases.operations.reads';
+const METRIC_DATABASE_OPERATIONS_WRITES  = 'databases.operations.writes';
 const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
