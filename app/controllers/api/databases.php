@@ -3077,6 +3077,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+
+        $response->addHeader('X-Debug-Operations', $operations);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($document, Response::MODEL_DOCUMENT);
@@ -3098,10 +3105,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setPayload($response->getPayload(), sensitive: $relationships);
 
 
-        $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3267,6 +3270,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
+        $response->addHeader('X-Debug-Operations', $operations);
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -3374,6 +3378,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
+        $response->addHeader('X-Debug-Operations', $operations);
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
@@ -3714,6 +3719,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
         ;
 
+        $response->addHeader('X-Debug-Operations', $operations);
         $response->dynamic($document, Response::MODEL_DOCUMENT);
 
         $relationships = \array_map(
@@ -3858,6 +3864,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
+        $response->addHeader('X-Debug-Operations', $operations);
         $response->noContent();
     });
 
