@@ -3121,7 +3121,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForUsage')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -3285,9 +3284,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('mode')
     ->inject('queueForUsage')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
