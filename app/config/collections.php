@@ -3,9 +3,9 @@
 use Utopia\Config\Config;
 
 $common = include __DIR__ . '/collections/common.php';
-$bucket = include __DIR__ . '/collections/bucket.php';
-$project = include __DIR__ . '/collections/project.php';
-$database = include __DIR__ . '/collections/database.php';
+$buckets = include __DIR__ . '/collections/buckets.php';
+$projects = include __DIR__ . '/collections/projects.php';
+$databases = include __DIR__ . '/collections/databases.php';
 $platform = include __DIR__ . '/collections/platform.php';
 
 $auth = Config::getParam('auth', []);
@@ -21,9 +21,9 @@ $providers = Config::getParam('oAuthProviders', []);
  */
 
 $collections = [
-    'buckets' => $bucket,
-    'databases' => $database,
-    'projects' => array_merge($project, $common),
+    'buckets' => $buckets,
+    'databases' => $databases,
+    'projects' => array_merge($projects, $common),
     'console' => array_merge($platform, $common),
 ];
 
