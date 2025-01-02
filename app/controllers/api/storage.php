@@ -1016,14 +1016,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        foreach([$width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output] as $param){
-               if(!empty($param)){
-                   $queueForUsage
-                        ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-                        ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
-                       ;
-                   break;
-               }
+        foreach ([$width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output] as $parameter) {
+            if (!empty($parameter)) {
+                $queueForUsage
+                     ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
+                     ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
+                ;
+                break;
+            }
         }
 
 
