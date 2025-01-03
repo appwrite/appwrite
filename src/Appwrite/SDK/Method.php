@@ -37,6 +37,11 @@ class Method
 {
     public static array $knownMethods = [];
 
+    //Tmp
+    public static array $knownMissingDescriptions = [];
+
+    public static array $exceptions = [];
+
     /**
      * @var array<Multiplex>
      */
@@ -85,8 +90,7 @@ class Method
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        // Disabled for now, will be enabled later
-        // $this->validateDesc($description);
+        $this->validateDesc($description);
 
         foreach ($responses as $response) {
             /** @var \Appwrite\SDK\Response $response */
@@ -95,7 +99,7 @@ class Method
             // No content check
             if ($response->getCode() === 204) {
                 if ($response->getModel() !== Response::MODEL_NONE) {
-                    throw new \Exception("Error with {$this->getDebugName()} method: Response code 204 must have response model 'none'");
+                    self::$exceptions[] = "Error with {$this->getDebugName()} method: Response code 204 must have response model 'none'";
                 }
             }
         }
@@ -109,7 +113,7 @@ class Method
     private function validateMethod(string $name, string $namespace): void
     {
         if (\in_array($this->getDebugName(), self::$knownMethods)) {
-            throw new \Exception('Method ' . $name . ' already exists in namespace ' . $namespace);
+            self::$exceptions[] = "Error with {$this->getDebugName()} method: Method already exists in namespace {$namespace}";
         }
 
         self::$knownMethods[] = $this->getDebugName();
@@ -119,7 +123,7 @@ class Method
     {
         foreach ($authTypes as $authType) {
             if (!($authType instanceof AuthType)) {
-                throw new \Exception("Error with {$this->getDebugName()} method: Invalid auth type");
+                self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid auth type";
             }
         }
     }
@@ -127,13 +131,15 @@ class Method
     private function validateDesc(string $desc): void
     {
         if (empty($desc)) {
-            throw new \Exception("Error with {$this->getDebugName()} method: Description file not set");
+            self::$exceptions[] = "Error with {$this->getDebugName()} method: Description label is empty";
+            return;
         }
 
         $descPath = \realpath(__DIR__ . '/../../../' . $desc);
 
         if (!\file_exists($descPath)) {
-            throw new \Exception("Error with {$this->getDebugName()} method: Description file not found at {$descPath}");
+            self::$exceptions[] = "Error with {$this->getDebugName()} method: Description file not found at {$desc}";
+            return;
         }
     }
 
@@ -146,7 +152,7 @@ class Method
                 try {
                     $response->getModel($model);
                 } catch (\Exception $e) {
-                    throw new \Exception("Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php");
+                    self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php";
                 }
             }
 
@@ -156,7 +162,7 @@ class Method
         try {
             $response->getModel($responseModel);
         } catch (\Exception $e) {
-            throw new \Exception("Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php");
+            self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php";
         }
     }
 
@@ -238,5 +244,13 @@ class Method
     public function getMultiplex(): array
     {
         return $this->multiplex;
+    }
+
+    // Throw any errors that were found during initialization
+    static function finaliseInitialization(): void
+    {
+        if (!empty(self::$exceptions)) {
+            throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, self::$exceptions));
+        }
     }
 }
