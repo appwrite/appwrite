@@ -1,15 +1,15 @@
 <?php
 
-use Utopia\Config\Config;
 
 $common = include __DIR__ . '/collections/common.php';
-$buckets = include __DIR__ . '/collections/buckets.php';
 $projects = include __DIR__ . '/collections/projects.php';
 $databases = include __DIR__ . '/collections/databases.php';
 $platform = include __DIR__ . '/collections/platform.php';
 
-$auth = Config::getParam('auth', []);
-$providers = Config::getParam('oAuthProviders', []);
+$buckets = $common['files'];
+
+// no more required.
+unset($common['files']);
 
 /**
  * $collection => id of the parent collection where this will be inserted
