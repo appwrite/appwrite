@@ -11,6 +11,7 @@ class Audit extends Event
     protected string $mode = '';
     protected string $userAgent = '';
     protected string $ip = '';
+    protected string $hostname = '';
 
     public function __construct(protected Connection $connection)
     {
@@ -114,6 +115,30 @@ class Audit extends Event
     }
 
     /**
+     * Set the hostname.
+     *
+     * @param string $hostname
+     *
+     * @return self
+     */
+    public function setHostname(string $hostname): self
+    {
+        $this->hostname = $hostname;
+
+        return $this;
+    }
+
+    /**
+     * Get the hostname.
+     *
+     * @return string
+     */
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
      * Executes the event and sends it to the audit worker.
      *
      * @return string|bool
@@ -136,6 +161,7 @@ class Audit extends Event
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
             'event' => $this->event,
+            'hostname' => $this->hostname
         ]);
     }
 }
