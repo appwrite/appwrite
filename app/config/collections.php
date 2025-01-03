@@ -6,7 +6,9 @@ $projects = include __DIR__ . '/collections/projects.php';
 $databases = include __DIR__ . '/collections/databases.php';
 $platform = include __DIR__ . '/collections/platform.php';
 
-$buckets = $common['files'];
+// see - http.php#245
+// $collections['buckets']['files'];
+$buckets = ['files' => $common['files']];
 
 // no more required.
 unset($common['files']);
