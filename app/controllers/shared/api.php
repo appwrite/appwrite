@@ -58,7 +58,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (Document $project,Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
         return;
@@ -692,7 +692,7 @@ App::shutdown()
                     ->trigger();
             }
 
-            /** Trigger webhooks events only if a project has them enabled 
+            /** Trigger webhooks events only if a project has them enabled
              * A future optimisation is to only trigger webhooks if the webhook is "enabled"
              * But it might have performance implications on the API due to the number of webhooks etc.
              * Some profiling is needed to see if this is a problem.
