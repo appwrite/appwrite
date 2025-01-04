@@ -493,6 +493,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_SMS_FREE_MONTHLY_LIMIT',
+                'description' => 'Free monthly SMS limit. Default value is 0.',
+                'introduction' => '0.16.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
     [

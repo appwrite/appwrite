@@ -96,7 +96,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $queueForUsage, $log);
+                $this->sendInternalSMSMessage($dbForProject, $message, $project, $recipients, $queueForUsage, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
@@ -377,7 +377,7 @@ class Messaging extends Action
         }
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
+    private function sendInternalSMSMessage(Database $dbForProject, Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
@@ -456,24 +456,29 @@ class Messaging extends Action
             $adapter->getMaxMessagesPerRequest()
         );
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage) {
-            return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage) {
+        $currentMonth = date('Y-m');
+        $sentCount = $this->getSentCountForCurrentMonth($dbForProject, $project->getId(), $currentMonth);
+        $freeLimit = (int) System::getEnv('_APP_SMS_FREE_MONTHLY_LIMIT', 0);
+
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage, $sentCount, $freeLimit) {
+            return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage, $sentCount, $freeLimit) {
                 $message->setAttribute('to', $batch);
 
                 $data = $this->buildSmsMessage($message, $provider);
 
                 try {
                     $adapter->send($data);
-
-                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
-                    if (!empty($countryCode)) {
+                    if ($sentCount >= $freeLimit) {
+                        $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
                         $queueForUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                            ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                            ->setProject($project)
+                            ->trigger();
                     }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
                 } catch (\Throwable $th) {
                     throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
@@ -481,7 +486,17 @@ class Messaging extends Action
         }, $batches));
     }
 
-
+    private function getSentCountForCurrentMonth(
+        Database $dbForProject,
+        string $projectId,
+        string $currentMonth
+    ): int {
+        return $dbForProject->count('messages', [
+            Query::equal('projectId', [$projectId]),
+            Query::greaterThanEqual('sentAt', $currentMonth . '-01 00:00:00'),
+            Query::lessThan('sentAt', date('Y-m-d H:i:s', strtotime($currentMonth . '-01 00:00:00 +1 month')))
+        ]);
+    }
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
