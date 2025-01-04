@@ -692,7 +692,11 @@ App::shutdown()
                     ->trigger();
             }
 
-            /** Trigger webhooks events only if a project has them enabled */
+            /** Trigger webhooks events only if a project has them enabled 
+             * A future optimisation is to only trigger webhooks if the webhook is "enabled"
+             * But it might have performance implications on the API due to the number of webhooks etc.
+             * Some profiling is needed to see if this is a problem.
+            */
             if ($project->getAttribute('webhooks', []) !== []) {
                 $queueForWebhooks
                     ->from($queueForEvents)
