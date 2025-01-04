@@ -52,6 +52,22 @@ class Usage extends Event
     }
 
     /**
+     * Add group.
+     *
+     * @param string $key
+     * @return self
+     */
+    public function addGroup(string $key): self
+    {
+
+        $this->metrics[] = [
+            'group' => $key,
+        ];
+
+        return $this;
+    }
+
+    /**
      * Sends metrics to the usage worker.
      *
      * @return string|bool
