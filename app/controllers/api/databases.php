@@ -2970,13 +2970,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                /**
-                 * Write relationship counts
-                 */
-                if (\in_array(\gettype($related), ['array', 'object'])) {
-                    $operations++;
-                }
-
                 if (empty($related)) {
                     continue;
                 }
@@ -2985,8 +2978,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 if ($isList) {
                     $relations = $related;
+                    $operations += count($related);
                 } else {
                     $relations = [$related];
+                    $operations++;
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -3038,6 +3033,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         /**
          * Add inserts $operations relations metrics here
          */
+var_dump('shmuel ===  $operations');
+var_dump($operations);
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
@@ -3611,7 +3608,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                  * Write relationship counts
                  */
                 if (\in_array(\gettype($related), ['array', 'object'])) {
-                    $operations++;
+
                 }
 
                 if (empty($related)) {
@@ -3622,8 +3619,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 if ($isList) {
                     $relations = $related;
+                    $operations += count($related);
                 } else {
                     $relations = [$related];
+                    $operations++;
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
