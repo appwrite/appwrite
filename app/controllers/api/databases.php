@@ -2944,7 +2944,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $operations = 1;
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -2967,6 +2969,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                /**
+                 * Write relationship counts
+                 */
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3026,6 +3035,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
+        /**
+         * Add inserts $operations relations metrics here
+         */
+
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
         } catch (StructureException $e) {
@@ -3076,6 +3089,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         };
 
         $processDocument($collection, $document);
+
+        /**
+         * Add read $operations relations metrics here
+         */
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3231,6 +3248,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         foreach ($documents as $document) {
             $processDocument($collection, $document);
         }
+
+        /**
+         * Add read $operations relations metrics here
+         */
 
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
@@ -3575,7 +3596,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $operations = 1;
+
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3583,6 +3606,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                /**
+                 * Write relationship counts
+                 */
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+                    $operations++;
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3643,6 +3673,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
+        /**
+         * Add Update $operations relations metrics here
+         */
+
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
@@ -3702,6 +3736,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         };
 
         $processDocument($collection, $document);
+
+        /**
+         * Add read $operations relations metrics here
+         */
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
 
@@ -3825,6 +3863,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         };
 
         $processDocument($collection, $document);
+
+        /**
+         * Add read $operations relations metrics here
+         */
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
