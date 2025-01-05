@@ -3033,8 +3033,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         /**
          * Add inserts $operations relations metrics here
          */
-var_dump('shmuel ===  $operations');
-var_dump($operations);
+        var_dump('shmuel ===  $operations');
+        var_dump($operations);
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
