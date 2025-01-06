@@ -3031,10 +3031,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
+
         $queueForUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
             ;
+
+        $response->addHeader('X-Debug-operations-write', $operations);
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
@@ -3092,8 +3095,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
-
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-operations-read', $operations);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($document, Response::MODEL_DOCUMENT);
@@ -3253,6 +3255,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
+        $response->addHeader('X-Debug-operations-reads', $operations);
+
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
         }, false);
@@ -3280,7 +3284,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $response->addHeader('X-Debug-Operations', $operations);
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -3388,7 +3391,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-operations-reads', $operations);
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
@@ -3681,6 +3684,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
         ;
 
+        $response->addHeader('X-Debug-operations-writes', $operations);
+
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
@@ -3746,7 +3751,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-operations-reads', $operations);
+
         $response->dynamic($document, Response::MODEL_DOCUMENT);
 
         $relationships = \array_map(
