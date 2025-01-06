@@ -3847,7 +3847,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-Operations', 1);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
