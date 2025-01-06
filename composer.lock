@@ -3136,7 +3136,7 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.46.2",
+            "version": "0.46.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
@@ -3233,7 +3233,7 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.43.3",
+            "version": "0.43.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
