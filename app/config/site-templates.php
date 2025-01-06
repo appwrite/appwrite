@@ -135,12 +135,12 @@ return [
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/astro-starter.png',
         'frameworks' => [
             getFramework('ASTRO', [
-                'providerRootDirectory' => './',
+                'providerRootDirectory' => './astro/starter',
             ]),
         ],
         'vcsProvider' => 'github',
-        'providerRepositoryId' => 'astro-ssr-test-template',
-        'providerOwner' => 'Meldiron',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
         'providerVersion' => '0.2.*',
         'variables' => [],
     ],

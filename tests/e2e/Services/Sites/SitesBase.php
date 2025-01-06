@@ -62,9 +62,30 @@ trait SitesBase
         $this->assertEquals($site['headers']['status-code'], 204);
     }
 
+    protected function cleanupDeployment(string $siteId, string $deploymentId): void
+    {
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
+
+        $this->assertEquals($deployment['headers']['status-code'], 204);
+    }
+
     protected function createSite(mixed $params): mixed
     {
         $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $site;
+    }
+
+    protected function updateSite(mixed $params): mixed
+    {
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $params['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $params);
@@ -179,8 +200,7 @@ trait SitesBase
     protected function getTemplate(string $templateId)
     {
         $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json'
         ], $this->getHeaders()));
 
         return $template;
