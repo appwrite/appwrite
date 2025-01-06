@@ -2944,8 +2944,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $operations = 1;
+        $operations = 0;
+
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -2977,12 +2980,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 if ($isList) {
                     $relations = $related;
-                    $operations += count($related);
                 } else {
                     $relations = [$related];
-                    $operations++;
                 }
-
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
@@ -3175,8 +3175,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
         $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $operations = 1;
         $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
@@ -3196,13 +3197,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                if (\gettype($related) === 'object'){
-                    $operations++;
-                } else if(\gettype($related) === 'array'){
-                    $operations += max(1, count($related));
-                }
-
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
 
@@ -3329,8 +3328,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $operations = 1;
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             if ($document->isEmpty()) {
                 return;
@@ -3349,13 +3349,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                if (\gettype($related) === 'object'){
-                    $operations++;
-                } else if(\gettype($related) === 'array'){
-                    $operations += max(1, count($related));
-                }
-
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
 
@@ -3593,8 +3591,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $operations = 1;
+        $operations = 0;
+
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+
+            $operations++;
+
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3611,10 +3613,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 if ($isList) {
                     $relations = $related;
-                    $operations += count($related);
                 } else {
                     $relations = [$related];
-                    $operations++;
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
