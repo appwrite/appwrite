@@ -3692,10 +3692,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 1; // Since we read original Document
-
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3706,10 +3704,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (\in_array(\gettype($related), ['array', 'object'])) {
-                    $operations++;
-                }
 
                 if (empty($related)) {
                     continue;
@@ -3732,13 +3726,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         };
 
         $processDocument($collection, $document);
-
-        $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
-        ;
-
-        $response->addHeader('X-Debug-operations-reads', $operations);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
 
