@@ -2944,7 +2944,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $operations = 1;
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -2976,9 +2978,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 if ($isList) {
                     $relations = $related;
+                    $operations += count($related);
                 } else {
                     $relations = [$related];
+                    $operations++;
                 }
+
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
@@ -3026,6 +3031,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ;
+
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
         } catch (StructureException $e) {
@@ -3036,7 +3046,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 1;
+        $operations = 0;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3078,8 +3088,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $processDocument($collection, $document);
 
         $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
 
@@ -3238,6 +3248,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
+        ;
+
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
         }, false);
@@ -3264,11 +3279,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
             }
         }
-
-        $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
-        ;
 
         $response->addHeader('X-Debug-Operations', $operations);
         $response->dynamic(new Document([
@@ -3586,7 +3596,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+
+        $operations = 1;
+
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3594,6 +3607,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                /**
+                 * Write relationship counts
+                 */
+                if (\in_array(\gettype($related), ['array', 'object'])) {
+
+                }
 
                 if (empty($related)) {
                     continue;
@@ -3603,8 +3623,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 if ($isList) {
                     $relations = $related;
+                    $operations += count($related);
                 } else {
                     $relations = [$related];
+                    $operations++;
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -3654,6 +3676,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+        ;
+
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
@@ -3673,7 +3700,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 1;
+        $operations = 0;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3715,8 +3742,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $processDocument($collection, $document);
 
         $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
 
         $response->addHeader('X-Debug-Operations', $operations);
@@ -3843,6 +3870,15 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+
+
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
@@ -3858,11 +3894,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
-
-        $queueForUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', $operations);
         $response->noContent();
