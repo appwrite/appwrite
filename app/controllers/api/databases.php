@@ -2944,7 +2944,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $operations = 1;
+        $operations = 1; // For root createDocument
 
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -3049,7 +3049,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 0;
+        $operations = 0; // Since the Document is sent through post no getDocument used
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3600,7 +3600,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $newDocument = new Document($data);
 
 
-        $operations = 1;
+        $operations = 1; // Root updateDocument
 
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
             $relationships = \array_filter(
@@ -3705,7 +3705,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 0;
+        $operations = 1; // Since we read original Document
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3817,6 +3817,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $operations = 1; // Read original Document
+
         // Read permission should not be required for delete
         $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
@@ -3834,8 +3836,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         } catch (NotFoundException $e) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
-
-        $operations = 1;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3882,8 +3882,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-
-
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
