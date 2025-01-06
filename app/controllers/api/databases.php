@@ -2944,8 +2944,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $operations = 1;
+        $operations = 0;
+
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -2977,12 +2980,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 if ($isList) {
                     $relations = $related;
-                    $operations += count($related);
                 } else {
                     $relations = [$related];
-                    $operations++;
                 }
-
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
@@ -3102,8 +3102,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
-
-
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3199,13 +3197,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                if (\gettype($related) === 'object'){
-                    $operations++;
-                } else if(\gettype($related) === 'array'){
-                    $operations += max(1, count($related));
-                }
-
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
 
@@ -3353,13 +3349,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
-                if (\gettype($related) === 'object'){
-                    $operations++;
-                } else if(\gettype($related) === 'array'){
-                    $operations += max(1, count($related));
-                }
-
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
 
@@ -3596,9 +3590,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $operations = 1;
+        $operations = 0;
 
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+
+            $operations++;
+
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3615,10 +3612,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 if ($isList) {
                     $relations = $related;
-                    $operations += count($related);
                 } else {
                     $relations = [$related];
-                    $operations++;
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -3793,8 +3788,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 1; // Read original Document
-
         // Read permission should not be required for delete
         $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
@@ -3814,7 +3807,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3825,10 +3818,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
             foreach ($relationships as $relationship) {
                 $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (\in_array(\gettype($related), ['array', 'object'])) {
-                    $operations++;
-                }
 
                 if (empty($related)) {
                     continue;
@@ -3855,8 +3844,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $queueForUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $relationships = \array_map(
@@ -3875,7 +3862,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-Operations', 1);
         $response->noContent();
     });
 
