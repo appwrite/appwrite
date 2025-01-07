@@ -680,7 +680,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setRecipients([$phone])
                     ->setProviderType('SMS');
 
-                if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+                if (isset($plan['authPhone'])) {
                     $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
                     $timeLimit
                         ->setParam('{organizationId}', $project->getAttribute('teamId'));

@@ -2462,7 +2462,7 @@ App::post('/v1/account/tokens/phone')
                 ->setRecipients([$phone])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+            if (isset($plan['authPhone'])) {
                 $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
                 $timeLimit
                     ->setParam('{organizationId}', $project->getAttribute('teamId'));
@@ -3581,7 +3581,7 @@ App::post('/v1/account/verification/phone')
                 ->setRecipients([$user->getAttribute('phone')])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+            if (isset($plan['authPhone'])) {
                 $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
                 $timeLimit
                     ->setParam('{organizationId}', $project->getAttribute('teamId'));
@@ -4141,7 +4141,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setProviderType(MESSAGE_TYPE_SMS);
 
                 $phone = $user->getAttribute('phone');
-                if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+                if (isset($plan['authPhone'])) {
                     $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
                     $timeLimit
                         ->setParam('{organizationId}', $project->getAttribute('teamId'));
