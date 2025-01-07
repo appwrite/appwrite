@@ -1,10 +1,9 @@
 <?php
 
 /**
- * Init
+ * App init
  *
- * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
- * Set configuration, framework resources & app constants
+ * Initializes both common configs across HTTP, CLI and Workers
  *
  */
 
@@ -12,42 +11,18 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-\ini_set('memory_limit', '512M');
-\ini_set('display_errors', 1);
-\ini_set('display_startup_errors', 1);
-\ini_set('default_socket_timeout', -1);
-\error_reporting(E_ALL);
 
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
-use Appwrite\Auth\Auth;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
-use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
-use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
@@ -55,40 +30,33 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Adapter\AppSignal;
 use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
-use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device;
-use Utopia\Storage\Device\Backblaze;
-use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Device\Linode;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Storage;
 use Utopia\System\System;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
+
+\ini_set('memory_limit', '512M');
+\ini_set('display_errors', 1);
+\ini_set('display_startup_errors', 1);
+\ini_set('default_socket_timeout', -1);
+\error_reporting(E_ALL);
+
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -280,13 +248,6 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
-
-if (!App::isProduction()) {
-    // Allow specific domains to skip public domain validation in dev environment
-    // Useful for existing tests involving webhooks
-    PublicDomain::allow(['request-catcher']);
-}
 
 /*
  * ENV vars
@@ -323,6 +284,8 @@ Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
+
+
 
 /**
  * New DB Filters
@@ -752,6 +715,9 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, Database::VAR_FLOAT);
 
+
+
+
 /*
  * Registry
  */
@@ -1075,691 +1041,3 @@ foreach ($locales as $locale) {
         'timeout' => 2,
     ],
 ]);
-
-// Runtime Execution
-App::setResource('log', fn () => new Log());
-App::setResource('logger', function ($register) {
-    return $register->get('logger');
-}, ['register']);
-
-App::setResource('hooks', function ($register) {
-    return $register->get('hooks');
-}, ['register']);
-
-App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
-
-App::setResource('localeCodes', function () {
-    return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
-});
-
-// Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
-App::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
-App::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
-App::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
-App::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-App::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
-App::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
-App::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-App::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
-App::setResource('clients', function ($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => ID::custom('platforms'),
-        'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
-        'hostname' => $request->getHostname(),
-    ], Document::SET_TYPE_APPEND);
-
-    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
-    $validator = new Hostname();
-    foreach ($hostnames as $hostname) {
-        $hostname = trim($hostname);
-        if (!$validator->isValid($hostname)) {
-            continue;
-        }
-        $console->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
-            'name' => $hostname,
-            'hostname' => $hostname,
-        ], Document::SET_TYPE_APPEND);
-    }
-
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
-    }
-
-    return \array_unique($clients);
-}, ['request', 'console', 'project']);
-
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var string $mode */
-
-    Authorization::setDefaultStatus(true);
-
-    Auth::setCookieName('a_session_' . $project->getId());
-
-    if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
-    }
-
-    $session = Auth::decodeSession(
-        $request->getCookie(
-            Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
-        )
-    );
-
-    // Get session from header for SSR clients
-    if (empty($session['id']) && empty($session['secret'])) {
-        $sessionHeader = $request->getHeader('x-appwrite-session', '');
-
-        if (!empty($sessionHeader)) {
-            $session = Auth::decodeSession($sessionHeader);
-        }
-    }
-
-    // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
-    if ($response) {
-        $response->addHeader('X-Debug-Fallback', 'false');
-    }
-
-    if (empty($session['id']) && empty($session['secret'])) {
-        if ($response) {
-            $response->addHeader('X-Debug-Fallback', 'true');
-        }
-        $fallback = $request->getHeader('x-fallback-cookies', '');
-        $fallback = \json_decode($fallback, true);
-        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-    }
-
-    Auth::$unique = $session['id'] ?? '';
-    Auth::$secret = $session['secret'] ?? '';
-
-    if (APP_MODE_ADMIN !== $mode) {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
-        } else {
-            if ($project->getId() === 'console') {
-                $user = $dbForConsole->getDocument('users', Auth::$unique);
-            } else {
-                $user = $dbForProject->getDocument('users', Auth::$unique);
-            }
-        }
-    } else {
-        $user = $dbForConsole->getDocument('users', Auth::$unique);
-    }
-
-    if (
-        $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
-    ) { // Validate user has valid login token
-        $user = new Document([]);
-    }
-
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
-
-    $authJWT = $request->getHeader('x-appwrite-jwt', '');
-
-    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
-        try {
-            $payload = $jwt->decode($authJWT);
-        } catch (JWTException $error) {
-            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
-        }
-
-        $jwtUserId = $payload['userId'] ?? '';
-        if (!empty($jwtUserId)) {
-            $user = $dbForProject->getDocument('users', $jwtUserId);
-        }
-
-        $jwtSessionId = $payload['sessionId'] ?? '';
-        if (!empty($jwtSessionId)) {
-            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                $user = new Document([]);
-            }
-        }
-    }
-
-    $dbForProject->setMetadata('user', $user->getId());
-    $dbForConsole->setMetadata('user', $user->getId());
-
-    return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
-
-App::setResource('project', function ($dbForConsole, $request, $console) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Document $console */
-
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
-
-    if (empty($projectId) || $projectId === 'console') {
-        return $console;
-    }
-
-    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-
-    return $project;
-}, ['dbForConsole', 'request', 'console']);
-
-App::setResource('session', function (Document $user) {
-    if ($user->isEmpty()) {
-        return;
-    }
-
-    $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
-
-    if (!$sessionId) {
-        return;
-    }
-
-    foreach ($sessions as $session) {/** @var Document $session */
-        if ($sessionId === $session->getId()) {
-            return $session;
-        }
-    }
-
-    return;
-}, ['user']);
-
-App::setResource('console', function () {
-    return new Document([
-        '$id' => ID::custom('console'),
-        '$internalId' => ID::custom('console'),
-        'name' => 'Appwrite',
-        '$collection' => ID::custom('projects'),
-        'description' => 'Appwrite core engine',
-        'logo' => '',
-        'teamId' => -1,
-        'webhooks' => [],
-        'keys' => [],
-        'platforms' => [
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'localhost',
-            ], // Current host is added on app init
-        ],
-        'legalName' => '',
-        'legalCountry' => '',
-        'legalState' => '',
-        'legalCity' => '',
-        'legalAddress' => '',
-        'legalTaxId' => '',
-        'auths' => [
-            'mockNumbers' => [],
-            'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
-            'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
-            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
-        ],
-        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'oAuthProviders' => [
-            'githubEnabled' => true,
-            'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
-        ],
-    ]);
-}, []);
-
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
-    }
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    $dbAdapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
-
-    $database
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-        $database
-            ->setSharedTables(true)
-            ->setTenant($project->getInternalId())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
-    }
-
-    return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
-
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
-
-    $database
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-
-    return $database;
-}, ['pools', 'cache']);
-
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $configure = (function (Database $database) use ($project, $dsn) {
-            $database
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
-            }
-        });
-
-        if (isset($databases[$dsn->getHost()])) {
-            $database = $databases[$dsn->getHost()];
-            $configure($database);
-            return $database;
-        }
-
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
-        $databases[$dsn->getHost()] = $database;
-        $configure($database);
-
-        return $database;
-    };
-}, ['pools', 'dbForConsole', 'cache']);
-
-App::setResource('cache', function (Group $pools) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
-
-App::setResource('deviceForLocal', function () {
-    return new Local();
-});
-
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
-
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
-
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
-
-function getDevice($root): Device
-{
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
-
-    if (!empty($connection)) {
-        $acl = 'private';
-        $device = Storage::DEVICE_LOCAL;
-        $accessKey = '';
-        $accessSecret = '';
-        $bucket = '';
-        $region = '';
-
-        try {
-            $dsn = new DSN($connection);
-            $device = $dsn->getScheme();
-            $accessKey = $dsn->getUser() ?? '';
-            $accessSecret = $dsn->getPassword() ?? '';
-            $bucket = $dsn->getPath() ?? '';
-            $region = $dsn->getParam('region');
-        } catch (\Throwable $e) {
-            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
-        }
-
-        switch ($device) {
-            case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE::DEVICE_DO_SPACES:
-                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
-                return $device;
-            case Storage::DEVICE_BACKBLAZE:
-                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LINODE:
-                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_WASABI:
-                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
-        }
-    } else {
-        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
-            case Storage::DEVICE_S3:
-                $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-                $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
-                $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
-                $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
-                $s3Acl = 'private';
-                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-            case Storage::DEVICE_DO_SPACES:
-                $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-                $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-                $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-                $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-                $doSpacesAcl = 'private';
-                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
-                return $device;
-            case Storage::DEVICE_BACKBLAZE:
-                $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-                $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-                $backblazeRegion = System::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-                $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
-                $backblazeAcl = 'private';
-                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
-            case Storage::DEVICE_LINODE:
-                $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-                $linodeSecretKey = System::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-                $linodeRegion = System::getEnv('_APP_STORAGE_LINODE_REGION', '');
-                $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
-                $linodeAcl = 'private';
-                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
-            case Storage::DEVICE_WASABI:
-                $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-                $wasabiSecretKey = System::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-                $wasabiRegion = System::getEnv('_APP_STORAGE_WASABI_REGION', '');
-                $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
-                $wasabiAcl = 'private';
-                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
-        }
-    }
-}
-
-App::setResource('mode', function ($request) {
-    /** @var Appwrite\Utopia\Request $request */
-
-    /**
-     * Defines the mode for the request:
-     * - 'default' => Requests for Client and Server Side
-     * - 'admin' => Request from the Console on non-console projects
-     */
-    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
-}, ['request']);
-
-App::setResource('geodb', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    return $register->get('geodb');
-}, ['register']);
-
-App::setResource('passwordsDictionary', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    return $register->get('passwordsDictionary');
-}, ['register']);
-
-
-App::setResource('servers', function () {
-    $platforms = Config::getParam('platforms');
-    $server = $platforms[APP_PLATFORM_SERVER];
-
-    $languages = array_map(function ($language) {
-        return strtolower($language['name']);
-    }, $server['sdks']);
-
-    return $languages;
-});
-
-App::setResource('promiseAdapter', function ($register) {
-    return $register->get('promiseAdapter');
-}, ['register']);
-
-App::setResource('schema', function ($utopia, $dbForProject) {
-
-    $complexity = function (int $complexity, array $args) {
-        $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
-        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
-
-        return $complexity * $limit;
-    };
-
-    $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
-            Query::limit($limit),
-            Query::offset($offset),
-        ]));
-
-        return \array_map(function ($attr) {
-            return $attr->getArrayCopy();
-        }, $attrs);
-    };
-
-    $urls = [
-        'list' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents";
-        },
-        'create' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents";
-        },
-        'read' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
-        'update' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
-        'delete' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
-    ];
-
-    $params = [
-        'list' => function (string $databaseId, string $collectionId, array $args) {
-            return [ 'queries' => $args['queries']];
-        },
-        'create' => function (string $databaseId, string $collectionId, array $args) {
-            $id = $args['id'] ?? 'unique()';
-            $permissions = $args['permissions'] ?? null;
-
-            unset($args['id']);
-            unset($args['permissions']);
-
-            // Order must be the same as the route params
-            return [
-                'databaseId' => $databaseId,
-                'documentId' => $id,
-                'collectionId' => $collectionId,
-                'data' => $args,
-                'permissions' => $permissions,
-            ];
-        },
-        'update' => function (string $databaseId, string $collectionId, array $args) {
-            $documentId = $args['id'];
-            $permissions = $args['permissions'] ?? null;
-
-            unset($args['id']);
-            unset($args['permissions']);
-
-            // Order must be the same as the route params
-            return [
-                'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
-                'documentId' => $documentId,
-                'data' => $args,
-                'permissions' => $permissions,
-            ];
-        },
-    ];
-
-    return Schema::build(
-        $utopia,
-        $complexity,
-        $attributes,
-        $urls,
-        $params,
-    );
-}, ['utopia', 'dbForProject']);
-
-App::setResource('contributors', function () {
-    $path = 'app/config/contributors.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('employees', function () {
-    $path = 'app/config/employees.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('heroes', function () {
-    $path = 'app/config/heroes.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('gitHub', function (Cache $cache) {
-    return new VcsGitHub($cache);
-}, ['cache']);
-
-App::setResource('requestTimestamp', function ($request) {
-    //TODO: Move this to the Request class itself
-    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
-    $requestTimestamp = null;
-    if (!empty($timestampHeader)) {
-        try {
-            $requestTimestamp = new \DateTime($timestampHeader);
-        } catch (\Throwable $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
-        }
-    }
-    return $requestTimestamp;
-}, ['request']);
-App::setResource('plan', function (array $plan = []) {
-    return [];
-});

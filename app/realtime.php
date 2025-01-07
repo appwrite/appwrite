@@ -35,7 +35,7 @@ use Utopia\WebSocket\Server;
 /**
  * @var \Utopia\Registry\Registry $register
  */
-require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/init/http.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
