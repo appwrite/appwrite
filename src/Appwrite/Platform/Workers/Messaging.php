@@ -459,6 +459,7 @@ class Messaging extends Action
         batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage) {
             return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage) {
                 $message->setAttribute('to', $batch);
+                $reportUsage = $message->getAttribute('reportUsage');
 
                 $data = $this->buildSmsMessage($message, $provider);
 
@@ -466,14 +467,16 @@ class Messaging extends Action
                     $adapter->send($data);
 
                     $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
-                    if (!empty($countryCode)) {
+                    if ($reportUsage && !empty($countryCode)) {
                         $queueForUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
+                    if ($reportUsage) {
+                        $queueForUsage
+                            ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                            ->setProject($project)
+                            ->trigger();
+                    }
                 } catch (\Throwable $th) {
                     throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }

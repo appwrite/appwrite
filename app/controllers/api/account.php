@@ -28,6 +28,8 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
@@ -2318,7 +2320,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
+    ->inject('plan')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2450,11 +2453,18 @@ App::post('/v1/account/tokens/phone')
                 ],
             ]);
 
+            $freeSmsLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject);
+            $freeSmsLimit->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+            $abuse = new Abuse($freeSmsLimit);
+            $reportUsage = ($plan['authPhone'] !== -1) && $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+
             $queueForMessaging
                 ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                 ->setMessage($messageDoc)
                 ->setRecipients([$phone])
-                ->setProviderType(MESSAGE_TYPE_SMS);
+                ->setProviderType(MESSAGE_TYPE_SMS)
+                ->setReportUsage($reportUsage);
         }
 
         // Set to unhashed secret for events and server responses

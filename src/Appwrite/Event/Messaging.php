@@ -14,6 +14,7 @@ class Messaging extends Event
     protected ?array $recipients = null;
     protected ?string $scheduledAt = null;
     protected ?string $providerType = null;
+    protected ?bool $reportUsage = true;
 
     public function __construct(protected Connection $connection)
     {
@@ -140,6 +141,29 @@ class Messaging extends Event
     }
 
     /**
+     * Sets whether to report usage for the messaging event.
+     *
+     * @param bool $reportUsage
+     * @return self
+     */
+    public function setReportUsage(bool $reportUsage): self
+    {
+        $this->reportUsage = $reportUsage;
+
+        return $this;
+    }
+
+    /**
+     * Returns whether to report usage for the messaging event.
+     *
+     * @return bool
+     */
+    public function getReportUsage(): bool
+    {
+        return $this->reportUsage;
+    }
+
+    /**
      * Sets Scheduled delivery time for the messaging event.
      *
      * @param string $scheduledAt
@@ -192,6 +216,7 @@ class Messaging extends Event
             'message' => $this->message,
             'recipients' => $this->recipients,
             'providerType' => $this->providerType,
+            'reportUsage' => $this->reportUsage,
         ]);
     }
 }
