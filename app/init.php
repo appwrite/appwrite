@@ -49,6 +49,7 @@ use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -124,7 +125,7 @@ const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
-const APP_VERSION_STABLE = '1.6.0';
+const APP_VERSION_STABLE = '1.6.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -232,6 +233,11 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
+const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
+const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
+const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
+const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
+
 
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
@@ -254,9 +260,15 @@ const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
+const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
@@ -854,31 +866,31 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
             'schemes' => ['redis'],
         ],
@@ -890,7 +902,7 @@ $register->set('pools', function () {
     $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
-        $workerCount = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
     }
@@ -950,12 +962,12 @@ $register->set('pools', function () {
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new Redis();
+                    $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
-                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -1215,12 +1227,12 @@ App::setResource('clients', function ($request, $console, $project) {
     return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
+App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Database $dbForPlatform */
     /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
@@ -1269,13 +1281,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $user = new Document([]);
         } else {
             if ($project->getId() === 'console') {
-                $user = $dbForConsole->getDocument('users', Auth::$unique);
+                $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
                 $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
     } else {
-        $user = $dbForConsole->getDocument('users', Auth::$unique);
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
     if (
@@ -1318,14 +1330,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     $dbForProject->setMetadata('user', $user->getId());
-    $dbForConsole->setMetadata('user', $user->getId());
+    $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
-App::setResource('project', function ($dbForConsole, $request, $console) {
+App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Database $dbForPlatform */
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
@@ -1334,10 +1346,10 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console']);
+}, ['dbForPlatform', 'request', 'console']);
 
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
@@ -1402,9 +1414,9 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
+        return $dbForPlatform;
     }
 
     try {
@@ -1427,14 +1439,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -1447,9 +1454,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     }
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -1467,12 +1474,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
+            return $dbForPlatform;
         }
 
         try {
@@ -1489,7 +1496,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
                 ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -1519,7 +1528,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
@@ -1535,6 +1544,27 @@ App::setResource('cache', function (Group $pools) {
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
+
+App::setResource('redis', function () {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
+    }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+});
+
+App::setResource('timelimit', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();
@@ -1860,7 +1890,7 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
         $teamInternalId = $project->getAttribute('teamInternalId', '');
@@ -1870,25 +1900,36 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
-            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
+            $p = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $pid));
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
-            $team = Authorization::skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+            $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
     }
 
-    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
-        return $dbForConsole->findOne('teams', [
+    $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
+        return $dbForPlatform->findOne('teams', [
             Query::equal('$internalId', [$teamInternalId]),
         ]);
     });
 
     return $team;
-}, ['project', 'dbForConsole', 'utopia', 'request']);
+}, ['project', 'dbForPlatform', 'utopia', 'request']);
 
 App::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+App::setResource('previewHostname', function (Request $request) {
+    if (App::isDevelopment()) {
+        $host = $request->getQuery('appwrite-hostname') ?? '';
+        if (!empty($host)) {
+            return $host;
+        }
+    }
+
+    return '';
+}, ['request']);

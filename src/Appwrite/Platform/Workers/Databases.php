@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -33,21 +34,21 @@ class Databases extends Action
         $this
             ->desc('Databases worker')
             ->inject('message')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
+            ->callback(fn (Message $message, Database $dbForPlatform, Database $dbForProject, Log $log) => $this->action($message, $dbForPlatform, $dbForProject, $log));
     }
 
     /**
      * @param Message $message
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
+    public function action(Message $message, Database $dbForPlatform, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -73,10 +74,10 @@ class Databases extends Action
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject),
+            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject),
+            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject),
+            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject),
             default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
@@ -86,7 +87,7 @@ class Databases extends Action
      * @param Document $collection
      * @param Document $attribute
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @return void
      * @throws Authorization
@@ -94,7 +95,7 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      */
-    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
+    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -133,7 +134,7 @@ class Databases extends Action
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
         $options = $attribute->getAttribute('options', []);
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
             switch ($type) {
@@ -210,7 +211,7 @@ class Databases extends Action
      * @param Document $collection
      * @param Document $attribute
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @return void
      * @throws Authorization
@@ -218,7 +219,7 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
+    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -238,7 +239,7 @@ class Databases extends Action
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
         $type = $attribute->getAttribute('type', '');
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
         $options = $attribute->getAttribute('options', []);
         $relatedAttribute = new Document();
         $relatedCollection = new Document();
@@ -251,23 +252,21 @@ class Databases extends Action
 
         try {
             try {
-                if ($status !== 'failed') {
-                    if ($type === Database::VAR_RELATIONSHIP) {
-                        if ($options['twoWay']) {
-                            $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                            if ($relatedCollection->isEmpty()) {
-                                throw new DatabaseException('Collection not found');
-                            }
-                            $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                if ($type === Database::VAR_RELATIONSHIP) {
+                    if ($options['twoWay']) {
+                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                        if ($relatedCollection->isEmpty()) {
+                            throw new DatabaseException('Collection not found');
                         }
-
-                        if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                            $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
-                            throw new DatabaseException('Failed to delete Relationship');
-                        }
-                    } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        throw new DatabaseException('Failed to delete Attribute');
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                     }
+
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        throw new DatabaseException('Failed to delete Relationship');
+                    }
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    throw new DatabaseException('Failed to delete Attribute');
                 }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -275,6 +274,18 @@ class Databases extends Action
                 if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
+
+            } catch (NotFound $e) {
+                Console::error($e->getMessage());
+
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
+
+                if (!$relatedAttribute->isEmpty()) {
+                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+                }
+
+                throw $e;
+
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
@@ -345,7 +356,7 @@ class Databases extends Action
                         }
 
                         if ($exists) { // Delete the duplicate if created, else update in db
-                            $this->deleteIndex($database, $collection, $index, $project, $dbForConsole, $dbForProject);
+                            $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject);
                         } else {
                             $dbForProject->updateDocument('indexes', $index->getId(), $index);
                         }
@@ -354,11 +365,9 @@ class Databases extends Action
             }
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
             if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
             }
         }
     }
@@ -368,7 +377,7 @@ class Databases extends Action
      * @param Document $collection
      * @param Document $index
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @return void
      * @throws Authorization
@@ -377,7 +386,7 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws \Throwable
      */
-    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
+    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -399,7 +408,7 @@ class Databases extends Action
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
         $orders = $index->getAttribute('orders', []);
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
             if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
@@ -429,7 +438,7 @@ class Databases extends Action
      * @param Document $collection
      * @param Document $index
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @return void
      * @throws Authorization
@@ -438,7 +447,7 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws \Throwable
      */
-    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
+    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -456,7 +465,7 @@ class Databases extends Action
         ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
             if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {

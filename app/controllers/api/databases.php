@@ -19,7 +19,6 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -152,7 +151,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
-        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     } catch (\Throwable $e) {
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
@@ -196,7 +195,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (\Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
@@ -290,15 +289,9 @@ function updateAttribute(
         $attribute->setAttribute('size', $size);
     }
 
-    $formatOptions = $attribute->getAttribute('formatOptions');
-
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
-
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
@@ -385,30 +378,42 @@ function updateAttribute(
                 size: $size,
                 required: $required,
                 default: $default,
-                formatOptions: $options ?? null,
+                formatOptions: $options,
                 newKey: $newKey ?? null
             );
         } catch (TruncateException) {
             throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         }
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        // Delete attribute and recreate since we can't modify IDs
-        $original = clone $attribute;
-
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
+        $originalUid = $attribute->getId();
 
         $attribute
             ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        try {
-            $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (DatabaseException|PDOException) {
-            $attribute = $dbForProject->createDocument('attributes', $original);
+        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+
+        /**
+         * @var Document $index
+         */
+        foreach ($collection->getAttribute('indexes') as $index) {
+            /**
+             * @var string[] $attributes
+             */
+            $attributes = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                $attributes[$found] = $newKey;
+                $index->setAttribute('attributes', $attributes);
+                $dbForProject->updateDocument('indexes', $index->getId(), $index);
+            }
         }
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -2572,7 +2577,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeSize = $oldAttributes[$attributeIndex]['size'];
             $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
@@ -2585,10 +2589,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             }
 
             $lengths[$i] = null;
-
-            if ($attributeType === Database::VAR_STRING) {
-                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
-            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
@@ -2612,7 +2612,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $dbForProject->getAdapter()->getMaxIndexLength()
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
         if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
@@ -2928,7 +2929,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $operations = 0;
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -3020,6 +3025,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
@@ -3055,6 +3061,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $response->addHeader('X-Debug-Operations', $operations);
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($document, Response::MODEL_DOCUMENT);
@@ -3074,10 +3087,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
-
-
-        $queueForUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3100,7 +3109,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3136,7 +3146,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-
             $documentId = $cursor->getValue();
 
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
@@ -3151,11 +3160,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
         $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
             }
+
+            $operations++;
 
             $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
@@ -3170,8 +3183,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
+
                 if (!\is_array($related)) {
                     $relations = [$related];
                 } else {
@@ -3179,6 +3197,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                // todo: Use local cache for this getDocument
                 $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
@@ -3202,6 +3221,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         foreach ($documents as $document) {
             $processDocument($collection, $document);
         }
+
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
+        ;
+
+        $response->addHeader('X-Debug-Operations', $operations);
 
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
@@ -3258,9 +3284,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -3287,11 +3313,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             if ($document->isEmpty()) {
                 return;
             }
+
+            $operations++;
 
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
@@ -3305,8 +3335,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
+
                 if (!\is_array($related)) {
                     $related = [$related];
                 }
@@ -3325,6 +3360,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         };
 
         $processDocument($collection, $document);
+
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
+        ;
+
+        $response->addHeader('X-Debug-Operations', $operations);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3421,6 +3463,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), false) ? \strtolower($geoRecord['countryCode']) : '--';
             $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), $locale->getText('locale.country.unknown'));
         }
+
         $response->dynamic(new Document([
             'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
@@ -3458,7 +3501,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Usage $queueForUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3525,7 +3569,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $operations = 0;
+
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+
+            $operations++;
+
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3592,6 +3641,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         });
 
         $setCollection($collection, $newDocument);
+
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+        ;
+
+        $response->addHeader('X-Debug-Operations', $operations);
 
         try {
             $document = $dbForProject->withRequestTimestamp(
@@ -3764,6 +3820,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
+        $queueForUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $response->addHeader('X-Debug-Operations', 1);
+
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
@@ -3779,9 +3842,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
-
-        $queueForUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
     });

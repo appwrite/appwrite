@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -74,13 +75,14 @@ App::post('/v1/storage/buckets')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
         $compression ??= Compression::NONE;
+        $encryption ??= true;
         try {
             $files = (Config::getParam('collections', [])['buckets'] ?? [])['files'] ?? [];
             if (empty($files)) {
@@ -260,7 +262,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -885,7 +887,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('queueForUsage')
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, Usage $queueForUsage) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1012,6 +1015,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $data = $image->output($output, $quality);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
+
+        $queueForUsage
+            ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
+            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
+        ;
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days

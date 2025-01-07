@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -29,6 +29,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
@@ -92,7 +93,9 @@ if (!function_exists('getProjectDB')) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -135,10 +138,43 @@ if (!function_exists('getCache')) {
     }
 }
 
+// Allows overriding
+if (!function_exists('getRedis')) {
+    function getRedis(): \Redis
+    {
+        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+        $port = System::getEnv('_APP_REDIS_PORT', 6379);
+        $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+        $redis = new \Redis();
+        @$redis->pconnect($host, (int)$port);
+        if ($pass) {
+            $redis->auth($pass);
+        }
+        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+        return $redis;
+    }
+}
+
+if (!function_exists('getTimelimit')) {
+    function getTimelimit(): TimeLimitRedis
+    {
+        return new TimeLimitRedis("", 0, 1, getRedis());
+    }
+}
+
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
         return new Realtime();
+    }
+}
+
+if (!function_exists('getTelemetry')) {
+    function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
+    {
+        return new NoTelemetry();
     }
 }
 
@@ -157,7 +193,7 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
-$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
 $adapter
@@ -174,7 +210,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
         $log = new Log();
         $log->setNamespace("realtime");
-        $log->setServer(gethostname());
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
@@ -273,6 +309,12 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started successfully');
+
+    $telemetry = getTelemetry($workerId);
+    $register->set('telemetry', fn () => $telemetry);
+    $register->set('telemetry.connectionCounter', fn () => $telemetry->createUpDownCounter('realtime.server.open_connections'));
+    $register->set('telemetry.connectionCreatedCounter', fn () => $telemetry->createCounter('realtime.server.connection.created'));
+    $register->set('telemetry.messageSentCounter', fn () => $telemetry->createCounter('realtime.server.message.sent'));
 
     $attempts = 0;
     $start = time();
@@ -416,6 +458,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 );
 
                 if (($num = count($receivers)) > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($num);
                     $stats->incr($event['project'], 'messages', $num);
                 }
             });
@@ -464,7 +507,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $dbForProject = getProjectDB($project);
+        $timelimit = $app->getResource('timelimit');
         $console = $app->getResource('console'); /** @var Document $console */
         $user = $app->getResource('user'); /** @var Document $user */
 
@@ -473,12 +516,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
-        $timeLimit
+        $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
+        $timelimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($timelimit);
 
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
@@ -518,6 +561,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 'user' => $user
             ]
         ]));
+
+        $register->get('telemetry.connectionCounter')->add(1);
+        $register->get('telemetry.connectionCreatedCounter')->add(1);
 
         $stats->set($project->getId(), [
             'projectId' => $project->getId(),
@@ -573,7 +619,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
 
         $timeLimit
             ->setParam('{connection}', $connection)
@@ -592,9 +638,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
-             * This type is used to authenticate.
-             */
+            case 'ping':
+                $server->send([$connection], json_encode([
+                    'type' => 'pong'
+                ]));
+
+                break;
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
@@ -652,9 +701,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+        $register->get('telemetry.connectionCounter')->add(-1);
     }
     $realtime->unsubscribe($connection);
 
