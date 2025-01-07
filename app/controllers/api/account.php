@@ -2462,24 +2462,25 @@ App::post('/v1/account/tokens/phone')
                 ->setRecipients([$phone])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            $freeSMSLimit = $plan['authPhone'] ?? 0;
-            $timeLimit = new TimeLimit('organization:{organizationId}', $freeSMSLimit, 30 * 24 * 60 * 60, $dbForProject);
-            $timeLimit->setParam('{organizationId}', $project->getAttribute('teamId'));
-            $abuse = new Abuse($timeLimit);
-            $reportUsage = ($plan['authPhone'] !== -1) && $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+            if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+                $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
+                $timeLimit
+                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
 
-            $helper = PhoneNumberUtil::getInstance();
-            $countryCode = $helper->parse($phone)->getCountryCode();
+                $abuse = new Abuse($timeLimit);
+                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                    $helper = PhoneNumberUtil::getInstance();
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-            if ($reportUsage) {
-                if (!empty($countryCode)) {
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
                     $queueForUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
                 }
-                $queueForUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
             }
         }
 
@@ -3495,7 +3496,8 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->inject('queueForUsage')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, Usage $queueForUsage) {
+    ->inject('plan')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, Usage $queueForUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3579,17 +3581,26 @@ App::post('/v1/account/verification/phone')
                 ->setRecipients([$user->getAttribute('phone')])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            $helper = PhoneNumberUtil::getInstance();
-            $countryCode = $helper->parse($phone)->getCountryCode();
+            if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+                $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
+                $timeLimit
+                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
 
-            if (!empty($countryCode)) {
-                $queueForUsage
-                    ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                $abuse = new Abuse($timeLimit);
+                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                    $helper = PhoneNumberUtil::getInstance();
+                    $countryCode = $helper->parse($phone)->getCountryCode();
+
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
             }
-            $queueForUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
         }
 
         // Set to unhashed secret for events and server responses
@@ -4069,7 +4080,8 @@ App::post('/v1/account/mfa/challenge')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
     ->inject('queueForUsage')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Usage $queueForUsage) {
+    ->inject('plan')
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Usage $queueForUsage, array $plan) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -4128,17 +4140,27 @@ App::post('/v1/account/mfa/challenge')
                     ->setRecipients([$user->getAttribute('phone')])
                     ->setProviderType(MESSAGE_TYPE_SMS);
 
-                $helper = PhoneNumberUtil::getInstance();
-                $countryCode = $helper->parse($user->getAttribute('phone'))->getCountryCode();
+                $phone = $user->getAttribute('phone');
+                if (isset($plan['authPhone']) && $plan['authPhone'] !== -1) {
+                    $timeLimit = new TimeLimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60, $dbForProject); // 30 days
+                    $timeLimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
 
-                if (!empty($countryCode)) {
-                    $queueForUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    $abuse = new Abuse($timeLimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                        $queueForUsage
+                            ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                            ->setProject($project)
+                            ->trigger();
+                    }
                 }
-                $queueForUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
 
                 break;
             case Type::EMAIL:

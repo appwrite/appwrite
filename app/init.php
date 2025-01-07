@@ -1761,5 +1761,5 @@ App::setResource('requestTimestamp', function ($request) {
     return $requestTimestamp;
 }, ['request']);
 App::setResource('plan', function (array $plan = []) {
-    return array_merge(['authPhone' => -1], $plan); // unlimited free phone auth
+    return [];
 });

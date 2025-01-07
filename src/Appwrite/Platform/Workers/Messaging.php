@@ -96,7 +96,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $queueForUsage, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
