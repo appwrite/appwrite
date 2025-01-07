@@ -27,7 +27,7 @@ class Messaging extends Event
     /**
      * Sets type for the build event.
      *
-     * @param string $type Can be `MESSAGE_TYPE_INTERNAL` or `MESSAGE_TYPE_EXTERNAL`.
+     * @param string $type Can be `MESSAGE_SEND_TYPE_INTERNAL` or `MESSAGE_SEND_TYPE_EXTERNAL`.
      * @return self
      */
     public function setType(string $type): self
