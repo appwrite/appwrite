@@ -30,6 +30,8 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
@@ -2321,7 +2323,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->inject('queueForUsage')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, Usage $queueForUsage) {
+    ->inject('plan')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, Usage $queueForUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2459,17 +2462,25 @@ App::post('/v1/account/tokens/phone')
                 ->setRecipients([$phone])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
+            $freeSMSLimit = $plan['authPhone'] ?? 0;
+            $timeLimit = new TimeLimit('organization:{organizationId}', $freeSMSLimit, 30 * 24 * 60 * 60, $dbForProject);
+            $timeLimit->setParam('{organizationId}', $project->getAttribute('teamId'));
+            $abuse = new Abuse($timeLimit);
+            $reportUsage = ($plan['authPhone'] !== -1) && $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+
             $helper = PhoneNumberUtil::getInstance();
             $countryCode = $helper->parse($phone)->getCountryCode();
 
-            if (!empty($countryCode)) {
+            if ($reportUsage) {
+                if (!empty($countryCode)) {
+                    $queueForUsage
+                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                }
                 $queueForUsage
-                    ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
             }
-            $queueForUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
         }
 
         // Set to unhashed secret for events and server responses
