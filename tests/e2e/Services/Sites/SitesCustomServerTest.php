@@ -365,7 +365,7 @@ class SitesCustomServerTest extends Scope
     //     $this->assertEquals(200, $site['headers']['status-code']);
     //     var_dump($deployment);
 
-    //     // $this->cleanupSite($siteId);
+    //     $this->cleanupSite($siteId);
     // }
 
     public function testCreateDeployment()
