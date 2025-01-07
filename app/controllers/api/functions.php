@@ -550,7 +550,9 @@ App::get('/v1/functions/specifications')
             }
 
             // Only add specs that are within the limits set by environment variables
-            if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+            if (
+                ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) || System::getEnv('_APP_FUNCTIONS_CPUS', 1) === 0) &&
+                ($spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) || System::getEnv('_APP_FUNCTIONS_MEMORY', 512) === 0) {
                 $runtimeSpecs[] = $spec;
             }
         }
