@@ -835,7 +835,7 @@ App::error()
 
                     $adapter = new Sentry($projectId, $key, $host);
                     $logger = new Logger($adapter);
-                    $logger->setSample(0.04);
+                    $logger->setSample(0.01);
                     $publish = true;
                 } else {
                     throw new \Exception('Invalid experimental logging provider');
