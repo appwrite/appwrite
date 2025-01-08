@@ -701,7 +701,7 @@ App::post('/v1/teams/:teamId/memberships')
                 if (isset($plan['authPhone'])) {
                     $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
                     $timelimit
-                        ->setParam('{organizationId}', $project->getAttribute('organizationId'));
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
 
                     $abuse = new Abuse($timelimit);
                     if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
