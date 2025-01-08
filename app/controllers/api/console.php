@@ -71,7 +71,7 @@ App::post('/v1/console/assistant')
     ->param('prompt', '', new Text(2000), 'Prompt. A string containing questions asked to the AI assistant.')
     ->inject('response')
     ->action(function (string $prompt, Response $response) {
-        $ch = curl_init('http://appwrite-assistant:3003/');
+        $ch = curl_init('http://appwrite-assistant:3003/v1/models/assistant/prompt');
         $responseHeaders = [];
         $query = json_encode(['prompt' => $prompt]);
         $headers = ['accept: text/event-stream'];

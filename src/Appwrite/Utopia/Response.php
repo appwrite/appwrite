@@ -625,6 +625,11 @@ class Response extends SwooleResponse
                 }
             }
 
+            if (!$data->isSet($key) && !$rule['required']) { // set output key null if data key is not set and required is false
+                $output[$key] = null;
+                continue;
+            }
+
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);

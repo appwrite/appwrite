@@ -47,6 +47,7 @@ App::get('/v1/project/usage')
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE,
+                METRIC_DATABASES_STORAGE,
                 METRIC_DEPLOYMENTS_STORAGE,
                 METRIC_BUILDS_STORAGE
             ],
@@ -56,6 +57,7 @@ App::get('/v1/project/usage')
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS,
+                METRIC_DATABASES_STORAGE,
                 METRIC_EXECUTIONS_MB_SECONDS,
                 METRIC_BUILDS_MB_SECONDS
             ]
@@ -182,6 +184,23 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
+            $id = $database->getId();
+            $name = $database->getAttribute('name');
+            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('databases'));
+
         $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
@@ -269,6 +288,7 @@ App::get('/v1/project/usage')
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
+            'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
@@ -279,6 +299,7 @@ App::get('/v1/project/usage')
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
+            'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'functionsStorageBreakdown' => $functionsStorageBreakdown,
@@ -304,8 +325,8 @@ App::post('/v1/project/variables')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variableId = ID::unique();
 
         $variable = new Document([
@@ -408,8 +429,8 @@ App::put('/v1/project/variables/:variableId')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variable = $dbForProject->getDocument('variables', $variableId);
         if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);

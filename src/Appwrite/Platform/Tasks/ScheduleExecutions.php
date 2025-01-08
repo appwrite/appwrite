@@ -22,7 +22,12 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    public static function getCollectionId(): string
+    {
+        return 'executions';
+    }
+
+    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
         $queue = $pools->get('queue')->pop();
         $connection = $queue->getResource();
@@ -31,7 +36,7 @@ class ScheduleExecutions extends ScheduleBase
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
-                $dbForConsole->deleteDocument(
+                $dbForPlatform->deleteDocument(
                     'schedules',
                     $schedule['$id'],
                 );
@@ -45,12 +50,14 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
-            $data = $dbForConsole->getDocument(
+            $data = $dbForPlatform->getDocument(
                 'schedules',
                 $schedule['$id'],
             )->getAttribute('data', []);
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+
+            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);
@@ -69,7 +76,7 @@ class ScheduleExecutions extends ScheduleBase
                     ->trigger();
             });
 
-            $dbForConsole->deleteDocument(
+            $dbForPlatform->deleteDocument(
                 'schedules',
                 $schedule['$id'],
             );

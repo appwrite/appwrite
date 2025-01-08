@@ -32,6 +32,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
@@ -55,6 +56,7 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createMailgunProvider')
@@ -142,6 +144,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createSendgridProvider')
@@ -217,6 +220,7 @@ App::post('/v1/messaging/providers/smtp')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createSmtpProvider')
@@ -304,6 +308,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('event', 'providers.[providerId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -381,6 +386,7 @@ App::post('/v1/messaging/providers/telesign')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createTelesignProvider')
@@ -458,6 +464,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createTextmagicProvider')
@@ -535,6 +542,7 @@ App::post('/v1/messaging/providers/twilio')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createTwilioProvider')
@@ -612,6 +620,7 @@ App::post('/v1/messaging/providers/vonage')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createVonageProvider')
@@ -689,6 +698,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createFcmProvider')
@@ -752,6 +762,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createApnsProvider')
@@ -835,6 +846,7 @@ App::get('/v1/messaging/providers')
     ->desc('List providers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listProviders')
@@ -866,6 +878,11 @@ App::get('/v1/messaging/providers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $providerId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
@@ -886,6 +903,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->desc('List provider logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listProviderLogs')
@@ -974,6 +992,7 @@ App::get('/v1/messaging/providers/:providerId')
     ->desc('Get provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getProvider')
@@ -1001,6 +1020,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateMailgunProvider')
@@ -1107,6 +1127,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateSendgridProvider')
@@ -1198,6 +1219,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateSmtpProvider')
@@ -1320,6 +1342,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateMsg91Provider')
@@ -1400,6 +1423,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateTelesignProvider')
@@ -1482,6 +1506,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateTextmagicProvider')
@@ -1564,6 +1589,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateTwilioProvider')
@@ -1646,6 +1672,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateVonageProvider')
@@ -1728,6 +1755,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateFcmProvider')
@@ -1797,6 +1825,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateApnsProvider')
@@ -1892,6 +1921,7 @@ App::delete('/v1/messaging/providers/:providerId')
     ->label('audits.resource', 'provider/{request.$providerId}')
     ->label('event', 'providers.[providerId].delete')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'deleteProvider')
@@ -1927,6 +1957,7 @@ App::post('/v1/messaging/topics')
     ->label('audits.resource', 'topic/{response.$id}')
     ->label('event', 'topics.[topicId].create')
     ->label('scope', 'topics.write')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createTopic')
@@ -1967,6 +1998,7 @@ App::get('/v1/messaging/topics')
     ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTopics')
@@ -1998,6 +2030,11 @@ App::get('/v1/messaging/topics')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $topicId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
@@ -2018,6 +2055,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->desc('List topic logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTopicLogs')
@@ -2107,6 +2145,7 @@ App::get('/v1/messaging/topics/:topicId')
     ->desc('Get topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getTopic')
@@ -2135,6 +2174,7 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('audits.resource', 'topic/{response.$id}')
     ->label('event', 'topics.[topicId].update')
     ->label('scope', 'topics.write')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateTopic')
@@ -2179,6 +2219,7 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('audits.resource', 'topic/{request.$topicId}')
     ->label('event', 'topics.[topicId].delete')
     ->label('scope', 'topics.write')
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'deleteTopic')
@@ -2219,6 +2260,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->label('audits.resource', 'subscriber/{response.$id}')
     ->label('event', 'topics.[topicId].subscribers.[subscriberId].create')
     ->label('scope', 'subscribers.write')
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createSubscriber')
@@ -2312,6 +2354,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listSubscribers')
@@ -2352,6 +2395,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $subscriberId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
@@ -2386,6 +2434,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->desc('List subscriber logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listSubscriberLogs')
@@ -2475,6 +2524,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Get subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getSubscriber')
@@ -2517,6 +2567,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
     ->label('event', 'topics.[topicId].subscribers.[subscriberId].delete')
     ->label('scope', 'subscribers.write')
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'deleteSubscriber')
@@ -2576,6 +2627,7 @@ App::post('/v1/messaging/messages/email')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createEmail')
@@ -2597,11 +2649,11 @@ App::post('/v1/messaging/messages/email')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2690,7 +2742,7 @@ App::post('/v1/messaging/messages/email')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -2728,6 +2780,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createSms')
@@ -2744,11 +2797,11 @@ App::post('/v1/messaging/messages/sms')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2806,7 +2859,7 @@ App::post('/v1/messaging/messages/sms')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -2844,6 +2897,7 @@ App::post('/v1/messaging/messages/push')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createPush')
@@ -2869,11 +2923,11 @@ App::post('/v1/messaging/messages/push')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2982,7 +3036,7 @@ App::post('/v1/messaging/messages/push')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -3017,6 +3071,7 @@ App::get('/v1/messaging/messages')
     ->desc('List messages')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listMessages')
@@ -3048,6 +3103,11 @@ App::get('/v1/messaging/messages')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $messageId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
@@ -3068,6 +3128,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->desc('List message logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listMessageLogs')
@@ -3157,6 +3218,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ->desc('List message targets')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTargets')
@@ -3202,6 +3264,11 @@ App::get('/v1/messaging/messages/:messageId/targets')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
@@ -3222,6 +3289,7 @@ App::get('/v1/messaging/messages/:messageId')
     ->desc('Get message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getMessage')
@@ -3249,6 +3317,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateEmail')
@@ -3270,11 +3339,11 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('attachments', null, new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3326,7 +3395,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3341,7 +3410,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3356,7 +3425,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3449,6 +3518,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateSms')
@@ -3465,11 +3535,11 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3521,7 +3591,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3536,7 +3606,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3551,7 +3621,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3604,6 +3674,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updatePush')
@@ -3629,11 +3700,11 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3685,7 +3756,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3700,7 +3771,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3715,7 +3786,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3842,6 +3913,7 @@ App::delete('/v1/messaging/messages/:messageId')
     ->label('audits.resource', 'message/{request.messageId}')
     ->label('event', 'messages.[messageId].delete')
     ->label('scope', 'messages.write')
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'delete')
@@ -3851,10 +3923,10 @@ App::delete('/v1/messaging/messages/:messageId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForEvents')
     ->inject('response')
-    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Response $response) {
+    ->action(function (string $messageId, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3877,7 +3949,7 @@ App::delete('/v1/messaging/messages/:messageId')
 
                 if (!empty($scheduleId)) {
                     try {
-                        $dbForConsole->deleteDocument('schedules', $scheduleId);
+                        $dbForPlatform->deleteDocument('schedules', $scheduleId);
                     } catch (Exception) {
                         // Ignore
                     }

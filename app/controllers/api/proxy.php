@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -42,9 +43,9 @@ App::post('/v1/proxy/rules')
     ->inject('project')
     ->inject('queueForCertificates')
     ->inject('queueForEvents')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('dbForProject')
-    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject) {
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
@@ -59,11 +60,17 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $document = $dbForPlatform->getDocument('rules', md5($domain));
+        } else {
+            $document = $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        }
 
-        if ($document && !$document->isEmpty()) {
+
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -102,7 +109,9 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -136,7 +145,7 @@ App::post('/v1/proxy/rules')
         }
 
         $rule->setAttribute('status', $status);
-        $rule = $dbForConsole->createDocument('rules', $rule);
+        $rule = $dbForPlatform->createDocument('rules', $rule);
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
@@ -162,8 +171,8 @@ App::get('/v1/proxy/rules')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForPlatform) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -185,8 +194,14 @@ App::get('/v1/proxy/rules')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $ruleId = $cursor->getValue();
-            $cursorDocument = $dbForConsole->getDocument('rules', $ruleId);
+            $cursorDocument = $dbForPlatform->getDocument('rules', $ruleId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rule '{$ruleId}' for the 'cursor' value not found.");
@@ -197,16 +212,16 @@ App::get('/v1/proxy/rules')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $rules = $dbForConsole->find('rules', $queries);
+        $rules = $dbForPlatform->find('rules', $queries);
         foreach ($rules as $rule) {
-            $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+            $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
             $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 
         $response->dynamic(new Document([
             'rules' => $rules,
-            'total' => $dbForConsole->count('rules', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
 
@@ -224,15 +239,15 @@ App::get('/v1/proxy/rules/:ruleId')
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole) {
-        $rule = $dbForConsole->getDocument('rules', $ruleId);
+    ->inject('dbForPlatform')
+    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForPlatform) {
+        $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
@@ -255,17 +270,17 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole, Delete $queueForDeletes, Event $queueForEvents) {
-        $rule = $dbForConsole->getDocument('rules', $ruleId);
+    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForPlatform, Delete $queueForDeletes, Event $queueForEvents) {
+        $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $dbForConsole->deleteDocument('rules', $rule->getId());
+        $dbForPlatform->deleteDocument('rules', $rule->getId());
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -294,10 +309,10 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->inject('queueForCertificates')
     ->inject('queueForEvents')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('log')
-    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForConsole, Log $log) {
-        $rule = $dbForConsole->getDocument('rules', $ruleId);
+    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForPlatform, Log $log) {
+        $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
@@ -327,7 +342,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 
-        $dbForConsole->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
+        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
 
         // Issue a TLS certificate when domain is verified
         $queueForCertificates
@@ -338,7 +353,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
-        $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);

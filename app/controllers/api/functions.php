@@ -11,7 +11,6 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
-use Appwrite\Functions\Validator\Payload;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
@@ -24,6 +23,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -38,6 +38,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
@@ -138,6 +139,7 @@ App::post('/v1/functions')
     ->desc('Create function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'function.create')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -177,14 +179,44 @@ App::post('/v1/functions')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('timelimit')
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        // Temporary abuse check
+        $abuseCheck = function () use ($project, $timelimit, $response) {
+            $abuseKey = "projectId:{projectId},url:{url}";
+            $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
+            $abuseTime = 86400; // 1 day
+
+            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{url}', '/v1/functions');
+
+            $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = $timeLimit->time() + $abuseTime;
+
+            $response
+                ->addHeader('X-RateLimit-Limit', $limit)
+                ->addHeader('X-RateLimit-Remaining', $remaining)
+                ->addHeader('X-RateLimit-Reset', $time);
+
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            if ($enabled && $abuse->check()) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        };
+
+        $abuseCheck();
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
@@ -206,7 +238,7 @@ App::post('/v1/functions')
                 ->setAttribute('version', $templateVersion);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -248,7 +280,7 @@ App::post('/v1/functions')
         ]));
 
         $schedule = Authorization::skip(
-            fn () => $dbForConsole->createDocument('schedules', new Document([
+            fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
@@ -267,7 +299,7 @@ App::post('/v1/functions')
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('repositories', new Document([
+            $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),
@@ -325,12 +357,13 @@ App::post('/v1/functions')
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
+            // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+            $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
             $rule = Authorization::skip(
-                fn () => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForPlatform->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
@@ -400,6 +433,7 @@ App::get('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('List functions')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'list')
@@ -432,6 +466,12 @@ App::get('/v1/functions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $functionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('functions', $functionId);
 
@@ -454,6 +494,7 @@ App::get('/v1/functions/runtimes')
     ->groups(['api', 'functions'])
     ->desc('List runtimes')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listRuntimes')
@@ -487,6 +528,7 @@ App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
     ->desc('List available function runtime specifications')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listSpecifications')
@@ -523,6 +565,7 @@ App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get function')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'get')
@@ -547,6 +590,7 @@ App::get('/v1/functions/:functionId/usage')
     ->desc('Get function usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getFunctionUsage')
@@ -651,6 +695,7 @@ App::get('/v1/functions/usage')
     ->desc('Get functions usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
@@ -750,6 +795,7 @@ App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update function')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].update')
     ->label('audits.event', 'function.update')
     ->label('audits.resource', 'function/{response.$id}')
@@ -789,9 +835,9 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -799,7 +845,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -830,7 +876,7 @@ App::put('/v1/functions/:functionId')
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
-            $repositories = $dbForConsole->find('repositories', [
+            $repositories = $dbForPlatform->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
@@ -838,7 +884,7 @@ App::put('/v1/functions/:functionId')
             ]);
 
             foreach ($repositories as $repository) {
-                $dbForConsole->deleteDocument('repositories', $repository->getId());
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
             }
 
             $providerRepositoryId = '';
@@ -854,7 +900,7 @@ App::put('/v1/functions/:functionId')
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('repositories', new Document([
+            $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),
@@ -936,12 +982,12 @@ App::put('/v1/functions/:functionId')
         }
 
         // Inform scheduler if function is still active
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());
 
@@ -952,6 +998,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeploymentDownload')
@@ -988,7 +1035,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
@@ -1037,6 +1084,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1052,8 +1100,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1081,12 +1129,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         ])));
 
         // Inform scheduler if function is still active
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1099,6 +1147,7 @@ App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete function')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1113,8 +1162,8 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1127,11 +1176,11 @@ App::delete('/v1/functions/:functionId')
         }
 
         // Inform scheduler to no longer run function
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false);
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -1146,6 +1195,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('audits.event', 'deployment.create')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1365,6 +1415,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List deployments')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listDeployments')
@@ -1408,6 +1459,12 @@ App::get('/v1/functions/:functionId/deployments')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $deploymentId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -1442,6 +1499,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get deployment')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeployment')
@@ -1485,6 +1543,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1550,6 +1609,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
     ->desc('Rebuild deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1618,6 +1678,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
     ->desc('Cancel deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1707,7 +1768,9 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create execution')
     ->label('scope', 'execution.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].create')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -1717,23 +1780,23 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->label('sdk.request.type', Response::CONTENT_TYPE_JSON)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Payload(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
     ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-    ->param('scheduledAt', null, new DatetimeValidator(true, DateTimeValidator::PRECISION_MINUTES, 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('response')
     ->inject('request')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1924,7 +1987,7 @@ App::post('/v1/functions/:functionId/executions')
                     'userId' => $user->getId()
                 ];
 
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
@@ -2109,6 +2172,7 @@ App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List executions')
     ->label('scope', 'execution.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
@@ -2154,6 +2218,12 @@ App::get('/v1/functions/:functionId/executions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $executionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('executions', $executionId);
 
@@ -2190,6 +2260,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get execution')
     ->label('scope', 'execution.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
@@ -2237,6 +2308,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Delete execution')
     ->label('scope', 'execution.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].delete')
     ->label('audits.event', 'executions.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -2250,9 +2322,9 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents) {
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2278,18 +2350,18 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         }
 
         if ($status === 'scheduled') {
-            $schedule = $dbForConsole->findOne('schedules', [
+            $schedule = $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]);
 
-            if ($schedule && !$schedule->isEmpty()) {
+            if (!$schedule->isEmpty()) {
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 
@@ -2307,6 +2379,7 @@ App::post('/v1/functions/:functionId/variables')
     ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.create')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2321,8 +2394,8 @@ App::post('/v1/functions/:functionId/variables')
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2355,12 +2428,12 @@ App::post('/v1/functions/:functionId/variables')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2371,6 +2444,7 @@ App::get('/v1/functions/:functionId/variables')
     ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listVariables')
@@ -2398,6 +2472,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getVariable')
@@ -2437,6 +2512,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2452,8 +2528,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -2484,12 +2560,12 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -2498,6 +2574,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.delete')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2510,8 +2587,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2532,12 +2609,12 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->noContent();
     });
@@ -2546,6 +2623,7 @@ App::get('/v1/functions/templates')
     ->groups(['api'])
     ->desc('List function templates')
     ->label('scope', 'public')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTemplates')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -2583,6 +2661,7 @@ App::get('/v1/functions/templates')
 App::get('/v1/functions/templates/:templateId')
     ->desc('Get function template')
     ->label('scope', 'public')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getTemplate')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -2595,9 +2674,11 @@ App::get('/v1/functions/templates/:templateId')
     ->action(function (string $templateId, Response $response) {
         $templates = Config::getParam('function-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+        $filtered = \array_filter($templates, function ($template) use ($templateId) {
             return $template['id'] === $templateId;
-        }));
+        });
+
+        $template = array_shift($filtered);
 
         if (empty($template)) {
             throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);
