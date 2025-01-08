@@ -98,7 +98,7 @@ $ appwrite users list
 
 To create a document you can use the following command 
 ```sh
-$ appwrite databases create-document --database-id=<DATABASE_ID> --collection-id=<COLLECTION_ID> --document-id="unique()" --data '{"name": "Walter O Brein"} --permissions 'read("any")' 'read("team:abc")'
+$ appwrite databases create-document --database-id=<DATABASE_ID> --collection-id=<COLLECTION_ID> --document-id="unique()" --data '{"name": "Walter O Brein"}' --permissions 'read("any")' 'read("team:abc")'
 ```
 
 ### Some Gotchas
