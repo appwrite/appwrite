@@ -4149,12 +4149,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "b1d35f023b3ccf0d171fad88cc833cdace0e1e67"
+                "reference": "3b1913e7e9cb01acac26215abb37eb767c0112ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/b1d35f023b3ccf0d171fad88cc833cdace0e1e67",
-                "reference": "b1d35f023b3ccf0d171fad88cc833cdace0e1e67",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/3b1913e7e9cb01acac26215abb37eb767c0112ee",
+                "reference": "3b1913e7e9cb01acac26215abb37eb767c0112ee",
                 "shasum": ""
             },
             "require": {
@@ -4192,7 +4192,7 @@
                 "issues": "https://github.com/utopia-php/pools/issues",
                 "source": "https://github.com/utopia-php/pools/tree/feat-connection-health"
             },
-            "time": "2025-01-08T03:56:11+00:00"
+            "time": "2025-01-08T07:40:13+00:00"
         },
         {
             "name": "utopia-php/preloader",
