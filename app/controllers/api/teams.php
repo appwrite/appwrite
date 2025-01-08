@@ -712,11 +712,11 @@ App::post('/v1/teams/:teamId/memberships')
                             $queueForUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
-                        $queueForUsage
-                            ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                            ->setProject($project)
-                            ->trigger();
                     }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
                 }
             }
         }

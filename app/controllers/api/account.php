@@ -2473,11 +2473,11 @@ App::post('/v1/account/tokens/phone')
                         $queueForUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
                 }
+                $queueForUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
             }
         }
 
@@ -3593,11 +3593,11 @@ App::post('/v1/account/verification/phone')
                         $queueForUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
                 }
+                $queueForUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
             }
         }
 
@@ -4154,11 +4154,11 @@ App::post('/v1/account/mfa/challenge')
                             $queueForUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
-                        $queueForUsage
-                            ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                            ->setProject($project)
-                            ->trigger();
                     }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
                 }
                 break;
             case Type::EMAIL:
