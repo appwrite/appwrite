@@ -3,7 +3,7 @@
 /**
  * App init
  *
- * Initializes both common configs across HTTP, CLI and Workers
+ * Initializes common configs across HTTP, CLI and Workers
  *
  */
 
@@ -64,6 +64,19 @@ use Utopia\Validator\WhiteList;
 \ini_set('display_startup_errors', 1);
 \ini_set('default_socket_timeout', -1);
 \error_reporting(E_ALL);
+
+
+\stream_context_set_default([ // Set global user agent and http settings
+    'http' => [
+        'method' => 'GET',
+        'user_agent' => \sprintf(
+            APP_USERAGENT,
+            System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+        ),
+        'timeout' => 2,
+    ],
+]);
 
 
 const APP_NAME = 'Appwrite';
@@ -1037,18 +1050,6 @@ foreach ($locales as $locale) {
 
     Locale::setLanguageFromJSON($code, $path);
 }
-
-\stream_context_set_default([ // Set global user agent and http settings
-    'http' => [
-        'method' => 'GET',
-        'user_agent' => \sprintf(
-            APP_USERAGENT,
-            System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-        ),
-        'timeout' => 2,
-    ],
-]);
 
 
 function getDevice($root): Device
