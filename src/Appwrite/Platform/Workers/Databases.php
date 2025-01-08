@@ -284,9 +284,6 @@ class Databases extends Action
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
 
-                /**
-                 * No throwing Exception
-                 */
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
