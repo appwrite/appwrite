@@ -54,8 +54,7 @@ class MessagingConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // required for Cloud x Audits
-        sleep(10);
+        sleep(10); // required for Cloud x Audits
 
         $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
