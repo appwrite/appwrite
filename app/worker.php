@@ -413,7 +413,16 @@ $worker
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
+    ->inject('connectionForProject')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, PoolConnection $connectionForProject) use ($queueName) {
+        if (
+            ($error instanceof PDOException || $error instanceof DatabaseException)
+            && DetectsLostConnections::causedByLostConnection($error)
+        ) {
+            // Mark connection as unhealthy, it will be recycled on next reclaim.
+            $connectionForProject->setHealthy(false);
+        }
+
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
