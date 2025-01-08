@@ -155,7 +155,7 @@ trait SitesBase
 
     protected function listLogs(string $siteId, mixed $params = []): mixed
     {
-        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/executions', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $params);

@@ -23,14 +23,11 @@ class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $site = $this->createSite([
-            'adapter' => 'static',
             'buildRuntime' => 'node-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
-            'providerBranch' => 'main',
-            'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
@@ -43,12 +40,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('other', $site['body']['framework']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
-        $this->assertEquals('static', $site['body']['adapter']);
         $this->assertEquals('node-22', $site['body']['buildRuntime']);
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
-        $this->assertEquals('main', $site['body']['providerBranch']);
-        $this->assertEquals('./', $site['body']['providerRootDirectory']);
 
         $variable = $this->createVariable($siteId, [
             'key' => 'siteKey1',
@@ -76,7 +70,6 @@ class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $siteId = $this->setupSite([
-            'adapter' => 'static',
             'buildRuntime' => 'node-22',
             'fallbackFile' => null,
             'framework' => 'other',
