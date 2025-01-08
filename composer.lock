@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59c7d90abfa068a55426b786a244d985",
+    "content-hash": "7b5b5926b452186543903eb539f59c2d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4145,16 +4145,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "dev-feat-connection-health",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "3b1913e7e9cb01acac26215abb37eb767c0112ee"
+                "reference": "59414ab7b57728edfde6d5ccc5a2583b7967ac18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/3b1913e7e9cb01acac26215abb37eb767c0112ee",
-                "reference": "3b1913e7e9cb01acac26215abb37eb767c0112ee",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/59414ab7b57728edfde6d5ccc5a2583b7967ac18",
+                "reference": "59414ab7b57728edfde6d5ccc5a2583b7967ac18",
                 "shasum": ""
             },
             "require": {
@@ -4190,9 +4190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/feat-connection-health"
+                "source": "https://github.com/utopia-php/pools/tree/0.6.0"
             },
-            "time": "2025-01-08T07:40:13+00:00"
+            "time": "2025-01-08T07:58:42+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -8554,18 +8554,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/pools",
-            "version": "dev-feat-connection-health",
-            "alias": "0.5.0",
-            "alias_normalized": "0.5.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/pools": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
