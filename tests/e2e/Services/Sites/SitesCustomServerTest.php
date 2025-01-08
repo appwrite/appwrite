@@ -23,7 +23,7 @@ class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $site = $this->createSite([
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -40,7 +40,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('other', $site['body']['framework']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
-        $this->assertEquals('node-22', $site['body']['buildRuntime']);
+        $this->assertEquals('ssr-22', $site['body']['buildRuntime']);
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
@@ -70,7 +70,7 @@ class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $siteId = $this->setupSite([
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -150,8 +150,7 @@ class SitesCustomServerTest extends Scope
          * Test pagination
          */
         $siteId2 = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site 2',
@@ -207,8 +206,7 @@ class SitesCustomServerTest extends Scope
     public function testGetSite(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -241,8 +239,7 @@ class SitesCustomServerTest extends Scope
     public function testUpdateSite(): void
     {
         $site = $this->createSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -259,8 +256,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site', $site['body']['name']);
 
         $site = $this->updateSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site Updated',
@@ -364,8 +360,7 @@ class SitesCustomServerTest extends Scope
     public function testCreateDeployment()
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -379,7 +374,7 @@ class SitesCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($siteId, [
             'siteId' => $siteId,
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => true,
         ]);
 
@@ -396,7 +391,7 @@ class SitesCustomServerTest extends Scope
         }, 50000, 500);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -425,8 +420,7 @@ class SitesCustomServerTest extends Scope
     public function testCancelDeploymentBuild(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -439,7 +433,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -483,8 +477,7 @@ class SitesCustomServerTest extends Scope
     public function testUpdateDeployment(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -497,7 +490,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -533,8 +526,7 @@ class SitesCustomServerTest extends Scope
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -547,7 +539,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -555,7 +547,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -713,8 +705,7 @@ class SitesCustomServerTest extends Scope
     public function testGetDeployment(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -727,7 +718,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -765,8 +756,7 @@ class SitesCustomServerTest extends Scope
     // public function testLoadSite(): void
     // {
     //     $site = $this->createSite([
-    //         'adapter' => 'static',
-    //         'buildRuntime' => 'node-22',
+    //         'buildRuntime' => 'ssr-22',
     //         'fallbackFile' => null,
     //         'framework' => 'other',
     //         'name' => 'Test Site',
@@ -782,7 +772,7 @@ class SitesCustomServerTest extends Scope
     //     var_dump($site);
 
     //     $deployment = $this->createDeployment($siteId, [
-    //         'code' => $this->packageSite('other'),
+    //         'code' => $this->packageSite('static'),
     //         'activate' => 'false'
     //     ]);
 
@@ -803,8 +793,7 @@ class SitesCustomServerTest extends Scope
     // public function testUpdateSpecs(): void
     // {
     //     $siteId = $this->setupSite([
-    //         'adapter' => 'static',
-    //         'buildRuntime' => 'node-22',
+    //         'buildRuntime' => 'ssr-22',
     //         'fallbackFile' => null,
     //         'framework' => 'other',
     //         'name' => 'Test Site',
@@ -821,8 +810,7 @@ class SitesCustomServerTest extends Scope
     //      */
     //     // Change the function specs
     //     $site = $this->updateSite([
-    //         'adapter' => 'static',
-    //         'buildRuntime' => 'node-22',
+    //         'buildRuntime' => 'ssr-22',
     //         'fallbackFile' => null,
     //         'framework' => 'other',
     //         'name' => 'Test Site',
@@ -839,8 +827,7 @@ class SitesCustomServerTest extends Scope
 
     //     // Change the specs to 1vcpu 512mb
     //     $site = $this->updateSite([
-    //         'adapter' => 'static',
-    //         'buildRuntime' => 'node-22',
+    //         'buildRuntime' => 'ssr-22',
     //         'fallbackFile' => null,
     //         'framework' => 'other',
     //         'name' => 'Test Site',
@@ -860,8 +847,7 @@ class SitesCustomServerTest extends Scope
     //      */
 
     //     $site = $this->updateSite([
-    //         'adapter' => 'static',
-    //         'buildRuntime' => 'node-22',
+    //         'buildRuntime' => 'ssr-22',
     //         'fallbackFile' => null,
     //         'framework' => 'other',
     //         'name' => 'Test Site',
@@ -883,8 +869,7 @@ class SitesCustomServerTest extends Scope
     public function testDeleteDeployment(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
@@ -897,7 +882,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('other'),
+            'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
 
@@ -928,8 +913,7 @@ class SitesCustomServerTest extends Scope
     public function testDeleteSite(): void
     {
         $siteId = $this->setupSite([
-            'adapter' => 'static',
-            'buildRuntime' => 'node-22',
+            'buildRuntime' => 'ssr-22',
             'fallbackFile' => null,
             'framework' => 'other',
             'name' => 'Test Site',
