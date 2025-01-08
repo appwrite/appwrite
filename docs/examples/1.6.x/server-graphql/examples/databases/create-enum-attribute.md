@@ -14,6 +14,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         elements
         format
         default
