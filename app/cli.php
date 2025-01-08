@@ -24,7 +24,7 @@ use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 // overwriting runtimes to be architectur agnostic for CLI
-Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
+Config::setParam('runtimes', (new Runtimes('v4rc'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';

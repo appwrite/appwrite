@@ -21,7 +21,7 @@ return [
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -45,7 +45,7 @@ return [
     'nuxt' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -69,7 +69,7 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -93,7 +93,7 @@ return [
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -117,7 +117,7 @@ return [
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -157,7 +157,7 @@ return [
     'other' => [
         'key' => 'other',
         'name' => 'Other',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'static' => [
