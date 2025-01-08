@@ -16,6 +16,7 @@ use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
+use Swoole\Database\DetectsLostConnections;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -25,11 +26,13 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Pools\Connection as PoolConnection;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
@@ -66,12 +69,12 @@ Server::setResource('project', function (Message $message, Database $dbForPlatfo
     return $dbForPlatform->getDocument('projects', $project->getId());
 }, ['message', 'dbForPlatform']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
+Server::setResource('connectionForProject', function (Group $pools, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
+        return $pools
+            ->get('console')
+            ->pop();
     }
-
-    $pools = $register->get('pools');
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -80,12 +83,17 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = $pools
+    return $pools
         ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
+        ->pop();
+}, ['pools', 'project']);
 
-    $database = new Database($adapter, $cache);
+Server::setResource('dbForProject', function (PoolConnection $connectionForProject, Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForPlatform;
+    }
+
+    $database = new Database($connectionForProject->getResource(), $cache);
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -109,12 +117,12 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     return $database;
-}, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
+}, ['connectionForProject', 'cache', 'register', 'message', 'project', 'dbForPlatform']);
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -146,12 +154,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $database = new Database($connectionForProject->getResource(), $cache);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -171,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
