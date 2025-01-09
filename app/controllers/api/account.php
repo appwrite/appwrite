@@ -17,6 +17,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
@@ -27,7 +28,9 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
@@ -2315,7 +2318,10 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Usage $queueForUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2452,6 +2458,27 @@ App::post('/v1/account/tokens/phone')
                 ->setMessage($messageDoc)
                 ->setRecipients([$phone])
                 ->setProviderType(MESSAGE_TYPE_SMS);
+
+            if (isset($plan['authPhone'])) {
+                $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                $timelimit
+                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                $abuse = new Abuse($timelimit);
+                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                    $helper = PhoneNumberUtil::getInstance();
+                    $countryCode = $helper->parse($phone)->getCountryCode();
+
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
+                }
+                $queueForUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
+            }
         }
 
         // Set to unhashed secret for events and server responses
@@ -3465,7 +3492,10 @@ App::post('/v1/account/verification/phone')
     ->inject('queueForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Usage $queueForUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3548,6 +3578,27 @@ App::post('/v1/account/verification/phone')
                 ->setMessage($messageDoc)
                 ->setRecipients([$user->getAttribute('phone')])
                 ->setProviderType(MESSAGE_TYPE_SMS);
+
+            if (isset($plan['authPhone'])) {
+                $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                $timelimit
+                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                $abuse = new Abuse($timelimit);
+                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                    $helper = PhoneNumberUtil::getInstance();
+                    $countryCode = $helper->parse($phone)->getCountryCode();
+
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
+                }
+                $queueForUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
+            }
         }
 
         // Set to unhashed secret for events and server responses
@@ -4026,7 +4077,10 @@ App::post('/v1/account/mfa/challenge')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails) {
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, Usage $queueForUsage, array $plan) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -4074,6 +4128,7 @@ App::post('/v1/account/mfa/challenge')
 
                 $message = $message->render();
 
+                $phone = $user->getAttribute('phone');
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage(new Document([
@@ -4082,8 +4137,29 @@ App::post('/v1/account/mfa/challenge')
                             'content' => $code,
                         ],
                     ]))
-                    ->setRecipients([$user->getAttribute('phone')])
+                    ->setRecipients([$phone])
                     ->setProviderType(MESSAGE_TYPE_SMS);
+
+                if (isset($plan['authPhone'])) {
+                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                    $timelimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                    $abuse = new Abuse($timelimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {
