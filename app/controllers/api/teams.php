@@ -8,6 +8,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
@@ -17,7 +18,9 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
@@ -423,7 +426,10 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -691,6 +697,27 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
                     ->setProviderType('SMS');
+
+                if (isset($plan['authPhone'])) {
+                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                    $timelimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                    $abuse = new Abuse($timelimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
             }
         }
 
