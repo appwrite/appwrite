@@ -324,7 +324,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(25, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -545,7 +545,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(25, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
