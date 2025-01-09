@@ -1422,7 +1422,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP V2',
-            'runtime' => 'php-8.3',
+            'runtime' => 'php-8.3', // Changed to php 8.0 in v2 update endpoint
             'entrypoint' => 'index.php',
             'events' => [],
             'timeout' => 15,
