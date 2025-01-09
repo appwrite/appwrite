@@ -862,7 +862,7 @@ class UsageTest extends Scope
             [
                 'functionId' => 'unique()',
                 'name' => 'Test',
-                'runtime' => 'php-8.0',
+                'runtime' => 'php-8.3',
                 'vars' => [
                     'funcKey1' => 'funcValue1',
                     'funcKey2' => 'funcValue2',

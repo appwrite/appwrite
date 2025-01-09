@@ -1286,7 +1286,7 @@ class RealtimeCustomClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => ['users'],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);

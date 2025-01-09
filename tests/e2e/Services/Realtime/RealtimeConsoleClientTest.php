@@ -524,7 +524,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',

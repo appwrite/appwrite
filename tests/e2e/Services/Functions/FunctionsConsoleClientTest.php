@@ -21,7 +21,7 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -39,7 +39,7 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
         ]);
 

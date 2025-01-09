@@ -72,6 +72,16 @@ trait FunctionsBase
         return $function;
     }
 
+    protected function updateFunction(string $functionId, mixed $params): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $function;
+    }
+
     protected function createVariable(string $functionId, mixed $params): mixed
     {
         $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([

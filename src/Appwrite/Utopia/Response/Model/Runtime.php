@@ -59,6 +59,13 @@ class Runtime extends Model
                 'example' => 'amd64',
                 'array' => true,
             ])
+            ->addRule('deprecated', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Deprecated runtimes cannot be used during creation.',
+                'default' => false,
+                'example' => false,
+                'array' => false,
+            ])
         ;
     }
 

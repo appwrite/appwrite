@@ -279,7 +279,7 @@ class VCSConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -294,7 +294,7 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('php-8.3', $function['body']['runtime']);
         $this->assertEquals('index.php', $function['body']['entrypoint']);
         $this->assertEquals('705764267', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
@@ -317,7 +317,7 @@ class VCSConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -332,7 +332,7 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('php-8.3', $function['body']['runtime']);
         $this->assertEquals('index.php', $function['body']['entrypoint']);
         $this->assertEquals('708688544', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);

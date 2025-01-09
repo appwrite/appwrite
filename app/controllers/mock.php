@@ -150,7 +150,11 @@ App::patch('/v1/mock/functions-v2')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
+        $function = $function
+            ->setAttribute('version', 'v2')
+            ->setAttribute('runtime', 'php-8.0');
+
+        $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $response->noContent();
     });
