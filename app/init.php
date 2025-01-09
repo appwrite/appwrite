@@ -1844,6 +1844,10 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
+App::setResource('getSmsPrice', function () {
+    return [];
+});
+
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
