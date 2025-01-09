@@ -1844,7 +1844,7 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('getSmsPrice', function () {
+App::setResource('smsRates', function () {
     return [];
 });
 

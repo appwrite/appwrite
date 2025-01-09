@@ -31,8 +31,8 @@ App::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('getSmsPrice')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, callable $getSmsPrice) {
+    ->inject('smsRates')
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, array $smsRates) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -285,15 +285,15 @@ App::get('/v1/project/usage')
 
             $value = $metric->getAttribute('value', 0);
 
-            if (is_callable($getSmsPrice)) {
-                $authPhoneEstimate += $value * $getSmsPrice($countryCode);
+            if (!empty($smsRates[$countryCode])) {
+                $authPhoneEstimate += $value * $smsRates[$countryCode];
             }
 
             $authPhoneCountryBreakdown[] = [
                 'name' => $countryCode,
                 'value' => $value,
-                'estimate' => is_callable($getSmsPrice)
-                    ? $value * $getSmsPrice($countryCode)
+                'estimate' => !empty($smsRates[$countryCode])
+                    ? $value * $smsRates[$countryCode]
                     : 0.0,
             ];
         }
