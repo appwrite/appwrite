@@ -334,6 +334,7 @@ Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
+Config::load('runtimes-active', __DIR__ . '/config/runtimes-active.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
 Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes

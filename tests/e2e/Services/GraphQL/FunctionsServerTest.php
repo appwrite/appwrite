@@ -25,7 +25,7 @@ class FunctionsServerTest extends Scope
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
                 'entrypoint' => 'index.php',
-                'runtime' => 'php-8.0',
+                'runtime' => 'php-8.3',
                 'execute' => [Role::any()->toString()],
             ]
         ];
@@ -410,7 +410,7 @@ class FunctionsServerTest extends Scope
                 'name' => 'Test Function Updated',
                 'execute' => [Role::any()->toString()],
                 'entrypoint' => 'index.php',
-                'runtime' => 'php-8.0',
+                'runtime' => 'php-8.3',
                 'vars' => [
                     'name' => 'John Doe',
                     'age' => 42,

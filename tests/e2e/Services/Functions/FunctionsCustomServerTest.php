@@ -29,7 +29,7 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'buckets.*.create',
@@ -44,7 +44,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('php-8.3', $function['body']['runtime']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
         $this->assertEquals('', $function['body']['deployment']);
@@ -145,7 +145,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Test search runtime
         $functions = $this->listFunctions([
-            'search' => 'php-8.0'
+            'search' => 'php-8.3'
         ]);
 
         $this->assertEquals($functions['headers']['status-code'], 200);
@@ -158,7 +158,7 @@ class FunctionsCustomServerTest extends Scope
         $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test 2',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'buckets.*.create',
@@ -251,7 +251,7 @@ class FunctionsCustomServerTest extends Scope
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 15,
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
         ]);
 
@@ -287,7 +287,7 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -328,7 +328,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $starterTemplate['headers']['status-code']);
 
         $phpRuntime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
-            return $runtime['name'] === 'php-8.0';
+            return $runtime['name'] === 'php-8.3';
         }))[0];
 
         // If this fails, the template has variables, and this test needs to be updated
@@ -338,7 +338,7 @@ class FunctionsCustomServerTest extends Scope
             [
                 'functionId' => ID::unique(),
                 'name' => $starterTemplate['body']['name'],
-                'runtime' => 'php-8.0',
+                'runtime' => 'php-8.3',
                 'execute' => $starterTemplate['body']['permissions'],
                 'entrypoint' => $phpRuntime['entrypoint'],
                 'events' => $starterTemplate['body']['events'],
@@ -683,7 +683,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(0, $deployments['body']['deployments']);
 
         $deployments = $this->listDeployments($functionId, [
-            'search' => 'php-8.0'
+            'search' => 'php-8.3'
         ]);
 
         $this->assertEquals($deployments['headers']['status-code'], 200);
@@ -1076,7 +1076,7 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'specification' => Specification::S_1VCPU_1GB,
         ]);
@@ -1104,7 +1104,7 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'specification' => Specification::S_1VCPU_512MB,
         ]);
@@ -1134,7 +1134,7 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'timeout' => 15,
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'specification' => 's-2vcpu-512mb', // Invalid specification
         ]);
@@ -1192,8 +1192,8 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test php-8.0',
-            'runtime' => 'php-8.0',
+            'name' => 'Test php-8.3',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [],
             'schedule' => '',
@@ -1237,7 +1237,7 @@ class FunctionsCustomServerTest extends Scope
     public function provideCustomExecutions(): array
     {
         return [
-            ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
+            ['folder' => 'php-fn', 'name' => 'php-8.3', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
             ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
             ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
             ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
@@ -1323,7 +1323,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1372,7 +1372,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1422,7 +1422,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP V2',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [],
             'timeout' => 15,
@@ -1488,7 +1488,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Event executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -1542,7 +1542,7 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test PHP Scopes executions',
             'commands' => 'sh setup.sh && composer install',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'scopes' => ['users.read'],
             'timeout' => 15,
@@ -1600,7 +1600,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Cookie executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
         ]);
@@ -1632,7 +1632,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Cookie executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1708,7 +1708,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1758,7 +1758,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Binary executions',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1810,7 +1810,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
         ]);
@@ -1845,7 +1845,7 @@ class FunctionsCustomServerTest extends Scope
         $function1Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1854,7 +1854,7 @@ class FunctionsCustomServerTest extends Scope
         $function2Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test2',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php',
             'timeout' => 15,
             'execute' => ['any']
@@ -1983,5 +1983,38 @@ class FunctionsCustomServerTest extends Scope
         }
 
         $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionDeprecatedRuntime(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Deprecated runtime',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Active runtime',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.3',
+            'entrypoint' => 'index.php',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $function = $this->updateFunction($functionId, [
+            'name' => 'Active runtime',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
     }
 }

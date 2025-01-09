@@ -799,7 +799,7 @@ trait MigrationsBase
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'php-8.3',
             'entrypoint' => 'index.php'
         ]);
 
@@ -849,7 +849,7 @@ trait MigrationsBase
 
         $this->assertEquals($functionId, $response['body']['$id']);
         $this->assertEquals('Test', $response['body']['name']);
-        $this->assertEquals('php-8.0', $response['body']['runtime']);
+        $this->assertEquals('php-8.3', $response['body']['runtime']);
         $this->assertEquals('index.php', $response['body']['entrypoint']);
 
 

@@ -43,7 +43,7 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-        "appwrite/php-runtimes": "0.16.*",
+        "appwrite/php-runtimes": "dev-feat-deprecated-runtimes as 0.16.99",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "0.46.*",
         "utopia-php/analytics": "0.10.*",
