@@ -285,14 +285,14 @@ App::get('/v1/project/usage')
 
             $value = $metric->getAttribute('value', 0);
 
-            if (!empty($smsRates[$countryCode])) {
+            if (isset($smsRates[$countryCode])) {
                 $authPhoneEstimate += $value * $smsRates[$countryCode];
             }
 
             $authPhoneCountryBreakdown[] = [
                 'name' => $countryCode,
                 'value' => $value,
-                'estimate' => !empty($smsRates[$countryCode])
+                'estimate' => isset($smsRates[$countryCode])
                     ? $value * $smsRates[$countryCode]
                     : 0.0,
             ];
