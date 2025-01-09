@@ -143,7 +143,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(25, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
