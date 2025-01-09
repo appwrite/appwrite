@@ -3337,6 +3337,17 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('fallbackFile'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('deploymentInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -3414,7 +3425,7 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('serveRuntime'),
+                '$id' => ID::custom('buildRuntime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -3425,12 +3436,12 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('buildRuntime'),
+                '$id' => ID::custom('adapter'), // ssr or static
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 128,
                 'signed' => true,
-                'required' => true,
+                'required' => false,
                 'default' => '',
                 'array' => false,
                 'filters' => [],
@@ -4086,7 +4097,7 @@ $projectCollections = array_merge([
         'name' => 'Executions',
         'attributes' => [
             [
-                '$id' => ID::custom('functionInternalId'),
+                '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -4097,7 +4108,18 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('functionId'),
+                '$id' => ID::custom('resourceId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -4286,9 +4308,9 @@ $projectCollections = array_merge([
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_function'),
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['functionId'],
+                'attributes' => ['resourceId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],

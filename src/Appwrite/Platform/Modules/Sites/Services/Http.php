@@ -11,6 +11,9 @@ use Appwrite\Platform\Modules\Sites\Http\Deployments\GetDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\ListDeployments;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\RebuildDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\UpdateDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Logs\DeleteLog;
+use Appwrite\Platform\Modules\Sites\Http\Logs\GetLog;
+use Appwrite\Platform\Modules\Sites\Http\Logs\ListLogs;
 use Appwrite\Platform\Modules\Sites\Http\Sites\CreateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\DeleteSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\GetSite;
@@ -54,6 +57,11 @@ class Http extends Service
         $this->addAction(DownloadBuild::getName(), new DownloadBuild());
         $this->addAction(RebuildDeployment::getName(), new RebuildDeployment());
         $this->addAction(CancelDeployment::getName(), new CancelDeployment());
+
+        // Logs
+        $this->addAction(GetLog::getName(), new GetLog());
+        $this->addAction(ListLogs::getName(), new ListLogs());
+        $this->addAction(DeleteLog::getName(), new DeleteLog());
 
         // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());

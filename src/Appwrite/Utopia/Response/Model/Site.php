@@ -131,11 +131,17 @@ class Site extends Model
                 'default' => '',
                 'example' => 'node-22',
             ])
-            ->addRule('serveRuntime', [
+            ->addRule('adapter', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Site serve runtime.',
-                'default' => '',
-                'example' => 'static-1',
+                'description' => 'Site framework adapter.',
+                'default' => null,
+                'example' => 'static',
+            ])
+            ->addRule('fallbackFile', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.',
+                'default' => null,
+                'example' => 'index.html',
             ])
         ;
     }

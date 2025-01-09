@@ -111,7 +111,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Query::orderDesc('$createdAt'),
                 ]));
 
-                if ($latestComment !== false && !$latestComment->isEmpty()) {
+                if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
 
                     $comment = new Comment();
@@ -225,6 +225,29 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
             ]));
+
+            // Preview deployments for sites
+            if ($resource->getCollection() === 'sites') {
+                $projectId = $project->getId();
+
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $ruleId = md5($domain);
+
+                $rule = Authorization::skip(
+                    fn () => $dbForConsole->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'resourceType' => 'deployment',
+                        'resourceId' => $deploymentId,
+                        'resourceInternalId' => $deployment->getInternalId(),
+                        'status' => 'verified',
+                        'certificateId' => '',
+                    ]))
+                );
+            }
 
             if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $resourceName = $resource->getAttribute('name');
@@ -376,13 +399,11 @@ App::get('/v1/vcs/github/callback')
             $identity = $dbForConsole->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
-            }
 
-            if ($identity !== false && !$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -423,7 +444,7 @@ App::get('/v1/vcs/github/callback')
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
 
-            if ($installation === false || $installation->isEmpty()) {
+            if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
@@ -731,7 +752,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                 Query::equal('provider', ['github']),
                 Query::equal('userInternalId', [$user->getInternalId()]),
             ]);
-            if ($identity === false || $identity->isEmpty()) {
+            if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
             }
 

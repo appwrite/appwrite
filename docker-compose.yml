@@ -97,6 +97,7 @@ services:
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_SESSION_ALERTS
@@ -879,7 +880,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.0
+    image: openruntimes/executor:0.7.2
     restart: unless-stopped
     networks:
       - appwrite
@@ -892,6 +893,7 @@ services:
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
+      - OPR_EXECUTOR_IMAGE_PULL=disabled
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK

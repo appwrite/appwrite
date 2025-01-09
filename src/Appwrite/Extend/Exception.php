@@ -39,6 +39,7 @@ class Exception extends \Exception
     public const GENERAL_UNKNOWN                   = 'general_unknown';
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    public const GENERAL_RESOURCE_BLOCKED          = 'general_resource_blocked';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
@@ -175,6 +176,9 @@ class Exception extends \Exception
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
     public const EXECUTION_IN_PROGRESS             = 'execution_in_progress';
+
+    /** Log */
+    public const LOG_NOT_FOUND                     = 'log_not_found';
 
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';

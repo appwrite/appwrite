@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -592,6 +597,13 @@ return [
         'name' => Exception::EXECUTION_IN_PROGRESS,
         'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
         'code' => 400,
+    ],
+
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
+        'code' => 404,
     ],
 
     /** Databases */

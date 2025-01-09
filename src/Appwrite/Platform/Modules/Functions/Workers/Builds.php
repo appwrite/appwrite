@@ -480,18 +480,14 @@ class Builds extends Action
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-            // JWT and API key generation for functions only
-            if ($resource->getCollection() === 'functions') {
-                $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
-                $apiKey = $jwtObj->encode([
-                    'projectId' => $project->getId(),
-                    'scopes' => $resource->getAttribute('scopes', [])
-                ]);
+            $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
-                $vars = array_merge($vars, ['APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey]);
-            }
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $resource->getAttribute('scopes', [])
+            ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
@@ -502,6 +498,8 @@ class Builds extends Action
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+                'APPWRITE_COMPUTE_CPUS' => $cpus,
+                'APPWRITE_COMPUTE_MEMORY' => $memory,
                 'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
                 'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
                 'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
@@ -521,27 +519,26 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
                         'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_COMPUTE_CPUS' => $cpus,
-                        'APPWRITE_COMPUTE_MEMORY' => $memory
                     ];
                     break;
                 case 'sites':
                     $vars = [
                         ...$vars,
+                        'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
                         'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
                         'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_COMPUTE_CPUS' => $cpus,
-                        'APPWRITE_COMPUTE_MEMORY' => $memory
                     ];
                     break;
             }
@@ -566,6 +563,7 @@ class Builds extends Action
                     try {
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
+                        // TODO: Detect adapter if adapter is empty
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
@@ -690,31 +688,6 @@ class Builds extends Action
             // $build->setAttribute('logs', $response['output']); // TODO: Figure out how to write them all at the end
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
-            // Preview deployments for sites
-            if ($resource->getCollection() === 'sites') {
-                $ruleId = ID::unique();
-
-                $deploymentId = $deployment->getId();
-                $projectId = $project->getId();
-
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
-
-                $rule = Authorization::skip(
-                    fn () => $dbForConsole->createDocument('rules', new Document([
-                        '$id' => $ruleId,
-                        'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
-                        'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deployment->getId(),
-                        'resourceInternalId' => $deployment->getInternalId(),
-                        'status' => 'verified',
-                        'certificateId' => '',
-                    ]))
-                );
-            }
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -892,13 +865,30 @@ class Builds extends Action
 
     protected function getCommand(Document $resource, Document $deployment): string
     {
-        return match($resource->getCollection()) {
-            'functions' => $deployment->getAttribute('commands', ''),
-            'sites' => implode(' && ', array_filter([
-                $deployment->getAttribute('installCommand'),
-                $deployment->getAttribute('buildCommand')
-            ]))
-        };
+        if ($resource->getCollection() === 'functions') {
+            return $deployment->getAttribute('commands', '');
+        } elseif ($resource->getCollection() === 'sites') {
+            $commands = [];
+
+            $commands[] = $deployment->getAttribute('installCommand', '');
+            $commands[] = $deployment->getAttribute('buildCommand', '');
+
+            $frameworks = Config::getParam('frameworks', []);
+            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+
+            if (!is_null($framework)) {
+                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
+                    $commands[] = $adapter['bundleCommand'];
+                }
+            }
+
+            $commands = array_filter($commands, fn ($command) => !empty($command));
+
+            return implode(' && ', $commands);
+        }
+
+        return '';
     }
 
     /**

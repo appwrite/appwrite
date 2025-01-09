@@ -18,7 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -67,8 +66,9 @@ class CreateSite extends Base
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
-            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.')
+            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Allows: static, ssr', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
+            ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
@@ -95,23 +95,28 @@ class CreateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $adapter, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
+        if (!empty($adapter)) {
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $adapters = \array_keys($configFramework['adapters'] ?? []);
+            $validator = new WhiteList($adapters, true);
+            if (!$validator->isValid($adapter)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+            }
+        }
+
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $ruleId = '';
         $routeSubdomain = '';
         $domain = '';
 
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
-                Query::equal('domain', [$domain])
-            ]));
+            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', \md5($domain)));
 
-            if (!empty($subdomain)) {
+            if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
             }
         }
@@ -161,6 +166,7 @@ class CreateSite extends Base
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
             'search' => implode(' ', [$siteId, $name, $framework]),
+            'fallbackFile' => $fallbackFile,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -171,7 +177,7 @@ class CreateSite extends Base
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
             'buildRuntime' => $buildRuntime,
-            'serveRuntime' => $serveRuntime,
+            'adapter' => $adapter,
         ]));
 
         // Git connect logic
@@ -206,7 +212,7 @@ class CreateSite extends Base
 
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForConsole, $queueForBuilds, $template, $github);
         } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
@@ -228,6 +234,26 @@ class CreateSite extends Base
                 'activate' => true,
             ]));
 
+            // Preview deployments url
+            $projectId = $project->getId();
+
+            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+            $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+
+            $rule = Authorization::skip(
+                fn () => $dbForConsole->createDocument('rules', new Document([
+                    '$id' => \md5($previewDomain),
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getInternalId(),
+                    'domain' => $previewDomain,
+                    'resourceType' => 'deployment',
+                    'resourceId' => $deploymentId,
+                    'resourceInternalId' => $deployment->getInternalId(),
+                    'status' => 'verified',
+                    'certificateId' => '',
+                ]))
+            );
+
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($site)
@@ -238,7 +264,7 @@ class CreateSite extends Base
         if (!empty($sitesDomain)) {
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
-                    '$id' => $ruleId,
+                    '$id' => \md5($domain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
                     'domain' => $domain,

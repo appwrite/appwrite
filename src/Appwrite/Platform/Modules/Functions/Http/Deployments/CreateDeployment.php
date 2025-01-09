@@ -43,6 +43,7 @@ class CreateDeployment extends Action
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
