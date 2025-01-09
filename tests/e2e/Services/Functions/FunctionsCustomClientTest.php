@@ -109,7 +109,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('8.3', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
         $this->assertEquals('default', $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
@@ -219,7 +219,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('8.3', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
         $this->assertEquals('default', $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
@@ -310,7 +310,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
-            'runtimes' => ['bun-1.0', 'dart-2.16']
+            'runtimes' => ['bun-1.0', 'dart-2.18']
         ]);
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
@@ -329,7 +329,7 @@ class FunctionsCustomClientTest extends Scope
             'limit' => 5,
             'offset' => 2,
             'useCases' => ['databases'],
-            'runtimes' => ['node-16.0']
+            'runtimes' => ['node-22']
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
@@ -341,7 +341,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertContains($template['useCases'][0], ['databases']);
         }
 
-        $this->assertContains('node-16.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+        $this->assertContains('node-22', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
 
         /**
          * Test for FAILURE

@@ -860,7 +860,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
         $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
-        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        $this->assertStringContainsString('8.3', $execution['body']['responseBody']);
         $this->assertStringContainsString('Global Variable Value', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
         $this->assertNotEmpty($execution['body']['errors']);
@@ -974,7 +974,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
         $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
-        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        $this->assertStringContainsString('8.3', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
 
@@ -1237,7 +1237,7 @@ class FunctionsCustomServerTest extends Scope
     public function provideCustomExecutions(): array
     {
         return [
-            ['folder' => 'php-fn', 'name' => 'php-8.3', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
+            ['folder' => 'php-fn', 'name' => 'php-8.3', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.3'],
             ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
             ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
             ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
@@ -1428,7 +1428,7 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
         ]);
 
-        $variable = $this->client->call(Client::METHOD_PATCH, '/mock/functions-v2', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/mock/functions-v2', [
             'content-type' => 'application/json',
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -1437,7 +1437,13 @@ class FunctionsCustomServerTest extends Scope
         ], [
             'functionId' => $functionId
         ]);
-        $this->assertEquals(204, $variable['headers']['status-code']);
+        $this->assertEquals(204, $function['headers']['status-code']);
+
+        $function = $this->getFunction($functionId);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals('v2', $function['body']['version']);
+        $this->assertEquals('php-8.0', $function['body']['runtime']);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
