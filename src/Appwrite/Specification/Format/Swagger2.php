@@ -128,6 +128,14 @@ class Swagger2 extends Format
                 continue;
             }
 
+            $additionalMethods = null;
+            if (is_array($sdk)) {
+                $mainSdk = array_shift($sdk);
+                $additionalMethods = $sdk;
+
+                $sdk = $mainSdk;
+            }
+
             $consumes = [$sdk->getRequestType()];
 
             $method = $sdk->getMethodName() ?? \uniqid();
@@ -197,17 +205,35 @@ class Swagger2 extends Format
                 $temp['produces'][] = $produces;
             }
 
-            if (!empty($sdk->getMultiplex())) {
-                $temp['x-appwrite']['multiplex'] = [];
-                foreach ($sdk->getMultiplex() as $multiplex) {
-                    /** @var \Appwrite\SDK\Multiplex $multiplex */
-
-                    $temp['x-appwrite']['multiplex'][] = [
-                        'name' => $multiplex->getName(),
-                        'parameters' => $multiplex->getParameters(),
-                        'required' => $multiplex->getRequired(),
-                        'responses' => ["#/definitions/" . $multiplex->getResponseModel()]
+            if (!empty($additionalMethods)) {
+                $temp['x-appwrite']['additional-methods'] = [];
+                foreach ($additionalMethods as $method) {
+                    /** @var \Appwrite\SDK\Method $method */
+                    $additionalMethod = [
+                        'name' => $method->getMethodName(),
+                        'parameters' => [],
+                        'required' => [],
+                        'responses' => []
                     ];
+                    
+                    foreach ($method->getParameters() as $name => $param) {
+                        $additionalMethod['parameters'][] = $name;
+
+                        if (!$param['optional']) {
+                            $additionalMethod['required'][] = $name;
+                        }
+                    }
+
+                    foreach ($method->getResponses() as $response) {
+                        /** @var \Appwrite\SDK\Response $response */
+                        $additionalMethod['responses'][] = [
+                            'code' => $response->getCode(),
+                            'description' => $response->getDescription(),
+                            'model' => '#/definitions/' . $response->getModel()
+                        ];
+                    }
+
+                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
                 }
             }
 

@@ -3,49 +3,14 @@
 namespace Appwrite\SDK;
 
 use Appwrite\Utopia\Response;
+use Appwrite\SDK\Response as SDKResponse;
 use Swoole\Http\Response as HttpResponse;
-
-enum AuthType: string
-{
-    case JWT = APP_AUTH_TYPE_JWT;
-    case KEY = APP_AUTH_TYPE_KEY;
-    case SESSION = APP_AUTH_TYPE_SESSION;
-    case ADMIN = APP_AUTH_TYPE_ADMIN;
-}
-
-enum MethodType: string
-{
-    case WEBAUTH = 'webAuth';
-    case LOCATION = 'location';
-    case GRAPHQL = 'graphql';
-    case UPLOAD = 'upload';
-}
-
-enum ResponseType: string
-{
-    case NONE = '';
-    case JSON = 'application/json';
-    case IMAGE = 'image/*';
-    case IMAGE_PNG = 'image/png';
-    case MULTIPART = 'multipart/form-data';
-    case HTML = 'text/html';
-    case TEXT = 'text/plain';
-    case ANY = '*/*';
-}
 
 class Method
 {
     public static array $knownMethods = [];
 
-    //Tmp
-    public static array $knownMissingDescriptions = [];
-
-    public static array $exceptions = [];
-
-    /**
-     * @var array<Multiplex>
-     */
-    protected array $multiplexRoutes = [];
+    public static array $errors = [];
 
     /**
      * Initialise a new SDK method
@@ -54,7 +19,7 @@ class Method
      * @param string $name
      * @param string $description
      * @param array<AuthType> $auth
-     * @param array<Response> $responses
+     * @param array<SDKResponse> $responses
      * @param int $responseCode
      * @param string|array<string> $responseModel
      * @param ResponseType $responseType
@@ -85,45 +50,40 @@ class Method
         protected array|bool $hide = false,
         protected bool $packaging = false,
         protected string $requestType = 'application/json',
-        protected array $parameters = [],
-        protected array $multiplex = []
+        protected array $parameters = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        $this->validateDesc($description);
+        //$this->validateDesc($description);
 
         foreach ($responses as $response) {
-            /** @var \Appwrite\SDK\Response $response */
+            /** @var SDKResponse $response */
             $this->validateResponseModel($response->getModel());
 
             // No content check
-            if ($response->getCode() === 204) {
-                if ($response->getModel() !== Response::MODEL_NONE) {
-                    self::$exceptions[] = "Error with {$this->getDebugName()} method: Response code 204 must have response model 'none'";
-                }
-            }
+            $this->validateNoContent($response);
         }
     }
 
-    private function getDebugName(): string
+    private function getRouteName(): string
     {
         return $this->namespace . '.' . $this->name;
     }
 
     private function validateMethod(string $name, string $namespace): void
     {
-        if (\in_array($this->getDebugName(), self::$knownMethods)) {
-            self::$exceptions[] = "Error with {$this->getDebugName()} method: Method already exists in namespace {$namespace}";
+        if (\in_array($this->getRouteName(), self::$knownMethods)) {
+            self::$errors[] = "Error with {$this->getRouteName()} method: Method already exists in namespace {$namespace}";
         }
 
-        self::$knownMethods[] = $this->getDebugName();
+        self::$knownMethods[] = $this->getRouteName();
     }
 
     private function validateAuthTypes(array $authTypes): void
     {
         foreach ($authTypes as $authType) {
             if (!($authType instanceof AuthType)) {
-                self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid auth type";
+                self::$errors[] = "Error with {$this->getRouteName()} method: Invalid auth type";
             }
         }
     }
@@ -131,14 +91,14 @@ class Method
     private function validateDesc(string $desc): void
     {
         if (empty($desc)) {
-            self::$exceptions[] = "Error with {$this->getDebugName()} method: Description label is empty";
+            self::$errors[] = "Error with {$this->getRouteName()} method: Description label is empty";
             return;
         }
 
         $descPath = \realpath(__DIR__ . '/../../../' . $desc);
 
         if (!\file_exists($descPath)) {
-            self::$exceptions[] = "Error with {$this->getDebugName()} method: Description file not found at {$desc}";
+            self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
             return;
         }
     }
@@ -152,7 +112,7 @@ class Method
                 try {
                     $response->getModel($model);
                 } catch (\Exception $e) {
-                    self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php";
+                    self::$errors[] = "Error with {$this->getRouteName()} method: Invalid response model, make sure the model has been defined in Response.php";
                 }
             }
 
@@ -162,7 +122,16 @@ class Method
         try {
             $response->getModel($responseModel);
         } catch (\Exception $e) {
-            self::$exceptions[] = "Error with {$this->getDebugName()} method: Invalid response model, make sure the model has been defined in Response.php";
+            self::$errors[] = "Error with {$this->getRouteName()} method: Invalid response model, make sure the model has been defined in Response.php";
+        }
+    }
+
+    private function validateNoContent(SDKResponse $response): void
+    {
+        if ($response->getCode() === 204) {
+            if ($response->getModel() !== Response::MODEL_NONE) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Response code 204 must have response model 'none'";
+            }
         }
     }
 
@@ -241,16 +210,11 @@ class Method
         return $this->parameters;
     }
 
-    public function getMultiplex(): array
-    {
-        return $this->multiplex;
-    }
-
     // Throw any errors that were found during initialization
     static function finaliseInitialization(): void
     {
-        if (!empty(self::$exceptions)) {
-            throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, self::$exceptions));
+        if (!empty(self::$errors)) {
+            throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, self::$errors));
         }
     }
 }

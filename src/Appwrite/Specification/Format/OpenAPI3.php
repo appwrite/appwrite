@@ -129,6 +129,14 @@ class OpenAPI3 extends Format
                 continue;
             }
 
+            $additionalMethods = null;
+            if (is_array($sdk)) {
+                $mainSdk = array_shift($sdk);
+                $additionalMethods = $sdk;
+
+                $sdk = $mainSdk;
+            }
+
             /**
              * @var \Appwrite\SDK\Method $sdk
              */
@@ -195,17 +203,36 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if (!empty($sdk->getMultiplex())) {
-                $temp['x-appwrite']['multiplex'] = [];
-                foreach ($sdk->getMultiplex() as $multiplex) {
-                    /** @var \Appwrite\SDK\Multiplex $multiplex */
 
-                    $temp['x-appwrite']['multiplex'][] = [
-                        'name' => $multiplex->getName(),
-                        'parameters' => $multiplex->getParameters(),
-                        'required' => $multiplex->getRequired(),
-                        'responses' => ['#/components/schemas/' . $multiplex->getResponseModel()]
+            if (!empty($additionalMethods)) {
+                $temp['x-appwrite']['additional-methods'] = [];
+                foreach ($additionalMethods as $method) {
+                    /** @var \Appwrite\SDK\Method $method */
+                    $additionalMethod = [
+                        'name' => $method->getMethodName(),
+                        'parameters' => [],
+                        'required' => [],
+                        'responses' => []
                     ];
+                    
+                    foreach ($method->getParameters() as $name => $param) {
+                        $additionalMethod['parameters'][] = $name;
+
+                        if (!$param['optional']) {
+                            $additionalMethod['required'][] = $name;
+                        }
+                    }
+
+                    foreach ($method->getResponses() as $response) {
+                        /** @var \Appwrite\SDK\Response $response */
+                        $additionalMethod['responses'][] = [
+                            'code' => $response->getCode(),
+                            'description' => $response->getDescription(),
+                            'model' => '#/components/schemas/' . $response->getModel()
+                        ];
+                    }
+
+                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
                 }
             }
 

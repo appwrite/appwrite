@@ -4564,22 +4564,7 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
-                    "multiplex": [
-                        {
-                            "name": "createDocument",
-                            "parameters": [
-                                "documentId",
-                                "data",
-                                "permissions"
-                            ],
-                            "required": [
-                                "documentId",
-                                "data"
-                            ],
-                            "responses": [
-                                "#\/components\/schemas\/document"
-                            ]
-                        },
+                    "additional-methods": [
                         {
                             "name": "createDocuments",
                             "parameters": [
@@ -4589,7 +4574,11 @@
                                 "documents"
                             ],
                             "responses": [
-                                "#\/components\/schemas\/documentList"
+                                {
+                                    "code": 201,
+                                    "description": "",
+                                    "model": "#\/components\/schemas\/document"
+                                }
                             ]
                         }
                     ],

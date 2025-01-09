@@ -3096,35 +3096,46 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label(
         'sdk',
-        new Method(
-            namespace: 'databases',
-            name: 'createDocument',
-            description: '/docs/references/databases/create-document.md',
-            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_CREATED,
-                    model: Response::MODEL_DOCUMENT,
-                )
-            ],
-            responseType: ResponseType::JSON,
-            offlineKey: '{documentId}',
-            offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-            multiplex: [
-                new Multiplex(
-                    name: 'createDocument',
-                    parameters: ['documentId', 'data', 'permissions'],
-                    required: ['documentId', 'data'],
-                    responseModel: Response::MODEL_DOCUMENT,
-                ),
-                new Multiplex(
+        [
+            new Method(
+                namespace: 'databases',
+                name: 'createDocument',
+                description: '/docs/references/databases/create-document.md',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DOCUMENT,
+                    )
+                ],
+                responseType: ResponseType::JSON,
+                offlineKey: '{documentId}',
+                offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+                parameters: [
+                    'documentId' => ['default' => [], 'validator' => new CustomId(), 'description' => '', 'optional' => false],
+                    'data' => ['default' => [], 'validator' => new JSON(), 'description' => '', 'optional' => false],
+                    'permissions' => ['default' => [], 'validator' => new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'description' => '', 'optional' => true],
+                ]
+            ),
+            new Method(
+                    namespace: 'databases',
                     name: 'createDocuments',
-                    parameters: ['documents'],
-                    required: ['documents'],
-                    responseModel: Response::MODEL_DOCUMENT_LIST,
-                ),
-            ]
-        )
+                    description: '/docs/references/databases/create-document.md',
+                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_CREATED,
+                            model: Response::MODEL_DOCUMENT,
+                        )
+                    ],
+                    responseType: ResponseType::JSON,
+                    offlineKey: '{documentId}',
+                    offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+                    parameters: [
+                        'documents' => ['default' => [], 'validator' => new ArrayList(new JSON(), APP_LIMIT_ARRAY_DOCUMENTS_SIZE), 'description' => '', 'optional' => false],
+                    ]
+            )
+        ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)

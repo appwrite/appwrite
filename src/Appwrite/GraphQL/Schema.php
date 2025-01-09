@@ -105,6 +105,14 @@ class Schema
                     continue;
                 }
 
+                $additionalMethods = null;
+                if (is_array($sdk)) {
+                    $mainSdk = array_shift($sdk);
+                    $additionalMethods = $sdk;
+    
+                    $sdk = $mainSdk;
+                }
+
                 $namespace = $sdk->getNamespace();
                 $method = $sdk->getMethodName();
                 $name = $namespace . \ucfirst($method);
