@@ -31,7 +31,8 @@ App::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
+    ->inject('smsRates')
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, array $smsRates) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -257,6 +258,46 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('functions'));
 
+        // This total is includes free and paid SMS usage
+        $authPhoneTotal = Authorization::skip(fn () => $dbForProject->sum('stats', 'value', [
+            Query::equal('metric', [METRIC_AUTH_METHOD_PHONE]),
+            Query::equal('period', ['1d']),
+            Query::greaterThanEqual('time', $firstDay),
+            Query::lessThan('time', $lastDay),
+        ]));
+
+        // This estimate is only for paid SMS usage
+        $authPhoneMetrics = Authorization::skip(fn () => $dbForProject->find('stats', [
+            Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE . '.'),
+            Query::equal('period', ['1d']),
+            Query::greaterThanEqual('time', $firstDay),
+            Query::lessThan('time', $lastDay),
+        ]));
+
+        $authPhoneEstimate = 0.0;
+        $authPhoneCountryBreakdown = [];
+        foreach ($authPhoneMetrics as $metric) {
+            $parts = explode('.', $metric->getAttribute('metric'));
+            $countryCode = $parts[3] ?? null;
+            if ($countryCode === null) {
+                continue;
+            }
+
+            $value = $metric->getAttribute('value', 0);
+
+            if (isset($smsRates[$countryCode])) {
+                $authPhoneEstimate += $value * $smsRates[$countryCode];
+            }
+
+            $authPhoneCountryBreakdown[] = [
+                'name' => $countryCode,
+                'value' => $value,
+                'estimate' => isset($smsRates[$countryCode])
+                    ? $value * $smsRates[$countryCode]
+                    : 0.0,
+            ];
+        }
+
         // merge network inbound + outbound
         $projectBandwidth = [];
         foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
@@ -303,6 +344,9 @@ App::get('/v1/project/usage')
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'functionsStorageBreakdown' => $functionsStorageBreakdown,
+            'authPhoneTotal' => $authPhoneTotal,
+            'authPhoneEstimate' => $authPhoneEstimate,
+            'authPhoneCountryBreakdown' => $authPhoneCountryBreakdown,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 

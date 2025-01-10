@@ -10,10 +10,8 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -44,7 +42,7 @@ $http = new Server(
 );
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
-$totalWorkers = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+$totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
@@ -198,11 +196,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForPlatform);
             $audit->setup();
-        }
-
-        if ($dbForPlatform->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForPlatform);
-            $adapter->setup();
         }
 
         /** @var array $collections */
