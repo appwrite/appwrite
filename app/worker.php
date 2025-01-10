@@ -18,7 +18,7 @@ use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Database\DetectsLostConnections;
 use Swoole\Runtime;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapters\Redis\TimeLimit as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
