@@ -31,6 +31,7 @@ return [
                 'outputDirectory' => './.next',
                 'startCommand' => 'sh helpers/next-js/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/next-js/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/next-js/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -39,6 +40,7 @@ return [
                 'outputDirectory' => './out',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -55,6 +57,7 @@ return [
                 'outputDirectory' => './.output',
                 'startCommand' => 'sh helpers/nuxt/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/nuxt/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/nuxt/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -63,6 +66,7 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -79,6 +83,7 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/sveltekit/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/sveltekit/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/sveltekit/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -87,6 +92,7 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -103,6 +109,7 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/astro/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/astro/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/astro/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -111,6 +118,7 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -127,6 +135,7 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/remix/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/remix/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/remix/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -135,6 +144,7 @@ return [
                 'outputDirectory' => './build/client',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -151,6 +161,7 @@ return [
                 'outputDirectory' => './build/web',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ],
         ],
     ],
@@ -167,6 +178,7 @@ return [
                 'outputDirectory' => './',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ],
         ]
     ],

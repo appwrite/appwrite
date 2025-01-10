@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a57d56106703cb729370214435feb98",
+    "content-hash": "20874601c6797a65c01000471bd74645",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "dev-feat-add-ssr-runtime",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "a021a2b09b045375979f8e7bc2e7aa520fc94847"
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/a021a2b09b045375979f8e7bc2e7aa520fc94847",
-                "reference": "a021a2b09b045375979f8e7bc2e7aa520fc94847",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9a9e20d1f5c28caf539ad4cb52164dc283f99797",
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/feat-add-ssr-runtime"
+                "source": "https://github.com/appwrite/runtimes/tree/0.17.0"
             },
-            "time": "2025-01-07T12:14:14+00:00"
+            "time": "2025-01-10T13:36:30+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -8556,12 +8556,6 @@
     ],
     "aliases": [
         {
-            "package": "appwrite/php-runtimes",
-            "version": "dev-feat-add-ssr-runtime",
-            "alias": "0.16.99",
-            "alias_normalized": "0.16.99.0"
-        },
-        {
             "package": "utopia-php/framework",
             "version": "dev-fix-prevent-duplicate-compression",
             "alias": "0.33.99",
@@ -8570,7 +8564,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "appwrite/php-runtimes": 20,
         "utopia-php/framework": 20
     },
     "prefer-stable": false,
@@ -8596,5 +8589,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
