@@ -268,7 +268,7 @@ App::get('/v1/project/usage')
 
         // This estimate is only for paid SMS usage
         $authPhoneMetrics = Authorization::skip(fn () => $dbForProject->find('stats', [
-            Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE . '.'),
+            Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE . '.'),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
             Query::lessThan('time', $lastDay),
