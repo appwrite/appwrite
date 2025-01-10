@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f80de1fcc781dfbf379e6898a4f57ab",
+    "content-hash": "630e10509c6effad82583cd67ad49974",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3929,16 +3929,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.13",
+            "version": "0.6.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13"
+                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/68d9b0a9477755afcda607e7e8109785cae17a13",
-                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
+                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
                 "shasum": ""
             },
             "require": {
@@ -3979,9 +3979,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.13"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.14"
             },
-            "time": "2024-11-26T13:57:53+00:00"
+            "time": "2025-01-08T01:07:25+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8556,7 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8580,5 +8580,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
