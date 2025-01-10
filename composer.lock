@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7b5b5926b452186543903eb539f59c2d",
+    "content-hash": "6b136b5490c0d5d331eac0d70bb3e198",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3929,16 +3929,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.14",
+            "version": "0.6.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2"
+                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
-                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/68d9b0a9477755afcda607e7e8109785cae17a13",
+                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13",
                 "shasum": ""
             },
             "require": {
@@ -3979,9 +3979,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.14"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.13"
             },
-            "time": "2025-01-08T01:07:25+00:00"
+            "time": "2024-11-26T13:57:53+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4145,25 +4145,25 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.6.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "59414ab7b57728edfde6d5ccc5a2583b7967ac18"
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/59414ab7b57728edfde6d5ccc5a2583b7967ac18",
-                "reference": "59414ab7b57728edfde6d5ccc5a2583b7967ac18",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.3"
+                "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "11.*"
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -4190,9 +4190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.6.0"
+                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
             },
-            "time": "2025-01-08T07:58:42+00:00"
+            "time": "2024-04-19T11:11:54+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -8556,7 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8580,5 +8580,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.2.0"
 }

@@ -16,7 +16,6 @@ use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
-use Swoole\Database\DetectsLostConnections;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -26,13 +25,11 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
-use Utopia\Pools\Connection as PoolConnection;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
@@ -69,12 +66,12 @@ Server::setResource('project', function (Message $message, Database $dbForPlatfo
     return $dbForPlatform->getDocument('projects', $project->getId());
 }, ['message', 'dbForPlatform']);
 
-Server::setResource('connectionForProject', function (Group $pools, Document $project) {
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $pools
-            ->get('console')
-            ->pop();
+        return $dbForPlatform;
     }
+
+    $pools = $register->get('pools');
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -83,17 +80,12 @@ Server::setResource('connectionForProject', function (Group $pools, Document $pr
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    return $pools
+    $adapter = $pools
         ->get($dsn->getHost())
-        ->pop();
-}, ['pools', 'project']);
+        ->pop()
+        ->getResource();
 
-Server::setResource('dbForProject', function (PoolConnection $connectionForProject, Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
-    }
-
-    $database = new Database($connectionForProject->getResource(), $cache);
+    $database = new Database($adapter, $cache);
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -117,12 +109,12 @@ Server::setResource('dbForProject', function (PoolConnection $connectionForProje
     }
 
     return $database;
-}, ['connectionForProject', 'cache', 'register', 'message', 'project', 'dbForPlatform']);
+}, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
-Server::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -154,7 +146,12 @@ Server::setResource('getProjectDB', function (Group $pools, PoolConnection $conn
             return $database;
         }
 
-        $database = new Database($connectionForProject->getResource(), $cache);
+        $dbAdapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -174,7 +171,7 @@ Server::setResource('getProjectDB', function (Group $pools, PoolConnection $conn
 
         return $database;
     };
-}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
@@ -413,16 +410,7 @@ $worker
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->inject('connectionForProject')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, PoolConnection $connectionForProject) use ($queueName) {
-        if (
-            ($error instanceof PDOException || $error instanceof DatabaseException)
-            && DetectsLostConnections::causedByLostConnection($error)
-        ) {
-            // Mark connection as unhealthy, it will be recycled on next reclaim.
-            $connectionForProject->setHealthy(false);
-        }
-
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
