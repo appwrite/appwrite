@@ -188,13 +188,6 @@ App::post('/v1/users')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk', new Method(
         namespace: 'users',
         name: 'create',

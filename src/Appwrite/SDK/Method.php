@@ -211,6 +211,104 @@ class Method
         return $this->parameters;
     }
 
+    public function setNamespace(string $namespace): self
+    {
+        $this->namespace = $namespace;
+        return $this;
+    }
+
+    public function setMethodName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    public function setAuth(array $auth): self
+    {
+        $this->validateAuthTypes($auth);
+        $this->auth = $auth;
+        return $this;
+    }
+
+    /**
+     * @param Array<SDKResponse> $responses
+     */
+    public function setResponses(array $responses): self
+    {
+        foreach ($responses as $response) {
+            $this->validateResponseModel($response->getModel());
+            $this->validateNoContent($response);
+        }
+        $this->responses = $responses;
+        return $this;
+    }
+
+    public function setResponseType(ResponseType $responseType): self
+    {
+        $this->responseType = $responseType;
+        return $this;
+    }
+
+    public function setMethodType(?MethodType $methodType): self
+    {
+        $this->methodType = $methodType;
+        return $this;
+    }
+
+    public function setOfflineKey(?string $offlineKey): self
+    {
+        $this->offlineKey = $offlineKey;
+        return $this;
+    }
+
+    public function setOfflineModel(?string $offlineModel): self
+    {
+        $this->offlineModel = $offlineModel;
+        return $this;
+    }
+
+    public function setOfflineResponseKey(?string $offlineResponseKey): self
+    {
+        $this->offlineResponseKey = $offlineResponseKey;
+        return $this;
+    }
+
+    public function setDeprecated(bool $deprecated): self
+    {
+        $this->deprecated = $deprecated;
+        return $this;
+    }
+
+    public function setHide(bool|array $hide): self
+    {
+        $this->hide = $hide;
+        return $this;
+    }
+
+    public function setPackaging(bool $packaging): self
+    {
+        $this->packaging = $packaging;
+        return $this;
+    }
+
+    public function setRequestType(string $requestType): self
+    {
+        $this->requestType = $requestType;
+        return $this;
+    }
+
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
+        return $this;
+    }
+
     // Throw any errors that were found during initialization
     public static function finaliseInitialization(): void
     {
