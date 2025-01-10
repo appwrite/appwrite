@@ -36709,7 +36709,8 @@
                     "resourceId": {
                         "type": "string",
                         "description": "Resource ID.",
-                        "x-example": "5e5ea5c16897e"
+                        "x-example": "5e5ea5c16897e",
+                        "nullable": true
                     },
                     "name": {
                         "type": "string",
@@ -36721,10 +36722,16 @@
                         "description": "The value of this metric at the timestamp.",
                         "x-example": 1,
                         "format": "int32"
+                    },
+                    "estimate": {
+                        "type": "number",
+                        "description": "The estimated value of this metric at the end of the period.",
+                        "x-example": 1,
+                        "format": "double",
+                        "nullable": true
                     }
                 },
                 "required": [
-                    "resourceId",
                     "name",
                     "value"
                 ]
@@ -37540,6 +37547,26 @@
                             "$ref": "#\/components\/schemas\/metricBreakdown"
                         },
                         "x-example": []
+                    },
+                    "authPhoneTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of phone auth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "authPhoneEstimate": {
+                        "type": "number",
+                        "description": "Estimated total aggregated cost of phone auth.",
+                        "x-example": 0,
+                        "format": "double"
+                    },
+                    "authPhoneCountryBreakdown": {
+                        "type": "array",
+                        "description": "Aggregated breakdown in totals of phone auth by country.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metricBreakdown"
+                        },
+                        "x-example": []
                     }
                 },
                 "required": [
@@ -37564,7 +37591,10 @@
                     "databasesStorageBreakdown",
                     "executionsMbSecondsBreakdown",
                     "buildsMbSecondsBreakdown",
-                    "functionsStorageBreakdown"
+                    "functionsStorageBreakdown",
+                    "authPhoneTotal",
+                    "authPhoneEstimate",
+                    "authPhoneCountryBreakdown"
                 ]
             },
             "headers": {
