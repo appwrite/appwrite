@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -113,6 +114,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 
 /**
@@ -664,6 +666,16 @@ class Response extends SwooleResponse
             }
 
             $output[$key] = $data[$key];
+        }
+
+        if ($rule['sensitive']) {
+            $roles = Authorization::getRoles();
+            $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+            $isAppUser = Auth::isAppUser($roles);
+
+            if (!$isPrivilegedUser && !$isAppUser) {
+                $output[$key] = '';
+            }
         }
 
         $this->payload = $output;
