@@ -665,17 +665,17 @@ class Response extends SwooleResponse
                 }
             }
 
-            $output[$key] = $data[$key];
-        }
+            if ($rule['sensitive']) {
+                $roles = Authorization::getRoles();
+                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+                $isAppUser = Auth::isAppUser($roles);
 
-        if ($rule['sensitive']) {
-            $roles = Authorization::getRoles();
-            $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-            $isAppUser = Auth::isAppUser($roles);
-
-            if (!$isPrivilegedUser && !$isAppUser) {
-                $output[$key] = '';
+                if (!$isPrivilegedUser && !$isAppUser) {
+                    $data->setAttribute($key, '');
+                }
             }
+
+            $output[$key] = $data[$key];
         }
 
         $this->payload = $output;
