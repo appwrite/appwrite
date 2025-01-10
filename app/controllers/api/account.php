@@ -1979,16 +1979,10 @@ App::post('/v1/account/tokens/magic-url')
             ->setRecipient($email)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $tokenSecret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $token->setAttribute('secret', '');
-        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -2208,16 +2202,10 @@ App::post('/v1/account/tokens/email')
             ->setRecipient($email)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $tokenSecret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $token->setAttribute('secret', '');
-        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -2481,13 +2469,12 @@ App::post('/v1/account/tokens/phone')
             }
         }
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $secret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-        // Hide secret for clients
+        // Encode secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
 
         $response
@@ -3139,7 +3126,6 @@ App::post('/v1/account/recovery')
             ->setSubject($subject)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $recovery->setAttribute('secret', $secret);
 
         $queueForEvents
@@ -3147,11 +3133,6 @@ App::post('/v1/account/recovery')
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
             ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $recovery->setAttribute('secret', '');
-        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3390,18 +3371,12 @@ App::post('/v1/account/verification')
             ->setName($user->getAttribute('name') ?? '')
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $verificationSecret);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $verification->setAttribute('secret', '');
-        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3601,18 +3576,12 @@ App::post('/v1/account/verification/phone')
             }
         }
 
-        // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $secret);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $verification->setAttribute('secret', '');
-        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
