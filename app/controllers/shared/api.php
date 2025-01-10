@@ -348,6 +348,10 @@ App::init()
          */
         $method = $route->getLabel('sdk', false);
 
+        if (is_array($method)) {
+            $method = $method[0];
+        }
+
         if (!empty($method)) {
             $namespace = $method->getNamespace();
             if (

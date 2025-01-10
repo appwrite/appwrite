@@ -86,17 +86,38 @@ class Mapper
             }
         }
 
-        /** @var \Appwrite\SDK\Method $sdk */
         $sdk = $route->getLabel('sdk', false);
 
         if (!$sdk) {
             return;
         }
 
-        $names = $sdk->getResponseModel() ?? [];
-        $models = \is_array($names)
-            ? \array_map(static fn ($m) => static::$models[$m], $names)
-            : [static::$models[$names]];
+        if (is_array($sdk)) {
+            $sdk = $sdk[0];
+        }
+
+        /** @var \Appwrite\SDK\Method $sdk */
+        $responses = $sdk->getResponses() ?? [];
+
+        // If responses is an array, map each response to its model
+        if (\is_array($responses)) {
+            $models = [];
+            foreach ($responses as $response) {
+                $modelName = $response->getModel();
+
+                if (\is_array($modelName)) {
+                    foreach ($modelName as $name) {
+                        $models[] = static::$models[$name];
+                    }
+                } else {
+                    $models[] = static::$models[$modelName];
+                }
+            }
+        } else {
+            // If single response, get its model and wrap in array
+            $modelName = $responses->getModel();
+            $models = [static::$models[$modelName]];
+        }
 
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));

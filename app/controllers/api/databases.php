@@ -9,7 +9,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\Multiplex;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -3118,22 +3117,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ]
             ),
             new Method(
-                    namespace: 'databases',
-                    name: 'createDocuments',
-                    description: '/docs/references/databases/create-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-                    responses: [
-                        new SDKResponse(
-                            code: Response::STATUS_CODE_CREATED,
-                            model: Response::MODEL_DOCUMENT,
-                        )
-                    ],
-                    responseType: ResponseType::JSON,
-                    offlineKey: '{documentId}',
-                    offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-                    parameters: [
-                        'documents' => ['default' => [], 'validator' => new ArrayList(new JSON(), APP_LIMIT_ARRAY_DOCUMENTS_SIZE), 'description' => '', 'optional' => false],
-                    ]
+                namespace: 'databases',
+                name: 'createDocuments',
+                description: '/docs/references/databases/create-document.md',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DOCUMENT,
+                    )
+                ],
+                responseType: ResponseType::JSON,
+                offlineKey: '{documentId}',
+                offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+                parameters: [
+                    'documents' => ['default' => [], 'validator' => new ArrayList(new JSON(), APP_LIMIT_ARRAY_DOCUMENTS_SIZE), 'description' => '', 'optional' => false],
+                ]
             )
         ]
     )

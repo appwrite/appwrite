@@ -215,7 +215,7 @@ class Swagger2 extends Format
                         'required' => [],
                         'responses' => []
                     ];
-                    
+
                     foreach ($method->getParameters() as $name => $param) {
                         $additionalMethod['parameters'][] = $name;
 

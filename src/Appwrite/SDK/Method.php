@@ -2,8 +2,8 @@
 
 namespace Appwrite\SDK;
 
-use Appwrite\Utopia\Response;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response;
 use Swoole\Http\Response as HttpResponse;
 
 class Method
@@ -20,8 +20,6 @@ class Method
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
-     * @param int $responseCode
-     * @param string|array<string> $responseModel
      * @param ResponseType $responseType
      * @param MethodType|null $methodType
      * @param string|null $offlineKey
@@ -155,6 +153,9 @@ class Method
         return $this->auth;
     }
 
+    /**
+     * @return Array<SDKResponse>
+     */
     public function getResponses(): array
     {
         return $this->responses;
@@ -211,7 +212,7 @@ class Method
     }
 
     // Throw any errors that were found during initialization
-    static function finaliseInitialization(): void
+    public static function finaliseInitialization(): void
     {
         if (!empty(self::$errors)) {
             throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, self::$errors));

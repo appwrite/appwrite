@@ -214,7 +214,7 @@ class OpenAPI3 extends Format
                         'required' => [],
                         'responses' => []
                     ];
-                    
+
                     foreach ($method->getParameters() as $name => $param) {
                         $additionalMethod['parameters'][] = $name;
 

@@ -200,10 +200,10 @@ class Specs extends Action
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
                             continue;
                         }
-    
+
                         $routeSecurity = $sdk->getAuth();
                         $sdkPlatforms = [];
-    
+
                         foreach ($routeSecurity as $value) {
                             switch ($value) {
                                 case AuthType::SESSION:
@@ -218,32 +218,32 @@ class Specs extends Action
                                     break;
                             }
                         }
-    
+
                         if (empty($routeSecurity)) {
                             $sdkPlatforms[] = APP_PLATFORM_SERVER;
                             $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         }
-    
+
                         if (!$route->getLabel('docs', true)) {
                             continue;
                         }
-    
+
                         if ($route->getLabel('mock', false) && !$mocks) {
                             continue;
                         }
-    
+
                         if (!$route->getLabel('mock', false) && $mocks) {
                             continue;
                         }
-    
+
                         if (empty($sdk->getNamespace())) {
                             continue;
                         }
-    
+
                         if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
                             continue;
                         }
-    
+
                         $routes[] = $route;
                     }
                 }

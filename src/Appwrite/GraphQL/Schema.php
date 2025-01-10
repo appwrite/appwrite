@@ -109,7 +109,7 @@ class Schema
                 if (is_array($sdk)) {
                     $mainSdk = array_shift($sdk);
                     $additionalMethods = $sdk;
-    
+
                     $sdk = $mainSdk;
                 }
 
