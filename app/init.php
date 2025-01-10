@@ -74,7 +74,6 @@ use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Utopia\Pools\Connection as PoolConnection;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -1413,26 +1412,7 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('connectionForProject', function (Group $pools, Document $project) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $pools
-            ->get('console')
-            ->pop();
-    }
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    return $pools
-        ->get($dsn->getHost())
-        ->pop();
-}, ['pools', 'project']);
-
-App::setResource('dbForProject', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -1444,7 +1424,12 @@ App::setResource('dbForProject', function (Group $pools, PoolConnection $connect
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $database = new Database($connectionForProject->getResource(), $cache);
+    $dbAdapter = $pools
+        ->get($dsn->getHost())
+        ->pop()
+        ->getResource();
+
+    $database = new Database($dbAdapter, $cache);
 
     $database
         ->setMetadata('host', \gethostname())
@@ -1467,7 +1452,7 @@ App::setResource('dbForProject', function (Group $pools, PoolConnection $connect
     }
 
     return $database;
-}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache', 'project']);
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
