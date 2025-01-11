@@ -563,7 +563,6 @@ App::post('/v1/teams/:teamId/memberships')
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             try {
