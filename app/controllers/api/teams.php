@@ -527,7 +527,7 @@ App::post('/v1/teams/:teamId/memberships')
         $createdMembership = false;
         if (!$membership) {
             $secret = Auth::tokenGenerator();
-    
+
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
