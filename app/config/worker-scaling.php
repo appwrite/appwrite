@@ -1,38 +1,15 @@
 <?php
 
 return [
-    'scaling' => [
-        'workers' => [
-            'deletes' => [
-                'min_instances' => 1,
-                'max_instances' => 5,
-                'scale_up_threshold' => [
-                    'queue_length' => 1000,
-                    'cpu_usage' => 80,
-                    'memory_usage' => 85
-                ],
-                'scale_down_threshold' => [
-                    'queue_length' => 100,
-                    'cpu_usage' => 20,
-                    'memory_usage' => 40
-                ],
-                'cooldown_period' => 300 // 5 minutes between scaling actions
-            ],
-            'certificates' => [
-                'min_instances' => 1,
-                'max_instances' => 3,
-                'scale_up_threshold' => [
-                    'queue_length' => 500,
-                    'cpu_usage' => 80,
-                    'memory_usage' => 85
-                ],
-                'scale_down_threshold' => [
-                    'queue_length' => 50,
-                    'cpu_usage' => 20,
-                    'memory_usage' => 40
-                ],
-                'cooldown_period' => 300
-            ]
-        ]
-    ]
+    'worker' => [
+        'scaling' => [
+            'enabled' => App::getEnv('_APP_WORKER_SCALING_ENABLED', 'false'),
+            'min_instances' => (int) App::getEnv('_APP_WORKER_MIN_INSTANCES', '1'),
+            'max_instances' => (int) App::getEnv('_APP_WORKER_MAX_INSTANCES', '10'),
+            'cooldown_period' => (int) App::getEnv('_APP_WORKER_COOLDOWN_PERIOD', '300'),
+            'queue_threshold' => (int) App::getEnv('_APP_WORKER_QUEUE_THRESHOLD', '1000'),
+            'cpu_threshold' => (float) App::getEnv('_APP_WORKER_CPU_THRESHOLD', '80.0'),
+            'memory_threshold' => (float) App::getEnv('_APP_WORKER_MEMORY_THRESHOLD', '85.0'), // Yeni eklenen bellek eşiği
+        ],
+    ],
 ];

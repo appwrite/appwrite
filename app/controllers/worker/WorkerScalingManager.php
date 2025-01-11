@@ -2,157 +2,105 @@
 
 namespace Appwrite\Worker;
 
-use Utopia\Cache\Cache;
+use Appwrite\Event\Event;
+use Appwrite\Queue\Queue;
+use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Registry\Registry;
-use Docker\Docker;
-use Docker\API\Model\ContainerConfig;
+use Utopia\Logger\Logger;
 
 class WorkerScalingManager
 {
-    protected Cache $cache;
-    protected Registry $register;
-    protected Config $config;
+    protected Queue $queue;
     protected WorkerMetrics $metrics;
-    
-    public function __construct(
-        Cache $cache,
-        Registry $register,
-        Config $config,
-        WorkerMetrics $metrics
-    ) {
-        $this->cache = $cache;
-        $this->register = $register;
-        $this->config = $config;
+    protected Logger $logger;
+
+    public function __construct(Queue $queue, WorkerMetrics $metrics, Logger $logger)
+    {
+        $this->queue = $queue;
         $this->metrics = $metrics;
+        $this->logger = $logger;
     }
 
-    /**
-     * Check and scale workers if needed
-     */
-    public function checkAndScale(string $workerType): void
+    public function scaleWorkers(string $workerType): void
     {
-        $config = $this->config->getParam('scaling.workers.' . $workerType);
-        if (!$config) {
+        try {
+            $metrics = $this->metrics->getQueueMetrics($workerType);
+            $config = Config::getParam('worker.scaling');
+            
+            if (!$this->shouldScale($metrics, $config)) {
+                return;
+            }
+
+            $this->adjustWorkerCount($workerType, $metrics, $config);
+            
+            $this->logger->info("Worker scaling completed for {$workerType}");
+        } catch (\Throwable $th) {
+            $this->logger->error("Worker scaling failed: {$th->getMessage()}");
+            Event::emit('worker.scaling.error', new Document([
+                'worker' => $workerType,
+                'error' => $th->getMessage()
+            ]));
+        }
+    }
+
+    protected function shouldScale(array $metrics, array $config): bool
+    {
+        $lastScaled = $this->getLastScaleTime($workerType);
+        if (time() - $lastScaled < $config['cooldown_period']) {
+            return false;
+        }
+
+        // Histerezis mekanizması
+        if ($metrics['size'] > $config['queue_threshold'] * 1.1) {
+            return true;
+        } elseif ($metrics['size'] < $config['queue_threshold'] * 0.9) {
+            return false;
+        }
+
+        return false;
+    }
+
+    protected function adjustWorkerCount(string $workerType, array $metrics, array $config): void
+    {
+        $currentInstances = $this->getCurrentWorkerCount($workerType);
+        $newInstances = $this->calculateRequiredWorkers($metrics, $config);
+
+        if ($newInstances === $currentInstances) {
             return;
         }
 
-        // Get current metrics
-        $metrics = $this->metrics->collectMetrics($workerType);
-        
-        // Check if we're in cooldown period
-        $lastScaleTime = $this->cache->get("worker:{$workerType}:last_scale");
-        if ($lastScaleTime && (time() - $lastScaleTime) < $config['cooldown_period']) {
-            return;
-        }
-
-        $currentInstances = $this->getCurrentInstances($workerType);
-
-        if ($this->shouldScaleUp($metrics, $config)) {
-            if ($currentInstances < $config['max_instances']) {
-                $this->scaleUp($workerType);
-            }
-        } elseif ($this->shouldScaleDown($metrics, $config)) {
-            if ($currentInstances > $config['min_instances']) {
-                $this->scaleDown($workerType);
-            }
+        if ($newInstances > $currentInstances) {
+            $this->scaleUp($workerType, $newInstances - $currentInstances);
+        } else {
+            $this->scaleDown($workerType, $currentInstances - $newInstances);
         }
     }
 
-    /**
-     * Check if worker should scale up
-     */
-    protected function shouldScaleUp(array $metrics, array $config): bool
+    protected function getCurrentWorkerCount(string $workerType): int
     {
-        $threshold = $config['scale_up_threshold'];
-        
-        return $metrics['queue_length'] > $threshold['queue_length'] ||
-               $metrics['cpu_usage'] > $threshold['cpu_usage'] ||
-               $metrics['memory_usage'] > $threshold['memory_usage'];
+        // Docker API entegrasyonu burada implement edilecek
+        return 1; // Şimdilik default değer
     }
 
-    /**
-     * Check if worker should scale down
-     */
-    protected function shouldScaleDown(array $metrics, array $config): bool
+    protected function calculateRequiredWorkers(array $metrics, array $config): int
     {
-        $threshold = $config['scale_down_threshold'];
-        
-        return $metrics['queue_length'] < $threshold['queue_length'] &&
-               $metrics['cpu_usage'] < $threshold['cpu_usage'] &&
-               $metrics['memory_usage'] < $threshold['memory_usage'];
+        $baseCount = ceil($metrics['size'] / $config['queue_threshold']);
+        return min(max($baseCount, $config['min_instances']), $config['max_instances']);
     }
 
-    /**
-     * Get current number of worker instances
-     */
-    protected function getCurrentInstances(string $workerType): int
+    protected function scaleUp(string $workerType, int $count): void
     {
-        // Use Docker API to count current containers
-        $docker = Docker::create();
-        $containers = $docker->containerList([
-            'filters' => [
-                'name' => ['appwrite-worker-' . $workerType],
-                'status' => ['running']
-            ]
-        ]);
-        
-        return count($containers);
+        // Docker API entegrasyonu
+        $command = "docker service scale {$workerType}={$count}";
+        shell_exec($command);
+        $this->logger->info("Scaled up {$workerType} to {$count} instances.");
     }
 
-    /**
-     * Scale up worker instances
-     */
-    protected function scaleUp(string $workerType): void
+    protected function scaleDown(string $workerType, int $count): void
     {
-        // Log scaling action
-        $this->cache->set(
-            "worker:{$workerType}:last_scale",
-            time(),
-            3600
-        );
-
-        // Use Docker API to create new container
-        $docker = Docker::create();
-        
-        // Use existing container as template
-        $template = $docker->containerInspect('appwrite-worker-' . $workerType);
-        
-        // Create new container with same config
-        $config = new ContainerConfig();
-        $config->setImage($template->getConfig()->getImage());
-        $config->setCmd($template->getConfig()->getCmd());
-        $config->setEnv($template->getConfig()->getEnv());
-        
-        $docker->containerCreate($config);
-    }
-
-    /**
-     * Scale down worker instances
-     */
-    protected function scaleDown(string $workerType): void
-    {
-        // Log scaling action
-        $this->cache->set(
-            "worker:{$workerType}:last_scale",
-            time(),
-            3600
-        );
-
-        // Use Docker API to remove container
-        $docker = Docker::create();
-        $containers = $docker->containerList([
-            'filters' => [
-                'name' => ['appwrite-worker-' . $workerType],
-                'status' => ['running']
-            ]
-        ]);
-        
-        if (!empty($containers)) {
-            // Remove last container
-            $container = end($containers);
-            $docker->containerStop($container->getId());
-            $docker->containerRemove($container->getId());
-        }
+        // Docker API entegrasyonu
+        $command = "docker service scale {$workerType}={$count}";
+        shell_exec($command);
+        $this->logger->info("Scaled down {$workerType} to {$count} instances.");
     }
 }
