@@ -37,11 +37,17 @@ class Execution extends Model
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])
-            ->addRule('functionId', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Resource ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
+            ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Resource type.',
+                'default' => '',
+                'example' => 'sites',
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
@@ -106,7 +112,7 @@ class Execution extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Function execution duration in seconds.',
+                'description' => 'Resource(function/site) execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
             ])

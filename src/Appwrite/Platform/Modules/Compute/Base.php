@@ -10,6 +10,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
@@ -92,7 +93,7 @@ class Base extends Action
             ->setTemplate($template);
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github)
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForConsole, Build $queueForBuilds, Document $template, GitHub $github)
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -159,6 +160,27 @@ class Base extends Action
             'search' => implode(' ', [$deploymentId]),
             'activate' => true,
         ]));
+
+        // Preview deployments for sites
+        $projectId = $project->getId();
+
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+        $ruleId = md5($domain);
+
+        $rule = Authorization::skip(
+            fn () => $dbForConsole->createDocument('rules', new Document([
+                '$id' => $ruleId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'domain' => $domain,
+                'resourceType' => 'deployment',
+                'resourceId' => $deploymentId,
+                'resourceInternalId' => $deployment->getInternalId(),
+                'status' => 'verified',
+                'certificateId' => '',
+            ]))
+        );
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

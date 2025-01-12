@@ -70,6 +70,12 @@ return [ // List of publicly visible scopes
     'sites.write' => [
         'description' => 'Access to create, update, and delete your project\'s sites and deployments',
     ],
+    'log.read' => [
+        'description' => 'Access to read your site\'s logs',
+    ],
+    'log.write' => [
+        'description' => 'Access to update, and delete your site\'s logs',
+    ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
     ],

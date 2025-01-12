@@ -805,8 +805,11 @@ App::get('/v1/teams/:teamId/memberships')
         }, $membershipsPrivacy);
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+            $user = !empty(array_filter($membershipsPrivacy))
+                ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+                : new Document();
+
             if ($membershipsPrivacy['mfa']) {
-                $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
                 $mfa = $user->getAttribute('mfa', false);
 
                 if ($mfa) {
@@ -888,9 +891,11 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        if ($membershipsPrivacy['mfa']) {
-            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $user = !empty(array_filter($membershipsPrivacy))
+            ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+            : new Document();
 
+        if ($membershipsPrivacy['mfa']) {
             $mfa = $user->getAttribute('mfa', false);
 
             if ($mfa) {

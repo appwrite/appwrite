@@ -63,7 +63,8 @@ class UpdateSite extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
-            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.', true)
+            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Usuallly allows: static, ssr', true)
+            ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -86,8 +87,17 @@ class UpdateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $serveRuntime, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, ?string $fallbackFile, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
+        if (!empty($adapter)) {
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $adapters = \array_keys($configFramework['adapters'] ?? []);
+            $validator = new WhiteList($adapters, true);
+            if (!$validator->isValid($adapter)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+            }
+        }
+
         // TODO: If only branch changes, re-deploy
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -218,7 +228,8 @@ class UpdateSite extends Base
             'specification' => $specification,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'buildRuntime' => $buildRuntime,
-            'serveRuntime' => $serveRuntime
+            'adapter' => $adapter,
+            'fallbackFile' => $fallbackFile,
         ])));
 
         // Redeploy logic

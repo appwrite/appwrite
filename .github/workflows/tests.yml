@@ -66,6 +66,9 @@ jobs:
           docker compose up -d
           sleep 10
 
+      - name: Logs
+        run: docker compose logs appwrite
+
       - name: Doctor
         run: docker compose exec -T appwrite doctor
 
