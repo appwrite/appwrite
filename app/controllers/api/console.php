@@ -126,11 +126,13 @@ App::get('v1/console/resources/:resourceId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'userId:{userId}')
     ->param('resourceId', '', new UID(), 'ID of the resource.')
     ->param('type', '', new WhiteList(['rules']), 'Resource type.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $type, string $resourceId, Response $response, Database $dbForConsole) {
+    ->action(function (string $resourceId, string $type, Response $response, Database $dbForConsole) {
         if ($type !== 'rules') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type.');
         }
