@@ -123,7 +123,6 @@ App::get('v1/console/resources/:resourceId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'console')
     ->label('sdk.method', 'checkResourceAvailability')
-    ->label('sdk.description', '/docs/references/console/resources.md') //TODO: add this file
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -136,7 +135,7 @@ App::get('v1/console/resources/:resourceId')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type.');
         }
 
-        $document = Authorization::skip(fn() => $dbForConsole->getDocument('rules', $resourceId));
+        $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $resourceId));
 
         if ($document && !$document->isEmpty()) {
             throw new Exception(Exception::RESOURCE_ALREADY_EXISTS, 'Resource ID is already in use.');

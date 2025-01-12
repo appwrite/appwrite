@@ -45,7 +45,7 @@ class CreateSite extends Base
             ->setHttpPath('/v1/sites')
             ->desc('Create site')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write')
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
@@ -113,7 +113,6 @@ class CreateSite extends Base
         if (!empty($sitesDomain)) {
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
-            $ruleId = md5($domain);
 
             $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', \md5($domain)));
 
