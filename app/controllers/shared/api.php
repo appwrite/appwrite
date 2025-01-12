@@ -244,7 +244,7 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
-                        'type' => Auth::AUDIT_TYPE_APP,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
                         'name' => 'Dynamic Key',
@@ -269,7 +269,7 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
-                        'type' => Auth::AUDIT_TYPE_APP,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
                         'name' => $key->getAttribute('name', 'UNKNOWN'),
@@ -521,7 +521,7 @@ App::init()
         // check first,
         // as api key user might already exists
         if (!$user->isEmpty()) {
-            $user->setAttribute('type', Auth::AUDIT_TYPE_USER);
+            $user->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($user);
         }
 
@@ -723,7 +723,7 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
-            $user->setAttribute('type', Auth::AUDIT_TYPE_USER);
+            $user->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($user);
         }
 

@@ -44,10 +44,10 @@ class Auth
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
-     * Audit User Types.
+     * Activity associated with user or the app.
      */
-    public const AUDIT_TYPE_APP = 'app';
-    public const AUDIT_TYPE_USER = 'user';
+    public const ACTIVITY_TYPE_APP = 'app';
+    public const ACTIVITY_TYPE_USER = 'user';
 
     /**
      * Token Types.
