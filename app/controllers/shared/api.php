@@ -659,6 +659,7 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('userType')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
     ->inject('queueForUsage')
@@ -670,7 +671,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Document $userType, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -708,11 +709,17 @@ App::shutdown()
             }
         }
 
-        if (!$user->isEmpty()) {
-            $queueForAudits->setUser($user);
-        }
+        $localUserInstance = clone $user;
+        $localUserInstance->setAttributes([
+            'keyName' => $userType->getAttribute('key'),
+            'userType' => $userType->getAttribute('type', 'user'),
+        ]);
 
-        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
+        // even if the user is empty,
+        // set the available info when using API Key.
+        $queueForAudits->setUser($localUserInstance);
+
+        if (!empty($queueForAudits->getResource())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints

@@ -1349,6 +1349,46 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
+App::setResource('userType', function ($request, $project, $user) {
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Document $user */
+
+    $userType = new Document();
+    $apiKey = $request->getHeader('x-appwrite-key', '');
+
+    // Case 1: User exists, no API key
+    if (!$user->isEmpty() && empty($apiKey)) {
+        $userType
+            ->setAttribute('key', null)
+            ->setAttribute('type', 'user');
+        return $userType;
+    }
+
+    // Case 2: API key exists, user is empty
+    if (!empty($apiKey) && $user->isEmpty()) {
+        $userType->setAttribute('type', 'app');
+
+        // covers both legacy and new format.
+        $keyType = \str_contains($apiKey, '_')
+            ? \explode('_', $apiKey, 2)[0]
+            : API_KEY_STANDARD;
+
+        switch ($keyType) {
+            case API_KEY_STANDARD:
+                $key = $project->find('secret', $apiKey, 'keys');
+                $userType->setAttribute('key', $key ? $key->getAttribute('name', 'UNKNOWN') : 'UNKNOWN');
+                break;
+
+            case API_KEY_DYNAMIC:
+                $userType->setAttribute('key', 'dynamic');
+                break;
+        }
+    }
+
+    return $userType;
+}, ['request', 'project', 'user']);
+
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
