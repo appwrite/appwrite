@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b136b5490c0d5d331eac0d70bb3e198",
+    "content-hash": "4840ac981ffe6b1ea61123edbfea1779",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.16.5",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9"
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
-                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9a9e20d1f5c28caf539ad4cb52164dc283f99797",
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.16.5"
+                "source": "https://github.com/appwrite/runtimes/tree/0.17.0"
             },
-            "time": "2024-11-25T15:17:06+00:00"
+            "time": "2025-01-10T13:36:30+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -8556,7 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8580,5 +8580,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
