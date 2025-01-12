@@ -44,6 +44,12 @@ class Auth
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
+     * Audit User Types.
+     */
+    public const AUDIT_TYPE_APP = 'app';
+    public const AUDIT_TYPE_USER = 'user';
+
+    /**
      * Token Types.
      */
     public const TOKEN_TYPE_LOGIN = 1; // Deprecated

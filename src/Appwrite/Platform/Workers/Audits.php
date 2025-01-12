@@ -76,8 +76,6 @@ class Audits extends Action
                 'userEmail' => $userEmail,
                 'mode' => $mode,
                 'data' => $auditPayload,
-                'keyName' => $user->getAttribute('keyName'),
-                'userType' => $user->getAttribute('userType'),
             ]
         );
     }

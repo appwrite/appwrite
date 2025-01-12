@@ -185,13 +185,14 @@ App::init()
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
+    ->inject('queueForAudits')
     ->inject('project')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -243,9 +244,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::AUDIT_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => 'Dynamic Key',
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -253,6 +255,9 @@ App::init()
 
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    // dynamic api key user
+                    $queueForAudits->setUser($user);
                 }
             } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
@@ -264,9 +269,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::AUDIT_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => $key->getAttribute('name', 'UNKNOWN'),
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -301,6 +307,8 @@ App::init()
                             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
+
+                    $queueForAudits->setUser($user);
                 }
             }
         }
@@ -508,8 +516,14 @@ App::init()
             ->setIP($request->getIP())
             ->setHostname($request->getHostname())
             ->setEvent($route->getLabel('audits.event', ''))
-            ->setProject($project)
-            ->setUser($user);
+            ->setProject($project);
+
+        // check first,
+        // as api key user might already exists
+        if (!$user->isEmpty()) {
+            $user->setAttribute('type', Auth::AUDIT_TYPE_USER);
+            $queueForAudits->setUser($user);
+        }
 
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
@@ -659,7 +673,6 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('userType')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
     ->inject('queueForUsage')
@@ -671,7 +684,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Document $userType, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -709,17 +722,12 @@ App::shutdown()
             }
         }
 
-        $localUserInstance = clone $user;
-        $localUserInstance->setAttributes([
-            'keyName' => $userType->getAttribute('key'),
-            'userType' => $userType->getAttribute('type', 'user'),
-        ]);
+        if (!$user->isEmpty()) {
+            $user->setAttribute('type', Auth::AUDIT_TYPE_USER);
+            $queueForAudits->setUser($user);
+        }
 
-        // even if the user is empty,
-        // set the available info when using API Key.
-        $queueForAudits->setUser($localUserInstance);
-
-        if (!empty($queueForAudits->getResource())) {
+        if (!empty($queueForAudits->getResource()) && !$queueForAudits->getUser()->isEmpty()) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
