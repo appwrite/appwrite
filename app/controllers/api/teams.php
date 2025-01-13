@@ -581,24 +581,22 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
-            try {
-                $membership = $createdMembership ?
-                    Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                    Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
-            }
+            $membership = $createdMembership ?
+                Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            if ($createdMembership) {
+                Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            }
 
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
-            try {
-                $membership = $createdMembership ?
-                    $dbForProject->createDocument('memberships', $membership) :
-                    $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
+            $membership = $createdMembership ?
+                $dbForProject->createDocument('memberships', $membership) :
+                $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+
+            if ($createdMembership) {
+                $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1);
             }
 
             $url = Template::parseURL($url);
