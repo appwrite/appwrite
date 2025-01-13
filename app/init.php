@@ -872,7 +872,7 @@ $register->set('pools', function () {
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
-            'multiple' => true,
+            'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
