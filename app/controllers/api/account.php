@@ -2970,6 +2970,9 @@ App::post('/v1/account/recovery')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
         $url = htmlentities($url);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
@@ -3094,10 +3097,6 @@ App::post('/v1/account/recovery')
             ->trigger();
 
         $recovery->setAttribute('secret', $secret);
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -3237,6 +3236,9 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
@@ -3346,10 +3348,6 @@ App::post('/v1/account/verification')
             ->trigger();
 
         $verification->setAttribute('secret', $verificationSecret);
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
