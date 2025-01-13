@@ -96,6 +96,7 @@ services:
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_SESSION_ALERTS
@@ -192,11 +193,14 @@ services:
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_DATABASE_SHARED_TABLES_V1
+      - _APP_DATABASE_SHARED_NAMESPACE
+      - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
 
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.0.12
+    image: appwrite/console:5.2.27
     restart: unless-stopped
     networks:
       - appwrite
@@ -381,6 +385,8 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_DATABASE_SHARED_TABLES_V1
+      - _APP_EMAIL_CERTIFICATES
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -863,7 +869,7 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.4.0
+    image: appwrite/assistant:0.7.0
     networks:
       - appwrite
     environment:

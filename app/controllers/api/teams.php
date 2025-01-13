@@ -8,6 +8,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
@@ -17,7 +18,9 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
@@ -34,6 +37,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
@@ -43,6 +47,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create team')
@@ -169,6 +174,12 @@ App::get('/v1/teams')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $teamId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('teams', $teamId);
 
@@ -393,7 +404,17 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('email', '', new Email(), 'Email of the new team member.', true)
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
+    ->param('roles', [], function (Document $project) {
+        if ($project->getId() === 'console') {
+            ;
+            $roles = array_keys(Config::getParam('roles', []));
+            array_filter($roles, function ($role) {
+                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+            });
+            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+        }
+        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
     ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
@@ -404,7 +425,10 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -448,17 +472,17 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
 
-        if (empty($invitee)) { // Create new user if no user with same email found
+        if ($invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
@@ -473,7 +497,7 @@ App::post('/v1/teams/:teamId/memberships')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -682,6 +706,27 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
                     ->setProviderType('SMS');
+
+                if (isset($plan['authPhone'])) {
+                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                    $timelimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                    $abuse = new Abuse($timelimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
             }
         }
 
@@ -718,9 +763,9 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Database $dbForProject) {
-
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -749,6 +794,13 @@ App::get('/v1/teams/:teamId/memberships')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -774,19 +826,40 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
-            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-            $mfa = $user->getAttribute('mfa', false);
-            if ($mfa) {
-                $totp = TOTP::getAuthenticatorFromUser($user);
-                $totpEnabled = $totp && $totp->getAttribute('verified', false);
-                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
-                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                    $mfa = false;
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+            $user = !empty(array_filter($membershipsPrivacy))
+                ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+                : new Document();
+
+            if ($membershipsPrivacy['mfa']) {
+                $mfa = $user->getAttribute('mfa', false);
+
+                if ($mfa) {
+                    $totp = TOTP::getAuthenticatorFromUser($user);
+                    $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                    $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                    $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                    if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                        $mfa = false;
+                    }
                 }
+
+                $membership->setAttribute('mfa', $mfa);
             }
 
             $membership
@@ -820,8 +893,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -835,19 +909,39 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-        $mfa = $user->getAttribute('mfa', false);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
-        if ($mfa) {
-            $totp = TOTP::getAuthenticatorFromUser($user);
-            $totpEnabled = $totp && $totp->getAttribute('verified', false);
-            $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-            $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
 
-            if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                $mfa = false;
+        $user = !empty(array_filter($membershipsPrivacy))
+            ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+            : new Document();
+
+        if ($membershipsPrivacy['mfa']) {
+            $mfa = $user->getAttribute('mfa', false);
+
+            if ($mfa) {
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
             }
+
+            $membership->setAttribute('mfa', $mfa);
         }
 
         $membership
@@ -875,7 +969,17 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
+    ->param('roles', [], function (Document $project) {
+        if ($project->getId() === 'console') {
+            ;
+            $roles = array_keys(Config::getParam('roles', []));
+            array_filter($roles, function ($role) {
+                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+            });
+            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+        }
+        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -984,7 +1088,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
-        if ($user->isEmpty()) {
+        $hasSession = !$user->isEmpty();
+        if (!$hasSession) {
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
@@ -1002,39 +1107,64 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
-        // Log user in
+        // Create session for the user if not logged in
+        if (!$hasSession) {
+            Authorization::setRole(Role::user($user->getId())->toString());
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $record = $geodb->get($request->getIP());
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
+            $secret = Auth::tokenGenerator();
+            $session = new Document(array_merge([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $user->getAttribute('email'),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['email'],
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-        $secret = Auth::tokenGenerator();
-        $session = new Document(array_merge([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => Auth::SESSION_PROVIDER_EMAIL,
-            'providerUid' => $user->getAttribute('email'),
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'factors' => ['email'],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $session = $dbForProject->createDocument('sessions', $session);
 
-        $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+            Authorization::setRole(Role::user($userId)->toString());
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
 
-        Authorization::setRole(Role::user($userId)->toString());
+            $response
+                ->addCookie(
+                    name: Auth::$cookieName . '_legacy',
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true
+                )
+                ->addCookie(
+                    name: Auth::$cookieName,
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true,
+                    sameSite: Config::getParam('cookieSamesite')
+                )
+            ;
+        }
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 

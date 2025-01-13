@@ -96,7 +96,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $queueForUsage, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
@@ -178,7 +178,7 @@ class Messaging extends Action
             Query::equal('type', [$providerType]),
         ]);
 
-        if ($default === false || $default->isEmpty()) {
+        if ($default->isEmpty()) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No enabled provider found.']
@@ -377,7 +377,7 @@ class Messaging extends Action
         }
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
@@ -456,24 +456,14 @@ class Messaging extends Action
             $adapter->getMaxMessagesPerRequest()
         );
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage) {
-            return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage) {
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter) {
+            return function () use ($batch, $message, $provider, $adapter) {
                 $message->setAttribute('to', $batch);
 
                 $data = $this->buildSmsMessage($message, $provider);
 
                 try {
                     $adapter->send($data);
-
-                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
-                    if (!empty($countryCode)) {
-                        $queueForUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
                 } catch (\Throwable $th) {
                     throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
@@ -489,11 +479,29 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken'], null, isset($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null),
-            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
-            'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
-            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
-            'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
+            'twilio' => new Twilio(
+                $credentials['accountSid'] ?? '',
+                $credentials['authToken'] ?? '',
+                null,
+                $credentials['messagingServiceSid'] ?? null
+            ),
+            'textmagic' => new TextMagic(
+                $credentials['username'] ?? '',
+                $credentials['apiKey'] ?? ''
+            ),
+            'telesign' => new Telesign(
+                $credentials['customerId'] ?? '',
+                $credentials['apiKey'] ?? ''
+            ),
+            'msg91' => new Msg91(
+                $credentials['senderId'] ?? '',
+                $credentials['authKey'] ?? '',
+                $credentials['templateId'] ?? ''
+            ),
+            'vonage' => new Vonage(
+                $credentials['apiKey'] ?? '',
+                $credentials['apiSecret'] ??  ''
+            ),
             default => null
         };
     }
@@ -506,11 +514,11 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
-                $credentials['authKey'],
-                $credentials['authKeyId'],
-                $credentials['teamId'],
-                $credentials['bundleId'],
-                $options['sandbox']
+                $credentials['authKey'] ?? '',
+                $credentials['authKeyId'] ?? '',
+                $credentials['teamId'] ?? '',
+                $credentials['bundleId'] ?? '',
+                $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
@@ -521,24 +529,25 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials', []);
         $options = $provider->getAttribute('options', []);
+        $apiKey = $credentials['apiKey'] ?? '';
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'],
-                $credentials['port'],
-                $credentials['username'],
-                $credentials['password'],
-                $options['encryption'],
-                $options['autoTLS'],
-                $options['mailer'],
+                $credentials['host'] ??  '',
+                $credentials['port'] ?? 25,
+                $credentials['username'] ?? '',
+                $credentials['password'] ?? '',
+                $options['encryption'] ?? '',
+                $options['autoTLS'] ??  false,
+                $options['mailer'] ??  '',
             ),
             'mailgun' => new Mailgun(
-                $credentials['apiKey'],
-                $credentials['domain'],
-                $credentials['isEuRegion']
+                $apiKey,
+                $credentials['domain'] ?? '',
+                $credentials['isEuRegion'] ?? false
             ),
-            'sendgrid' => new Sendgrid($credentials['apiKey']),
+            'sendgrid' => new Sendgrid($apiKey),
             default => null
         };
     }

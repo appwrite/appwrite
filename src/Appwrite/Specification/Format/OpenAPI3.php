@@ -550,6 +550,7 @@ class OpenAPI3 extends Format
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
+                    case 'payload':
                         $type = 'string';
                         break;
 

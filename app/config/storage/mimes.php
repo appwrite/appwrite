@@ -6,6 +6,8 @@ return [
     'image/gif',
     'image/png',
     'image/webp',
+    // 'image/heic',
+    'image/avif',
 
     // Video Files
     'video/mp4',
@@ -31,6 +33,7 @@ return [
     'audio/ogg', // Ogg Vorbis RFC 5334
     'audio/vorbis', // Vorbis RFC 5215
     'audio/vnd.wav', // wav RFC 2361
+    'audio/x-wav', // php reads .wav as this - https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types
     'audio/aac', //AAC audio
     'audio/x-hx-aac-adts', // AAC audio
 

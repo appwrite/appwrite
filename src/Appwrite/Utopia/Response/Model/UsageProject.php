@@ -28,6 +28,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('databasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of databases storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('usersTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of users.',
@@ -118,6 +124,13 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('databasesStorageBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'An array of the aggregated breakdown of storage usage by databases.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('executionsMbSecondsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of execution mbSeconds by functions.',
@@ -135,6 +148,25 @@ class UsageProject extends Model
             ->addRule('functionsStorageBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of functions storage size (in bytes).',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('authPhoneTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of phone auth.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('authPhoneEstimate', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Estimated total aggregated cost of phone auth.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('authPhoneCountryBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of phone auth by country.',
                 'default' => [],
                 'example' => [],
                 'array' => true
