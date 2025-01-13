@@ -336,5 +336,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 });
 
-Method::finaliseInitialization();
+// Check for any errors found while we were initialising the SDK Methods.
+if (!empty(Method::getErrors())) {
+    throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
+}
+
 $http->start();

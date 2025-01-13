@@ -309,11 +309,8 @@ class Method
         return $this;
     }
 
-    // Throw any errors that were found during initialization
-    public static function finaliseInitialization(): void
+    public static function getErrors(): array
     {
-        if (!empty(self::$errors)) {
-            throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, self::$errors));
-        }
+        return self::$errors;
     }
 }
