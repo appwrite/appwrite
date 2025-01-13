@@ -186,9 +186,9 @@ trait TeamsBaseServer
         // $this->assertContains('team:'.$teamUid.'/editor', $response['body']['roles']);
 
         /**
-         * Test for FAILURE
+         * Test for resend
+         * SUCCESS
          */
-
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -199,7 +199,11 @@ trait TeamsBaseServer
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
