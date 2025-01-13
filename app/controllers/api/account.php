@@ -3095,11 +3095,21 @@ App::post('/v1/account/recovery')
 
         $recovery->setAttribute('secret', $secret);
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
             ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
+
+        // manually hiding secret for non-privileged users
+        $response->setShowSensitive(true);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $recovery->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3337,10 +3347,20 @@ App::post('/v1/account/verification')
 
         $verification->setAttribute('secret', $verificationSecret);
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
+
+        // manually hiding secret for non-privileged users
+        $response->setShowSensitive(true);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $verification->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
