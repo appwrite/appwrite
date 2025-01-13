@@ -1814,6 +1814,12 @@ App::post('/v1/users/:userId/sessions')
             $detector->getDevice()
         ));
 
+        $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session = $dbForProject->createDocument('sessions', $session);
