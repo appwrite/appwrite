@@ -522,8 +522,10 @@ App::init()
         // check first,
         // as api key user might already exists
         if (!$user->isEmpty()) {
-            $user->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($user);
+            $typedUser = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $typedUser->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($typedUser);
         }
 
         $queueForDeletes->setProject($project);
@@ -724,8 +726,10 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
-            $user->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($user);
+            $typedUser = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $typedUser->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($typedUser);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.
