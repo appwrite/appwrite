@@ -875,6 +875,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
         'queue' => [
             'type' => 'queue',
             'dsns' => $fallbackForRedis,
