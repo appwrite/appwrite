@@ -894,7 +894,7 @@ App::error()
 
             $log->addTag('database', $dsn->getHost());
             $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
+            $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addTag('projectId', $project->getId());
