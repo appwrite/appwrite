@@ -588,7 +588,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
 
-        if (!$isPrivilegedUser && !$isAppUser) {
+        if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             $url = Template::parseURL($url);
