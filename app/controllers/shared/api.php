@@ -308,6 +308,7 @@ App::init()
                         }
                     }
 
+                    // standard api key user
                     $queueForAudits->setUser($user);
                 }
             }
@@ -724,6 +725,25 @@ App::shutdown()
 
         if (!$user->isEmpty()) {
             $user->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($user);
+        } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
+            /**
+             * User in the request is empty, and no user was set for auditing previously.
+             * This indicates:
+             * - No API Key was used.
+             * - No active session exists.
+             *
+             * Therefore, we consider this an anonymous request and create a relevant user.
+             */
+            $user = new Document([
+                '$id' => '',
+                'status' => true,
+                'type' => Auth::ACTIVITY_TYPE_ANONYMOUS,
+                'email' => 'anonymous.' . $project->getId() . '@service.' . $request->getHostname(),
+                'password' => '',
+                'name' => 'Anonymous',
+            ]);
+
             $queueForAudits->setUser($user);
         }
 
