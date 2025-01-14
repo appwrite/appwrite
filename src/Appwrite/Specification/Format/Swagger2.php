@@ -330,7 +330,7 @@ class Swagger2 extends Format
 
             $parameters = \array_merge(
                 $route->getParams(),
-                $sdk->getParameters() ?? [],
+                $sdk->getAdditionalParameters() ?? [],
             );
 
             foreach ($parameters as $name => $param) { // Set params

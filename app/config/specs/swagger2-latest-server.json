@@ -7904,14 +7904,14 @@
                             "properties": {
                                 "documentId": {
                                     "type": "string",
-                                    "description": "",
-                                    "default": null,
+                                    "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "default": "",
                                     "x-example": "<DOCUMENT_ID>"
                                 },
                                 "data": {
                                     "type": "object",
-                                    "description": "",
-                                    "default": {},
+                                    "description": "Document data as JSON object.",
+                                    "default": [],
                                     "x-example": "{}"
                                 },
                                 "documents": {
@@ -7925,18 +7925,14 @@
                                 },
                                 "permissions": {
                                     "type": "array",
-                                    "description": "",
-                                    "default": [],
+                                    "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                    "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
                                     "items": {
                                         "type": "string"
                                     }
                                 }
-                            },
-                            "required": [
-                                "documentId",
-                                "data"
-                            ]
+                            }
                         }
                     }
                 ]

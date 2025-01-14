@@ -30,6 +30,7 @@ class Method
      * @param bool $packaging
      * @param string $requestType
      * @param array $parameters
+     * @param array $additionalParameters
      *
      * @throws \Exception
      */
@@ -48,7 +49,8 @@ class Method
         protected array|bool $hide = false,
         protected bool $packaging = false,
         protected string $requestType = 'application/json',
-        protected array $parameters = []
+        protected array $parameters = [],
+        protected array $additionalParameters = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -209,6 +211,11 @@ class Method
     public function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    public function getAdditionalParameters(): array
+    {
+        return $this->additionalParameters;
     }
 
     public function setNamespace(string $namespace): self

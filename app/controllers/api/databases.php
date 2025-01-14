@@ -3111,9 +3111,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 offlineKey: '{documentId}',
                 offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
                 parameters: [
-                    'documentId' => ['default' => [], 'validator' => new CustomId(), 'description' => '', 'optional' => false],
-                    'data' => ['default' => [], 'validator' => new JSON(), 'description' => '', 'optional' => false],
-                    'permissions' => ['default' => [], 'validator' => new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'description' => '', 'optional' => true],
+                    'documentId' => ['optional' => false],
+                    'data' => ['optional' => false],
+                    'permissions' => ['optional' => true],
                 ]
             ),
             new Method(
@@ -3131,7 +3131,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 offlineKey: '{documentId}',
                 offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
                 parameters: [
-                    'documents' => ['default' => [], 'validator' => new ArrayList(new JSON(), APP_LIMIT_ARRAY_DOCUMENTS_SIZE), 'description' => '', 'optional' => false],
+                    'documents' => ['optional' => false],
                 ]
             )
         ]
