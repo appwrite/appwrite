@@ -2294,7 +2294,7 @@ App::delete('/v1/users/identities/:identityId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-            ],
+        ],
         responseType: ResponseType::NONE,
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
