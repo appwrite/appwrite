@@ -1188,7 +1188,8 @@ App::delete('/v1/functions/:functionId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
@@ -1605,7 +1606,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -2404,7 +2406,8 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
@@ -2700,7 +2703,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)

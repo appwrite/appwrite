@@ -7877,7 +7877,7 @@
                     "200": {
                         "description": "Documents List",
                         "content": {
-                            "application\/json": {
+                            "": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/documentList"
                                 }
@@ -21141,7 +21141,7 @@
                     "200": {
                         "description": "User",
                         "content": {
-                            "application\/json": {
+                            "": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/user"
                                 }

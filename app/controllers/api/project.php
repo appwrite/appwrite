@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -501,7 +502,8 @@ App::delete('/v1/project/variables/:variableId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('project')

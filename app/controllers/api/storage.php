@@ -339,7 +339,8 @@ App::delete('/v1/storage/buckets/:bucketId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
@@ -1672,7 +1673,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')

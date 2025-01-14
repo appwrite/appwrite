@@ -785,7 +785,7 @@ App::delete('/v1/databases/:databaseId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
@@ -1204,7 +1204,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -2604,7 +2604,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3030,7 +3030,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -4192,7 +4192,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON,
+        responseType: ResponseType::NONE,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
     ))
@@ -4317,7 +4317,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
+        responseType: ResponseType::NONE,
         offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
         offlineKey: '{documentId}'
     ))

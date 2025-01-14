@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -1143,7 +1144,8 @@ App::delete('/v1/migrations/:migrationId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')

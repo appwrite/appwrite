@@ -225,9 +225,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -423,9 +421,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -831,9 +827,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -1852,9 +1846,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -2535,9 +2527,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -2813,9 +2803,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "account"
                 ],
@@ -5161,9 +5149,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -5589,9 +5575,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -8035,9 +8019,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -8534,9 +8516,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -8822,9 +8802,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -9270,9 +9248,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "databases"
                 ],
@@ -10670,9 +10646,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "functions"
                 ],
@@ -11044,9 +11018,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "functions"
                 ],
@@ -11615,9 +11587,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "functions"
                 ],
@@ -12076,9 +12046,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "functions"
                 ],
@@ -15189,9 +15157,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "messaging"
                 ],
@@ -17804,9 +17770,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "messaging"
                 ],
@@ -18332,9 +18296,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "messaging"
                 ],
@@ -18714,9 +18676,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "messaging"
                 ],
@@ -20057,9 +20017,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "migrations"
                 ],
@@ -20475,9 +20433,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "project"
                 ],
@@ -20951,9 +20907,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -22435,9 +22389,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -22999,9 +22951,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -24086,9 +24036,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -24766,9 +24714,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -25365,9 +25311,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "projects"
                 ],
@@ -25726,9 +25670,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "proxy"
                 ],
@@ -26263,9 +26205,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "storage"
                 ],
@@ -26670,9 +26610,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "storage"
                 ],
@@ -27563,9 +27501,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "teams"
                 ],
@@ -28067,9 +28003,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "teams"
                 ],
@@ -28812,9 +28746,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -29549,9 +29481,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -30077,9 +30007,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -30908,9 +30836,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -30968,9 +30894,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -31473,9 +31397,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "users"
                 ],
@@ -32468,9 +32390,7 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [
-                    "application\/json"
-                ],
+                "produces": [],
                 "tags": [
                     "vcs"
                 ],

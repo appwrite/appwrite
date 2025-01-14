@@ -469,7 +469,7 @@ App::delete('/v1/account')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->inject('user')
     ->inject('project')
@@ -571,7 +571,7 @@ App::delete('/v1/account/sessions')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->label('abuse-limit', 100)
     ->inject('request')
@@ -695,7 +695,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON
+        responseType: ResponseType::NONE
     ))
     ->label('abuse-limit', 100)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
@@ -2008,6 +2008,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -4230,7 +4231,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON,
+        responseType: ResponseType::NONE
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
@@ -4706,7 +4707,7 @@ App::delete('/v1/account/targets/:targetId/push')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON,
+        responseType: ResponseType::NONE
     ))
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
@@ -4828,7 +4829,7 @@ App::delete('/v1/account/identities/:identityId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::JSON,
+        responseType: ResponseType::NONE
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')

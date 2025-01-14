@@ -14,6 +14,7 @@ use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -382,7 +383,8 @@ App::delete('/v1/teams/:teamId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
@@ -1221,7 +1223,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')

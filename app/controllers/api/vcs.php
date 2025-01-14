@@ -1191,7 +1191,8 @@ App::delete('/v1/vcs/installations/:installationId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')

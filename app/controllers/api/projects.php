@@ -13,6 +13,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
@@ -1083,7 +1084,8 @@ App::delete('/v1/projects/:projectId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
@@ -1377,7 +1379,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
@@ -1609,7 +1612,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
@@ -1885,7 +1889,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('platformId', '', new UID(), 'Platform unique ID.')
@@ -2300,7 +2305,8 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SMS_TEMPLATE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
@@ -2349,7 +2355,8 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_EMAIL_TEMPLATE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')

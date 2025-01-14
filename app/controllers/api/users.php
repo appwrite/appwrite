@@ -18,6 +18,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
@@ -1905,7 +1906,8 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
@@ -2087,7 +2089,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('sessionId', '', new UID(), 'Session ID.')
@@ -2136,7 +2139,8 @@ App::delete('/v1/users/:userId/sessions')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -2184,7 +2188,8 @@ App::delete('/v1/users/:userId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
@@ -2232,7 +2237,8 @@ App::delete('/v1/users/:userId/targets/:targetId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
@@ -2288,7 +2294,8 @@ App::delete('/v1/users/identities/:identityId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+            ],
+        responseType: ResponseType::NONE,
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')

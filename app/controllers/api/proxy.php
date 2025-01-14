@@ -8,6 +8,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -279,7 +280,8 @@ App::delete('/v1/proxy/rules/:ruleId')
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
             )
-        ]
+        ],
+        responseType: ResponseType::NONE
     ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
