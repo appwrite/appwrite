@@ -133,10 +133,6 @@ App::get('v1/console/resources/:resourceId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $resourceId, string $type, Response $response, Database $dbForConsole) {
-        if ($type !== 'rules') {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type.');
-        }
-
         $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $resourceId));
 
         if ($document && !$document->isEmpty()) {
