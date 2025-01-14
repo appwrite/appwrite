@@ -580,144 +580,148 @@ App::post('/v1/teams/:teamId/memberships')
                 Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                 $dbForProject->createDocument('memberships', $membership);
         } else {
-            
+
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
         }
 
-        $dbForProject->purgeCachedDocument('users', $invitee->getId());
 
-        $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
-        $url = Template::unParseURL($url);
-        if (!empty($email)) {
-            $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
+        } else {
 
-            $body = $locale->getText("emails.invitation.body");
-            $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-            $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+            $url = Template::unParseURL($url);
+            if (!empty($email)) {
+                $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-            $message
-                ->setParam('{{body}}', $body, escapeHtml: false)
-                ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
-                ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
-            $body = $message->render();
+                $body = $locale->getText("emails.invitation.body");
+                $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
-            $smtp = $project->getAttribute('smtp', []);
-            $smtpEnabled = $smtp['enabled'] ?? false;
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message
+                    ->setParam('{{body}}', $body, escapeHtml: false)
+                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
+                $body = $message->render();
 
-            $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-            $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-            $replyTo = "";
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
 
-            if ($smtpEnabled) {
-                if (!empty($smtp['senderEmail'])) {
-                    $senderEmail = $smtp['senderEmail'];
+                $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $queueForMails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $queueForMails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
                 }
-                if (!empty($smtp['senderName'])) {
-                    $senderName = $smtp['senderName'];
-                }
-                if (!empty($smtp['replyTo'])) {
-                    $replyTo = $smtp['replyTo'];
-                }
+
+                $emailVariables = [
+                    'owner' => $user->getAttribute('name'),
+                    'direction' => $locale->getText('settings.direction'),
+                    /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+                    'user' => $user->getAttribute('name'),
+                    'team' => $team->getAttribute('name'),
+                    'redirect' => $url,
+                    'project' => $projectName
+                ];
 
                 $queueForMails
-                    ->setSmtpHost($smtp['host'] ?? '')
-                    ->setSmtpPort($smtp['port'] ?? '')
-                    ->setSmtpUsername($smtp['username'] ?? '')
-                    ->setSmtpPassword($smtp['password'] ?? '')
-                    ->setSmtpSecure($smtp['secure'] ?? '');
-
-                if (!empty($customTemplate)) {
-                    if (!empty($customTemplate['senderEmail'])) {
-                        $senderEmail = $customTemplate['senderEmail'];
-                    }
-                    if (!empty($customTemplate['senderName'])) {
-                        $senderName = $customTemplate['senderName'];
-                    }
-                    if (!empty($customTemplate['replyTo'])) {
-                        $replyTo = $customTemplate['replyTo'];
-                    }
-
-                    $body = $customTemplate['message'] ?? '';
-                    $subject = $customTemplate['subject'] ?? $subject;
-                }
-
-                $queueForMails
-                    ->setSmtpReplyTo($replyTo)
-                    ->setSmtpSenderEmail($senderEmail)
-                    ->setSmtpSenderName($senderName);
-            }
-
-            $emailVariables = [
-                'owner' => $user->getAttribute('name'),
-                'direction' => $locale->getText('settings.direction'),
-                /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
-                'user' => $user->getAttribute('name'),
-                'team' => $team->getAttribute('name'),
-                'redirect' => $url,
-                'project' => $projectName
-            ];
-
-            $queueForMails
-                ->setSubject($subject)
-                ->setBody($body)
-                ->setRecipient($invitee->getAttribute('email'))
-                ->setName($invitee->getAttribute('name'))
-                ->setVariables($emailVariables)
-                ->trigger();
-
-        } elseif (!empty($phone)) {
-            if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
-                throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
-            }
-
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
-
-            $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
-            if (!empty($customTemplate)) {
-                $message = $customTemplate['message'];
-            }
-
-            $message = $message->setParam('{{token}}', $url);
-            $message = $message->render();
-
-            $messageDoc = new Document([
-                '$id' => ID::unique(),
-                'data' => [
-                    'content' => $message,
-                ],
-            ]);
-
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                ->setMessage($messageDoc)
-                ->setRecipients([$phone])
-                ->setProviderType('SMS');
-
-            if (isset($plan['authPhone'])) {
-                $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                $timelimit
-                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
-
-                $abuse = new Abuse($timelimit);
-                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                    $helper = PhoneNumberUtil::getInstance();
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (!empty($countryCode)) {
-                        $queueForUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                }
-                $queueForUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setRecipient($invitee->getAttribute('email'))
+                    ->setName($invitee->getAttribute('name'))
+                    ->setVariables($emailVariables)
                     ->trigger();
+
+            } elseif (!empty($phone)) {
+                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
+                if (!empty($customTemplate)) {
+                    $message = $customTemplate['message'];
+                }
+
+                $message = $message->setParam('{{token}}', $url);
+                $message = $message->render();
+
+                $messageDoc = new Document([
+                    '$id' => ID::unique(),
+                    'data' => [
+                        'content' => $message,
+                    ],
+                ]);
+
+                $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                    ->setMessage($messageDoc)
+                    ->setRecipients([$phone])
+                    ->setProviderType('SMS');
+
+                if (isset($plan['authPhone'])) {
+                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                    $timelimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                    $abuse = new Abuse($timelimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
             }
         }
 
