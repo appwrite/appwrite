@@ -1567,7 +1567,8 @@ return [
                 'required' => false,
                 'type' => 'number'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-chip',
