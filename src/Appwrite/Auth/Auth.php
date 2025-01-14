@@ -48,7 +48,7 @@ class Auth
      */
     public const ACTIVITY_TYPE_APP = 'app';
     public const ACTIVITY_TYPE_USER = 'user';
-    public const ACTIVITY_TYPE_ANONYMOUS = 'anonymous';
+    public const ACTIVITY_TYPE_GUEST = 'guest';
 
     /**
      * Token Types.

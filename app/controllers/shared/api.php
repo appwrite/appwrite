@@ -742,10 +742,10 @@ App::shutdown()
             $user = new Document([
                 '$id' => '',
                 'status' => true,
-                'type' => Auth::ACTIVITY_TYPE_ANONYMOUS,
-                'email' => 'anonymous.' . $project->getId() . '@service.' . $request->getHostname(),
+                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
-                'name' => 'Anonymous',
+                'name' => 'Guest',
             ]);
 
             $queueForAudits->setUser($user);
