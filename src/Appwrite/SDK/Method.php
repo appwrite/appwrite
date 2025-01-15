@@ -8,7 +8,7 @@ use Swoole\Http\Response as HttpResponse;
 
 class Method
 {
-    public static array $knownMethods = [];
+    public static array $processed = [];
 
     public static array $errors = [];
 
@@ -53,8 +53,6 @@ class Method
         foreach ($responses as $response) {
             /** @var SDKResponse $response */
             $this->validateResponseModel($response->getModel());
-
-            // No content check
             $this->validateNoContent($response);
         }
     }
@@ -66,11 +64,11 @@ class Method
 
     private function validateMethod(string $name, string $namespace): void
     {
-        if (\in_array($this->getRouteName(), self::$knownMethods)) {
+        if (\in_array($this->getRouteName(), self::$processed)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Method already exists in namespace {$namespace}";
         }
 
-        self::$knownMethods[] = $this->getRouteName();
+        self::$processed[] = $this->getRouteName();
     }
 
     private function validateAuthTypes(array $authTypes): void
@@ -101,22 +99,16 @@ class Method
     {
         $response = new Response(new HttpResponse());
 
-        if (\is_array($responseModel)) {
-            foreach ($responseModel as $model) {
-                try {
-                    $response->getModel($model);
-                } catch (\Exception $e) {
-                    self::$errors[] = "Error with {$this->getRouteName()} method: Invalid response model, make sure the model has been defined in Response.php";
-                }
-            }
-
-            return;
+        if (!\is_array($responseModel)) {
+            $responseModel = [$responseModel];
         }
 
-        try {
-            $response->getModel($responseModel);
-        } catch (\Exception $e) {
-            self::$errors[] = "Error with {$this->getRouteName()} method: Invalid response model, make sure the model has been defined in Response.php";
+        foreach ($responseModel as $model) {
+            try {
+                $response->getModel($model);
+            } catch (\Exception $e) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Invalid response model, make sure the model has been defined in Response.php";
+            }
         }
     }
 
@@ -150,7 +142,7 @@ class Method
     }
 
     /**
-     * @return Array<SDKResponse>
+     * @return array<SDKResponse>
      */
     public function getResponses(): array
     {
@@ -223,7 +215,7 @@ class Method
     }
 
     /**
-     * @param Array<SDKResponse> $responses
+     * @param array<SDKResponse> $responses
      */
     public function setResponses(array $responses): self
     {
