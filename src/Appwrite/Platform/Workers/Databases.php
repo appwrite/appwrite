@@ -293,16 +293,18 @@ class Databases extends Action
 
                 if ($e instanceof DatabaseException) {
                     $attribute->setAttribute('error', $e->getMessage());
-                    if (!$relatedAttribute->isEmpty()) {
+                    if (! $relatedAttribute->isEmpty()) {
                         $relatedAttribute->setAttribute('error', $e->getMessage());
                     }
                 }
+
                 $dbForProject->updateDocument(
                     'attributes',
                     $attribute->getId(),
                     $attribute->setAttribute('status', 'stuck')
                 );
-                if (!$relatedAttribute->isEmpty()) {
+
+                if (! $relatedAttribute->isEmpty()) {
                     $dbForProject->updateDocument(
                         'attributes',
                         $relatedAttribute->getId(),
