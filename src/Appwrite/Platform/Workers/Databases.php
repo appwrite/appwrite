@@ -278,6 +278,17 @@ class Databases extends Action
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
 
+            } catch (DatabaseException\Dependency $e) {
+                Console::error($e->getMessage());
+
+                $dbForProject->updateDocument(
+                    'attributes',
+                    $attribute->getId(),
+                    $attribute->setAttribute('error', $e->getMessage())
+                );
+
+               return;
+
             } catch (NotFound $e) {
                 Console::error($e->getMessage());
 
