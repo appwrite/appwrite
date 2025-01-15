@@ -810,7 +810,7 @@ App::error()
                 $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Dependency':
-                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, $error->getMessage(), previous: $error);
+                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY);
                 break;
         }
 
