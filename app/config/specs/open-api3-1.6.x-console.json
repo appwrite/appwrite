@@ -13675,7 +13675,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 390,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13753,7 +13753,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 387,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13899,7 +13899,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 394,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14047,7 +14047,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 389,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14223,7 +14223,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 396,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14403,7 +14403,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 388,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14514,7 +14514,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 395,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14628,7 +14628,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 393,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14683,7 +14683,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 397,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14747,7 +14747,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 391,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14824,7 +14824,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 392,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14901,7 +14901,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 362,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14979,7 +14979,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 361,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15086,7 +15086,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 374,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15196,7 +15196,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 360,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15283,7 +15283,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 373,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15373,7 +15373,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 352,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15490,7 +15490,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 365,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15610,7 +15610,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 355,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15707,7 +15707,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 368,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15807,7 +15807,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 353,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15914,7 +15914,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 366,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16024,7 +16024,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 354,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16169,7 +16169,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 367,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16316,7 +16316,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 356,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16413,7 +16413,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 369,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16513,7 +16513,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 357,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16610,7 +16610,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 370,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16710,7 +16710,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 358,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16807,7 +16807,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 371,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16907,7 +16907,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 359,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17004,7 +17004,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 372,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17104,7 +17104,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 364,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17159,7 +17159,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 375,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17223,7 +17223,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 363,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17300,7 +17300,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 384,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17377,7 +17377,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 377,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17453,7 +17453,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 376,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17538,7 +17538,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 379,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17600,7 +17600,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 380,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17679,7 +17679,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 381,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17743,7 +17743,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 378,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17820,7 +17820,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 383,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17906,7 +17906,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 382,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17998,7 +17998,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 385,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18063,7 +18063,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 386,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18140,7 +18140,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 339,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18306,7 +18306,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
-                    "weight": 341,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18381,7 +18381,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase data (Service Account)",
+                "summary": "Migrate Firebase data",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "tags": [
                     "migrations"
@@ -18401,7 +18401,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
-                    "weight": 336,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18457,177 +18457,6 @@
                 }
             }
         },
-        "\/migrations\/firebase\/deauthorize": {
-            "get": {
-                "summary": "Revoke Appwrite's authorization to access Firebase projects",
-                "operationId": "migrationsDeleteFirebaseAuth",
-                "tags": [
-                    "migrations"
-                ],
-                "description": "",
-                "responses": {
-                    "200": {
-                        "description": "File"
-                    }
-                },
-                "x-appwrite": {
-                    "method": "deleteFirebaseAuth",
-                    "weight": 347,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "migrations\/delete-firebase-auth.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "migrations.write",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ]
-            }
-        },
-        "\/migrations\/firebase\/oauth": {
-            "post": {
-                "summary": "Migrate Firebase data (OAuth)",
-                "operationId": "migrationsCreateFirebaseOAuthMigration",
-                "tags": [
-                    "migrations"
-                ],
-                "description": "",
-                "responses": {
-                    "202": {
-                        "description": "Migration",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/migration"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "createFirebaseOAuthMigration",
-                    "weight": 335,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "migrations\/create-firebase-o-auth-migration.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/migrations\/migration-firebase.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "migrations.write",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application\/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "resources": {
-                                        "type": "array",
-                                        "description": "List of resources to migrate",
-                                        "x-example": null,
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "projectId": {
-                                        "type": "string",
-                                        "description": "Project ID of the Firebase Project",
-                                        "x-example": "<PROJECT_ID>"
-                                    }
-                                },
-                                "required": [
-                                    "resources",
-                                    "projectId"
-                                ]
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "\/migrations\/firebase\/projects": {
-            "get": {
-                "summary": "List Firebase projects",
-                "operationId": "migrationsListFirebaseProjects",
-                "tags": [
-                    "migrations"
-                ],
-                "description": "",
-                "responses": {
-                    "200": {
-                        "description": "Migrations Firebase Projects List",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/firebaseProjectList"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "listFirebaseProjects",
-                    "weight": 346,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "migrations\/list-firebase-projects.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "migrations.read",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ]
-            }
-        },
         "\/migrations\/firebase\/report": {
             "get": {
                 "summary": "Generate a report on Firebase data",
@@ -18650,7 +18479,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
-                    "weight": 342,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18702,80 +18531,6 @@
                 ]
             }
         },
-        "\/migrations\/firebase\/report\/oauth": {
-            "get": {
-                "summary": "Generate a report on Firebase data using OAuth",
-                "operationId": "migrationsGetFirebaseReportOAuth",
-                "tags": [
-                    "migrations"
-                ],
-                "description": "",
-                "responses": {
-                    "200": {
-                        "description": "Migration Report",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/migrationReport"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getFirebaseReportOAuth",
-                    "weight": 343,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "migrations\/get-firebase-report-o-auth.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/migrations\/migration-firebase-report.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "migrations.write",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "resources",
-                        "description": "List of resources to migrate",
-                        "required": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "in": "query"
-                    },
-                    {
-                        "name": "projectId",
-                        "description": "Project ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<PROJECT_ID>"
-                        },
-                        "in": "query"
-                    }
-                ]
-            }
-        },
         "\/migrations\/nhost": {
             "post": {
                 "summary": "Migrate NHost data",
@@ -18798,7 +18553,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
-                    "weight": 338,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18911,7 +18666,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
-                    "weight": 349,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19046,7 +18801,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
-                    "weight": 337,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19153,7 +18908,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
-                    "weight": 348,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19279,7 +19034,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 340,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19339,7 +19094,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
-                    "weight": 350,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19392,7 +19147,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 351,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -32791,30 +32546,6 @@
                     "migrations"
                 ]
             },
-            "firebaseProjectList": {
-                "description": "Migrations Firebase Projects List",
-                "type": "object",
-                "properties": {
-                    "total": {
-                        "type": "integer",
-                        "description": "Total number of projects documents that matched your query.",
-                        "x-example": 5,
-                        "format": "int32"
-                    },
-                    "projects": {
-                        "type": "array",
-                        "description": "List of projects.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/firebaseProject"
-                        },
-                        "x-example": ""
-                    }
-                },
-                "required": [
-                    "total",
-                    "projects"
-                ]
-            },
             "specificationList": {
                 "description": "Specifications List",
                 "type": "object",
@@ -37018,7 +36749,8 @@
                     "resourceId": {
                         "type": "string",
                         "description": "Resource ID.",
-                        "x-example": "5e5ea5c16897e"
+                        "x-example": "5e5ea5c16897e",
+                        "nullable": true
                     },
                     "name": {
                         "type": "string",
@@ -37030,10 +36762,16 @@
                         "description": "The value of this metric at the timestamp.",
                         "x-example": 1,
                         "format": "int32"
+                    },
+                    "estimate": {
+                        "type": "number",
+                        "description": "The estimated value of this metric at the end of the period.",
+                        "x-example": 1,
+                        "format": "double",
+                        "nullable": true
                     }
                 },
                 "required": [
-                    "resourceId",
                     "name",
                     "value"
                 ]
@@ -37849,6 +37587,26 @@
                             "$ref": "#\/components\/schemas\/metricBreakdown"
                         },
                         "x-example": []
+                    },
+                    "authPhoneTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of phone auth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "authPhoneEstimate": {
+                        "type": "number",
+                        "description": "Estimated total aggregated cost of phone auth.",
+                        "x-example": 0,
+                        "format": "double"
+                    },
+                    "authPhoneCountryBreakdown": {
+                        "type": "array",
+                        "description": "Aggregated breakdown in totals of phone auth by country.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metricBreakdown"
+                        },
+                        "x-example": []
                     }
                 },
                 "required": [
@@ -37873,7 +37631,10 @@
                     "databasesStorageBreakdown",
                     "executionsMbSecondsBreakdown",
                     "buildsMbSecondsBreakdown",
-                    "functionsStorageBreakdown"
+                    "functionsStorageBreakdown",
+                    "authPhoneTotal",
+                    "authPhoneEstimate",
+                    "authPhoneCountryBreakdown"
                 ]
             },
             "headers": {
@@ -38748,26 +38509,6 @@
                     "function",
                     "size",
                     "version"
-                ]
-            },
-            "firebaseProject": {
-                "description": "MigrationFirebaseProject",
-                "type": "object",
-                "properties": {
-                    "projectId": {
-                        "type": "string",
-                        "description": "Project ID.",
-                        "x-example": "my-project"
-                    },
-                    "displayName": {
-                        "type": "string",
-                        "description": "Project display name.",
-                        "x-example": "My Project"
-                    }
-                },
-                "required": [
-                    "projectId",
-                    "displayName"
                 ]
             }
         },

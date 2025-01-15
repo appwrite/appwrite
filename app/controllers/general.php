@@ -835,7 +835,7 @@ App::error()
 
                     $adapter = new Sentry($projectId, $key, $host);
                     $logger = new Logger($adapter);
-                    $logger->setSample(0.04);
+                    $logger->setSample(0.01);
                     $publish = true;
                 } else {
                     throw new \Exception('Invalid experimental logging provider');
@@ -894,7 +894,7 @@ App::error()
 
             $log->addTag('database', $dsn->getHost());
             $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
+            $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addTag('projectId', $project->getId());

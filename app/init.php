@@ -259,9 +259,15 @@ const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
+const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
@@ -876,6 +882,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
         'queue' => [
             'type' => 'queue',
             'dsns' => $fallbackForRedis,
@@ -902,7 +914,7 @@ $register->set('pools', function () {
     $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
-        $workerCount = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
     }
@@ -1827,6 +1839,10 @@ App::setResource('requestTimestamp', function ($request) {
 }, ['request']);
 
 App::setResource('plan', function (array $plan = []) {
+    return [];
+});
+
+App::setResource('smsRates', function () {
     return [];
 });
 
