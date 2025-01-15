@@ -4095,16 +4095,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.7.1",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "3433a0f1a54988f2a59c735f507745cb2c24638a"
+                "reference": "6f9243848f1c6466f6509fd01c7e18306a6d8caf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/3433a0f1a54988f2a59c735f507745cb2c24638a",
-                "reference": "3433a0f1a54988f2a59c735f507745cb2c24638a",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/6f9243848f1c6466f6509fd01c7e18306a6d8caf",
+                "reference": "6f9243848f1c6466f6509fd01c7e18306a6d8caf",
                 "shasum": ""
             },
             "require": {
@@ -4139,9 +4139,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.7.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.2"
             },
-            "time": "2024-10-22T10:27:49+00:00"
+            "time": "2025-01-15T05:56:26+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -5126,16 +5126,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.19.0",
+            "version": "v1.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "8169513746e1bac70c85d6ea1524d9225d4886f0"
+                "reference": "53072e8ea22213a7ed168a8a15b96fbb8b82d44b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/8169513746e1bac70c85d6ea1524d9225d4886f0",
-                "reference": "8169513746e1bac70c85d6ea1524d9225d4886f0",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/53072e8ea22213a7ed168a8a15b96fbb8b82d44b",
+                "reference": "53072e8ea22213a7ed168a8a15b96fbb8b82d44b",
                 "shasum": ""
             },
             "require": {
@@ -5188,7 +5188,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-12-30T16:20:10+00:00"
+            "time": "2025-01-14T16:20:53+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -8556,7 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
