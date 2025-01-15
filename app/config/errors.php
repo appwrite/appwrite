@@ -731,6 +731,11 @@ return [
         'description' => 'Index invalid.',
         'code' => 400,
     ],
+    Exception::INDEX_DEPENDENCY => [
+        'name' => Exception::INDEX_DEPENDENCY,
+        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 400,
+    ],
 
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [

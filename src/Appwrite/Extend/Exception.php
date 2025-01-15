@@ -211,6 +211,7 @@ class Exception extends \Exception
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
     public const INDEX_INVALID                     = 'index_invalid';
+    public const INDEX_DEPENDENCY                  = 'index_dependency';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
