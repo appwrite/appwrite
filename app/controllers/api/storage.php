@@ -12,7 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
@@ -340,7 +340,7 @@ App::delete('/v1/storage/buckets/:bucketId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
@@ -386,7 +386,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         namespace: 'storage',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
-        methodType: MethodType::UPLOAD,
+        type: MethodType::UPLOAD,
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         requestType: 'multipart/form-data',
         responses: [
@@ -915,8 +915,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 model: Response::MODEL_NONE
             )
         ],
-        methodType: MethodType::LOCATION,
-        responseType: ResponseType::IMAGE
+        type: MethodType::LOCATION,
+        contentType: ContentType::IMAGE
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID')
@@ -1092,8 +1092,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 model: Response::MODEL_NONE
             )
         ],
-        methodType: MethodType::LOCATION,
-        responseType: ResponseType::ANY,
+        type: MethodType::LOCATION,
+        contentType: ContentType::ANY,
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
@@ -1240,8 +1240,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 model: Response::MODEL_NONE,
             )
         ],
-        methodType: MethodType::LOCATION,
-        responseType: ResponseType::ANY,
+        type: MethodType::LOCATION,
+        contentType: ContentType::ANY,
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
@@ -1674,7 +1674,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')

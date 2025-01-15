@@ -20,7 +20,7 @@ class Method
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
-     * @param ResponseType $responseType
+     * @param ContentType $responseType
      * @param MethodType|null $methodType
      * @param bool $deprecated
      * @param array|bool $hide
@@ -37,8 +37,8 @@ class Method
         protected string $description,
         protected array $auth,
         protected array $responses,
-        protected ResponseType $responseType = ResponseType::JSON,
-        protected ?MethodType $methodType = null,
+        protected ContentType $contentType = ContentType::JSON,
+        protected ?MethodType $type = null,
         protected bool $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
@@ -157,14 +157,14 @@ class Method
         return $this->responses;
     }
 
-    public function getResponseType(): ResponseType
+    public function getContentType(): ContentType
     {
-        return $this->responseType;
+        return $this->contentType;
     }
 
-    public function getMethodType(): ?MethodType
+    public function getType(): ?MethodType
     {
-        return $this->methodType;
+        return $this->type;
     }
 
     public function isDeprecated(): bool
@@ -235,15 +235,15 @@ class Method
         return $this;
     }
 
-    public function setResponseType(ResponseType $responseType): self
+    public function setContentType(ContentType $contentType): self
     {
-        $this->responseType = $responseType;
+        $this->contentType = $contentType;
         return $this;
     }
 
-    public function setMethodType(?MethodType $methodType): self
+    public function setType(?MethodType $type): self
     {
-        $this->methodType = $methodType;
+        $this->type = $type;
         return $this;
     }
 

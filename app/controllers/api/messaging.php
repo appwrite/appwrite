@@ -14,7 +14,7 @@ use Appwrite\Role;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -2052,7 +2052,7 @@ App::delete('/v1/messaging/providers/:providerId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('queueForEvents')
@@ -2381,7 +2381,7 @@ App::delete('/v1/messaging/topics/:topicId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('queueForEvents')
@@ -2755,7 +2755,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
@@ -4157,7 +4157,7 @@ App::delete('/v1/messaging/messages/:messageId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')

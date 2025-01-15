@@ -13,7 +13,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -111,7 +111,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                responseType: ResponseType::MULTIPART,
+                contentType: ContentType::MULTIPART,
                 requestType: 'application/json',
             ));
         } else {

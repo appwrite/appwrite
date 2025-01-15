@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -41,7 +41,7 @@ App::get('/v1/health')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -79,7 +79,7 @@ App::get('/v1/health/db')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('pools')
@@ -139,7 +139,7 @@ App::get('/v1/health/cache')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('pools')
@@ -203,7 +203,7 @@ App::get('/v1/health/queue')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('pools')
@@ -266,7 +266,7 @@ App::get('/v1/health/pubsub')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('pools')
@@ -330,7 +330,7 @@ App::get('/v1/health/time')
                 model: Response::MODEL_HEALTH_TIME,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -393,7 +393,7 @@ App::get('/v1/health/queue/webhooks')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -426,7 +426,7 @@ App::get('/v1/health/queue/logs')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -459,7 +459,7 @@ App::get('/v1/health/certificate')
                 model: Response::MODEL_HEALTH_CERTIFICATE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
@@ -515,7 +515,7 @@ App::get('/v1/health/queue/certificates')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -548,7 +548,7 @@ App::get('/v1/health/queue/builds')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -581,7 +581,7 @@ App::get('/v1/health/queue/databases')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
@@ -615,7 +615,7 @@ App::get('/v1/health/queue/deletes')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -648,7 +648,7 @@ App::get('/v1/health/queue/mails')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -681,7 +681,7 @@ App::get('/v1/health/queue/messaging')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -714,7 +714,7 @@ App::get('/v1/health/queue/migrations')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -747,7 +747,7 @@ App::get('/v1/health/queue/functions')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -780,7 +780,7 @@ App::get('/v1/health/queue/usage')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -813,7 +813,7 @@ App::get('/v1/health/queue/usage-dump')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
@@ -846,7 +846,7 @@ App::get('/v1/health/storage/local')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -895,7 +895,7 @@ App::get('/v1/health/storage')
                 model: Response::MODEL_HEALTH_STATUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('deviceForFiles')
@@ -942,7 +942,7 @@ App::get('/v1/health/anti-virus')
                 model: Response::MODEL_HEALTH_ANTIVIRUS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -987,7 +987,7 @@ App::get('/v1/health/queue/failed/:name')
                 model: Response::MODEL_HEALTH_QUEUE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('name', '', new WhiteList([
         Event::DATABASE_QUEUE_NAME,

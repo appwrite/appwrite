@@ -10,7 +10,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
@@ -463,7 +463,7 @@ App::post('/v1/databases')
                 model: Response::MODEL_DATABASE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
@@ -545,7 +545,7 @@ App::get('/v1/databases')
                 model: Response::MODEL_DATABASE_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -607,7 +607,7 @@ App::get('/v1/databases/:databaseId')
                 model: Response::MODEL_DATABASE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
@@ -639,7 +639,7 @@ App::get('/v1/databases/:databaseId/logs')
                 model: Response::MODEL_LOG_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -740,7 +740,7 @@ App::put('/v1/databases/:databaseId')
                 model: Response::MODEL_DATABASE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
@@ -785,7 +785,7 @@ App::delete('/v1/databases/:databaseId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
@@ -841,7 +841,7 @@ App::post('/v1/databases/:databaseId/collections')
                 model: Response::MODEL_COLLECTION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -912,7 +912,7 @@ App::get('/v1/databases/:databaseId/collections')
                 model: Response::MODEL_COLLECTION_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
@@ -984,7 +984,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
                 model: Response::MODEL_COLLECTION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -1025,7 +1025,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
                 model: Response::MODEL_LOG_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -1130,7 +1130,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
                 model: Response::MODEL_COLLECTION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -1204,7 +1204,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -2076,7 +2076,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
                 model: Response::MODEL_ATTRIBUTE_STRING,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2127,7 +2127,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
                 model: Response::MODEL_ATTRIBUTE_EMAIL,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2176,7 +2176,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
                 model: Response::MODEL_ATTRIBUTE_ENUM,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2227,7 +2227,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
                 model: Response::MODEL_ATTRIBUTE_IP,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2276,7 +2276,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
                 model: Response::MODEL_ATTRIBUTE_URL,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2325,7 +2325,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
                 model: Response::MODEL_ATTRIBUTE_INTEGER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2384,7 +2384,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
                 model: Response::MODEL_ATTRIBUTE_FLOAT,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2443,7 +2443,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
                 model: Response::MODEL_ATTRIBUTE_BOOLEAN,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2491,7 +2491,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
                 model: Response::MODEL_ATTRIBUTE_DATETIME,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2539,7 +2539,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
                 model: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2604,7 +2604,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2725,7 +2725,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 model: Response::MODEL_INDEX,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2899,7 +2899,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 model: Response::MODEL_INDEX_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -2981,7 +2981,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
                 model: Response::MODEL_INDEX,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3030,7 +3030,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3107,7 +3107,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         model: Response::MODEL_DOCUMENT,
                     )
                 ],
-                responseType: ResponseType::JSON,
+                contentType: ContentType::JSON,
                 parameters: [
                     'documentId' => ['optional' => false],
                     'data' => ['optional' => false],
@@ -3125,7 +3125,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         model: Response::MODEL_DOCUMENT_LIST,
                     )
                 ],
-                responseType: ResponseType::JSON,
+                contentType: ContentType::JSON,
                 parameters: [
                     'documents' => ['optional' => false],
                 ]
@@ -3425,7 +3425,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3585,7 +3585,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 model: Response::MODEL_DOCUMENT,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3682,7 +3682,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 model: Response::MODEL_LOG_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -3799,7 +3799,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 model: Response::MODEL_DOCUMENT,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -4040,7 +4040,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -4182,7 +4182,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -4305,7 +4305,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -4413,7 +4413,7 @@ App::get('/v1/databases/usage')
                 model: Response::MODEL_USAGE_DATABASES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
@@ -4502,7 +4502,7 @@ App::get('/v1/databases/:databaseId/usage')
                 model: Response::MODEL_USAGE_DATABASE,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
@@ -4597,7 +4597,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 model: Response::MODEL_USAGE_COLLECTION,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)

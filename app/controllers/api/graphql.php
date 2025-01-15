@@ -99,7 +99,7 @@ App::post('/v1/graphql/mutation')
                 model: Response::MODEL_ANY,
             )
         ],
-        methodType: MethodType::GRAPHQL,
+        type: MethodType::GRAPHQL,
         additionalParameters: [
             'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
         ],
@@ -149,7 +149,7 @@ App::post('/v1/graphql')
                 model: Response::MODEL_ANY,
             )
         ],
-        methodType: MethodType::GRAPHQL,
+        type: MethodType::GRAPHQL,
         additionalParameters: [
             'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
         ],

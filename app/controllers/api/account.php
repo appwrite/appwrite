@@ -25,7 +25,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -295,7 +295,7 @@ App::post('/v1/account')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -438,7 +438,7 @@ App::get('/v1/account')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -467,7 +467,7 @@ App::delete('/v1/account')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->inject('user')
     ->inject('project')
@@ -519,7 +519,7 @@ App::get('/v1/account/sessions')
                 model: Response::MODEL_SESSION_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->inject('response')
     ->inject('user')
@@ -568,7 +568,7 @@ App::delete('/v1/account/sessions')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
     ->inject('request')
@@ -637,7 +637,7 @@ App::get('/v1/account/sessions/:sessionId')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to get the current device session.')
     ->inject('response')
@@ -690,7 +690,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
@@ -778,7 +778,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
@@ -862,7 +862,7 @@ App::post('/v1/account/sessions/email')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
@@ -1002,7 +1002,7 @@ App::post('/v1/account/sessions/anonymous')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -1145,7 +1145,7 @@ App::post('/v1/account/sessions/token')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
@@ -1171,7 +1171,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         namespace: 'account',
         name: 'createOAuth2Session',
         description: '/docs/references/account/create-session-oauth2.md',
-        methodType: MethodType::WEBAUTH,
+        type: MethodType::WEBAUTH,
         auth: [],
         responses: [
             new SDKResponse(
@@ -1179,7 +1179,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::HTML,
+        contentType: ContentType::HTML,
         hide: [APP_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
@@ -1775,8 +1775,8 @@ App::get('/v1/account/tokens/oauth2/:provider')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::HTML,
-        methodType: MethodType::WEBAUTH,
+        contentType: ContentType::HTML,
+        type: MethodType::WEBAUTH,
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -1855,7 +1855,7 @@ App::post('/v1/account/tokens/magic-url')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
@@ -2105,7 +2105,7 @@ App::post('/v1/account/tokens/email')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
@@ -2340,7 +2340,7 @@ App::put('/v1/account/sessions/magic-url')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
         deprecated: true,
     ))
     ->label('abuse-limit', 10)
@@ -2377,7 +2377,7 @@ App::put('/v1/account/sessions/phone')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
         deprecated: true,
     ))
     ->label('abuse-limit', 10)
@@ -2415,7 +2415,7 @@ App::post('/v1/account/tokens/phone')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
@@ -2599,7 +2599,7 @@ App::post('/v1/account/jwts')
                 model: Response::MODEL_JWT,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 100)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -2647,7 +2647,7 @@ App::get('/v1/account/prefs')
                 model: Response::MODEL_PREFERENCES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -2673,7 +2673,7 @@ App::get('/v1/account/logs')
                 model: Response::MODEL_LOG_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -2747,7 +2747,7 @@ App::patch('/v1/account/name')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('requestTimestamp')
@@ -2785,7 +2785,7 @@ App::patch('/v1/account/password')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
@@ -2858,7 +2858,7 @@ App::patch('/v1/account/email')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -2954,7 +2954,7 @@ App::patch('/v1/account/phone')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -3039,7 +3039,7 @@ App::patch('/v1/account/prefs')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('requestTimestamp')
@@ -3076,7 +3076,7 @@ App::patch('/v1/account/status')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->inject('requestTimestamp')
     ->inject('request')
@@ -3126,7 +3126,7 @@ App::post('/v1/account/recovery')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
@@ -3312,7 +3312,7 @@ App::put('/v1/account/recovery')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
@@ -3402,7 +3402,7 @@ App::post('/v1/account/verification')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -3573,7 +3573,7 @@ App::put('/v1/account/verification')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
@@ -3639,7 +3639,7 @@ App::post('/v1/account/verification/phone')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},userId:{userId}', 'url:{url},ip:{ip}'])
@@ -3772,7 +3772,7 @@ App::put('/v1/account/verification/phone')
                 model: Response::MODEL_TOKEN,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{param-userId}')
@@ -3837,7 +3837,7 @@ App::patch('/v1/account/mfa')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
     ->inject('requestTimestamp')
@@ -3890,7 +3890,7 @@ App::get('/v1/account/mfa/factors')
                 model: Response::MODEL_MFA_FACTORS,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -3930,7 +3930,7 @@ App::post('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_MFA_TYPE,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
@@ -4006,7 +4006,7 @@ App::put('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
@@ -4075,7 +4075,7 @@ App::post('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -4121,7 +4121,7 @@ App::patch('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('dbForProject')
     ->inject('response')
@@ -4162,7 +4162,7 @@ App::get('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -4200,7 +4200,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
@@ -4245,7 +4245,7 @@ App::post('/v1/account/mfa/challenge')
                 model: Response::MODEL_MFA_CHALLENGE,
             )
         ],
-        responseType: ResponseType::JSON,
+        contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -4439,7 +4439,7 @@ App::put('/v1/account/mfa/challenge')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
@@ -4532,7 +4532,7 @@ App::post('/v1/account/targets/push')
                 model: Response::MODEL_TARGET,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
@@ -4612,7 +4612,7 @@ App::put('/v1/account/targets/:targetId/push')
                 model: Response::MODEL_TARGET,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
@@ -4676,7 +4676,7 @@ App::delete('/v1/account/targets/:targetId/push')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
@@ -4726,7 +4726,7 @@ App::get('/v1/account/identities')
                 model: Response::MODEL_IDENTITY_LIST,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
@@ -4797,7 +4797,7 @@ App::delete('/v1/account/identities/:identityId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')

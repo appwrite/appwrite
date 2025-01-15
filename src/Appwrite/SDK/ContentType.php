@@ -2,7 +2,7 @@
 
 namespace Appwrite\SDK;
 
-enum ResponseType: string
+enum ContentType: string
 {
     case NONE = '';
     case JSON = 'application/json';

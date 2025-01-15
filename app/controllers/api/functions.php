@@ -18,7 +18,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
@@ -1025,8 +1025,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::ANY,
-        methodType: MethodType::LOCATION
+        contentType: ContentType::ANY,
+        type: MethodType::LOCATION
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1189,7 +1189,7 @@ App::delete('/v1/functions/:functionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
@@ -1245,7 +1245,7 @@ App::post('/v1/functions/:functionId/deployments')
             )
         ],
         requestType: 'multipart/form-data',
-        methodType: MethodType::UPLOAD,
+        type: MethodType::UPLOAD,
         packaging: true,
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
@@ -1607,7 +1607,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
@@ -1850,7 +1850,7 @@ App::post('/v1/functions/:functionId/executions')
                 model: Response::MODEL_EXECUTION,
             )
         ],
-        responseType: ResponseType::MULTIPART,
+        contentType: ContentType::MULTIPART,
         requestType: 'application/json',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
@@ -2407,7 +2407,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
@@ -2704,7 +2704,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)

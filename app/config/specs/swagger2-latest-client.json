@@ -102,9 +102,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -155,9 +152,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -248,9 +242,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -330,9 +321,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/identities",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -394,9 +382,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -459,9 +444,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -512,9 +494,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -581,9 +560,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -656,9 +632,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -724,9 +697,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -805,9 +775,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -875,9 +842,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -954,9 +918,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1036,9 +997,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1091,9 +1049,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1144,9 +1099,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1197,9 +1149,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1252,9 +1201,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1327,9 +1273,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1408,9 +1351,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1490,9 +1430,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1543,9 +1480,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1621,9 +1555,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1701,9 +1632,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1790,9 +1718,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1838,9 +1763,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1893,9 +1815,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1946,9 +1865,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2026,9 +1942,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2103,9 +2016,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2241,9 +2151,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2321,9 +2228,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2401,9 +2305,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "{sessionId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2464,9 +2365,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2522,9 +2420,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2587,9 +2482,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2641,9 +2533,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2727,9 +2616,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2801,9 +2687,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2865,9 +2748,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2954,9 +2834,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3043,9 +2920,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3184,9 +3058,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3264,9 +3135,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3337,9 +3205,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3422,9 +3287,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3475,9 +3337,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3558,9 +3417,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3687,9 +3543,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3820,9 +3673,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3887,9 +3737,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4378,9 +4225,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4465,9 +4309,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4560,9 +4401,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4655,9 +4493,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4739,9 +4574,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "additional-methods": [
                         {
                             "name": "createDocuments",
@@ -4754,10 +4586,10 @@
                             "responses": [
                                 {
                                     "code": 201,
-                                    "description": "",
-                                    "model": "#\/definitions\/document"
+                                    "model": "#\/definitions\/documentList"
                                 }
-                            ]
+                            ],
+                            "description": "\/docs\/references\/databases\/create-document.md"
                         }
                     ],
                     "auth": {
@@ -4868,9 +4700,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4940,7 +4769,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -4971,9 +4802,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5063,9 +4891,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5155,9 +4980,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5254,9 +5076,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5336,9 +5155,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5421,9 +5237,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5542,9 +5355,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5616,9 +5426,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5692,9 +5499,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5768,9 +5572,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/localed",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5824,9 +5625,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/localeCode",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5880,9 +5678,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/continents",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5936,9 +5731,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5992,9 +5784,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/eu",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -6048,9 +5837,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/phones",
-                    "offline-key": "",
-                    "offline-response-key": "countryCode",
                     "auth": {
                         "Project": []
                     }
@@ -6104,9 +5890,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/currencies",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -6160,9 +5943,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/languages",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -6217,9 +5997,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6304,9 +6081,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6378,9 +6152,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6463,9 +6234,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6557,9 +6325,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6629,9 +6394,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6720,9 +6482,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6794,9 +6553,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6868,9 +6624,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7069,9 +6822,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7143,9 +6893,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7220,9 +6967,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7314,9 +7058,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7378,9 +7119,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7455,9 +7193,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7521,9 +7256,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7606,9 +7338,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7723,9 +7452,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "{membershipId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7795,9 +7521,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7883,9 +7606,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7956,9 +7676,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -8054,9 +7771,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -8117,9 +7831,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }

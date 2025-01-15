@@ -4,7 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
@@ -36,7 +36,7 @@ App::get('/v1/console/variables')
                 model: Response::MODEL_CONSOLE_VARIABLES,
             )
         ],
-        responseType: ResponseType::JSON
+        contentType: ContentType::JSON
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -81,7 +81,7 @@ App::post('/v1/console/assistant')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::TEXT
+        contentType: ContentType::TEXT
     ))
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')

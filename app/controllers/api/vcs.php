@@ -8,7 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -285,8 +285,8 @@ App::get('/v1/vcs/github/authorize')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::HTML,
-        methodType: MethodType::WEBAUTH,
+        contentType: ContentType::HTML,
+        type: MethodType::WEBAUTH,
         hide: true,
     ))
     ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
@@ -1192,7 +1192,7 @@ App::delete('/v1/vcs/installations/:installationId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')

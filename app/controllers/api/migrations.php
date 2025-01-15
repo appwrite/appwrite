@@ -10,7 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\SDK\ResponseType;
+use Appwrite\SDK\ContentType;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -709,7 +709,7 @@ App::get('/v1/migrations/firebase/connect')
             )
         ],
         hide: true,
-        methodType: MethodType::WEBAUTH
+        type: MethodType::WEBAUTH
     ))
     ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
     ->param('projectId', '', new UID(), 'Project ID')
@@ -1145,7 +1145,7 @@ App::delete('/v1/migrations/:migrationId')
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE
+        contentType: ContentType::NONE
     ))
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')

@@ -145,7 +145,7 @@ class Swagger2 extends Format
             }
 
             $desc = (!empty($sdk->getDescription())) ? \realpath(__DIR__ . '/../../../../' . $sdk->getDescription()) : null;
-            $produces = ($sdk->getResponseType())->value;
+            $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
 
@@ -185,7 +185,7 @@ class Swagger2 extends Format
                     'method' => $method,
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $sdk->getMethodType()->value ?? '',
+                    'type' => $sdk->getType()->value ?? '',
                     'deprecated' => $sdk->isDeprecated(),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
@@ -210,7 +210,8 @@ class Swagger2 extends Format
                         'name' => $method->getMethodName(),
                         'parameters' => [],
                         'required' => [],
-                        'responses' => []
+                        'responses' => [],
+                        'description' => $method->getDescription(),
                     ];
 
                     foreach ($method->getParameters() as $name => $param) {
@@ -225,7 +226,6 @@ class Swagger2 extends Format
                         /** @var \Appwrite\SDK\Response $response */
                         $additionalMethod['responses'][] = [
                             'code' => $response->getCode(),
-                            'description' => $response->getDescription(),
                             'model' => '#/definitions/' . $response->getModel()
                         ];
                     }
@@ -377,7 +377,7 @@ class Swagger2 extends Format
                         $node['x-example'] = false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
-                        if ($sdk->getMethodType() === MethodType::UPLOAD) {
+                        if ($sdk->getType() === MethodType::UPLOAD) {
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();

@@ -11,8 +11,7 @@ class Response
      */
     public function __construct(
         private int $code,
-        private string|array $model,
-        private string $description = '',
+        private string|array $model
     ) {
     }
 
@@ -24,10 +23,5 @@ class Response
     public function getModel(): string|array
     {
         return $this->model;
-    }
-
-    public function getDescription(): string
-    {
-        return $this->description;
     }
 }
