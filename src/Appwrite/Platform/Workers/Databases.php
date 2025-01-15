@@ -14,6 +14,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Dependency;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -278,16 +279,6 @@ class Databases extends Action
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
 
-            } catch (DatabaseException\Dependency $e) {
-                Console::error($e->getMessage());
-
-                $attribute->setAttribute('status', 'available');
-                $attribute->setAttribute('error', $e->getMessage());
-
-                $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute);
-
-               return;
-
             } catch (NotFound $e) {
                 Console::error($e->getMessage());
 
@@ -317,6 +308,10 @@ class Databases extends Action
                         $relatedAttribute->getId(),
                         $relatedAttribute->setAttribute('status', 'stuck')
                     );
+                }
+
+                if ($e instanceof Dependency) {
+                    return;
                 }
 
                 throw $e;
