@@ -25,9 +25,7 @@ App::get('/v1/locale')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOCALE,
             )
-        ],
-        offlineKey: 'current',
-        offlineModel: '/localed',
+        ]
     ))
     ->inject('request')
     ->inject('response')
@@ -90,9 +88,7 @@ App::get('/v1/locale/codes')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOCALE_CODE_LIST,
             )
-        ],
-        offlineKey: 'current',
-        offlineModel: '/locale/localeCode',
+        ]
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -117,9 +113,7 @@ App::get('/v1/locale/countries')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_COUNTRY_LIST,
             )
-        ],
-        offlineModel: '/locale/countries',
-        offlineResponseKey: 'code'
+        ]
     ))
     ->inject('response')
     ->inject('locale')
@@ -155,9 +149,7 @@ App::get('/v1/locale/countries/eu')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_COUNTRY_LIST,
             )
-        ],
-        offlineModel: '/locale/countries/eu',
-        offlineResponseKey: 'code'
+        ]
     ))
     ->inject('response')
     ->inject('locale')
@@ -195,9 +187,7 @@ App::get('/v1/locale/countries/phones')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PHONE_LIST,
             )
-        ],
-        offlineModel: '/locale/countries/phones',
-        offlineResponseKey: 'countryCode'
+        ]
     ))
     ->inject('response')
     ->inject('locale')
@@ -234,9 +224,7 @@ App::get('/v1/locale/continents')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_CONTINENT_LIST,
             )
-        ],
-        offlineModel: '/locale/continents',
-        offlineResponseKey: 'code'
+        ]
     ))
     ->inject('response')
     ->inject('locale')
@@ -271,9 +259,7 @@ App::get('/v1/locale/currencies')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_CURRENCY_LIST,
             )
-        ],
-        offlineModel: '/locale/currencies',
-        offlineResponseKey: 'code'
+        ]
     ))
     ->inject('response')
     ->action(function (Response $response) {
@@ -299,9 +285,7 @@ App::get('/v1/locale/languages')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LANGUAGE_LIST,
             )
-        ],
-        offlineModel: '/locale/languages',
-        offlineResponseKey: 'code'
+        ]
     ))
     ->inject('response')
     ->action(function (Response $response) {

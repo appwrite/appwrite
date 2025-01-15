@@ -22,9 +22,6 @@ class Method
      * @param array<SDKResponse> $responses
      * @param ResponseType $responseType
      * @param MethodType|null $methodType
-     * @param string|null $offlineKey
-     * @param string|null $offlineModel
-     * @param string|null $offlineResponseKey
      * @param bool $deprecated
      * @param array|bool $hide
      * @param bool $packaging
@@ -42,9 +39,6 @@ class Method
         protected array $responses,
         protected ResponseType $responseType = ResponseType::JSON,
         protected ?MethodType $methodType = null,
-        protected ?string $offlineKey = null,
-        protected ?string $offlineModel = null,
-        protected ?string $offlineResponseKey = null,
         protected bool $deprecated = false,
         protected array|bool $hide = false,
         protected bool $packaging = false,
@@ -173,21 +167,6 @@ class Method
         return $this->methodType;
     }
 
-    public function getOfflineKey(): ?string
-    {
-        return $this->offlineKey;
-    }
-
-    public function getOfflineModel(): ?string
-    {
-        return $this->offlineModel;
-    }
-
-    public function getOfflineResponseKey(): ?string
-    {
-        return $this->offlineResponseKey;
-    }
-
     public function isDeprecated(): bool
     {
         return $this->deprecated;
@@ -265,24 +244,6 @@ class Method
     public function setMethodType(?MethodType $methodType): self
     {
         $this->methodType = $methodType;
-        return $this;
-    }
-
-    public function setOfflineKey(?string $offlineKey): self
-    {
-        $this->offlineKey = $offlineKey;
-        return $this;
-    }
-
-    public function setOfflineModel(?string $offlineModel): self
-    {
-        $this->offlineModel = $offlineModel;
-        return $this;
-    }
-
-    public function setOfflineResponseKey(?string $offlineResponseKey): self
-    {
-        $this->offlineResponseKey = $offlineResponseKey;
         return $this;
     }
 

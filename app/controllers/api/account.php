@@ -438,9 +438,7 @@ App::get('/v1/account')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current'
+        responseType: ResponseType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -522,7 +520,6 @@ App::get('/v1/account/sessions')
             )
         ],
         responseType: ResponseType::JSON,
-        offlineModel: '/account/sessions'
     ))
     ->inject('response')
     ->inject('user')
@@ -640,9 +637,7 @@ App::get('/v1/account/sessions/:sessionId')
                 model: Response::MODEL_SESSION,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account/sessions',
-        offlineKey: '{sessionId}'
+        responseType: ResponseType::JSON
     ))
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to get the current device session.')
     ->inject('response')
@@ -2652,9 +2647,7 @@ App::get('/v1/account/prefs')
                 model: Response::MODEL_PREFERENCES,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account/prefs',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -2754,9 +2747,7 @@ App::patch('/v1/account/name')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('requestTimestamp')
@@ -2794,9 +2785,7 @@ App::patch('/v1/account/password')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->label('abuse-limit', 10)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
@@ -2869,9 +2858,7 @@ App::patch('/v1/account/email')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -2967,9 +2954,7 @@ App::patch('/v1/account/phone')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -3054,9 +3039,7 @@ App::patch('/v1/account/prefs')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account/prefs',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('requestTimestamp')
@@ -3854,9 +3837,7 @@ App::patch('/v1/account/mfa')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
     ->inject('requestTimestamp')
@@ -3909,9 +3890,7 @@ App::get('/v1/account/mfa/factors')
                 model: Response::MODEL_MFA_FACTORS,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineKey: 'current',
-        offlineModel: '/account'
+        responseType: ResponseType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -3951,9 +3930,7 @@ App::post('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_MFA_TYPE,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current'
+        responseType: ResponseType::JSON
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
@@ -4029,9 +4006,7 @@ App::put('/v1/account/mfa/authenticators/:type')
                 model: Response::MODEL_USER,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current'
+        responseType: ResponseType::JSON
     ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
@@ -4100,9 +4075,7 @@ App::post('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -4148,9 +4121,7 @@ App::patch('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->inject('dbForProject')
     ->inject('response')
@@ -4191,9 +4162,7 @@ App::get('/v1/account/mfa/recovery-codes')
                 model: Response::MODEL_MFA_RECOVERY_CODES,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account',
-        offlineKey: 'current',
+        responseType: ResponseType::JSON
     ))
     ->inject('response')
     ->inject('user')
@@ -4757,8 +4726,7 @@ App::get('/v1/account/identities')
                 model: Response::MODEL_IDENTITY_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/account/identities',
+        responseType: ResponseType::JSON
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->inject('response')

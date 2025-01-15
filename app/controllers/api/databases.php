@@ -3108,8 +3108,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     )
                 ],
                 responseType: ResponseType::JSON,
-                offlineKey: '{documentId}',
-                offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
                 parameters: [
                     'documentId' => ['optional' => false],
                     'data' => ['optional' => false],
@@ -3124,12 +3122,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_DOCUMENT,
+                        model: Response::MODEL_DOCUMENT_LIST,
                     )
                 ],
                 responseType: ResponseType::JSON,
-                offlineKey: '{documentId}',
-                offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
                 parameters: [
                     'documents' => ['optional' => false],
                 ]
@@ -3429,8 +3425,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3590,9 +3585,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 model: Response::MODEL_DOCUMENT,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-        offlineKey: '{documentId}'
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -3806,9 +3799,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 model: Response::MODEL_DOCUMENT,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-        offlineKey: '{documentId}'
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -4049,8 +4040,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::JSON,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+        responseType: ResponseType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -4192,9 +4182,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 model: Response::MODEL_NONE,
             )
         ],
-        responseType: ResponseType::NONE,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-        offlineKey: '{documentId}'
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -4317,9 +4305,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                 model: Response::MODEL_DOCUMENT_LIST,
             )
         ],
-        responseType: ResponseType::NONE,
-        offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
-        offlineKey: '{documentId}'
+        responseType: ResponseType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')

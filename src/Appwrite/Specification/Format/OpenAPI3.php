@@ -196,10 +196,7 @@ class OpenAPI3 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging(),
-                    'offline-model' => $sdk->getOfflineModel() ?? '',
-                    'offline-key' => $sdk->getOfflineKey() ?? '',
-                    'offline-response-key' => $sdk->getOfflineResponseKey() ?? '$id',
+                    'packaging' => $sdk->isPackaging()
                 ],
             ];
 

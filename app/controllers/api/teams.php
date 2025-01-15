@@ -157,8 +157,7 @@ App::get('/v1/teams')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TEAM_LIST,
             )
-        ],
-        offlineModel: '/teams',
+        ]
     ))
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -226,9 +225,7 @@ App::get('/v1/teams/:teamId')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TEAM,
             )
-        ],
-        offlineModel: '/teams',
-        offlineKey: '{teamId}',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
@@ -258,8 +255,7 @@ App::get('/v1/teams/:teamId/prefs')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
             )
-        ],
-        offlineModel: '/teams/{teamId}/prefs',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
@@ -294,9 +290,7 @@ App::put('/v1/teams/:teamId')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TEAM,
             )
-        ],
-        offlineModel: '/teams',
-        offlineKey: '{teamId}',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
@@ -343,8 +337,7 @@ App::put('/v1/teams/:teamId/prefs')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
             )
-        ],
-        offlineModel: '/teams/{teamId}/prefs',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
@@ -771,8 +764,7 @@ App::get('/v1/teams/:teamId/memberships')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MEMBERSHIP_LIST,
             )
-        ],
-        offlineModel: '/teams/{teamId}/memberships',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
@@ -907,9 +899,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MEMBERSHIP,
             )
-        ],
-        offlineModel: '/teams/{teamId}/memberships',
-        offlineKey: '{membershipId}',
+        ]
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
