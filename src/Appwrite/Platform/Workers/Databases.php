@@ -281,11 +281,10 @@ class Databases extends Action
             } catch (DatabaseException\Dependency $e) {
                 Console::error($e->getMessage());
 
-                $dbForProject->updateDocument(
-                    'attributes',
-                    $attribute->getId(),
-                    $attribute->setAttribute('error', $e->getMessage())
-                );
+                $attribute->setAttribute('status', 'available');
+                $attribute->setAttribute('error', $e->getMessage());
+
+                $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute);
 
                return;
 
