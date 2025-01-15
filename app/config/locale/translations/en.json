@@ -48,7 +48,7 @@
     "emails.recovery.signature": "{{project}} team",
     "emails.invitation.subject": "Invitation to %s Team at %s",
     "emails.invitation.hello": "Hello {{user}},",
-    "emails.invitation.body": "This mail was sent to you because {{b}}{{owner}}{{/b}} wanted to invite you to become a member of the {{b}}{{team}}{{/b}} team at {{b}}{{project}}{{/b}}.",
+    "emails.invitation.body": "This mail was sent to you because {{b}}{{owner}}{{/b}} invited you to become a member of the {{b}}{{team}}{{/b}} team at {{b}}{{project}}{{/b}}.",
     "emails.invitation.footer": "If you are not interested, you can ignore this message.",
     "emails.invitation.thanks": "Thanks,",
     "emails.invitation.signature": "{{project}} team",

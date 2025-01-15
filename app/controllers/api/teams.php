@@ -656,7 +656,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'owner' => $user->getAttribute('name'),
                     'direction' => $locale->getText('settings.direction'),
                     /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
-                    'user' => $user->getAttribute('name'),
+                    'user' => $invitee->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
                     'redirect' => $url,
                     'project' => $projectName
