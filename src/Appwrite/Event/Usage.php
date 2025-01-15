@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -61,6 +62,11 @@ class Usage extends Event
         if ($this->paused) {
             return false;
         }
+
+        Console::log('------------------------');
+        Console::log('Usage Event Triggered');
+        Console::log('Metrics: ' . json_encode($this->metrics, JSON_PRETTY_PRINT));
+        Console::log('------------------------');
 
         $client = new Client($this->queue, $this->connection);
 
