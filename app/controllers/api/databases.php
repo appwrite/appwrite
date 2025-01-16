@@ -2431,7 +2431,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         );
 
         if (! $validator->isValid($attribute)) {
-            throw new Exception(Exception::INDEX_DEPENDENCY, $validator->getDescription());
+            throw new Exception(Exception::INDEX_DEPENDENCY);
         }
 
         // Only update status if removing available attribute
