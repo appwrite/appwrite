@@ -15,6 +15,6 @@ result = databases.update_string_attribute(
     key: '',
     required: false,
     default: '<DEFAULT>',
-    size: null, # optional
+    size: 1, # optional
     new_key: '' # optional
 )
