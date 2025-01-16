@@ -154,20 +154,15 @@ class Deletes extends Action
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_MAINTENANCE:
-                $this->performMaintenance($project, $getProjectDB, $executionRetention, $auditRetention, $hourlyUsageRetentionDatetime);
+                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
+                $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
-    }
-
-    private function performMaintenance(Document $project, callable $getProjectDB, string $executionRetention, string $auditRetention, string $hourlyUsageRetentionDatetime): void
-    {
-        $this->deleteExpiredTargets($project, $getProjectDB);
-        $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
-        $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
-        $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
-        $this->deleteExpiredSessions($project, $getProjectDB);
     }
 
     /**
