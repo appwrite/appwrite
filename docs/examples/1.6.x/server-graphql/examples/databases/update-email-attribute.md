@@ -13,6 +13,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         format
         default
     }
