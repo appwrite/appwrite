@@ -3109,6 +3109,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ],
                 contentType: ContentType::JSON,
                 parameters: [
+                    'databaseId' => ['optional' => false],
+                    'collectionId' => ['optional' => false],
                     'documentId' => ['optional' => false],
                     'data' => ['optional' => false],
                     'permissions' => ['optional' => true],
@@ -3127,6 +3129,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ],
                 contentType: ContentType::JSON,
                 parameters: [
+                    'databaseId' => ['optional' => false],
+                    'collectionId' => ['optional' => false],
                     'documents' => ['optional' => false],
                 ]
             )
