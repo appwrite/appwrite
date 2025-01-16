@@ -19,7 +19,10 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "sound": "<SOUND>",
   "color": "<COLOR>",
   "tag": "<TAG>",
-  "badge": "<BADGE>",
+  "badge": 0,
   "draft": false,
-  "scheduledAt": 
+  "scheduledAt": ,
+  "contentAvailable": false,
+  "critical": false,
+  "priority": "normal"
 }
