@@ -114,7 +114,7 @@ class Schema
                     $methodName = $method->getMethodName();
                     $name = $namespace . \ucfirst($methodName);
 
-                    foreach (Mapper::route($utopia, $route, $complexity) as $field) {
+                    foreach (Mapper::route($utopia, $route, $method, $complexity) as $field) {
                         switch ($route->getMethod()) {
                             case 'GET':
                                 $queries[$name] = $field;

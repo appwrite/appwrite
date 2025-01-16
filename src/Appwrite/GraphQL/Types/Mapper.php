@@ -4,6 +4,7 @@ namespace Appwrite\GraphQL\Types;
 
 use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
+use Appwrite\SDK\Method;
 use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
@@ -78,6 +79,7 @@ class Mapper
     public static function route(
         App $utopia,
         Route $route,
+        Method $method,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -86,18 +88,7 @@ class Mapper
             }
         }
 
-        $sdk = $route->getLabel('sdk', false);
-
-        if (!$sdk) {
-            return;
-        }
-
-        if (is_array($sdk)) {
-            $sdk = $sdk[0];
-        }
-
-        /** @var \Appwrite\SDK\Method $sdk */
-        $responses = $sdk->getResponses() ?? [];
+        $responses = $method->getResponses() ?? [];
 
         // If responses is an array, map each response to its model
         if (\is_array($responses)) {
@@ -126,13 +117,25 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
+                $methodParameters = $method->getParameters();
+
+                if (!empty($methodParameters)) {
+                    if (!array_key_exists($name, $methodParameters)) {
+                        continue;
+                    }
+                    $optional = $methodParameters[$name]['optional'];
+                } else {
+                    $optional = $parameter['optional'];
+                }
+
                 if ($name === 'queries') {
                     $list = true;
                 }
+
                 $parameterType = Mapper::param(
                     $utopia,
                     $parameter['validator'],
-                    !$parameter['optional'],
+                    !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [

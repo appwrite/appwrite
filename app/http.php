@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -335,10 +334,5 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $pools->reclaim();
     }
 });
-
-// Check for any errors found while we were initialising the SDK Methods.
-if (!empty(Method::getErrors())) {
-    throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
-}
 
 $http->start();

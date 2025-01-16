@@ -1128,3 +1128,8 @@ App::wildcard()
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
+
+// Check for any errors found while we were initialising the SDK Methods.
+if (!empty(Method::getErrors())) {
+    throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
+}
