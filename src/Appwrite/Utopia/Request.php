@@ -47,9 +47,11 @@ class Request extends UtopiaRequest
                 $params += $method->getParameters();
             }
 
-            $parameters = array_filter($parameters, function ($key) use ($params) {
-                return array_key_exists($key, $params);
-            }, \ARRAY_FILTER_USE_KEY);
+            if (!empty($params)) {
+                $parameters = array_filter($parameters, function ($key) use ($params) {
+                    return array_key_exists($key, $params);
+                }, \ARRAY_FILTER_USE_KEY);
+            }
 
             foreach ($this->getFilters() as $filter) {
                 $parameters = $filter->parse($parameters, $endpointIdentifier);
