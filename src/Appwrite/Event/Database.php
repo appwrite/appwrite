@@ -121,6 +121,8 @@ class Database extends Event
 
         $this->setQueue($dsn->getHost());
 
+        $this->trimFields();
+
         $client = new Client($this->queue, $this->connection);
 
         try {

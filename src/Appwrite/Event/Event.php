@@ -136,9 +136,21 @@ class Event
      */
     public function setProject(Document $project): self
     {
+        $this->project = $project;
+        return $this;
+    }
+
+    /**
+     * Trims the fields of the project document to only include the necessary fields.
+     *
+     * @return self
+     */
+    public function trimFields(): self
+    {
         $this->project = new Document([
-            '$id' => $project->getId(),
-            '$internalId' => $project->getInternalId()
+            '$id' => $this->project->getId(),
+            '$internalId' => $this->project->getInternalId(),
+            'database' => $this->project->getAttribute('database')
         ]);
 
         return $this;
@@ -326,6 +338,8 @@ class Event
         if ($this->paused) {
             return false;
         }
+
+        $this->trimFields();
 
         $client = new Client($this->queue, $this->connection);
 

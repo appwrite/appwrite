@@ -62,10 +62,12 @@ class Usage extends Event
             return false;
         }
 
+        $this->trimFields();
+
         $client = new Client($this->queue, $this->connection);
 
         $result = $client->enqueue([
-            'project' => $this->getProject(),
+            'project' => $this->project,
             'reduce'  => $this->reduce,
             'metrics' => $this->metrics,
         ]);

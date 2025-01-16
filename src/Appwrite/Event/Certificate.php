@@ -78,6 +78,8 @@ class Certificate extends Event
             return false;
         }
 
+        $this->trimFields();
+
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([

@@ -19,7 +19,6 @@ class Webhook extends Event
     {
         /** Filter out context and trim project to keep the payload small */
         $this->context = [];
-
         return parent::trigger();
     }
 }
