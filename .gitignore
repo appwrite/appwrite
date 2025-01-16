@@ -17,3 +17,4 @@ dev/yasd_init.php
 Makefile
 appwrite.json
 /.zed/
+.history
