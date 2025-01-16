@@ -14122,7 +14122,7 @@
                                     },
                                     "data": {
                                         "type": "object",
-                                        "description": "Additional Data for push notification.",
+                                        "description": "Additional key-value pair data for push notification.",
                                         "x-example": "{}"
                                     },
                                     "action": {
@@ -14142,7 +14142,7 @@
                                     },
                                     "sound": {
                                         "type": "string",
-                                        "description": "Sound for push notification. Available only for Android and IOS Platform.",
+                                        "description": "Sound for push notification. Available only for Android and iOS Platform.",
                                         "x-example": "<SOUND>"
                                     },
                                     "color": {
@@ -14156,9 +14156,9 @@
                                         "x-example": "<TAG>"
                                     },
                                     "badge": {
-                                        "type": "string",
-                                        "description": "Badge for push notification. Available only for IOS Platform.",
-                                        "x-example": "<BADGE>"
+                                        "type": "integer",
+                                        "description": "Badge for push notification. Available only for iOS Platform.",
+                                        "x-example": null
                                     },
                                     "draft": {
                                         "type": "boolean",
@@ -14169,12 +14169,31 @@
                                         "type": "string",
                                         "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                         "x-example": null
+                                    },
+                                    "contentAvailable": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "critical": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Set the notification priority. \"normal\" will consider device state and may not deliver notifications immediately. \"high\" will always attempt to immediately deliver the notification.",
+                                        "x-example": "normal",
+                                        "enum": [
+                                            "normal",
+                                            "high"
+                                        ],
+                                        "x-enum-name": "MessagePriority",
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "required": [
-                                    "messageId",
-                                    "title",
-                                    "body"
+                                    "messageId"
                                 ]
                             }
                         }
@@ -14333,6 +14352,27 @@
                                         "type": "string",
                                         "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                         "x-example": null
+                                    },
+                                    "contentAvailable": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "critical": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                        "x-example": "normal",
+                                        "enum": [
+                                            "normal",
+                                            "high"
+                                        ],
+                                        "x-enum-name": "MessagePriority",
+                                        "x-enum-keys": []
                                     }
                                 }
                             }
@@ -36709,7 +36749,8 @@
                     "resourceId": {
                         "type": "string",
                         "description": "Resource ID.",
-                        "x-example": "5e5ea5c16897e"
+                        "x-example": "5e5ea5c16897e",
+                        "nullable": true
                     },
                     "name": {
                         "type": "string",
@@ -36721,10 +36762,16 @@
                         "description": "The value of this metric at the timestamp.",
                         "x-example": 1,
                         "format": "int32"
+                    },
+                    "estimate": {
+                        "type": "number",
+                        "description": "The estimated value of this metric at the end of the period.",
+                        "x-example": 1,
+                        "format": "double",
+                        "nullable": true
                     }
                 },
                 "required": [
-                    "resourceId",
                     "name",
                     "value"
                 ]
@@ -37540,6 +37587,26 @@
                             "$ref": "#\/components\/schemas\/metricBreakdown"
                         },
                         "x-example": []
+                    },
+                    "authPhoneTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of phone auth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "authPhoneEstimate": {
+                        "type": "number",
+                        "description": "Estimated total aggregated cost of phone auth.",
+                        "x-example": 0,
+                        "format": "double"
+                    },
+                    "authPhoneCountryBreakdown": {
+                        "type": "array",
+                        "description": "Aggregated breakdown in totals of phone auth by country.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metricBreakdown"
+                        },
+                        "x-example": []
                     }
                 },
                 "required": [
@@ -37564,7 +37631,10 @@
                     "databasesStorageBreakdown",
                     "executionsMbSecondsBreakdown",
                     "buildsMbSecondsBreakdown",
-                    "functionsStorageBreakdown"
+                    "functionsStorageBreakdown",
+                    "authPhoneTotal",
+                    "authPhoneEstimate",
+                    "authPhoneCountryBreakdown"
                 ]
             },
             "headers": {

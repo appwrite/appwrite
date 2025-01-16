@@ -5,7 +5,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
-use Swoole\Database\DetectsLostConnections;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
@@ -18,7 +17,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -364,15 +362,6 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        if (
-            ($th instanceof PDOException || $th instanceof DatabaseException)
-            && DetectsLostConnections::causedByLostConnection($th)
-        ) {
-            // Mark connection as unhealthy so it will be recycled on next reclaim.
-            $connectionForProject = $app->getResource('connectionForProject');
-            $connectionForProject->setHealthy(false);
-        }
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
