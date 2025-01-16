@@ -18,3 +18,5 @@ Makefile
 appwrite.json
 /.zed/
 .history
+appwrite/.env
+appwrite/docker-compose.yml
