@@ -547,8 +547,8 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $membership = $dbForProject->findOne('memberships', [
-            Query::equal('userId', [$invitee->getId()]),
-            Query::equal('teamId', [$team->getId()]),
+            Query::equal('userId', [$invitee->getInternalId()]),
+            Query::equal('teamId', [$team->getInternalId()]),
         ]);
 
         if ($membership->isEmpty()) {
