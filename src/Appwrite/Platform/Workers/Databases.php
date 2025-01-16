@@ -11,7 +11,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\Dependency;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
@@ -293,27 +292,21 @@ class Databases extends Action
 
                 if ($e instanceof DatabaseException) {
                     $attribute->setAttribute('error', $e->getMessage());
-                    if (! $relatedAttribute->isEmpty()) {
+                    if (!$relatedAttribute->isEmpty()) {
                         $relatedAttribute->setAttribute('error', $e->getMessage());
                     }
                 }
-
                 $dbForProject->updateDocument(
                     'attributes',
                     $attribute->getId(),
                     $attribute->setAttribute('status', 'stuck')
                 );
-
-                if (! $relatedAttribute->isEmpty()) {
+                if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->updateDocument(
                         'attributes',
                         $relatedAttribute->getId(),
                         $relatedAttribute->setAttribute('status', 'stuck')
                     );
-                }
-
-                if ($e instanceof Dependency) {
-                    return;
                 }
 
                 throw $e;
