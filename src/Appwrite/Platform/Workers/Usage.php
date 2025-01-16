@@ -34,7 +34,7 @@ class Usage extends Action
         $this
         ->desc('Usage worker')
         ->inject('message')
-        ->inject('project') 
+        ->inject('project')
         ->inject('getProjectDB')
         ->inject('queueForUsageDump')
         ->callback(function (Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump) {
