@@ -147,11 +147,13 @@ class Event
      */
     public function trimFields(): self
     {
-        $this->project = new Document([
-            '$id' => $this->project->getId(),
-            '$internalId' => $this->project->getInternalId(),
-            'database' => $this->project->getAttribute('database')
-        ]);
+        if ($this->project) {
+            $this->project = new Document([
+                '$id' => $this->project->getId(),
+                '$internalId' => $this->project->getInternalId(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
 
         return $this;
     }
