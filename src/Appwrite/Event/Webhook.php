@@ -20,11 +20,7 @@ class Webhook extends Event
     {
         /** Filter out context and trim project to keep the payload small */
         $this->context = [];
-        $this->project = new Document([
-            '$id' => $this->project->getId(),
-            '$internalId' => $this->project->getInternalId(),
-        ]);
-
+        
         return parent::trigger();
     }
 }

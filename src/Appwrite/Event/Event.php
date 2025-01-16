@@ -136,7 +136,10 @@ class Event
      */
     public function setProject(Document $project): self
     {
-        $this->project = $project;
+        $this->project = new Document([
+            '$id' => $project->getId(),
+            '$internalId' => $project->getInternalId()
+        ]);
 
         return $this;
     }

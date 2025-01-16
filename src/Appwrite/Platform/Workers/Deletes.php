@@ -43,6 +43,7 @@ class Deletes extends Action
         $this
             ->desc('Deletes worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('timelimit')
@@ -55,8 +56,8 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
+                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -64,7 +65,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -78,7 +79,6 @@ class Deletes extends Action
         $resource = $payload['resource'] ?? null;
         $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
-        $project  = new Document($payload['project'] ?? []);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);

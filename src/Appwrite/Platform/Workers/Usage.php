@@ -34,10 +34,11 @@ class Usage extends Action
         $this
         ->desc('Usage worker')
         ->inject('message')
+        ->inject('project') 
         ->inject('getProjectDB')
         ->inject('queueForUsageDump')
-        ->callback(function (Message $message, callable $getProjectDB, UsageDump $queueForUsageDump) {
-            $this->action($message, $getProjectDB, $queueForUsageDump);
+        ->callback(function (Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump) {
+            $this->action($message, $project, $getProjectDB, $queueForUsageDump);
         });
 
         $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
@@ -46,21 +47,20 @@ class Usage extends Action
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param callable $getProjectDB
      * @param UsageDump $queueForUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, callable $getProjectDB, UsageDump $queueForUsageDump): void
+    public function action(Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump): void
     {
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        $document = $payload['project'] ?? [];
-        $project = new Document($document);
 
         if (empty($project->getAttribute('database'))) {
             var_dump($payload);
