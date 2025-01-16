@@ -105,31 +105,29 @@ class Schema
                     continue;
                 }
 
-                $additionalMethods = null;
-                if (is_array($sdk)) {
-                    $mainSdk = array_shift($sdk);
-                    $additionalMethods = $sdk;
-
-                    $sdk = $mainSdk;
+                if (!\is_array($sdk)) {
+                    $sdk = [$sdk];
                 }
 
-                $namespace = $sdk->getNamespace();
-                $method = $sdk->getMethodName();
-                $name = $namespace . \ucfirst($method);
+                foreach ($sdk as $method) {
+                    $namespace = $method->getNamespace();
+                    $methodName = $method->getMethodName();
+                    $name = $namespace . \ucfirst($methodName);
 
-                foreach (Mapper::route($utopia, $route, $complexity) as $field) {
-                    switch ($route->getMethod()) {
-                        case 'GET':
-                            $queries[$name] = $field;
-                            break;
-                        case 'POST':
-                        case 'PUT':
-                        case 'PATCH':
-                        case 'DELETE':
-                            $mutations[$name] = $field;
-                            break;
-                        default:
-                            throw new \Exception("Unsupported method: {$route->getMethod()}");
+                    foreach (Mapper::route($utopia, $route, $complexity) as $field) {
+                        switch ($route->getMethod()) {
+                            case 'GET':
+                                $queries[$name] = $field;
+                                break;
+                            case 'POST':
+                            case 'PUT':
+                            case 'PATCH':
+                            case 'DELETE':
+                                $mutations[$name] = $field;
+                                break;
+                            default:
+                                throw new \Exception("Unsupported method: {$route->getMethod()}");
+                        }
                     }
                 }
             }
