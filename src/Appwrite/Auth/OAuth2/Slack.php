@@ -20,10 +20,9 @@ class Slack extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'identity.avatar',
-        'identity.basic',
-        'identity.email',
-        'identity.team'
+        'openid',
+        'email',
+        'profile',
     ];
 
     /**
@@ -42,7 +41,7 @@ class Slack extends OAuth2
         // https://api.slack.com/authentication/oauth-v2
         return 'https://slack.com/oauth/v2/authorize?' . \http_build_query([
             'client_id' => $this->appID,
-            'scope' => \implode(',', $this->getScopes()),
+            'user_scope' => \implode(',', $this->getScopes()),
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state)
         ]);
@@ -65,6 +64,10 @@ class Slack extends OAuth2
                     'redirect_uri' => $this->callback
                 ])
             ), true);
+
+            if (!$this->tokens['ok']) {
+                throw new \Exception('Error in fetching access token.');
+            }
         }
 
         return $this->tokens;
@@ -160,7 +163,12 @@ class Slack extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                'https://slack.com/api/users.identity?token=' . \urlencode($accessToken)
+                'https://slack.com/api/users.identity',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $accessToken
+                    ]
+                ]
             );
 
             $this->user = \json_decode($user, true);
