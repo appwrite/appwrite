@@ -5,6 +5,10 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -38,13 +42,19 @@ App::get('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.hide', true)
-    ->label('sdk.description', '/docs/references/graphql/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'get',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        hide: true,
+        description: '/docs/references/graphql/get.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->param('query', '', new Text(0, 0), 'The query to execute.')
@@ -78,17 +88,22 @@ App::post('/v1/graphql/mutation')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'mutation')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'mutation',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
@@ -123,17 +138,22 @@ App::post('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'query')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'query',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')

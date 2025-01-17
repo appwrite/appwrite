@@ -363,11 +363,20 @@ App::init()
         }
 
         /** Do not allow access to disabled services */
-        $service = $route->getLabel('sdk.namespace', '');
-        if (!empty($service)) {
+        /**
+         * @var ?\Appwrite\SDK\Method $method
+         */
+        $method = $route->getLabel('sdk', false);
+
+        if (is_array($method)) {
+            $method = $method[0];
+        }
+
+        if (!empty($method)) {
+            $namespace = $method->getNamespace();
             if (
-                array_key_exists($service, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$service]
+                array_key_exists($namespace, $project->getAttribute('services', []))
+                && !$project->getAttribute('services', [])[$namespace]
                 && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);

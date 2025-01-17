@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -182,56 +183,69 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
-                    $hide = $route->getLabel('sdk.hide', false);
-                    if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                    $sdks = $route->getLabel('sdk', false);
+
+                    if (empty($sdks)) {
                         continue;
                     }
 
-                    /** @var \Utopia\Route $route */
-                    $routeSecurity = $route->getLabel('sdk.auth', []);
-                    $sdkPlatforms = [];
+                    if (!\is_array($sdks)) {
+                        $sdks = [$sdks];
+                    }
 
-                    foreach ($routeSecurity as $value) {
-                        switch ($value) {
-                            case APP_AUTH_TYPE_SESSION:
-                                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                                break;
-                            case APP_AUTH_TYPE_JWT:
-                            case APP_AUTH_TYPE_KEY:
-                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
-                            case APP_AUTH_TYPE_ADMIN:
-                                $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                                break;
+                    foreach ($sdks as $sdk) {
+                        /** @var \Appwrite\SDK\Method $sdks */
+
+                        $hide = $sdk->isHidden();
+                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                            continue;
                         }
-                    }
 
-                    if (empty($routeSecurity)) {
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                    }
+                        $routeSecurity = $sdk->getAuth();
+                        $sdkPlatforms = [];
 
-                    if (!$route->getLabel('docs', true)) {
-                        continue;
-                    }
+                        foreach ($routeSecurity as $value) {
+                            switch ($value) {
+                                case AuthType::SESSION:
+                                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                                    break;
+                                case AuthType::JWT:
+                                case AuthType::KEY:
+                                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                                    break;
+                                case AuthType::ADMIN:
+                                    $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
+                                    break;
+                            }
+                        }
 
-                    if ($route->getLabel('sdk.mock', false) && !$mocks) {
-                        continue;
-                    }
+                        if (empty($routeSecurity)) {
+                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                        }
 
-                    if (!$route->getLabel('sdk.mock', false) && $mocks) {
-                        continue;
-                    }
+                        if (!$route->getLabel('docs', true)) {
+                            continue;
+                        }
 
-                    if (empty($route->getLabel('sdk.namespace', null))) {
-                        continue;
-                    }
+                        if ($route->getLabel('mock', false) && !$mocks) {
+                            continue;
+                        }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
-                        continue;
-                    }
+                        if (!$route->getLabel('mock', false) && $mocks) {
+                            continue;
+                        }
 
-                    $routes[] = $route;
+                        if (empty($sdk->getNamespace())) {
+                            continue;
+                        }
+
+                        if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
+                            continue;
+                        }
+
+                        $routes[] = $route;
+                    }
                 }
             }
 
