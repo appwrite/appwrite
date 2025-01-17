@@ -401,7 +401,6 @@ App::post('/v1/functions')
                 'ruleId' => $rule->getId(),
             ]);
 
-
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],
