@@ -47,9 +47,12 @@ class Maintenance extends Action
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
             $this->foreachProject($dbForPlatform, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                $queueForDeletes->setProject($project);
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_MAINTENANCE)
+                    ->setProject($project)
+                    ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                    ->trigger();
 
-                $this->notifyProjects($queueForDeletes, $usageStatsRetentionHourly);
             });
 
             $this->notifyDeleteConnections($queueForDeletes);
@@ -57,16 +60,6 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval, $delay);
-    }
-
-    /**
-     * Hook to allow sub-classes to extend project-level maintenance functionality.
-     */
-    protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
-    {
-        $queueForDeletes
-            ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-            ->trigger();
     }
 
     protected function foreachProject(Database $dbForPlatform, callable $callback): void
