@@ -20,9 +20,7 @@ class Slack extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'openid',
-        'email',
-        'profile',
+        'users:read',
     ];
 
     /**
@@ -63,13 +61,7 @@ class Slack extends OAuth2
                     'code' => $code,
                     'redirect_uri' => $this->callback
                 ])
-            ), true);
-
-            if (!$this->tokens['ok']) {
-                throw new \Exception('Error in fetching access token: ' . $this->tokens['error']);
-            }
-
-            $this->tokens['access_token'] = $this->tokens['authed_user']['access_token'];
+            ), true)['authed_user'];
         }
 
         return $this->tokens;
@@ -174,10 +166,6 @@ class Slack extends OAuth2
             );
 
             $this->user = \json_decode($user, true);
-
-            if (!$this->user['ok']) {
-                throw new \Exception('Error in fetching user: ' . $this->user['error']);
-            }
         }
 
         return $this->user;
