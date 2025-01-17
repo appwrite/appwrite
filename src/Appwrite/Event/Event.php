@@ -344,6 +344,7 @@ class Event
             return false;
         }
 
+        /** The getter is required since events like Databases need to override the queue name depending on the project */
         $client = new Client($this->getQueue(), $this->connection);
 
         // Merge the base payload with any trimmed values

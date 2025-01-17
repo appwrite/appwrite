@@ -402,8 +402,6 @@ App::post('/v1/functions')
             ]);
 
 
-            var_dump("-------------------- Create Function ---------------");
-            var_dump($project);
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],
