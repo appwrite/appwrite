@@ -32,22 +32,24 @@ class Webhooks extends Action
         $this
             ->desc('Webhooks worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log) => $this->action($message, $dbForPlatform, $queueForMails, $queueForUsage, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForMails, $queueForUsage, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log): void
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
@@ -60,8 +62,6 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $project = new Document($payload['project']);
-        $project = $dbForPlatform->getDocument('projects', $project->getId());
         $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
