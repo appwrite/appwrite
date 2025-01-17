@@ -66,8 +66,10 @@ class Slack extends OAuth2
             ), true);
 
             if (!$this->tokens['ok']) {
-                throw new \Exception('Error in fetching access token.');
+                throw new \Exception('Error in fetching access token: ' . $this->tokens['error']);
             }
+
+            $this->tokens['access_token'] = $this->tokens['authed_user']['access_token'];
         }
 
         return $this->tokens;
@@ -174,7 +176,7 @@ class Slack extends OAuth2
             $this->user = \json_decode($user, true);
 
             if (!$this->user['ok']) {
-                throw new \Exception('Error in fetching user.');
+                throw new \Exception('Error in fetching user: ' . $this->user['error']);
             }
         }
 

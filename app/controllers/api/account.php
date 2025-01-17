@@ -1346,7 +1346,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             );
         }
 
-        $oauth2ID = $oauth2->getUserID($accessToken);
+        $oauth2ID = '';
+        try {
+            $oauth2ID = $oauth2->getUserID($accessToken);
+        } catch (Exception $ex) {
+            $failureRedirect(
+                $ex->getType(),
+                'Failed to obtain user ID. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
+            );
+        }
+
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
         }
