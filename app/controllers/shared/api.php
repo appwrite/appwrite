@@ -76,7 +76,7 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
 
 
     /** Trigger webhooks events only if a project has them enabled */
-    if ($project->getAttribute('webhooks', []) !== []) {
+    if (!empty($project->getAttribute('webhooks'))) {
         $queueForWebhooks
             ->from($queueForEvents)
             ->trigger();
@@ -697,7 +697,7 @@ App::shutdown()
              * But it might have performance implications on the API due to the number of webhooks etc.
              * Some profiling is needed to see if this is a problem.
             */
-            if ($project->getAttribute('webhooks', []) !== []) {
+            if (!empty($project->getAttribute('webhooks'))) {
                 $queueForWebhooks
                     ->from($queueForEvents)
                     ->trigger();
