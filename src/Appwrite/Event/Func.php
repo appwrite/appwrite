@@ -182,6 +182,18 @@ class Func extends Event
     }
 
     /**
+     * Sets JWT for the function event.
+     *
+     * @param string $jwt
+     * @return self
+     */
+    public function setJWT(string $jwt): self
+    {
+        $this->jwt = $jwt;
+        return $this;
+    }
+
+    /**
      * Prepare payload for the function event.
      *
      * @return array
