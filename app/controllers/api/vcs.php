@@ -272,7 +272,6 @@ App::get('/v1/vcs/github/authorize')
     ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk', new Method(
         namespace: 'vcs',
