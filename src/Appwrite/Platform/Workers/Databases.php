@@ -34,21 +34,23 @@ class Databases extends Action
         $this
             ->desc('Databases worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForPlatform, Database $dbForProject, Log $log) => $this->action($message, $dbForPlatform, $dbForProject, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Database $dbForProject, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -57,7 +59,6 @@ class Databases extends Action
         }
 
         $type = $payload['type'];
-        $project = new Document($payload['project']);
         $collection = new Document($payload['collection'] ?? []);
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
