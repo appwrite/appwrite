@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Delete extends Event
@@ -131,24 +130,14 @@ class Delete extends Event
         return $this->document;
     }
 
-
     /**
-     * Executes this event and sends it to the deletes worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $this->trimFields();
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'type' => $this->type,
             'document' => $this->document,
@@ -156,6 +145,6 @@ class Delete extends Event
             'resourceType' => $this->resourceType,
             'datetime' => $this->datetime,
             'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime
-        ]);
+        ];
     }
 }

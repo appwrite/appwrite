@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Func extends Event
@@ -173,29 +172,6 @@ class Func extends Event
     }
 
     /**
-     * Returns set custom data for the function event.
-     *
-     * @return string
-     */
-    public function getData(): string
-    {
-        return $this->data;
-    }
-
-    /**
-     * Sets JWT for the function event.
-     *
-     * @param string $jwt
-     * @return self
-     */
-    public function setJWT(string $jwt): self
-    {
-        $this->jwt = $jwt;
-
-        return $this;
-    }
-
-    /**
      * Returns set JWT for the function event.
      *
      * @return string
@@ -206,24 +182,15 @@ class Func extends Event
     }
 
     /**
-     * Executes the function event and sends it to the functions worker.
+     * Prepare payload for the function event.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $this->trimFields();
-
-        $client = new Client($this->queue, $this->connection);
-
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,
@@ -238,6 +205,6 @@ class Func extends Event
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
-        ]);
+        ];
     }
 }

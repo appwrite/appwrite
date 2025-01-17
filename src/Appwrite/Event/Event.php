@@ -141,24 +141,6 @@ class Event
     }
 
     /**
-     * Trims the fields of the project document to only include the necessary fields.
-     *
-     * @return self
-     */
-    public function trimFields(): self
-    {
-        if ($this->project) {
-            $this->project = new Document([
-                '$id' => $this->project->getId(),
-                '$internalId' => $this->project->getInternalId(),
-                'database' => $this->project->getAttribute('database')
-            ]);
-        }
-
-        return $this;
-    }
-
-    /**
      * Get project for this event.
      *
      * @return ?Document
@@ -330,6 +312,27 @@ class Event
     }
 
     /**
+     * Get trimmed values for sensitive/large payload fields.
+     * Override this method in child classes to add more fields to trim.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+                '$internalId' => $this->project->getInternalId(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -341,18 +344,29 @@ class Event
             return false;
         }
 
-        $this->trimFields();
+        $client = new Client($this->getQueue(), $this->connection);
 
-        $client = new Client($this->queue, $this->connection);
+        // Merge the base payload with any trimmed values
+        $payload = array_merge($this->preparePayload(), $this->trimPayload());
 
-        return $client->enqueue([
+        return $client->enqueue($payload);
+    }
+
+    /**
+     * Prepare payload for queue. Can be overridden by child classes to customize payload.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 
     /**

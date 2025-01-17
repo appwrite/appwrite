@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Usage extends Event
@@ -52,28 +51,28 @@ class Usage extends Event
     }
 
     /**
+     * Prepare the payload for the usage event.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
+            'project' => $this->project,
+            'reduce'  => $this->reduce,
+            'metrics' => $this->metrics,
+        ];
+    }
+
+    /**
      * Sends metrics to the usage worker.
      *
      * @return string|bool
      */
     public function trigger(): string|bool
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $this->trimFields();
-
-        $client = new Client($this->queue, $this->connection);
-
-        $result = $client->enqueue([
-            'project' => $this->project,
-            'reduce'  => $this->reduce,
-            'metrics' => $this->metrics,
-        ]);
-
+        parent::trigger();
         $this->metrics = [];
-
-        return $result;
+        return true;
     }
 }

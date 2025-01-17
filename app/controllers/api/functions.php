@@ -400,6 +400,10 @@ App::post('/v1/functions')
             $allEvents = Event::generateEvents('rules.[ruleId].create', [
                 'ruleId' => $rule->getId(),
             ]);
+
+
+            var_dump("-------------------- Create Function ---------------");
+            var_dump($project);
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],

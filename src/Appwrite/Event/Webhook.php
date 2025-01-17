@@ -15,10 +15,17 @@ class Webhook extends Event
             ->setClass(Event::WEBHOOK_CLASS_NAME);
     }
 
-    public function trigger(): string|bool
+    /**
+     * Trim the payload for the webhook event.
+     *
+     * @return array
+     */
+    public function trimPayload(): array
     {
-        /** Filter out context and trim project to keep the payload small */
-        $this->context = [];
-        return parent::trigger();
+        $trimmed = parent::trimPayload();
+        if (isset($this->context)) {
+            $trimmed['context'] = [];
+        }
+        return $trimmed;
     }
 }

@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Build extends Event
@@ -105,28 +104,19 @@ class Build extends Event
     }
 
     /**
-     * Executes the function event and sends it to the functions worker.
+     * Prepare payload for queue.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $this->trimFields();
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
             'template' => $this->template
-        ]);
+        ];
     }
 
     /**

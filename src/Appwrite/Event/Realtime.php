@@ -43,6 +43,9 @@ class Realtime extends Event
         $collection = $this->getContext('collection');
         $bucket = $this->getContext('bucket');
 
+        // var_dump("-------------------- In Realtime trigger ---------------");
+        // var_dump($this->getProject());
+
         $target = RealtimeAdapter::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Audit extends Event
@@ -139,22 +138,13 @@ class Audit extends Event
     }
 
     /**
-     * Executes the event and sends it to the audit worker.
+     * Prepare payload for queue.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $this->trimFields();
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -164,6 +154,6 @@ class Audit extends Event
             'userAgent' => $this->userAgent,
             'event' => $this->event,
             'hostname' => $this->hostname
-        ]);
+        ];
     }
 }
