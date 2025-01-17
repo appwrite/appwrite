@@ -276,7 +276,7 @@ App::get('/v1/vcs/github/authorize')
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'createGitHubInstallation',
-        description: '',
+        description: '/docs/references/vcs/create-github-installation.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -457,7 +457,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'getRepositoryContents',
-        description: '',
+        description: '/docs/references/vcs/get-repository-contents.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -523,7 +523,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'createRepositoryDetection',
-        description: '',
+        description: '/docs/references/vcs/create-repository-detection.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -600,7 +600,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'listRepositories',
-        description: '',
+        description: '/docs/references/vcs/list-repositories.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -700,7 +700,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'createRepository',
-        description: '',
+        description: '/docs/references/vcs/create-repository.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -812,7 +812,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'getRepository',
-        description: '',
+        description: '/docs/references/vcs/get-repository.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -866,7 +866,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'listRepositoryBranches',
-        description: '',
+        description: '/docs/references/vcs/list-repository-branches.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -1204,7 +1204,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->label('sdk', new Method(
         namespace: 'vcs',
         name: 'updateExternalDeployments',
-        description: '',
+        description: '/docs/references/vcs/update-external-deployments.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

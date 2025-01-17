@@ -327,7 +327,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('sdk', new Method(
         namespace: 'proxy',
         name: 'updateRuleVerification',
-        description: '',
+        description: '/docs/references/proxy/update-rule-verification.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

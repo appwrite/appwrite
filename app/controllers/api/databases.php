@@ -4150,7 +4150,7 @@ App::get('/v1/databases/usage')
     ->label('sdk', new Method(
         namespace: 'databases',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/databases/get-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -4239,7 +4239,7 @@ App::get('/v1/databases/:databaseId/usage')
     ->label('sdk', new Method(
         namespace: 'databases',
         name: 'getDatabaseUsage',
-        description: '',
+        description: '/docs/references/databases/get-database-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -4334,7 +4334,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->label('sdk', new Method(
         namespace: 'databases',
         name: 'getCollectionUsage',
-        description: '',
+        description: '/docs/references/databases/get-collection-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

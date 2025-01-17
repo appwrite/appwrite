@@ -1774,7 +1774,7 @@ App::get('/v1/storage/usage')
     ->label('sdk', new Method(
         namespace: 'storage',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/storage/get-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -1860,7 +1860,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk', new Method(
         namespace: 'storage',
         name: 'getBucketUsage',
-        description: '',
+        description: '/docs/references/storage/get-bucket-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

@@ -2391,7 +2391,7 @@ App::get('/v1/users/usage')
     ->label('sdk', new Method(
         namespace: 'users',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/users/get-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

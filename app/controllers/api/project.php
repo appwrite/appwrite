@@ -27,7 +27,7 @@ App::get('/v1/project/usage')
     ->label('sdk', new Method(
         namespace: 'project',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/project/get-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(

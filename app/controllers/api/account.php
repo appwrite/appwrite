@@ -4599,7 +4599,7 @@ App::post('/v1/account/targets/push')
     ->label('sdk', new Method(
         namespace: 'account',
         name: 'createPushTarget',
-        description: '',
+        description: '/docs/references/account/create-push-target.md',
         auth: [AuthType::SESSION],
         responses: [
             new SDKResponse(
@@ -4679,7 +4679,7 @@ App::put('/v1/account/targets/:targetId/push')
     ->label('sdk', new Method(
         namespace: 'account',
         name: 'updatePushTarget',
-        description: '',
+        description: '/docs/references/account/update-push-target.md',
         auth: [AuthType::SESSION],
         responses: [
             new SDKResponse(
@@ -4743,7 +4743,7 @@ App::delete('/v1/account/targets/:targetId/push')
     ->label('sdk', new Method(
         namespace: 'account',
         name: 'deletePushTarget',
-        description: '',
+        description: '/docs/references/account/delete-push-target.md',
         auth: [AuthType::SESSION],
         responses: [
             new SDKResponse(

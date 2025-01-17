@@ -624,7 +624,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk', new Method(
         namespace: 'functions',
         name: 'getFunctionUsage',
-        description: '',
+        description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -735,7 +735,7 @@ App::get('/v1/functions/usage')
     ->label('sdk', new Method(
         namespace: 'functions',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
@@ -1704,7 +1704,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('sdk', new Method(
         namespace: 'functions',
         name: 'createBuild',
-        description: '',
+        description: '/docs/references/functions/create-build.md',
         auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
@@ -1779,7 +1779,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('sdk', new Method(
         namespace: 'functions',
         name: 'updateDeploymentBuild',
-        description: '',
+        description: '/docs/references/functions/update-deployment-build.md',
         auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
