@@ -136,6 +136,9 @@ class Databases extends Action
         $options = $attribute->getAttribute('options', []);
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
+        $relatedAttribute = new Document();
+        $relatedCollection = new Document();
+
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
@@ -175,7 +178,7 @@ class Databases extends Action
 
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
-                if (isset($relatedAttribute)) {
+                if (! $relatedAttribute->isEmpty()) {
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
@@ -186,7 +189,7 @@ class Databases extends Action
                 $attribute->setAttribute('status', 'failed')
             );
 
-            if (isset($relatedAttribute)) {
+            if (! $relatedAttribute->isEmpty()) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
@@ -198,7 +201,7 @@ class Databases extends Action
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
 
-            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+            if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
             }
 
@@ -284,8 +287,6 @@ class Databases extends Action
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
 
-                throw $e;
-
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
@@ -366,7 +367,7 @@ class Databases extends Action
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
 
-            if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
+            if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
             }
         }

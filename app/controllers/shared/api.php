@@ -509,6 +509,7 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
+            ->setHostname($request->getHostname())
             ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
