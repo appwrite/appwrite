@@ -202,6 +202,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';

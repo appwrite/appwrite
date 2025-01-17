@@ -64,11 +64,9 @@ class Maintenance extends Action
      */
     protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
-        $this->notifyDeleteTargets($queueForDeletes);
-        $this->notifyDeleteExecutionLogs($queueForDeletes);
-        $this->notifyDeleteAuditLogs($queueForDeletes);
-        $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
-        $this->notifyDeleteExpiredSessions($queueForDeletes);
+        $queueForDeletes
+            ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+            ->trigger();
     }
 
     protected function foreachProject(Database $dbForPlatform, callable $callback): void
@@ -98,40 +96,11 @@ class Maintenance extends Action
         Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    private function notifyDeleteExecutionLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_EXECUTIONS)
-            ->trigger();
-    }
-
-    private function notifyDeleteAuditLogs(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->trigger();
-    }
-
-    private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_USAGE)
-            ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-            ->trigger();
-    }
-
     private function notifyDeleteConnections(Delete $queueForDeletes): void
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
-            ->trigger();
-    }
-
-    private function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_SESSIONS)
             ->trigger();
     }
 
@@ -175,13 +144,6 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_SCHEDULES)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
-    }
-
-    private function notifyDeleteTargets(Delete $queueForDeletes): void
-    {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
     }
 }
