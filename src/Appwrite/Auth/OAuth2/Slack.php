@@ -172,6 +172,10 @@ class Slack extends OAuth2
             );
 
             $this->user = \json_decode($user, true);
+
+            if (!$this->user['ok']) {
+                throw new \Exception('Error in fetching user.');
+            }
         }
 
         return $this->user;
