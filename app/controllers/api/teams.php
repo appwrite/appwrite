@@ -582,11 +582,12 @@ App::post('/v1/teams/:teamId/memberships')
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         } else {
-            $membership = new Document([
-                '$id' => $membership->getId(),
-                'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
-                'confirm' => ($isPrivilegedUser || $isAppUser),
-            ]);
+            $membership->setAttribute('invited', DateTime::now());
+
+            if ($isPrivilegedUser || $isAppUser) {
+                $membership->setAttribute('joined', DateTime::now());
+                $membership->setAttribute('confirm', true);
+            }
 
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
