@@ -83,9 +83,6 @@ class Deletes extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        var_dump("--------------------------------");
-        var_dump($type);
-
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
