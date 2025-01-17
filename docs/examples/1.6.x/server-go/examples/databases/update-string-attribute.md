@@ -20,7 +20,7 @@ func main() {
         "",
         false,
         "<DEFAULT>",
-        databases.WithUpdateStringAttributeSize(0),
+        databases.WithUpdateStringAttributeSize(1),
         databases.WithUpdateStringAttributeNewKey(""),
     )
 
