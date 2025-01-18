@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -35,7 +36,6 @@ use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -276,8 +276,8 @@ App::get('/v1/vcs/github/authorize')
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->label('sdk.hide', true)
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
+    ->param('success', '', fn ($clients) => new Redirect($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Redirect($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
