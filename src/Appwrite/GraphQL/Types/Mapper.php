@@ -235,6 +235,7 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\CustomId':
             case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
+            case 'Appwrite\Network\Validator\Redirect':
             case 'Appwrite\Event\Validator\Event':
             case 'Appwrite\Event\Validator\FunctionEvent':
             case 'Utopia\Validator\HexColor':
