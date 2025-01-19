@@ -112,7 +112,6 @@ class Exception extends \Exception
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
-    public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
     public const TEAM_INVITE_NOT_FOUND             = 'team_invite_not_found';
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
