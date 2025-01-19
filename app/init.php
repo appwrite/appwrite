@@ -1264,7 +1264,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     var_dump([
         'no' => '1',
-        'cookie_name' =>  Auth::$setCookieName,
+        'cookie_name' =>  Auth::$cookieName,
         'session' => $session
     ]);
 
