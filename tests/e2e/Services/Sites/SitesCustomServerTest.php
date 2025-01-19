@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Sites;
 
+use Appwrite\Sites\Specification;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -283,79 +284,67 @@ class SitesCustomServerTest extends Scope
     //     // TODO: Implement testCreateDeploymentFromCLI() later
     // }
 
-    // public function testCreateSiteAndDeploymentFromTemplate()
-    // {
-    //     $starterTemplate = $this->getTemplate('nextjs-starter');
-    //     $this->assertEquals(200, $starterTemplate['headers']['status-code']);
+    public function testCreateSiteAndDeploymentFromTemplate()
+    {
+        $starterTemplate = $this->getTemplate('nextjs-starter');
+        $this->assertEquals(200, $starterTemplate['headers']['status-code']);
 
-    //     $nextjsFramework = array_values(array_filter($starterTemplate['body']['frameworks'], function ($framework) {
-    //         return $framework['key'] === 'nextjs';
-    //     }))[0];
+        $nextjsFramework = array_values(array_filter($starterTemplate['body']['frameworks'], function ($framework) {
+            return $framework['key'] === 'nextjs';
+        }))[0];
 
-    //     // If this fails, the template has variables, and this test needs to be updated
-    //     $this->assertEmpty($starterTemplate['body']['variables']);
+        // If this fails, the template has variables, and this test needs to be updated
+        $this->assertEmpty($starterTemplate['body']['variables']);
 
-    //     var_dump("creating site");
+        $site = $this->createSite(
+            [
+                'siteId' => ID::unique(),
+                'name' => $starterTemplate['body']['name'],
+                'framework' => $nextjsFramework['key'],
+                'adapter' => $nextjsFramework['adapter'],
+                'buildCommand' => $nextjsFramework['buildCommand'],
+                'buildRuntime' => $nextjsFramework['buildRuntime'],
+                'fallbackFile' => $nextjsFramework['fallbackFile'],
+                'installCommand' => $nextjsFramework['installCommand'],
+                'outputDirectory' => $nextjsFramework['outputDirectory'],
+                'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'templateOwner' => $starterTemplate['body']['providerOwner'],
+                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
+                'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'templateVersion' => $starterTemplate['body']['providerVersion'],
+                'providerBranch' => 'main',
+            ]
+        );
 
-    //     $site = $this->createSite(
-    //         [
-    //             'siteId' => ID::unique(),
-    //             'name' => $starterTemplate['body']['name'],
-    //             'framework' => $nextjsFramework['key'],
-    //             'adapter' => $nextjsFramework['adapter'],
-    //             'buildCommand' => $nextjsFramework['buildCommand'],
-    //             'buildRuntime' => $nextjsFramework['buildRuntime'],
-    //             'fallbackFile' => $nextjsFramework['fallbackFile'],
-    //             'installCommand' => $nextjsFramework['installCommand'],
-    //             'outputDirectory' => $nextjsFramework['outputDirectory'],
-    //             'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
-    //             'templateOwner' => $starterTemplate['body']['providerOwner'],
-    //             'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
-    //             'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
-    //             'templateVersion' => $starterTemplate['body']['providerVersion'],
-    //             'providerBranch' => 'main',
-    //         ]
-    //     );
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
 
-    //     $this->assertEquals(201, $site['headers']['status-code']);
-    //     $this->assertNotEmpty($site['body']['$id']);
+        $siteId = $site['body']['$id'] ?? '';
 
-    //     $siteId = $site['body']['$id'] ?? '';
-    //     var_dump("Site id");
+        $deployments = $this->listDeployments($siteId);
 
-    //     $deployments = $this->listDeployments($siteId);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(1, $deployments['body']['total']);
 
-    //     var_dump($deployments);
+        $lastDeployment = $deployments['body']['deployments'][0];
 
-    //     $this->assertEquals(200, $deployments['headers']['status-code']);
-    //     $this->assertEquals(1, $deployments['body']['total']);
+        $this->assertNotEmpty($lastDeployment['$id']);
+        $this->assertEquals(0, $lastDeployment['size']);
 
-    //     $lastDeployment = $deployments['body']['deployments'][0];
+        $deploymentId = $lastDeployment['$id'];
 
-    //     $this->assertNotEmpty($lastDeployment['$id']);
-    //     $this->assertEquals(0, $lastDeployment['size']);
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
 
-    //     $deploymentId = $lastDeployment['$id'];
-    //     var_dump("flow reached here");
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 300000, 1000);
 
-    //     $this->assertEventually(function () use ($siteId, $deploymentId) {
-    //         $deployment = $this->getDeployment($siteId, $deploymentId);
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
 
-    //         $this->assertEquals(200, $deployment['headers']['status-code']);
-    //         // assert that deployment is ready or failed
-    //         $this->assertContains($deployment['body']['status'], ['ready', 'failed']);
-    //     }, 300000, 1000);
-
-    //     var_dump("flow reached here 2");
-
-    //     $site = $this->getSite($siteId);
-    //     $deployment = $this->getDeployment($siteId, $deploymentId);
-
-    //     $this->assertEquals(200, $site['headers']['status-code']);
-    //     var_dump($deployment);
-
-    //     $this->cleanupSite($siteId);
-    // }
+        $this->cleanupSite($siteId);
+    }
 
     public function testCreateDeployment()
     {
@@ -769,8 +758,6 @@ class SitesCustomServerTest extends Scope
     //     $siteId = $site['body']['$id'] ?? '';
     //     $this->assertNotEmpty($siteId);
 
-    //     var_dump($site);
-
     //     $deployment = $this->createDeployment($siteId, [
     //         'code' => $this->packageSite('static'),
     //         'activate' => 'false'
@@ -782,89 +769,87 @@ class SitesCustomServerTest extends Scope
     //         $deployment = $this->getDeployment($siteId, $deploymentId);
 
     //         $this->assertEquals('ready', $deployment['body']['status']);
-    //     }, 50000, 500);
+    //     }, 30000, 300);
 
-    //     $domain = $site['body']['domain'];
+    //     // get rule for this site from rules collection
 
     //     $response = $this->client->call(Client::METHOD_GET, $domain);
     //     var_dump($response);
     // }
 
-    // public function testUpdateSpecs(): void
-    // {
-    //     $siteId = $this->setupSite([
-    //         'buildRuntime' => 'ssr-22',
-    //         'fallbackFile' => null,
-    //         'framework' => 'other',
-    //         'name' => 'Test Site',
-    //         'outputDirectory' => './',
-    //         'providerBranch' => 'main',
-    //         'providerRootDirectory' => './',
-    //         'siteId' => ID::unique()
-    //     ]);
+    public function testUpdateSpecs(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
 
-    //     $this->assertNotNull($siteId);
+        $this->assertNotNull($siteId);
 
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     // Change the function specs
-    //     $site = $this->updateSite([
-    //         'buildRuntime' => 'ssr-22',
-    //         'fallbackFile' => null,
-    //         'framework' => 'other',
-    //         'name' => 'Test Site',
-    //         'outputDirectory' => './',
-    //         'providerBranch' => 'main',
-    //         'providerRootDirectory' => './',
-    //         '$id' => $siteId,
-    //         'specification' => Specification::S_1VCPU_1GB,
-    //     ]);
+        /**
+         * Test for SUCCESS
+         */
+        // Change the function specs
+        $site = $this->updateSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'specification' => Specification::S_1VCPU_1GB,
+        ]);
 
-    //     $this->assertEquals(200, $site['headers']['status-code']);
-    //     $this->assertNotEmpty($site['body']['$id']);
-    //     $this->assertEquals(Speci::S_1VCPU_1GB, $site['body']['specification']);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['specification']);
 
-    //     // Change the specs to 1vcpu 512mb
-    //     $site = $this->updateSite([
-    //         'buildRuntime' => 'ssr-22',
-    //         'fallbackFile' => null,
-    //         'framework' => 'other',
-    //         'name' => 'Test Site',
-    //         'outputDirectory' => './',
-    //         'providerBranch' => 'main',
-    //         'providerRootDirectory' => './',
-    //         '$id' => $siteId,
-    //         'specification' => Specification::S_1VCPU_512MB,
-    //     ]);
+        // Change the specs to 1vcpu 512mb
+        $site = $this->updateSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'specification' => Specification::S_1VCPU_512MB,
+        ]);
 
-    //     $this->assertEquals(200, $site['headers']['status-code']);
-    //     $this->assertNotEmpty($site['body']['$id']);
-    //     $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['specification']);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['specification']);
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
+        /**
+         * Test for FAILURE
+         */
 
-    //     $site = $this->updateSite([
-    //         'buildRuntime' => 'ssr-22',
-    //         'fallbackFile' => null,
-    //         'framework' => 'other',
-    //         'name' => 'Test Site',
-    //         'outputDirectory' => './',
-    //         'providerBranch' => 'main',
-    //         'providerRootDirectory' => './',
-    //         '$id' => $siteId,
-    //         'specification' => 's-2vcpu-512mb', // Invalid specification
-    //     ]);
+        $site = $this->updateSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'specification' => 's-2vcpu-512mb', // Invalid specification
+        ]);
 
-    //     var_dump($site);
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $site['body']['message']);
 
-    //     $this->assertEquals(400, $site['headers']['status-code']);
-    //     $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $site['body']['message']);
-
-    //     $this->cleanupSite($siteId);
-    // }
+        $this->cleanupSite($siteId);
+    }
 
     public function testDeleteDeployment(): void
     {
@@ -953,4 +938,6 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('runtimes', $framework);
         $this->assertArrayHasKey('adapters', $framework);
     }
+
+    // TODO: Add tests for deletion of resources when site is deleted
 }
