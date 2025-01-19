@@ -1312,6 +1312,10 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
     } else {
         $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        var_dump([
+            'no' => '3',
+            'secret' =>  $user,
+        ]);
     }
 
     if (
