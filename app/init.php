@@ -607,7 +607,11 @@ Database::addFilter(
         }
         $value = json_decode($value, true);
         $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
-
+        var_dump([
+            'key' => $key,
+            'method' => $value['method'],
+            'data'   => $value['data'],
+            ]);
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );
