@@ -607,6 +607,7 @@ Database::addFilter(
         }
         $value = json_decode($value, true);
         $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+
         var_dump([
             'key' => $key,
             'method' => $value['method'],
