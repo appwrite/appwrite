@@ -201,10 +201,15 @@ class Deletes extends Action
                     'message' => 'messages'
                 };
 
-                $resource = $getProjectDB($project)->getDocument(
-                    $collectionId,
-                    $document->getAttribute('resourceId')
-                );
+                try {
+                    $resource = $getProjectDB($project)->getDocument(
+                        $collectionId,
+                        $document->getAttribute('resourceId')
+                    );
+                } catch (Throwable $e) {
+                    Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
+                    return;
+                }
 
                 $delete = true;
 
