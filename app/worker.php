@@ -88,9 +88,9 @@ Server::setResource('connectionForProject', function (Group $pools, Document $pr
         ->pop();
 }, ['pools', 'project']);
 
-Server::setResource('dbForProject', function (PoolConnection $connectionForProject, Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
+Server::setResource('dbForProject', function (PoolConnection $connectionForProject, Cache $cache, Registry $register, Message $message, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
+        throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
     }
 
     $database = new Database($connectionForProject->getResource(), $cache);
@@ -117,14 +117,14 @@ Server::setResource('dbForProject', function (PoolConnection $connectionForProje
     }
 
     return $database;
-}, ['connectionForProject', 'cache', 'register', 'message', 'project', 'dbForPlatform']);
+}, ['connectionForProject', 'cache', 'register', 'message', 'project']);
 
-Server::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $connectionForProject, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
+            throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
         }
 
         try {
@@ -174,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, PoolConnection $conn
 
         return $database;
     };
-}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache']);
+}, ['pools', 'connectionForProject', 'cache']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);

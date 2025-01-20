@@ -97,12 +97,12 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
     return $dbForPlatform;
 }, ['pools', 'cache']);
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+CLI::setResource('getProjectDB', function (Group $pools, Cache $cache) {
+    $databases = [];
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
+            throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
         }
 
         try {
@@ -158,7 +158,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'cache']);
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();

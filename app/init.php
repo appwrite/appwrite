@@ -1429,9 +1429,7 @@ App::setResource('console', function () {
 
 App::setResource('connectionForProject', function (Group $pools, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $pools
-            ->get('console')
-            ->pop();
+        throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
     }
 
     try {
@@ -1446,9 +1444,9 @@ App::setResource('connectionForProject', function (Group $pools, Document $proje
         ->pop();
 }, ['pools', 'project']);
 
-App::setResource('dbForProject', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, PoolConnection $connectionForProject, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
+        throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
     }
 
     try {
@@ -1481,7 +1479,7 @@ App::setResource('dbForProject', function (Group $pools, PoolConnection $connect
     }
 
     return $database;
-}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache', 'project']);
+}, ['pools', 'connectionForProject', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
@@ -1501,12 +1499,12 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+App::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Cache $cache) {
+    $databases = [];
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
+            throw new \Exception('Trying to inject project database using console project. Use "dbForPlatform" instead');
         }
 
         try {
