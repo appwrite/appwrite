@@ -58,7 +58,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
         return;
@@ -74,17 +74,20 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
         ->from($queueForEvents)
         ->trigger();
 
-    $queueForWebhooks
-        ->from($queueForEvents)
-        ->trigger();
 
-    if ($queueForEvents->getProject()->getId() === 'console') {
-        return;
+    /** Trigger webhooks events only if a project has them enabled */
+    if (!empty($project->getAttribute('webhooks'))) {
+        $queueForWebhooks
+            ->from($queueForEvents)
+            ->trigger();
     }
 
-    $queueForRealtime
-        ->from($queueForEvents)
-        ->trigger();
+    /** Trigger realtime events only for non console events */
+    if ($queueForEvents->getProject()->getId() !== 'console') {
+        $queueForRealtime
+            ->from($queueForEvents)
+            ->trigger();
+    }
 };
 
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
@@ -506,6 +509,7 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
+            ->setHostname($request->getHostname())
             ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
@@ -526,6 +530,7 @@ App::init()
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
                 $document,
                 $response,
                 $queueForEventsClone->from($queueForEvents),
@@ -678,16 +683,23 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            $queueForWebhooks
-                ->from($queueForEvents)
-                ->trigger();
-
             $queueForFunctions
                 ->from($queueForEvents)
                 ->trigger();
 
             if ($project->getId() !== 'console') {
                 $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+
+            /** Trigger webhooks events only if a project has them enabled
+             * A future optimisation is to only trigger webhooks if the webhook is "enabled"
+             * But it might have performance implications on the API due to the number of webhooks etc.
+             * Some profiling is needed to see if this is a problem.
+            */
+            if (!empty($project->getAttribute('webhooks'))) {
+                $queueForWebhooks
                     ->from($queueForEvents)
                     ->trigger();
             }

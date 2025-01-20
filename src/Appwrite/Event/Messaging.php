@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Messaging extends Event
@@ -27,7 +26,7 @@ class Messaging extends Event
     /**
      * Sets type for the build event.
      *
-     * @param string $type Can be `MESSAGE_TYPE_INTERNAL` or `MESSAGE_TYPE_EXTERNAL`.
+     * @param string $type Can be `MESSAGE_SEND_TYPE_INTERNAL` or `MESSAGE_SEND_TYPE_EXTERNAL`.
      * @return self
      */
     public function setType(string $type): self
@@ -176,19 +175,13 @@ class Messaging extends Event
     }
 
     /**
-     * Executes the event and sends it to the messaging worker.
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * Prepare the payload for the event
+     *
+     * @return array
      */
-    public function trigger(): string | bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'type' => $this->type,
             'project' => $this->project,
             'user' => $this->user,
@@ -196,6 +189,6 @@ class Messaging extends Event
             'message' => $this->message,
             'recipients' => $this->recipients,
             'providerType' => $this->providerType,
-        ]);
+        ];
     }
 }
