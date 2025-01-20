@@ -391,12 +391,10 @@ class Auth
         foreach ($sessions as $session) {
 
             var_dump([
-                'secret'   => $session->getAttribute('secret'),
-                'provider' => $session->getAttribute('provider'),
-                'expire'   => $session->getAttribute('expire'),
-                'hashed'   => self::hash($secret),
+                'secret from cookie' =>  $secret,
+                'hashed secret'   => self::hash($secret),
+                'secret from db'   => $session->getAttribute('secret'),
                 'secret_validation'   => $session->getAttribute('secret') === self::hash($secret),
-                'expiration_validation'  => DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now()),
             ]);
 
 

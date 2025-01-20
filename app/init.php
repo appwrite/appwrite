@@ -1301,14 +1301,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     } else {
         $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
-    var_dump([
-        'number' => 1,
-        'file' => 'init.php',
-        '$user' => $user,
-        'Auth::$secret' => Auth::$secret,
-        'sessions' =>  $user->getAttribute('sessions', []),
-        'Auth::sessionVerify' => Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
-    ]);
+
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
@@ -1318,11 +1311,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
 
-    var_dump([
-        'number' => 2,
-        'file' => 'init.php',
-        '$user' => $user,
-    ]);
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
     //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
