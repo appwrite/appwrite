@@ -59,15 +59,17 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
+            ->inject('project')
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('queueForUsage')
-            ->callback(fn (Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $queueForUsage));
+            ->callback(fn (Message $message, Document $project, Log $log, Database $dbForProject, Device $deviceForFiles, Usage $queueForUsage) => $this->action($message, $project, $log, $dbForProject, $deviceForFiles, $queueForUsage));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
@@ -77,6 +79,7 @@ class Messaging extends Action
      */
     public function action(
         Message $message,
+        Document $project,
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
@@ -90,7 +93,6 @@ class Messaging extends Action
         }
 
         $type = $payload['type'] ?? '';
-        $project = new Document($payload['project'] ?? []);
 
         switch ($type) {
             case MESSAGE_SEND_TYPE_INTERNAL:
