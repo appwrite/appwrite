@@ -48,7 +48,7 @@ class Method
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        //$this->validateDesc($description);
+        $this->validateDesc($description);
 
         foreach ($responses as $response) {
             /** @var SDKResponse $response */

@@ -9267,7 +9267,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -9280,7 +9280,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9345,7 +9345,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Build",
@@ -9365,7 +9365,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/update-deployment-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/update-deployment-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",

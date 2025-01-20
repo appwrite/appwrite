@@ -2382,7 +2382,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to register a device for push notifications. Provide a target ID (custom or generated using ID.unique()), a device identifier (usually a device token), and optionally specify which provider should send notifications to this target. The target is automatically linked to the current session and includes device information like brand and model.",
                 "responses": {
                     "201": {
                         "description": "Target",
@@ -2402,7 +2402,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2459,7 +2459,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Update the currently logged in user's push notification target. You can modify the target's identifier (device token) and provider ID (token, email, phone etc.). The target must exist and belong to the current user. If you change the provider ID, notifications will be sent through the new messaging provider instead.",
                 "responses": {
                     "200": {
                         "description": "Target",
@@ -2479,7 +2479,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2535,7 +2535,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Delete a push notification target for the currently logged in user. After deletion, the device will no longer receive push notifications. The target must exist and belong to the current user.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -2548,7 +2548,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -4285,7 +4285,7 @@
                 "tags": [
                     "assistant"
                 ],
-                "description": "",
+                "description": "Send a prompt to the AI assistant and receive a response. This endpoint allows you to interact with Appwrite's AI assistant by sending questions or prompts and receiving helpful responses in real-time through a server-sent events stream. ",
                 "responses": {
                     "200": {
                         "description": "File"
@@ -4541,7 +4541,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageDatabases",
@@ -4561,7 +4561,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -8727,7 +8727,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a collection. Returning the total number of documents. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageCollection",
@@ -8747,7 +8747,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-collection-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -8890,7 +8890,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageDatabase",
@@ -8910,7 +8910,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-database-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-database-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9544,7 +9544,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a for all functions. View statistics including total functions, deployments, builds, executions, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageFunctions",
@@ -9564,7 +9564,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-functions-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10332,7 +10332,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -10345,7 +10345,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10409,7 +10409,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Build",
@@ -10429,7 +10429,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/update-deployment-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/update-deployment-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10877,7 +10877,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a for a specific function. View statistics including total deployments, builds, executions, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageFunction",
@@ -10897,7 +10897,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/get-function-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-function-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -17482,7 +17482,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "List all migrations in the current project. This endpoint returns a list of all migrations including their status, progress, and any errors that occurred during the migration process.",
                 "responses": {
                     "200": {
                         "description": "Migrations List",
@@ -17555,7 +17555,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Migrate data from another Appwrite project to your current project. This endpoint allows you to migrate resources like databases, collections, documents, users, and files from an existing Appwrite project. ",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -17642,7 +17642,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Generate a report of the data in an Appwrite project before migrating. This endpoint analyzes the source project and returns information about the resources that can be migrated.",
                 "responses": {
                     "200": {
                         "description": "Migration Report",
@@ -17734,7 +17734,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Migrate data from a Firebase project to your Appwrite project. This endpoint allows you to migrate resources like authentication and other supported services from a Firebase project. ",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -17809,7 +17809,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Generate a report of the data in a Firebase project before migrating. This endpoint analyzes the source project and returns information about the resources that can be migrated.",
                 "responses": {
                     "200": {
                         "description": "Migration Report",
@@ -17880,7 +17880,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Migrate data from an NHost project to your Appwrite project. This endpoint allows you to migrate resources like authentication, databases, and other supported services from an NHost project. ",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -17990,7 +17990,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Generate a detailed report of the data in an NHost project before migrating. This endpoint analyzes the source project and returns information about the resources that can be migrated. ",
                 "responses": {
                     "200": {
                         "description": "Migration Report",
@@ -18122,7 +18122,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Migrate data from a Supabase project to your Appwrite project. This endpoint allows you to migrate resources like authentication, databases, and other supported services from a Supabase project. ",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -18226,7 +18226,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Generate a report of the data in a Supabase project before migrating. This endpoint analyzes the source project and returns information about the resources that can be migrated. ",
                 "responses": {
                     "200": {
                         "description": "Migration Report",
@@ -18349,7 +18349,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Get a migration by its unique ID. This endpoint returns detailed information about a specific migration including its current status, progress, and any errors that occurred during the migration process. ",
                 "responses": {
                     "200": {
                         "description": "Migration",
@@ -18406,7 +18406,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Retry a failed migration. This endpoint allows you to retry a migration that has previously failed.",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -18463,7 +18463,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "",
+                "description": "Delete a migration by its unique ID. This endpoint allows you to remove a migration from your project's migration history. ",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -18515,7 +18515,7 @@
                 "tags": [
                     "project"
                 ],
-                "description": "",
+                "description": "Get comprehensive usage statistics for your project. View metrics including network requests, bandwidth, storage, function executions, database usage, and user activity. Specify a time range with startDate and endDate, and optionally set the data granularity with period (1h or 1d). The response includes both total counts and detailed breakdowns by resource, along with historical data over the specified period.",
                 "responses": {
                     "200": {
                         "description": "UsageProject",
@@ -18535,7 +18535,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "project\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/project\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -18909,7 +18909,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a list of all projects. You can use the query params to filter your results. ",
                 "responses": {
                     "200": {
                         "description": "Projects List",
@@ -18929,7 +18929,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/list.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/list.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -18980,7 +18980,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Create a new project. You can create a maximum of 100 projects per account. ",
                 "responses": {
                     "201": {
                         "description": "Project",
@@ -19000,7 +19000,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19114,7 +19114,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a project by its unique ID. This endpoint allows you to retrieve the project's details, including its name, description, team, region, and other metadata. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19134,7 +19134,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19171,7 +19171,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a project by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19191,7 +19191,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19292,7 +19292,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Delete a project by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -19305,7 +19305,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19344,7 +19344,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the status of a specific API type. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19364,7 +19364,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-api-status.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-api-status.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19435,7 +19435,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the status of all API types. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime all at once.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19455,7 +19455,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-api-status-all.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-api-status-all.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19513,7 +19513,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update how long sessions created within a project should stay active for.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19533,7 +19533,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-duration.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-duration.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19591,7 +19591,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the maximum number of users allowed in this project. Set to 0 for unlimited users. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19611,7 +19611,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-limit.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-limit.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19669,7 +19669,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the maximum number of sessions allowed per user within the project, if the limit is hit the oldest session will be deleted to make room for new sessions.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19689,7 +19689,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-sessions-limit.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-sessions-limit.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19747,7 +19747,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update project membership privacy settings. Use this endpoint to control what user information is visible to other team members, such as user name, email, and MFA status. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19767,7 +19767,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-memberships-privacy.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-memberships-privacy.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19837,7 +19837,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the list of mock phone numbers for testing. Use these numbers to bypass SMS verification in development. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19857,7 +19857,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-mock-numbers.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-mock-numbers.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19918,7 +19918,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Enable or disable checking user passwords against common passwords dictionary. This helps ensure users don't use common and insecure passwords. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -19938,7 +19938,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-password-dictionary.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-password-dictionary.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19996,7 +19996,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the authentication password history requirement. Use this endpoint to require new passwords to be different than the last X amount of previously used ones.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -20016,7 +20016,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-password-history.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-password-history.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20074,7 +20074,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Enable or disable checking user passwords against their personal data. This helps prevent users from using personal information in their passwords. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -20094,7 +20094,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-personal-data-check.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-personal-data-check.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20152,7 +20152,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Enable or disable session email alerts. When enabled, users will receive email notifications when new sessions are created.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -20172,7 +20172,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-session-alerts.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-session-alerts.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20230,7 +20230,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the status of a specific authentication method. Use this endpoint to enable or disable different authentication methods such as email, magic urls or sms in your project. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -20250,7 +20250,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-auth-status.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-auth-status.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20329,7 +20329,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Create a new JWT token. This token can be used to authenticate users with custom scopes and expiration time. ",
                 "responses": {
                     "201": {
                         "description": "JWT",
@@ -20349,7 +20349,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create-j-w-t.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create-jwt.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20415,7 +20415,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a list of all API keys from the current project. ",
                 "responses": {
                     "200": {
                         "description": "API Keys List",
@@ -20435,7 +20435,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/list-keys.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/list-keys.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20472,7 +20472,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Create a new API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.",
                 "responses": {
                     "201": {
                         "description": "Key",
@@ -20492,7 +20492,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create-key.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create-key.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20564,7 +20564,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a key by its unique ID. This endpoint returns details about a specific API key in your project including it's scopes.",
                 "responses": {
                     "200": {
                         "description": "Key",
@@ -20584,7 +20584,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get-key.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get-key.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20631,7 +20631,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a key by its unique ID. Use this endpoint to update the name, scopes, or expiration time of an API key. ",
                 "responses": {
                     "200": {
                         "description": "Key",
@@ -20651,7 +20651,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-key.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-key.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20731,7 +20731,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Delete a key by its unique ID. Once deleted, the key can no longer be used to authenticate API calls. ",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -20744,7 +20744,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete-key.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete-key.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20793,7 +20793,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the OAuth2 provider configurations. Use this endpoint to set up or update the OAuth2 provider credentials or enable\/disable providers. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -20813,7 +20813,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-o-auth2.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-oauth2.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20929,7 +20929,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a list of all platforms in the project. This endpoint returns an array of all platforms and their configurations. ",
                 "responses": {
                     "200": {
                         "description": "Platforms List",
@@ -20949,7 +20949,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/list-platforms.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/list-platforms.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20986,7 +20986,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Create a new platform for your project. Use this endpoint to register a new platform where your users will run your application which will interact with the Appwrite API.",
                 "responses": {
                     "201": {
                         "description": "Platform",
@@ -21006,7 +21006,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create-platform.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create-platform.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21104,7 +21104,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a platform by its unique ID. This endpoint returns the platform's details, including its name, type, and key configurations. ",
                 "responses": {
                     "200": {
                         "description": "Platform",
@@ -21124,7 +21124,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get-platform.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get-platform.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21171,7 +21171,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a platform by its unique ID. Use this endpoint to update the platform's name, key, platform store ID, or hostname. ",
                 "responses": {
                     "200": {
                         "description": "Platform",
@@ -21191,7 +21191,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-platform.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-platform.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21272,7 +21272,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Delete a platform by its unique ID. This endpoint removes the platform and all its configurations from the project. ",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -21285,7 +21285,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete-platform.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete-platform.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21334,7 +21334,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the status of a specific service. Use this endpoint to enable or disable a service in your project. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -21354,7 +21354,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-service-status.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-service-status.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21433,7 +21433,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the status of all services. Use this endpoint to enable or disable all optional services at once. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -21453,7 +21453,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-service-status-all.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-service-status-all.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21511,7 +21511,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the SMTP configuration for your project. Use this endpoint to configure your project's SMTP provider with your custom settings for sending transactional emails. ",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -21531,7 +21531,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-smtp.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-smtp.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21635,7 +21635,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Send a test email to verify SMTP configuration. ",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -21648,7 +21648,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create-smtp-test.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create-smtp-test.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21758,7 +21758,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the team ID of a project allowing for it to be transferred to another team.",
                 "responses": {
                     "200": {
                         "description": "Project",
@@ -21778,7 +21778,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-team.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-team.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21836,7 +21836,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a custom email template for the specified locale and type. This endpoint returns the template content, subject, and other configuration details. ",
                 "responses": {
                     "200": {
                         "description": "EmailTemplate",
@@ -21856,7 +21856,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get-email-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get-email-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -22059,7 +22059,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a custom email template for the specified locale and type. Use this endpoint to modify the content of your email templates.",
                 "responses": {
                     "200": {
                         "description": "EmailTemplate",
@@ -22079,7 +22079,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-email-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-email-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -22322,7 +22322,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Reset a custom email template to its default value. This endpoint removes any custom content and restores the template to its original state. ",
                 "responses": {
                     "200": {
                         "description": "EmailTemplate",
@@ -22342,7 +22342,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete-email-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete-email-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -22547,7 +22547,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a custom SMS template for the specified locale and type returning it's contents.",
                 "responses": {
                     "200": {
                         "description": "SmsTemplate",
@@ -22567,7 +22567,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get-sms-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get-sms-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -22767,7 +22767,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a custom SMS template for the specified locale and type. Use this endpoint to modify the content of your SMS templates. ",
                 "responses": {
                     "200": {
                         "description": "SmsTemplate",
@@ -22787,7 +22787,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-sms-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-sms-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23006,7 +23006,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Reset a custom SMS template to its default value. This endpoint removes any custom message and restores the template to its original state. ",
                 "responses": {
                     "200": {
                         "description": "SmsTemplate",
@@ -23026,7 +23026,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete-sms-template.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete-sms-template.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23228,7 +23228,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a list of all webhooks belonging to the project. You can use the query params to filter your results. ",
                 "responses": {
                     "200": {
                         "description": "Webhooks List",
@@ -23248,7 +23248,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/list-webhooks.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/list-webhooks.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23285,7 +23285,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Create a new webhook. Use this endpoint to configure a URL that will receive events from Appwrite when specific events occur. ",
                 "responses": {
                     "201": {
                         "description": "Webhook",
@@ -23305,7 +23305,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/create-webhook.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/create-webhook.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23399,7 +23399,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Get a webhook by its unique ID. This endpoint returns details about a specific webhook configured for a project. ",
                 "responses": {
                     "200": {
                         "description": "Webhook",
@@ -23419,7 +23419,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/get-webhook.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/get-webhook.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23466,7 +23466,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update a webhook by its unique ID. Use this endpoint to update the URL, events, or status of an existing webhook. ",
                 "responses": {
                     "200": {
                         "description": "Webhook",
@@ -23486,7 +23486,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-webhook.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-webhook.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23588,7 +23588,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Delete a webhook by its unique ID. Once deleted, the webhook will no longer receive project events. ",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -23601,7 +23601,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/delete-webhook.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/delete-webhook.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23650,7 +23650,7 @@
                 "tags": [
                     "projects"
                 ],
-                "description": "",
+                "description": "Update the webhook signature key. This endpoint can be used to regenerate the signature key used to sign and validate payload deliveries for a specific webhook. ",
                 "responses": {
                     "200": {
                         "description": "Webhook",
@@ -23670,7 +23670,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "projects\/update-webhook-signature.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/projects\/update-webhook-signature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23982,7 +23982,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "",
+                "description": "Retry getting verification process of a proxy rule. This endpoint triggers domain verification by checking DNS records (CNAME) against the configured target domain. If verification is successful, a TLS certificate will be automatically provisioned for the domain.",
                 "responses": {
                     "200": {
                         "description": "Rule",
@@ -24002,7 +24002,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "proxy\/update-rule-verification.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/proxy\/update-rule-verification.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25241,7 +25241,7 @@
                 "tags": [
                     "storage"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for all buckets in the project. You can view the total number of buckets, files, storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.\n",
                 "responses": {
                     "200": {
                         "description": "StorageUsage",
@@ -25261,7 +25261,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "storage\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25312,7 +25312,7 @@
                 "tags": [
                     "storage"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics a specific bucket in the project. You can view the total number of files, storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.\n",
                 "responses": {
                     "200": {
                         "description": "UsageBuckets",
@@ -25332,7 +25332,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "storage\/get-bucket-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-bucket-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -27423,7 +27423,7 @@
                 "tags": [
                     "users"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for all users in the project. You can view the total number of users and sessions. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.\n",
                 "responses": {
                     "200": {
                         "description": "UsageUsers",
@@ -27443,7 +27443,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "users\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/users\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -29696,7 +29696,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Get a list of GitHub repositories available through your installation. This endpoint returns repositories with their basic information, detected runtime environments, and latest push dates. You can optionally filter repositories using a search term. Each repository's runtime is automatically detected based on its contents and language statistics. The GitHub installation must be properly configured for this endpoint to work.",
                 "responses": {
                     "200": {
                         "description": "Provider Repositories List",
@@ -29716,7 +29716,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/list-repositories.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/list-repositories.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -29764,7 +29764,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Create a new GitHub repository through your installation. This endpoint allows you to create either a public or private repository by specifying a name and visibility setting. The repository will be created under your GitHub user account or organization, depending on your installation type. The GitHub installation must be properly configured and have the necessary permissions for repository creation.",
                 "responses": {
                     "200": {
                         "description": "ProviderRepository",
@@ -29784,7 +29784,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/create-repository.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/create-repository.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -29848,7 +29848,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Get detailed information about a specific GitHub repository from your installation. This endpoint returns repository details including its ID, name, visibility status, organization, and latest push date. The GitHub installation must be properly configured and have access to the requested repository for this endpoint to work.",
                 "responses": {
                     "200": {
                         "description": "ProviderRepository",
@@ -29868,7 +29868,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/get-repository.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/get-repository.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -29917,7 +29917,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Get a list of all branches from a GitHub repository in your installation. This endpoint returns the names of all branches in the repository and their total count. The GitHub installation must be properly configured and have access to the requested repository for this endpoint to work.\n",
                 "responses": {
                     "200": {
                         "description": "Branches List",
@@ -29937,7 +29937,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/list-repository-branches.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/list-repository-branches.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -29986,7 +29986,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Get a list of files and directories from a GitHub repository connected to your project. This endpoint returns the contents of a specified repository path, including file names, sizes, and whether each item is a file or directory. The GitHub installation must be properly configured and the repository must be accessible through your installation for this endpoint to work.\n",
                 "responses": {
                     "200": {
                         "description": "VCS Content List",
@@ -30006,7 +30006,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/get-repository-contents.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/get-repository-contents.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -30066,7 +30066,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Analyze a GitHub repository to automatically detect the programming language and runtime environment. This endpoint scans the repository's files and language statistics to determine the appropriate runtime settings for your function. The GitHub installation must be properly configured and the repository must be accessible through your installation for this endpoint to work.",
                 "responses": {
                     "200": {
                         "description": "Detection",
@@ -30086,7 +30086,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/create-repository-detection.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/create-repository-detection.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -30151,7 +30151,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Authorize and create deployments for a GitHub pull request in your project. This endpoint allows external contributions by creating deployments from pull requests, enabling preview environments for code review. The pull request must be open and not previously authorized. The GitHub installation must be properly configured and have access to both the repository and pull request for this endpoint to work.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -30164,7 +30164,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "vcs\/update-external-deployments.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/vcs\/update-external-deployments.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -30232,7 +30232,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "List all VCS installations configured for the current project. This endpoint returns a list of installations including their provider, organization, and other configuration details.\n",
                 "responses": {
                     "200": {
                         "description": "Installations List",
@@ -30305,7 +30305,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Get a VCS installation by its unique ID. This endpoint returns the installation's details including its provider, organization, and configuration. ",
                 "responses": {
                     "200": {
                         "description": "Installation",
@@ -30362,7 +30362,7 @@
                 "tags": [
                     "vcs"
                 ],
-                "description": "",
+                "description": "Delete a VCS installation by its unique ID. This endpoint removes the installation and all its associated repositories from the project.",
                 "responses": {
                     "204": {
                         "description": "No content"

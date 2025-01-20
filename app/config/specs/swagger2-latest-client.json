@@ -2508,7 +2508,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to register a device for push notifications. Provide a target ID (custom or generated using ID.unique()), a device identifier (usually a device token), and optionally specify which provider should send notifications to this target. The target is automatically linked to the current session and includes device information like brand and model.",
                 "responses": {
                     "201": {
                         "description": "Target",
@@ -2524,7 +2524,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2591,7 +2591,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Update the currently logged in user's push notification target. You can modify the target's identifier (device token) and provider ID (token, email, phone etc.). The target must exist and belong to the current user. If you change the provider ID, notifications will be sent through the new messaging provider instead.",
                 "responses": {
                     "200": {
                         "description": "Target",
@@ -2607,7 +2607,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2665,7 +2665,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Delete a push notification target for the currently logged in user. After deletion, the device will no longer receive push notifications. The target must exist and belong to the current user.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -2678,7 +2678,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
