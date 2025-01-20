@@ -1501,7 +1501,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, $cache) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, PoolConnection $connectionForProject, $cache) {
     $databases = [];
 
     return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases) {
@@ -1552,7 +1552,7 @@ App::setResource('getProjectDB', function (Group $pools, PoolConnection $connect
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'connectionForProject', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
