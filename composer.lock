@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3853435a659889e86c16764046950bed",
+    "content-hash": "92b40e75d531c98b72508dd104eeab0d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3639,16 +3639,16 @@
         },
         {
             "name": "utopia-php/fetch",
-            "version": "0.2.1",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82"
+                "reference": "02b12c05aec13399dcc2da8d51f908e328ab63f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/1423c0ee3eef944d816ca6e31706895b585aea82",
-                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/02b12c05aec13399dcc2da8d51f908e328ab63f4",
+                "reference": "02b12c05aec13399dcc2da8d51f908e328ab63f4",
                 "shasum": ""
             },
             "require": {
@@ -3672,9 +3672,9 @@
             "description": "A simple library that provides an interface for making HTTP Requests.",
             "support": {
                 "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.2.1"
+                "source": "https://github.com/utopia-php/fetch/tree/0.3.0"
             },
-            "time": "2024-03-18T11:50:59+00:00"
+            "time": "2025-01-17T06:11:10+00:00"
         },
         {
             "name": "utopia-php/framework",
