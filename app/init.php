@@ -609,9 +609,13 @@ Database::addFilter(
         $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         var_dump([
+            'region' => System::getEnv('_APP_REGION', 'default'),
             'key' => $key,
+            'value' => $value,
             'method' => $value['method'],
             'data'   => $value['data'],
+            'iv' => hex2bin($value['iv']),
+            'tag' => hex2bin($value['tag'])
             ]);
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
