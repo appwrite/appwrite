@@ -40,6 +40,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries;
@@ -2635,6 +2636,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
 
         if ($attribute->isEmpty()) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        }
+
+        /**
+         * Check index dependency
+         */
+        $validator = new IndexDependencyValidator(
+            $collection->getAttribute('indexes'),
+            $dbForProject->getAdapter()->getSupportForCastIndexArray(),
+        );
+
+        if (! $validator->isValid($attribute)) {
+            throw new Exception(Exception::INDEX_DEPENDENCY);
         }
 
         // Only update status if removing available attribute
