@@ -198,6 +198,7 @@ class Deletes extends Action
 
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
+                    'execution' => 'executions',
                     'message' => 'messages'
                 };
 
@@ -216,6 +217,9 @@ class Deletes extends Action
                 switch ($document->getAttribute('resourceType')) {
                     case 'function':
                         $delete = $resource->isEmpty();
+                        break;
+                    case 'execution':
+                        $delete = false;
                         break;
                 }
 
