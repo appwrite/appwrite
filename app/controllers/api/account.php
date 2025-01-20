@@ -28,7 +28,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
@@ -2468,12 +2467,7 @@ App::post('/v1/account/tokens/phone')
                 $abuse = new Abuse($timelimit);
                 if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
                     $helper = PhoneNumberUtil::getInstance();
-
-                    try {
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-                    } catch (NumberParseException $e) {
-                        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid phone number');
-                    }
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
                         $queueForUsage
@@ -3593,12 +3587,7 @@ App::post('/v1/account/verification/phone')
                 $abuse = new Abuse($timelimit);
                 if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
                     $helper = PhoneNumberUtil::getInstance();
-
-                    try {
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-                    } catch (NumberParseException $e) {
-                        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid phone number');
-                    }
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
                         $queueForUsage
@@ -4159,12 +4148,7 @@ App::post('/v1/account/mfa/challenge')
                     $abuse = new Abuse($timelimit);
                     if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
                         $helper = PhoneNumberUtil::getInstance();
-
-                        try {
-                            $countryCode = $helper->parse($phone)->getCountryCode();
-                        } catch (NumberParseException $e) {
-                            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid phone number');
-                        }
+                        $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
                             $queueForUsage
