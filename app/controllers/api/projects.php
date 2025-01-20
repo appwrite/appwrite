@@ -35,7 +35,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
-use Utopia\Pools\Connection;
 use Utopia\Pools\Group;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -85,11 +84,10 @@ App::post('/v1/projects')
     ->inject('request')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('connectionForProject')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Connection $connectionForProject, Cache $cache, Group $pools, Hooks $hooks) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -197,7 +195,8 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        $dbForProject = new Database($connectionForProject->getResource(), $cache);
+        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
