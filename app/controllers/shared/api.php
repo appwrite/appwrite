@@ -334,11 +334,6 @@ App::init()
         $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
-        var_dump([
-            'file' => 'api.php',
-            '$user' => $user,
-            'roles' => Auth::getRoles($user),
-        ]);
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
         }

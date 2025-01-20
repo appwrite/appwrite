@@ -1308,7 +1308,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
-
+    var_dump([
+        'number' => 1,
+        'file' => 'init.php',
+        '$user' => $user,
+    ]);
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
     //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
@@ -1343,10 +1347,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
+
     var_dump([
+        'number' => 2,
         'file' => 'init.php',
         '$user' => $user,
     ]);
+
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
