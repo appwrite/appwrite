@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7ef4409cc1690563b87dffc0d52b06d5",
+    "content-hash": "3cd37ea04612e04b9e76eb51c5da41dd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4807,16 +4807,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.28",
+            "version": "0.39.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6ff467858fe418e364460da905139216570a5d5e"
+                "reference": "830198d501f51163514305befefb775106a7198b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6ff467858fe418e364460da905139216570a5d5e",
-                "reference": "6ff467858fe418e364460da905139216570a5d5e",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/830198d501f51163514305befefb775106a7198b",
+                "reference": "830198d501f51163514305befefb775106a7198b",
                 "shasum": ""
             },
             "require": {
@@ -4852,9 +4852,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.28"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.30"
             },
-            "time": "2024-12-30T11:17:25+00:00"
+            "time": "2025-01-20T06:10:03+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8556,7 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

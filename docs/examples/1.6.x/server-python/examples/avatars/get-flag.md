@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.avatars import Avatars
 from appwrite.enums import Flag
 
 client = Client()
