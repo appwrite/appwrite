@@ -1317,6 +1317,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
+
     var_dump([
         'number' => 2,
         'file' => 'init.php',
