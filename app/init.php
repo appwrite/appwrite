@@ -1262,12 +1262,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         )
     );
 
-    var_dump([
-        'no' => '1',
-        'cookie_name' =>  Auth::$cookieName,
-        'session' => $session
-    ]);
-
     // Get session from header for SSR clients
     if (empty($session['id']) && empty($session['secret'])) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
@@ -1281,12 +1275,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
     }
-    var_dump([
-        'no' => '2',
-        'mode' => $mode,
-        'secret' =>  $session['secret'],
-        'id' => $session['id']
-    ]);
 
     if (empty($session['id']) && empty($session['secret'])) {
         if ($response) {
@@ -1312,10 +1300,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
     } else {
         $user = $dbForPlatform->getDocument('users', Auth::$unique);
-        var_dump([
-            'no' => '3',
-            'secret' =>  $user,
-        ]);
     }
 
     if (
@@ -1359,7 +1343,10 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
-
+    var_dump([
+        'file' => 'init.php',
+        '$user' => $user,
+    ]);
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
