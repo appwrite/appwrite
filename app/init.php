@@ -1357,12 +1357,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 
-    var_dump([
-        'number' => 3,
-        'file' => 'init.php',
-        '$user' => $user,
-    ]);
-
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 

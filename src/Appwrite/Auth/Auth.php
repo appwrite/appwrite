@@ -385,6 +385,16 @@ class Auth
      */
     public static function sessionVerify(array $sessions, string $secret)
     {
+
+        var_dump([
+            'secret'   => $session->getAttribute('secret'),
+            'provider' => $session->getAttribute('provider'),
+            'expire'   => $session->getAttribute('expire'),
+            'hashed'   => self::hash($secret),
+            'secret_validation'   => $session->getAttribute('secret') === self::hash($secret),
+            'expiration_validation'  => DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now()),
+        ]);
+
         foreach ($sessions as $session) {
             if (
                 $session->isSet('secret') &&
