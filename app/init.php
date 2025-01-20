@@ -968,7 +968,7 @@ $register->set('pools', function () {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
                             PDO::ATTR_TIMEOUT => 3, // Seconds
-                            PDO::ATTR_PERSISTENT => true,
+                            PDO::ATTR_PERSISTENT => false, // We manage our own pool
                             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                             PDO::ATTR_EMULATE_PREPARES => true,
                             PDO::ATTR_STRINGIFY_FETCHES => true
