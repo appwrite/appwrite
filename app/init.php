@@ -1501,10 +1501,10 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+App::setResource('getProjectDB', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, $cache) {
+    $databases = [];
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -1544,10 +1544,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
+        $dbAdapter = $connectionForProject->getResource();
 
         $database = new Database($dbAdapter, $cache);
         $databases[$dsn->getHost()] = $database;
