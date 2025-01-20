@@ -52,10 +52,7 @@ class Phone extends Validator
         }
 
         try {
-            $parsedValue = $this->helper->parse($value);
-            if (!$this->helper->isValidNumber($parsedValue)) {
-                return false;
-            }
+            $this->helper->parse($value);
         } catch (NumberParseException $e) {
             return false;
         }
