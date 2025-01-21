@@ -69,13 +69,12 @@ class CreateDeployment extends Action
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') // TODO: Remove this later once volume is added to executor
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
+    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForLocal, Build $queueForBuilds)
     {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -157,7 +156,7 @@ class CreateDeployment extends Action
 
         // Save to storage
         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
-        $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = $deviceForSites->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
@@ -169,7 +168,7 @@ class CreateDeployment extends Action
             }
         }
 
-        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForSites->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -192,7 +191,7 @@ class CreateDeployment extends Action
                 }
             }
 
-            $fileSize = $deviceForFunctions->getFileSize($path);
+            $fileSize = $deviceForSites->getFileSize($path);
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
