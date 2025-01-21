@@ -385,19 +385,7 @@ class Auth
      */
     public static function sessionVerify(array $sessions, string $secret)
     {
-
-
-
         foreach ($sessions as $session) {
-
-            var_dump([
-                'secret from cookie' =>  $secret,
-                'hashed secret'   => self::hash($secret),
-                'secret from db'   => $session->getAttribute('secret'),
-                'secret_validation'   => $session->getAttribute('secret') === self::hash($secret),
-            ]);
-
-
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&

@@ -608,15 +608,6 @@ Database::addFilter(
         $value = json_decode($value, true);
         $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
-        var_dump([
-            'region' => System::getEnv('_APP_REGION', 'default'),
-            'key' => $key,
-            'value' => $value,
-            'method' => $value['method'],
-            'data'   => $value['data'],
-            'iv' => hex2bin($value['iv']),
-            'tag' => hex2bin($value['tag'])
-            ]);
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );
@@ -1311,14 +1302,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
-
     if (
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
-
 
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
