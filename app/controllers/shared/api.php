@@ -259,7 +259,6 @@ App::init()
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
-                    // dynamic api key user
                     $queueForAudits->setUser($user);
                 }
             } elseif ($keyType === API_KEY_STANDARD) {
@@ -311,7 +310,6 @@ App::init()
                         }
                     }
 
-                    // standard api key user
                     $queueForAudits->setUser($user);
                 }
             }
