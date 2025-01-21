@@ -40,7 +40,7 @@ class Slack extends OAuth2
     {
         return 'https://slack.com/oauth/v2/authorize?' . \http_build_query([
             'client_id' => $this->appID,
-            'user_scope' => \implode(',', $this->getScopes()),
+            'user_scope' => \implode(' ', $this->getScopes()),
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state)
         ]);
