@@ -850,12 +850,12 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertNotEmpty($execution['body']['resourceId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
-        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals($data['functionId'], $execution['body']['resourceId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['responseBody']);
+        $this->assertStringContainsString($execution['body']['resourceId'], $execution['body']['responseBody']);
         $this->assertStringContainsString($data['deploymentId'], $execution['body']['responseBody']);
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
@@ -941,7 +941,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsInt($executions['body']['total']);
         $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals($data['functionId'], $executions['body']['executions'][0]['functionId']);
+        $this->assertEquals($data['functionId'], $executions['body']['executions'][0]['resourceId']);
 
         $executions = $this->listExecutions($data['functionId'], [
             'search' => $data['functionId'],

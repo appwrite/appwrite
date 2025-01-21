@@ -3,6 +3,7 @@
 /node_modules/
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
+/tests/resources/sites/**/code.tar.gz
 /app/sdks/*
 /.idea/
 !/.idea/workspace.xml
