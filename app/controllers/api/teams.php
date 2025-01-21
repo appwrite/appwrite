@@ -546,47 +546,58 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
-        $secret = Auth::tokenGenerator();
-
-        $membershipId = ID::unique();
-        $membership = new Document([
-            '$id' => $membershipId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($invitee->getId())),
-                Permission::update(Role::team($team->getId(), 'owner')),
-                Permission::delete(Role::user($invitee->getId())),
-                Permission::delete(Role::team($team->getId(), 'owner')),
-            ],
-            'userId' => $invitee->getId(),
-            'userInternalId' => $invitee->getInternalId(),
-            'teamId' => $team->getId(),
-            'teamInternalId' => $team->getInternalId(),
-            'roles' => $roles,
-            'invited' => DateTime::now(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
-            'confirm' => ($isPrivilegedUser || $isAppUser),
-            'secret' => Auth::hash($secret),
-            'search' => implode(' ', [$membershipId, $invitee->getId()])
+        $membership = $dbForProject->findOne('memberships', [
+            Query::equal('userInternalId', [$invitee->getInternalId()]),
+            Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
-        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
-            try {
-                $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
-            }
+        if ($membership->isEmpty()) {
+            $secret = Auth::tokenGenerator();
 
+            $membershipId = ID::unique();
+            $membership = new Document([
+                '$id' => $membershipId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($invitee->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($invitee->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
+                'userId' => $invitee->getId(),
+                'userInternalId' => $invitee->getInternalId(),
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
+                'roles' => $roles,
+                'invited' => DateTime::now(),
+                'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
+                'confirm' => ($isPrivilegedUser || $isAppUser),
+                'secret' => Auth::hash($secret),
+                'search' => implode(' ', [$membershipId, $invitee->getId()])
+            ]);
+
+            $membership = ($isPrivilegedUser || $isAppUser) ?
+                Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                $dbForProject->createDocument('memberships', $membership);
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
-            try {
-                $membership = $dbForProject->createDocument('memberships', $membership);
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
+            $membership->setAttribute('invited', DateTime::now());
+
+            if ($isPrivilegedUser || $isAppUser) {
+                $membership->setAttribute('joined', DateTime::now());
+                $membership->setAttribute('confirm', true);
             }
 
+            $membership = ($isPrivilegedUser || $isAppUser) ?
+                Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
+                $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        }
+
+
+        if ($isPrivilegedUser || $isAppUser) {
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
+        } else {
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
@@ -656,7 +667,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'owner' => $user->getAttribute('name'),
                     'direction' => $locale->getText('settings.direction'),
                     /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
-                    'user' => $user->getAttribute('name'),
+                    'user' => $name,
                     'team' => $team->getAttribute('name'),
                     'redirect' => $url,
                     'project' => $projectName
@@ -668,8 +679,8 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
                     ->setVariables($emailVariables)
-                    ->trigger()
-                ;
+                    ->trigger();
+
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');

@@ -5,7 +5,7 @@ mutation {
         key: "",
         required: false,
         default: "<DEFAULT>",
-        size: 0,
+        size: 1,
         newKey: ""
     ) {
         key
@@ -14,6 +14,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         size
         default
     }

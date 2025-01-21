@@ -46,6 +46,7 @@ class Builds extends Action
         $this
             ->desc('Builds worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
@@ -54,11 +55,12 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn ($message, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
@@ -70,7 +72,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -79,7 +81,6 @@ class Builds extends Action
         }
 
         $type = $payload['type'] ?? '';
-        $project = new Document($payload['project'] ?? []);
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);

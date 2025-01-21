@@ -51,16 +51,17 @@ class Migrations extends Action
         $this
             ->desc('Migrations worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('logError')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForPlatform, callable $logError) => $this->action($message, $dbForProject, $dbForPlatform, $logError));
+            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForPlatform, callable $logError): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -69,7 +70,6 @@ class Migrations extends Action
         }
 
         $events    = $payload['events'] ?? [];
-        $project   = new Document($payload['project'] ?? []);
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {

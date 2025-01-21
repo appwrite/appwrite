@@ -4,7 +4,6 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Database extends Event
@@ -100,18 +99,8 @@ class Database extends Event
         return $this->document;
     }
 
-    /**
-     * Executes the event and send it to the database worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
+    public function getQueue(): string
     {
-        if ($this->paused) {
-            return false;
-        }
-
         try {
             $dsn = new DSN($this->getProject()->getAttribute('database'));
         } catch (\InvalidArgumentException) {
@@ -119,23 +108,25 @@ class Database extends Event
             $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
         }
 
-        $this->setQueue($dsn->getHost());
+        $this->queue = $dsn->getHost();
+        return $this->queue;
+    }
 
-        $client = new Client($this->queue, $this->connection);
-
-        try {
-            $result = $client->enqueue([
-                'project' => $this->project,
-                'user' => $this->user,
-                'type' => $this->type,
-                'collection' => $this->collection,
-                'document' => $this->document,
-                'database' => $this->database,
-                'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-            ]);
-            return $result;
-        } catch (\Throwable $th) {
-            return false;
-        }
+    /**
+     * Prepare the payload for the event
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
+            'project' => $this->project,
+            'user' => $this->user,
+            'type' => $this->type,
+            'collection' => $this->collection,
+            'document' => $this->document,
+            'database' => $this->database,
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+        ];
     }
 }
