@@ -21,7 +21,7 @@ return [
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -31,6 +31,7 @@ return [
                 'outputDirectory' => './.next',
                 'startCommand' => 'sh helpers/next-js/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/next-js/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/next-js/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -39,13 +40,14 @@ return [
                 'outputDirectory' => './out',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
     'nuxt' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -55,6 +57,7 @@ return [
                 'outputDirectory' => './.output',
                 'startCommand' => 'sh helpers/nuxt/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/nuxt/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/nuxt/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -63,13 +66,14 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -79,6 +83,7 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/sveltekit/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/sveltekit/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/sveltekit/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -87,13 +92,14 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -103,6 +109,7 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/astro/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/astro/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/astro/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -111,13 +118,14 @@ return [
                 'outputDirectory' => './dist',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -127,6 +135,7 @@ return [
                 'outputDirectory' => './build',
                 'startCommand' => 'sh helpers/remix/server.sh',
                 'bundleCommand' => 'sh /usr/local/server/helpers/remix/bundle.sh',
+                'envCommand' => 'source /usr/local/server/helpers/remix/env.sh',
             ],
             'static' => [
                 'key' => 'static',
@@ -135,6 +144,7 @@ return [
                 'outputDirectory' => './build/client',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ]
         ]
     ],
@@ -151,13 +161,14 @@ return [
                 'outputDirectory' => './build/web',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ],
         ],
     ],
     'other' => [
         'key' => 'other',
         'name' => 'Other',
-        'buildRuntime' => 'node-22',
+        'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'static' => [
@@ -167,6 +178,7 @@ return [
                 'outputDirectory' => './',
                 'startCommand' => 'sh helpers/server.sh',
                 'bundleCommand' => '',
+                'envCommand' => '',
             ],
         ]
     ],
