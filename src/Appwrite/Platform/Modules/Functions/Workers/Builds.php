@@ -881,6 +881,9 @@ class Builds extends Action
                 if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
                     $commands[] = $adapter['bundleCommand'];
                 }
+                if (!is_null($adapter) && isset($adapter['envCommand'])) {
+                    $commands[] = $adapter['envCommand'];
+                }
             }
 
             $commands = array_filter($commands, fn ($command) => !empty($command));

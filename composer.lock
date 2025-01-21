@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a57d56106703cb729370214435feb98",
+    "content-hash": "20874601c6797a65c01000471bd74645",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "dev-feat-add-ssr-runtime",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "a021a2b09b045375979f8e7bc2e7aa520fc94847"
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/a021a2b09b045375979f8e7bc2e7aa520fc94847",
-                "reference": "a021a2b09b045375979f8e7bc2e7aa520fc94847",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9a9e20d1f5c28caf539ad4cb52164dc283f99797",
+                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/feat-add-ssr-runtime"
+                "source": "https://github.com/appwrite/runtimes/tree/0.17.0"
             },
-            "time": "2025-01-07T12:14:14+00:00"
+            "time": "2025-01-10T13:36:30+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -3929,16 +3929,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.13",
+            "version": "0.6.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13"
+                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/68d9b0a9477755afcda607e7e8109785cae17a13",
-                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
+                "reference": "59a19f09ded0ccab4c8cca35b1242c01e2b9cfd2",
                 "shasum": ""
             },
             "require": {
@@ -3979,9 +3979,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.13"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.14"
             },
-            "time": "2024-11-26T13:57:53+00:00"
+            "time": "2025-01-08T01:07:25+00:00"
         },
         {
             "name": "utopia-php/mongo",
