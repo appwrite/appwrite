@@ -3760,6 +3760,16 @@ $projectCollections = array_merge([
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('providerCommitAuthorAvatar'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('providerCommitAuthor'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,

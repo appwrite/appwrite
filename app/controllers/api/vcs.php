@@ -42,7 +42,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerCommitAuthorAvatar, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
     $errors = [];
     foreach ($repositories as $repository) {
         try {
@@ -217,6 +217,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerRepositoryUrl' => $providerRepositoryUrl,
                 'providerCommitHash' => $providerCommitHash,
                 'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
+                'providerCommitAuthorAvatar' => $providerCommitAuthorAvatar,
                 'providerCommitAuthor' => $providerCommitAuthor,
                 'providerCommitMessage' => $providerCommitMessage,
                 'providerCommitUrl' => $providerCommitUrl,
@@ -957,6 +958,7 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
                 $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
+                $providerCommitAuthorAvatar = $parsedPayload["authorAvatarUrl"] ?? '';
                 $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
@@ -970,7 +972,7 @@ App::post('/v1/vcs/github/events')
 
                 // create new deployment only on push and not when branch is created
                 if (!$providerBranchCreated) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerCommitAuthorAvatar, '', false, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
@@ -1009,6 +1011,7 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
                     $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
                     $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
+                    $providerCommitAuthorAvatar = $parsedPayload["authorAvatarUrl"] ?? '';
 
                     // Ignore sync for non-external. We handle it in push webhook
                     if (!$external && $parsedPayload["action"] == "synchronize") {
@@ -1026,7 +1029,7 @@ App::post('/v1/vcs/github/events')
                         Query::orderDesc('$createdAt')
                     ]));
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerCommitAuthorAvatar, $providerPullRequestId, $external, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 

@@ -363,7 +363,7 @@ class Builds extends Action
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
                     $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
-                    $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
+                    $deployment->setAttribute('providerCommitAuthor', 'Appwrite'); // TODO: Add Appwrite's GitHub Avatar
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
@@ -510,6 +510,7 @@ class Builds extends Action
                 'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
                 'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
                 'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_AVATAR' => $deployment->getAttribute('providerCommitAuthorAvatar', ''),
                 'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
