@@ -522,10 +522,10 @@ App::init()
 
         /* If a session exists, use the user associated with the session */
         if (!$user->isEmpty()) {
-            $typedUser = clone $user;
+            $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $typedUser->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($typedUser);
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
         }
 
         $queueForDeletes->setProject($project);
@@ -734,10 +734,10 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
-            $typedUser = clone $user;
+            $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $typedUser->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($typedUser);
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.
