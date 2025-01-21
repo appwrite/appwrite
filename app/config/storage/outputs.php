@@ -8,6 +8,5 @@ return [
     "png" => "image/png",
     "webp" => "image/webp",
     "heic" => "image/heic",
-    "heics" => "image/heic",
     "avif" => "image/avif",
 ];
