@@ -198,19 +198,28 @@ class Deletes extends Action
 
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
+                    'execution' => 'executions',
                     'message' => 'messages'
                 };
 
-                $resource = $getProjectDB($project)->getDocument(
-                    $collectionId,
-                    $document->getAttribute('resourceId')
-                );
+                try {
+                    $resource = $getProjectDB($project)->getDocument(
+                        $collectionId,
+                        $document->getAttribute('resourceId')
+                    );
+                } catch (Throwable $e) {
+                    Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
+                    return;
+                }
 
                 $delete = true;
 
                 switch ($document->getAttribute('resourceType')) {
                     case 'function':
                         $delete = $resource->isEmpty();
+                        break;
+                    case 'execution':
+                        $delete = false;
                         break;
                 }
 

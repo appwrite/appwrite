@@ -771,7 +771,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 }, Database::VAR_DATETIME);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
-    $elements = $attribute['formatOptions']['elements'];
+    $elements = $attribute['formatOptions']['elements'] ?? [];
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 

@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.locale import Locale
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
