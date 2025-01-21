@@ -520,8 +520,7 @@ App::init()
             ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project);
 
-        // check first,
-        // as api key user might already exists
+        /* If a session exists, use the user associated with the session */
         if (!$user->isEmpty()) {
             $typedUser = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
