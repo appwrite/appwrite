@@ -84,12 +84,12 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.39.30",
-        "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "5.1.2",
-        "textalk/websocket": "1.5.7",
-        "laravel/pint": "^1.14",
-        "phpbench/phpbench": "^1.2"
+        "appwrite/sdk-generator": "0.39.*",
+        "phpunit/phpunit": "9.*",
+        "swoole/ide-helper": "5.1.3",
+        "textalk/websocket": "1.5.*",
+        "laravel/pint": "1.*",
+        "phpbench/phpbench": "1.*"
     },
     "provide": {
         "ext-phpiredis": "*"
