@@ -2,13 +2,9 @@
 
 namespace Tests\Unit\Usage;
 
-use Appwrite\URL\URL as AppwriteURL;
 use PHPUnit\Framework\TestCase;
-use Utopia\DSN\DSN;
-use Utopia\Queue;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\System\System;
 
 class StatsTest extends TestCase
 {
@@ -19,18 +15,9 @@ class StatsTest extends TestCase
 
     public function setUp(): void
     {
-        $env = System::getEnv('_APP_CONNECTIONS_QUEUE', 'redis_main=' . AppwriteURL::unparse([
-            'scheme' => 'redis',
-            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => System::getEnv('_APP_REDIS_USER', ''),
-            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-        ]));
-
-        $dsn = explode('=', $env);
-        $dsn = count($dsn) > 1 ? $dsn[1] : $dsn[0];
-        $dsn = new DSN($dsn);
-        $this->connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        global $register;
+        $connection = $register->get('pools')->get('queue')->pop()->getResource();
+        $this->connection = $connection;
         $this->client     = new Client(self::QUEUE_NAME, $this->connection);
     }
 

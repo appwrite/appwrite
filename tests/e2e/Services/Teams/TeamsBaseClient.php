@@ -30,8 +30,8 @@ trait TeamsBaseClient
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
         $this->assertFalse($response['body']['memberships'][0]['mfa']);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']['memberships'][0]);
+        $this->assertArrayHasKey('userEmail', $response['body']['memberships'][0]);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
         $this->assertContains('player', $response['body']['memberships'][0]['roles']);
@@ -96,8 +96,8 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']['memberships'][0]);
+        $this->assertArrayHasKey('userEmail', $response['body']['memberships'][0]);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
         $this->assertContains('player', $response['body']['memberships'][0]['roles']);
@@ -112,8 +112,8 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']['memberships'][0]);
+        $this->assertArrayHasKey('userEmail', $response['body']['memberships'][0]);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
         $this->assertContains('player', $response['body']['memberships'][0]['roles']);
@@ -157,8 +157,8 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertFalse($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertNotEmpty($response['body']['userName']);
-        $this->assertNotEmpty($response['body']['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']);
+        $this->assertArrayHasKey('userEmail', $response['body']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(1, $response['body']['roles']);

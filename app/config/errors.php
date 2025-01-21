@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -535,6 +540,23 @@ return [
         'code' => 404,
     ],
 
+    /** Sites */
+    Exception::SITE_NOT_FOUND => [
+        'name' => Exception::SITE_NOT_FOUND,
+        'description' => 'Site with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SITE_FRAMEWORK_UNSUPPORTED => [
+        'name' => Exception::SITE_FRAMEWORK_UNSUPPORTED,
+        'description' => 'The requested framework is either inactive or unsupported. Please check the value of the _APP_SITES_FRAMEWORKS environment variable.',
+        'code' => 404,
+    ],
+    Exception::SITE_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
+        'description' => 'Site Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
         'name' => Exception::BUILD_NOT_FOUND,
@@ -575,6 +597,13 @@ return [
         'name' => Exception::EXECUTION_IN_PROGRESS,
         'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
         'code' => 400,
+    ],
+
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
+        'code' => 404,
     ],
 
     /** Databases */

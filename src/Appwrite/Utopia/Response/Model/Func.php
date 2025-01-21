@@ -61,7 +61,7 @@ class Func extends Model
             ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution runtime.',
+                'description' => 'Function execution and build runtime.',
                 'default' => '',
                 'example' => 'python-3.8',
             ])
@@ -155,8 +155,8 @@ class Func extends Model
             ->addRule('specification', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Machine specification for builds and executions.',
-                'default' => APP_FUNCTION_SPECIFICATION_DEFAULT,
-                'example' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
         ;
     }

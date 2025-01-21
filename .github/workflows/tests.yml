@@ -66,6 +66,9 @@ jobs:
           docker compose up -d
           sleep 10
 
+      - name: Logs
+        run: docker compose logs appwrite
+
       - name: Doctor
         run: docker compose exec -T appwrite doctor
 
@@ -125,6 +128,7 @@ jobs:
             Webhooks,
             VCS,
             Messaging,
+            Migrations
           ]
 
     steps:
@@ -142,7 +146,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 30
+          sleep 60
 
       - name: Run ${{matrix.service}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug

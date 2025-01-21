@@ -1,4 +1,4 @@
-<p>{{hello}},</p>
+<p>{{hello}}</p>
 
 <p>{{description}}</p>
 

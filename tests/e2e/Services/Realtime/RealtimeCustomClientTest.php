@@ -111,6 +111,30 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testPingPong()
+    {
+        $client = $this->getWebsocket(['files'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'ping'
+        ]));
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('pong', $response['type']);
+
+        $client->close();
+    }
+
     public function testManualAuthentication()
     {
         $user = $this->getUser();

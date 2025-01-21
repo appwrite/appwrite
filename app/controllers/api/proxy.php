@@ -11,7 +11,6 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
@@ -37,7 +36,7 @@ App::post('/v1/proxy/rules')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-    ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function"')
+    ->param('resourceType', null, new WhiteList(['api', 'function', 'site']), 'Action definition for the rule. Possible values are "api", "function" and "site"')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
     ->inject('response')
     ->inject('project')
@@ -51,20 +50,25 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
 
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+
+        if (
+            ($functionsDomain !== '' && str_ends_with($domain, $functionsDomain)) ||
+            ($sitesDomain !== '' && str_ends_with($domain, $sitesDomain))
+        ) {
+            // TODO: Refactor later
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions or sites domain or their subdomains to a specific resource. Please use a different domain.');
         }
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        $ruleId = md5($domain);
+        $document = $dbForConsole->getDocument('rules', $ruleId);
 
-        if ($document && !$document->isEmpty()) {
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -83,18 +87,33 @@ App::post('/v1/proxy/rules')
 
         $resourceInternalId = '';
 
-        if ($resourceType == 'function') {
-            if (empty($resourceId)) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        switch ($resourceType) {
+            case 'function':
+                if (empty($resourceId)) {
+                    throw new Exception(Exception::FUNCTION_NOT_FOUND);
+                }
 
-            $function = $dbForProject->getDocument('functions', $resourceId);
+                $function = $dbForProject->getDocument('functions', $resourceId);
 
-            if ($function->isEmpty()) {
-                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
-            }
+                if ($function->isEmpty()) {
+                    throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+                }
 
-            $resourceInternalId = $function->getInternalId();
+                $resourceInternalId = $function->getInternalId();
+                break;
+            case 'site':
+                if (empty($resourceId)) {
+                    throw new Exception(Exception::SITE_NOT_FOUND);
+                }
+
+                $site = $dbForProject->getDocument('sites', $resourceId);
+
+                if ($site->isEmpty()) {
+                    throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+                }
+
+                $resourceInternalId = $site->getInternalId();
+                break;
         }
 
         try {
@@ -103,7 +122,7 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        $ruleId = md5($domain->get());
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -116,8 +135,8 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
-        if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+
+        if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
             $status = 'verified';
         }
 
@@ -349,4 +368,35 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+    });
+
+App::get('/v1/proxy/subdomains')
+    ->desc('Check if subdomain is available')
+    ->groups(['api', 'proxy'])
+    ->label('scope', 'rules.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'proxy')
+    ->label('sdk.method', 'checkSubdomain')
+    ->label('sdk.description', '/docs/references/proxy/check-subdomain.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('resourceType', null, new WhiteList(['function', 'site']), 'Action definition for the rule. Possible values are "function" and "site"')
+    ->param('subdomain', '', new Text(256), 'Subdomain name.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $resourceType, string $subdomain, Response $response, Database $dbForConsole) {
+        //TODO: Add tests for this endpoint
+        $resourceDomain = $resourceType === 'site' ? System::getEnv('_APP_DOMAIN_SITES', '') : System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $domain = $subdomain . '.' . $resourceDomain;
+
+        $document = $dbForConsole->findOne('rules', [
+            Query::equal('domain', [$domain]),
+        ]);
+
+        if ($document && !$document->isEmpty()) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS, 'Subdomain already assigned to different project.');
+        }
+
+        $response->noContent();
     });

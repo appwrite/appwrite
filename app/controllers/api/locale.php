@@ -63,7 +63,7 @@ App::get('/v1/locale')
 
         $response
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
