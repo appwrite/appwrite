@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3cd37ea04612e04b9e76eb51c5da41dd",
+    "content-hash": "8b621344d83a71a93913bfc12d1ebf4f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3476,16 +3476,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.56.4",
+            "version": "dev-feat-batch-upsert",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "240478a60797124a885ceac40046fe47c22415b7"
+                "reference": "c9170c85c07997fc3718f35928b252062a02070a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/240478a60797124a885ceac40046fe47c22415b7",
-                "reference": "240478a60797124a885ceac40046fe47c22415b7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c9170c85c07997fc3718f35928b252062a02070a",
+                "reference": "c9170c85c07997fc3718f35928b252062a02070a",
                 "shasum": ""
             },
             "require": {
@@ -3526,9 +3526,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.56.4"
+                "source": "https://github.com/utopia-php/database/tree/feat-batch-upsert"
             },
-            "time": "2025-01-20T09:22:08+00:00"
+            "time": "2025-01-22T12:38:29+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8554,9 +8554,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-batch-upsert",
+            "alias": "0.56.4",
+            "alias_normalized": "0.56.4.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
