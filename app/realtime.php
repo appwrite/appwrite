@@ -534,6 +534,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $origin = $request->getOrigin();
         var_dump([
+            '_APP_CONSOLE_HOSTNAMES' => System::getEnv('_APP_CONSOLE_HOSTNAMES'),
             'platforms '=>  $console->getAttribute('platforms', [])
         ]);
 
