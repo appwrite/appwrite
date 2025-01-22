@@ -7,7 +7,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -199,7 +198,7 @@ class UsageDump extends Action
                         'region' => System::getEnv('_APP_REGION', 'default'),
                     ]);
                     break;
-                // Database Level
+                    // Database Level
                 case METRIC_DATABASE_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
@@ -255,7 +254,7 @@ class UsageDump extends Action
                         'region' => System::getEnv('_APP_REGION', 'default'),
                     ]);
                     break;
-                // Project Level
+                    // Project Level
                 case METRIC_PROJECT_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
 

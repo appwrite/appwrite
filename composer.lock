@@ -3480,12 +3480,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c9170c85c07997fc3718f35928b252062a02070a"
+                "reference": "fb3fc216f3c8006528f42264216067aceb2f392c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c9170c85c07997fc3718f35928b252062a02070a",
-                "reference": "c9170c85c07997fc3718f35928b252062a02070a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/fb3fc216f3c8006528f42264216067aceb2f392c",
+                "reference": "fb3fc216f3c8006528f42264216067aceb2f392c",
                 "shasum": ""
             },
             "require": {
@@ -3528,7 +3528,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-batch-upsert"
             },
-            "time": "2025-01-22T12:38:29+00:00"
+            "time": "2025-01-22T12:49:21+00:00"
         },
         {
             "name": "utopia-php/domains",
