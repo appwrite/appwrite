@@ -89,7 +89,7 @@ class Method
 
         $descPath = $this->getDescriptionFilePath();
 
-        if (!\file_exists($descPath)) {
+        if (empty($descPath)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
             return;
         }
