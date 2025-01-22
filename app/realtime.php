@@ -533,6 +533,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
+        var_dump([
+            'platforms '=>  $console->getAttribute('platforms', [])
+        ]);
+
         $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
         if (!$originValidator->isValid($origin) && $project->getId() !== 'console') {
