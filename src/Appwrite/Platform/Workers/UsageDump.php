@@ -117,8 +117,7 @@ class UsageDump extends Action
         array &$projectDocuments,
         array &$databaseCache,
         array &$collectionSizeCache,
-    ): void
-    {
+    ): void {
         $data = \explode('.', $key);
         $value = 0;
         $previousValue = 0;
@@ -283,8 +282,7 @@ class UsageDump extends Action
         string $time,
         string $key,
         int $diff,
-    ): Document
-    {
+    ): Document {
         return new Document([
             '$id' => $id,
             'period' => $period,
