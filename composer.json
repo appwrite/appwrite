@@ -48,7 +48,7 @@
         "utopia-php/abuse": "0.47.*",
         "utopia-php/analytics": "0.10.*",
         "utopia-php/audit": "0.47.*",
-        "utopia-php/cache": "0.11.*",
+        "utopia-php/cache": "dev-telemetry-adapter as 0.11.0",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.56.4",

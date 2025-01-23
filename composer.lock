@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3cd37ea04612e04b9e76eb51c5da41dd",
+    "content-hash": "775d90874f660aacab45cd7a6af33f71",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3280,23 +3280,24 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.11.0",
+            "version": "dev-telemetry-adapter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc"
+                "reference": "9d65da9e7a75ae1aea352df8a5d48f07672cc6b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
-                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/9d65da9e7a75ae1aea352df8a5d48f07672cc6b1",
+                "reference": "9d65da9e7a75ae1aea352df8a5d48f07672cc6b1",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-memcached": "*",
                 "ext-redis": "*",
-                "php": ">=8.0"
+                "php": ">=8.0",
+                "utopia-php/telemetry": "^0.1.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3324,9 +3325,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.11.0"
+                "source": "https://github.com/utopia-php/cache/tree/telemetry-adapter"
             },
-            "time": "2024-11-05T16:53:58+00:00"
+            "time": "2025-01-23T12:13:03+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -8554,9 +8555,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/cache",
+            "version": "dev-telemetry-adapter",
+            "alias": "0.11.0",
+            "alias_normalized": "0.11.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/cache": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
