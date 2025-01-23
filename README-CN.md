@@ -154,7 +154,7 @@ docker run -it --rm `
 |                    | [SvelteKit 快速开始](https://appwrite.io/docs/quick-starts/sveltekit)       |
 |                    | [Refine 快速开始](https://appwrite.io/docs/quick-starts/refine)             |
 |                    | [Angular 快速开始](https://appwrite.io/docs/quick-starts/angular)           |
-| **苹果于安卓应用** | [React Native 快速开始](https://appwrite.io/docs/quick-starts/react-native) |
+| **苹果与安卓应用** | [React Native 快速开始](https://appwrite.io/docs/quick-starts/react-native) |
 |                    | [Flutter 快速开始](https://appwrite.io/docs/quick-starts/flutter)           |
 |                    | [Apple 快速开始](https://appwrite.io/docs/quick-starts/apple)               |
 |                    | [Android 快速开始](https://appwrite.io/docs/quick-starts/android)           |
