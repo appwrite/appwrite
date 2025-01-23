@@ -534,21 +534,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
-        $validator = new Hostname();
-        foreach ($hostnames as $hostname) {
-            $hostname = trim($hostname);
-            if (!$validator->isValid($hostname)) {
-                continue;
-            }
-
-            $console->setAttribute('platforms', [
-                '$collection' => ID::custom('platforms'),
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'name' => $hostname,
-                'hostname' => $hostname,
-            ], Document::SET_TYPE_APPEND);
-        }
 
         var_dump([
             '_APP_CONSOLE_HOSTNAMES' => System::getEnv('_APP_CONSOLE_HOSTNAMES'),
