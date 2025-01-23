@@ -1362,6 +1362,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
 
     if ($project->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
         var_dump([
+            'x-projectId' => $projectId,
             'projectId'       => $project->getId(),
             'projectRegion'   => $project->getAttribute('region'),
             '_APP_REGION'     => System::getEnv('_APP_REGION'),
