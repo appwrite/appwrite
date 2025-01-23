@@ -58,10 +58,18 @@ class UsageDump extends Action
         try {
             foreach ($payload['stats'] ?? [] as $stats) {
                 $project = new Document($stats['project'] ?? []);
+                $numberOfKeys = !empty($stats['keys']) ? \count($stats['keys']) : 0;
+                $receivedAt = $stats['receivedAt'] ?? 'NONE';
+                if ($numberOfKeys === 0) {
+                    continue;
+                }
+
                 $dbForProject = $getProjectDB($project);
                 $projectDocuments = [];
                 $databaseCache = [];
                 $collectionSizeCache = [];
+
+                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
