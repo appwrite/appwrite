@@ -265,7 +265,7 @@ class UsageDump extends Action
                 foreach ($keys as $metric) {
                     $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
                 }
-                
+
                 break;
         }
     }
