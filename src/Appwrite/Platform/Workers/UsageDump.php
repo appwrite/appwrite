@@ -38,9 +38,7 @@ class UsageDump extends Action
         $this
             ->inject('message')
             ->inject('getProjectDB')
-            ->callback(function (Message $message, callable $getProjectDB) {
-                $this->action($message, $getProjectDB);
-            });
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -57,45 +55,38 @@ class UsageDump extends Action
             throw new Exception('Missing payload');
         }
 
-
-        foreach ($payload['stats'] ?? [] as $stats) {
-            $project = new Document($stats['project'] ?? []);
-
-            /**
-             * End temp bug fallback
-             */
-            $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-            $receivedAt = $stats['receivedAt'] ?? 'NONE';
-            if ($numberOfKeys === 0) {
-                continue;
-            }
-
-            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
-
-            try {
+        try {
+            foreach ($payload['stats'] ?? [] as $stats) {
+                $project = new Document($stats['project'] ?? []);
                 $dbForProject = $getProjectDB($project);
+                $projectDocuments = [];
+                $databaseCache = [];
+                $collectionSizeCache = [];
 
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
                         continue;
                     }
 
-                    if (str_contains($key, METRIC_DATABASES_STORAGE)) {
-                        try {
-                            $this->handleDatabaseStorage($key, $dbForProject);
-                        } catch (\Exception $e) {
-                            Console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
-                        }
-                        continue;
-                    }
-
-                    $documents = [];
-
                     foreach ($this->periods as $period => $format) {
-                        $time = 'inf' === $period ? null : date($format, time());
+                        $time = 'inf' === $period ? null : \date($format, \time());
                         $id = \md5("{$time}_{$period}_{$key}");
 
-                        $documents[] = new Document([
+                        if (\str_contains($key, METRIC_DATABASES_STORAGE)) {
+                            $this->handleDatabaseStorage(
+                                $id,
+                                $key,
+                                $time,
+                                $period,
+                                $dbForProject,
+                                $projectDocuments,
+                                $databaseCache,
+                                $collectionSizeCache
+                            );
+                            continue;
+                        }
+
+                        $projectDocuments[] = new Document([
                             '$id' => $id,
                             'period' => $period,
                             'time' => $time,
@@ -104,200 +95,203 @@ class UsageDump extends Action
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
                     }
-
-                    $dbForProject->createOrUpdateDocumentsWithIncrease(
-                        collection: 'stats',
-                        attribute: 'value',
-                        documents: $documents
-                    );
                 }
-            } catch (\Exception $e) {
-                Console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+
+                $dbForProject->createOrUpdateDocumentsWithIncrease(
+                    collection: 'stats',
+                    attribute: 'value',
+                    documents: $projectDocuments
+                );
             }
+        } catch (\Exception $e) {
+            Console::error('[' . DateTime::now() . '] Error processing stats: ' . $e->getMessage());
         }
     }
 
-    private function handleDatabaseStorage(string $key, Database $dbForProject): void
+    private function handleDatabaseStorage(
+        string $id,
+        string $key,
+        string $time,
+        string $period,
+        Database $dbForProject,
+        array &$projectDocuments,
+        array &$databaseCache,
+        array &$collectionSizeCache,
+    ): void
     {
         $data = \explode('.', $key);
-        $start = \microtime(true);
+        $value = 0;
+        $previousValue = 0;
 
-        $documents = [];
+        try {
+            $previousValue = $dbForProject
+                ->getDocument('stats', $id)
+                ->getAttribute('value', 0);
+        } catch (\Exception) {
+            // No previous value
+        }
 
-        foreach ($this->periods as $period => $format) {
-            $time = 'inf' === $period ? null : \date($format, \time());
-            $id = \md5("{$time}_{$period}_{$key}");
+        switch (\count($data)) {
+            case METRIC_COLLECTION_LEVEL_STORAGE:
+                Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
 
-            $value = 0;
-            $previousValue = 0;
+                $databaseInternalId = $data[0];
+                $collectionInternalId = $data[1];
+                $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
 
-            try {
-                $previousValue = $dbForProject
-                    ->getDocument('stats', $id)
-                    ->getAttribute('value', 0);
-            } catch (\Exception) {
-                // No previous value
-            }
-
-            switch (\count($data)) {
-                // Collection Level
-                case METRIC_COLLECTION_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
-
-                    $databaseInternalId = $data[0];
-                    $collectionInternalId = $data[1];
-
+                if (!isset($collectionSizeCache[$collectionId])) {
                     try {
-                        $value = $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collectionInternalId);
+                        $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
                     } catch (\Exception $e) {
                         if (!$e instanceof NotFound) {
                             throw $e;
                         }
+                        $collectionSizeCache[$collectionId] = 0;
                     }
+                }
 
-                    // Compare with previous value
-                    $diff = $value - $previousValue;
+                $value = $collectionSizeCache[$collectionId];
 
-                    if ($diff === 0) {
-                        break;
-                    }
-
-                    $databaseKey = \str_replace(
-                        ['{databaseInternalId}'],
-                        [$data[0]],
-                        METRIC_DATABASE_ID_STORAGE
-                    );
-
-                    // Database
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => $databaseKey,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
-
-                    // Collection
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => $key,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
-
-                    // Project
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => METRIC_DATABASES_STORAGE,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
+                $diff = $value - $previousValue;
+                if ($diff === 0) {
                     break;
-                    // Database Level
-                case METRIC_DATABASE_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
-                    $databaseInternalId = $data[0];
+                }
 
-                    $collections = [];
+                $keys = [
+                    $key,
+                    \str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE),
+                    METRIC_DATABASES_STORAGE
+                ];
+
+                foreach ($keys as $metric) {
+                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                }
+                break;
+
+            case METRIC_DATABASE_LEVEL_STORAGE:
+                Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
+                $databaseInternalId = $data[0];
+                $databaseId = "database_{$databaseInternalId}";
+
+                if (!isset($databaseCache[$databaseId])) {
                     try {
-                        $collections = $dbForProject->find('database_' . $databaseInternalId);
+                        $databaseCache[$databaseId] = $dbForProject->find($databaseId);
                     } catch (\Exception $e) {
                         if (!$e instanceof NotFound) {
                             throw $e;
                         }
+                        $databaseCache[$databaseId] = [];
                     }
+                }
 
-                    foreach ($collections as $collection) {
+                foreach ($databaseCache[$databaseId] as $collection) {
+                    $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
+
+                    if (!isset($collectionSizeCache[$collectionId])) {
                         try {
-                            $value += $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+                            $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
                         } catch (\Exception $e) {
                             if (!$e instanceof NotFound) {
                                 throw $e;
                             }
+                            $collectionSizeCache[$collectionId] = 0;
+                        }
+                    }
+                    $value += $collectionSizeCache[$collectionId];
+                }
+
+                $diff = $value - $previousValue;
+                if ($diff === 0) {
+                    break;
+                }
+
+                $keys = [
+                    \str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE),
+                    METRIC_DATABASES_STORAGE
+                ];
+
+                foreach ($keys as $metric) {
+                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                }
+                break;
+
+            case METRIC_PROJECT_LEVEL_STORAGE:
+                if (!isset($databaseCache['*'])) {
+                    try {
+                        $databaseCache['*'] = $dbForProject->find('databases');
+                    } catch (\Exception $e) {
+                        if (!$e instanceof NotFound) {
+                            throw $e;
+                        }
+                        $databaseCache['*'] = [];
+                    }
+                }
+
+                foreach ($databaseCache['*'] as $database) {
+                    $databaseId = "database_{$database->getInternalId()}";
+                    if (!isset($databaseCache[$databaseId])) {
+                        try {
+                            $databaseCache[$databaseId] = $dbForProject->find($databaseId);
+                        } catch (\Exception $e) {
+                            if (!$e instanceof NotFound) {
+                                throw $e;
+                            }
+                            $databaseCache[$databaseId] = [];
                         }
                     }
 
-                    $diff = $value - $previousValue;
+                    foreach ($databaseCache[$databaseId] as $collection) {
+                        $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
 
-                    if ($diff === 0) {
-                        break;
-                    }
-
-                    // Database
-                    $databaseKey = str_replace(
-                        ['{databaseInternalId}'],
-                        [$data[0]],
-                        METRIC_DATABASE_ID_STORAGE
-                    );
-
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => $databaseKey,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
-
-                    // Project
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => METRIC_DATABASES_STORAGE,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
-                    break;
-                    // Project Level
-                case METRIC_PROJECT_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
-
-                    $databases = $dbForProject->find('databases');
-
-                    // Recalculate all databases
-                    foreach ($databases as $database) {
-                        $collections = $dbForProject->find('database_' . $database->getInternalId());
-
-                        foreach ($collections as $collection) {
+                        if (!isset($collectionSizeCache[$collectionId])) {
                             try {
-                                $value += $dbForProject->getSizeOfCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+                                $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
                             } catch (\Exception $e) {
                                 if (!$e instanceof NotFound) {
                                     throw $e;
                                 }
+                                $collectionSizeCache[$collectionId] = 0;
                             }
                         }
+                        $value += $collectionSizeCache[$collectionId];
                     }
+                }
 
-                    $diff = $value - $previousValue;
-
-                    // Project
-                    $documents[] = new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => METRIC_DATABASES_STORAGE,
-                        'value' => $diff,
-                        'region' => System::getEnv('_APP_REGION', 'default'),
-                    ]);
+                $diff = $value - $previousValue;
+                if ($diff === 0) {
                     break;
-            }
+                }
+
+                $keys = [
+                    METRIC_DATABASES_STORAGE
+                ];
+
+                foreach ($keys as $metric) {
+                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                }
+
+                break;
+            default:
+                Console::log('Unknown storage level.');
+                break;
         }
+    }
 
-        $dbForProject->createOrUpdateDocumentsWithIncrease(
-            collection: 'stats',
-            attribute: 'value',
-            documents: $documents
-        );
-
-        $end = microtime(true);
-
-        Console::log('[' . DateTime::now() . '] DB Storage Calculation [' . $key . '] took ' . (($end - $start) * 1000) . ' milliseconds');
+    private function createStatsDocument(
+        string $id,
+        string $period,
+        string $time,
+        string $key,
+        int $diff,
+    ): Document
+    {
+        return new Document([
+            '$id' => $id,
+            'period' => $period,
+            'time' => $time,
+            'metric' => $key,
+            'value' => $diff,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
     }
 }
