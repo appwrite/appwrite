@@ -105,7 +105,7 @@ class UsageDump extends Action
                         ]);
                     }
 
-                    $dbForProject->createOrUpdateDocumentsWithInplaceIncrease(
+                    $dbForProject->createOrUpdateDocumentsWithIncrease(
                         collection: 'stats',
                         attribute: 'value',
                         documents: $documents
@@ -290,7 +290,7 @@ class UsageDump extends Action
             }
         }
 
-        $dbForProject->createOrUpdateDocumentsWithInplaceIncrease(
+        $dbForProject->createOrUpdateDocumentsWithIncrease(
             collection: 'stats',
             attribute: 'value',
             documents: $documents
