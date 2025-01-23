@@ -10,7 +10,6 @@ class RedirectTest extends TestCase
     public function redirectsProvider(): array
     {
         return [
-            // Existing tests
             "custom scheme" => [[], "exp://192.168.0.1", true],
             "only scheme with triple slash" => [[], "myapp:///", true],
             "only scheme" => [[], "myapp://", true],
