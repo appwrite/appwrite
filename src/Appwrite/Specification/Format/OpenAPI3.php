@@ -375,6 +375,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
+                    case 'Appwrite\Network\Validator\Redirect':
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
                         $node['schema']['type'] = $validator->getType();
