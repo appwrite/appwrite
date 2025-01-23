@@ -147,7 +147,8 @@ class Certificates extends Action
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $log)) {
-                    throw new Exception('Renew isn\'t required.');
+                    Console::info("Skipping, renew isn't required");
+                    return;
                 }
             }
 

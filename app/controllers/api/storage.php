@@ -9,6 +9,11 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
@@ -55,13 +60,18 @@ App::post('/v1/storage/buckets')
     ->label('event', 'buckets.[bucketId].create')
     ->label('audits.event', 'bucket.create')
     ->label('audits.resource', 'bucket/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'createBucket')
-    ->label('sdk.description', '/docs/references/storage/create-bucket.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'createBucket',
+        description: '/docs/references/storage/create-bucket.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_BUCKET,
+            )
+        ]
+    ))
     ->param('bucketId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Bucket name')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -152,13 +162,18 @@ App::get('/v1/storage/buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'listBuckets')
-    ->label('sdk.description', '/docs/references/storage/list-buckets.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUCKET_LIST)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'listBuckets',
+        description: '/docs/references/storage/list-buckets.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BUCKET_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -213,13 +228,18 @@ App::get('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getBucket')
-    ->label('sdk.description', '/docs/references/storage/get-bucket.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getBucket',
+        description: '/docs/references/storage/get-bucket.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BUCKET,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -242,13 +262,18 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('event', 'buckets.[bucketId].update')
     ->label('audits.event', 'bucket.update')
     ->label('audits.resource', 'bucket/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'updateBucket')
-    ->label('sdk.description', '/docs/references/storage/update-bucket.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'updateBucket',
+        description: '/docs/references/storage/update-bucket.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BUCKET,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -307,12 +332,19 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('audits.event', 'bucket.delete')
     ->label('event', 'buckets.[bucketId].delete')
     ->label('audits.resource', 'bucket/{request.bucketId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'deleteBucket')
-    ->label('sdk.description', '/docs/references/storage/delete-bucket.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'deleteBucket',
+        description: '/docs/references/storage/delete-bucket.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -353,15 +385,20 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'createFile')
-    ->label('sdk.description', '/docs/references/storage/create-file.md')
-    ->label('sdk.request.type', 'multipart/form-data')
-    ->label('sdk.methodType', 'upload')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'createFile',
+        description: '/docs/references/storage/create-file.md',
+        type: MethodType::UPLOAD,
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        requestType: 'multipart/form-data',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_FILE,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
@@ -717,13 +754,18 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'listFiles')
-    ->label('sdk.description', '/docs/references/storage/list-files.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'listFiles',
+        description: '/docs/references/storage/list-files.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FILE_LIST,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -809,13 +851,18 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getFile')
-    ->label('sdk.description', '/docs/references/storage/get-file.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getFile',
+        description: '/docs/references/storage/get-file.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FILE,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
@@ -860,13 +907,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache', true)
     ->label('cache.resourceType', 'bucket/{request.bucketId}')
     ->label('cache.resource', 'file/{request.fileId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getFilePreview')
-    ->label('sdk.description', '/docs/references/storage/get-file-preview.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
-    ->label('sdk.methodType', 'location')
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getFilePreview',
+        description: '/docs/references/storage/get-file-preview.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE
+            )
+        ],
+        type: MethodType::LOCATION,
+        contentType: ContentType::IMAGE
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
@@ -1036,13 +1090,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getFileDownload')
-    ->label('sdk.description', '/docs/references/storage/get-file-download.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getFileDownload',
+        description: '/docs/references/storage/get-file-download.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE
+            )
+        ],
+        type: MethodType::LOCATION,
+        contentType: ContentType::ANY,
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('request')
@@ -1177,13 +1238,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getFileView')
-    ->label('sdk.description', '/docs/references/storage/get-file-view.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getFileView',
+        description: '/docs/references/storage/get-file-view.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        type: MethodType::LOCATION,
+        contentType: ContentType::ANY,
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
@@ -1490,13 +1558,18 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'updateFile')
-    ->label('sdk.description', '/docs/references/storage/update-file.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'updateFile',
+        description: '/docs/references/storage/update-file.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FILE,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('name', null, new Text(255), 'Name of the file', true)
@@ -1599,12 +1672,19 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'deleteFile')
-    ->label('sdk.description', '/docs/references/storage/delete-file.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'deleteFile',
+        description: '/docs/references/storage/delete-file.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
@@ -1691,12 +1771,18 @@ App::get('/v1/storage/usage')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getUsage',
+        description: '/docs/references/storage/get-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_STORAGE,
+            )
+        ]
+    ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1771,12 +1857,18 @@ App::get('/v1/storage/:bucketId/usage')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getBucketUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
+    ->label('sdk', new Method(
+        namespace: 'storage',
+        name: 'getBucketUsage',
+        description: '/docs/references/storage/get-bucket-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_BUCKETS,
+            )
+        ]
+    ))
     ->param('bucketId', '', new UID(), 'Bucket ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
