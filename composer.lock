@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2050a253319ce2c068e000ba5787d74",
+    "content-hash": "3cd37ea04612e04b9e76eb51c5da41dd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3133,6 +3133,57 @@
                 "source": "https://github.com/thecodingmachine/safe/tree/v2.5.0"
             },
             "time": "2023-04-05T11:54:14+00:00"
+        },
+        {
+            "name": "utopia-php/abuse",
+            "version": "0.47.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/abuse.git",
+                "reference": "2b52bb362234d4072b647ed57db1b3be030f57c2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/2b52bb362234d4072b647ed57db1b3be030f57c2",
+                "reference": "2b52bb362234d4072b647ed57db1b3be030f57c2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-pdo": "*",
+                "ext-redis": "*",
+                "php": ">=8.0",
+                "utopia-php/database": "0.56.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.5.*",
+                "phpbench/phpbench": "^1.2",
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Abuse\\": "src/Abuse"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple abuse library to manage application usage limits",
+            "keywords": [
+                "Abuse",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/abuse/issues",
+                "source": "https://github.com/utopia-php/abuse/tree/0.47.0"
+            },
+            "time": "2025-01-15T02:41:02+00:00"
         },
         {
             "name": "utopia-php/analytics",
