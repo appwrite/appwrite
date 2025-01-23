@@ -69,7 +69,8 @@ class UsageDump extends Action
                 $databaseCache = [];
                 $collectionSizeCache = [];
 
-                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys . ' Started');
+                $start = \microtime(true);
 
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
@@ -110,6 +111,9 @@ class UsageDump extends Action
                     attribute: 'value',
                     documents: $projectDocuments
                 );
+
+                $end = \microtime(true);
+                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys. ' Time: '.($end - $start).'s');
             }
         } catch (\Exception $e) {
             Console::error('[' . DateTime::now() . '] Error processing stats: ' . $e->getMessage());
