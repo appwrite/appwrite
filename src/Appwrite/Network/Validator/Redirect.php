@@ -44,9 +44,9 @@ class Redirect extends Host
      */
     public function isValid($value): bool
     {
-        // `parse_url()` returns false for URLs with only a scheme.
+        // `parse_url` returns false for URL with only a scheme.
         // We need to check for this case separately.
-        if (preg_match('/^([a-z][a-z0-9+\.-]*):\/\/?$/i', $value, $matches)) {
+        if (preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
             $scheme = strtolower($matches[1]);
             return $scheme !== 'javascript';
         }

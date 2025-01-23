@@ -10,6 +10,7 @@ class RedirectTest extends TestCase
     public function redirectsProvider(): array
     {
         return [
+            // Existing tests
             "custom scheme" => [[], "exp://192.168.0.1", true],
             "only scheme with triple slash" => [[], "myapp:///", true],
             "only scheme" => [[], "myapp://", true],
@@ -25,6 +26,11 @@ class RedirectTest extends TestCase
                 "HTTPS://example.com",
                 true,
             ],
+            "javascript scheme with different case" => [[], "JaVaScRiPt://alert(1)", false],
+            "multiple slashes after scheme" => [[], "myapp:////", true],
+            "scheme with special chars" => [[], "my-app+custom.123://", true],
+            "empty string" => [[], "", false],
+            "malformed scheme" => [[], "http:/example.com", false],
         ];
     }
 
