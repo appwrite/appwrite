@@ -377,10 +377,6 @@ class Builds extends Action
                         payload: $build,
                         project: $project
                     );
-
-                    var_dump($target);
-
-
                     Realtime::send(
                         projectId: 'console',
                         payload: $build->getArrayCopy(),
