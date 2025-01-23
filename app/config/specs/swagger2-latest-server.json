@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.6.0",
+        "version": "1.6.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -2501,7 +2501,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -7583,9 +7583,13 @@
                         {
                             "name": "createDocuments",
                             "parameters": [
+                                "databaseId",
+                                "collectionId",
                                 "documents"
                             ],
                             "required": [
+                                "databaseId",
+                                "collectionId",
                                 "documents"
                             ],
                             "responses": [
@@ -9666,7 +9670,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -9679,7 +9683,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-deployment-build.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9745,7 +9749,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Build",
@@ -12550,7 +12554,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 392,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12625,7 +12629,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 389,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12783,7 +12787,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 396,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12938,7 +12942,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 391,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12980,13 +12984,13 @@
                                 "title": {
                                     "type": "string",
                                     "description": "Title for push notification.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<TITLE>"
                                 },
                                 "body": {
                                     "type": "string",
                                     "description": "Body for push notification.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<BODY>"
                                 },
                                 "topics": {
@@ -13018,7 +13022,7 @@
                                 },
                                 "data": {
                                     "type": "object",
-                                    "description": "Additional Data for push notification.",
+                                    "description": "Additional key-value pair data for push notification.",
                                     "default": {},
                                     "x-example": "{}"
                                 },
@@ -13042,7 +13046,7 @@
                                 },
                                 "sound": {
                                     "type": "string",
-                                    "description": "Sound for push notification. Available only for Android and IOS Platform.",
+                                    "description": "Sound for push notification. Available only for Android and iOS Platform.",
                                     "default": "",
                                     "x-example": "<SOUND>"
                                 },
@@ -13059,10 +13063,10 @@
                                     "x-example": "<TAG>"
                                 },
                                 "badge": {
-                                    "type": "string",
-                                    "description": "Badge for push notification. Available only for IOS Platform.",
-                                    "default": "",
-                                    "x-example": "<BADGE>"
+                                    "type": "integer",
+                                    "description": "Badge for push notification. Available only for iOS Platform.",
+                                    "default": -1,
+                                    "x-example": null
                                 },
                                 "draft": {
                                     "type": "boolean",
@@ -13075,12 +13079,34 @@
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
                                     "x-example": null
+                                },
+                                "contentAvailable": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "critical": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "priority": {
+                                    "type": "string",
+                                    "description": "Set the notification priority. \"normal\" will consider device state and may not deliver notifications immediately. \"high\" will always attempt to immediately deliver the notification.",
+                                    "default": "high",
+                                    "x-example": "normal",
+                                    "enum": [
+                                        "normal",
+                                        "high"
+                                    ],
+                                    "x-enum-name": "MessagePriority",
+                                    "x-enum-keys": []
                                 }
                             },
                             "required": [
-                                "messageId",
-                                "title",
-                                "body"
+                                "messageId"
                             ]
                         }
                     }
@@ -13111,7 +13137,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 398,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13250,6 +13276,30 @@
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
                                     "x-example": null
+                                },
+                                "contentAvailable": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "critical": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "priority": {
+                                    "type": "string",
+                                    "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                    "default": null,
+                                    "x-example": "normal",
+                                    "enum": [
+                                        "normal",
+                                        "high"
+                                    ],
+                                    "x-enum-name": "MessagePriority",
+                                    "x-enum-keys": []
                                 }
                             }
                         }
@@ -13281,7 +13331,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 390,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13399,7 +13449,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 397,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13515,7 +13565,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 395,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13570,7 +13620,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 399,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13632,7 +13682,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 393,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13706,7 +13756,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 394,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13780,7 +13830,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 364,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13855,7 +13905,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 363,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13970,7 +14020,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 376,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14083,7 +14133,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 362,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14174,7 +14224,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 375,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14263,7 +14313,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 354,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14390,7 +14440,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 367,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14515,7 +14565,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 357,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14618,7 +14668,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 370,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14719,7 +14769,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 355,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14834,7 +14884,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 368,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14947,7 +14997,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 356,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15106,7 +15156,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 369,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15262,7 +15312,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 358,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15365,7 +15415,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 371,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15466,7 +15516,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 359,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15569,7 +15619,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 372,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15670,7 +15720,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 360,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15773,7 +15823,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 373,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15874,7 +15924,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 361,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15977,7 +16027,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 374,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16078,7 +16128,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 366,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16133,7 +16183,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 377,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16195,7 +16245,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 365,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16269,7 +16319,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 386,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16343,7 +16393,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 379,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16416,7 +16466,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 378,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16506,7 +16556,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 381,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16566,7 +16616,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 382,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16645,7 +16695,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 383,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16707,7 +16757,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 380,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16781,7 +16831,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 385,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16862,7 +16912,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 384,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16953,7 +17003,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 387,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17016,7 +17066,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 388,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25674,7 +25724,7 @@
                 },
                 "schedule": {
                     "type": "string",
-                    "description": "Function execution schedult in CRON format.",
+                    "description": "Function execution schedule in CRON format.",
                     "x-example": "5 4 * * *"
                 },
                 "timeout": {

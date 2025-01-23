@@ -48,7 +48,7 @@ class Method
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        //$this->validateDesc($description);
+        $this->validateDesc($description);
 
         foreach ($responses as $response) {
             /** @var SDKResponse $response */
@@ -57,12 +57,12 @@ class Method
         }
     }
 
-    private function getRouteName(): string
+    protected function getRouteName(): string
     {
         return $this->namespace . '.' . $this->name;
     }
 
-    private function validateMethod(string $name, string $namespace): void
+    protected function validateMethod(string $name, string $namespace): void
     {
         if (\in_array($this->getRouteName(), self::$processed)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Method already exists in namespace {$namespace}";
@@ -71,7 +71,7 @@ class Method
         self::$processed[] = $this->getRouteName();
     }
 
-    private function validateAuthTypes(array $authTypes): void
+    protected function validateAuthTypes(array $authTypes): void
     {
         foreach ($authTypes as $authType) {
             if (!($authType instanceof AuthType)) {
@@ -80,22 +80,22 @@ class Method
         }
     }
 
-    private function validateDesc(string $desc): void
+    protected function validateDesc(string $desc): void
     {
         if (empty($desc)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Description label is empty";
             return;
         }
 
-        $descPath = \realpath(__DIR__ . '/../../../' . $desc);
+        $descPath = $this->getDescriptionFilePath();
 
-        if (!\file_exists($descPath)) {
+        if (empty($descPath)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
             return;
         }
     }
 
-    private function validateResponseModel(string|array $responseModel): void
+    protected function validateResponseModel(string|array $responseModel): void
     {
         $response = new Response(new HttpResponse());
 
@@ -112,7 +112,7 @@ class Method
         }
     }
 
-    private function validateNoContent(SDKResponse $response): void
+    protected function validateNoContent(SDKResponse $response): void
     {
         if ($response->getCode() === 204) {
             if ($response->getModel() !== Response::MODEL_NONE) {
@@ -134,6 +134,16 @@ class Method
     public function getDescription(): string
     {
         return $this->description;
+    }
+
+    /**
+     * This method returns the absolute path to the description file returning null if the file does not exist.
+     *
+     * @return string|null
+     */
+    public function getDescriptionFilePath(): ?string
+    {
+        return \realpath(__DIR__ . '/../../../' . $this->getDescription()) ?: null;
     }
 
     public function getAuth(): array

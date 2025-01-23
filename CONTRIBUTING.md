@@ -613,6 +613,18 @@ If you need to clear the cache, you can do so by running the following command:
 docker compose exec redis redis-cli FLUSHALL
 ```
 
+## Using preview domains locally
+
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud woekspaces such as Gitpod or GitHub Codespaces.
+
+To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
+
+```
+https://8080-appwrite-appwrite-mjeb3ebilwv.ws-eu116.gitpod.io/ping?preview=672b3c7eab1ac523ccf5.functions.localhost
+```
+
+The path was set to `/ping` intentionally. Visiting `/` for preview domains might trigger Console background worker, and trigger redirect to Console without our preview URL param. Visiting different path ensures this doesnt happen.
+
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:

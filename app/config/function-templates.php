@@ -11,7 +11,7 @@ const TEMPLATE_RUNTIMES = [
     ],
     'DART' => [
         'name' => 'dart',
-        'versions' => ['3.5', '3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
+        'versions' => ['3.5', '3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16']
     ],
     'GO' => [
         'name' => 'go',
@@ -1567,7 +1567,8 @@ return [
                 'required' => false,
                 'type' => 'number'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-chip',

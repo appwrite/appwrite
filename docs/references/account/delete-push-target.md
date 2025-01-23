@@ -1,1 +1,1 @@
-Use this endpoint to delete an existing push target for messages for the currently logged in user.
+Delete a push notification target for the currently logged in user. After deletion, the device will no longer receive push notifications. The target must exist and belong to the current user.

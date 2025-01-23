@@ -152,6 +152,25 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('authPhoneTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of phone auth.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('authPhoneEstimate', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Estimated total aggregated cost of phone auth.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('authPhoneCountryBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of phone auth by country.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
         ;
     }
 

@@ -1,1 +1,1 @@
-Use this endpoint to update an existing push target for messages for the currently logged in user.
+Use this endpoint to register a device for push notifications. Provide a target ID (custom or generated using ID.unique()), a device identifier (usually a device token), and optionally specify which provider should send notifications to this target. The target is automatically linked to the current session and includes device information like brand and model.

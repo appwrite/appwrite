@@ -144,7 +144,7 @@ class Swagger2 extends Format
                 $method = array_keys($method)[0];
             }
 
-            $desc = (!empty($sdk->getDescription())) ? \realpath(__DIR__ . '/../../../../' . $sdk->getDescription()) : null;
+            $desc = $sdk->getDescriptionFilePath();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];

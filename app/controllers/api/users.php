@@ -1984,6 +1984,7 @@ App::post('/v1/users/:userId/sessions')
                 'provider' => Auth::SESSION_PROVIDER_SERVER,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'factors' => ['server'],
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => $expire,
@@ -1993,11 +1994,20 @@ App::post('/v1/users/:userId/sessions')
             $detector->getDevice()
         ));
 
+        $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session = $dbForProject->createDocument('sessions', $session);
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
         $session
-            ->setAttribute('secret', $secret)
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
@@ -2381,7 +2391,7 @@ App::get('/v1/users/usage')
     ->label('sdk', new Method(
         namespace: 'users',
         name: 'getUsage',
-        description: '',
+        description: '/docs/references/users/get-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
