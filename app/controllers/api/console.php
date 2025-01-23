@@ -135,7 +135,7 @@ App::get('v1/console/resources/:resourceId')
     ->action(function (string $resourceId, string $type, Response $response, Database $dbForConsole) {
         $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $resourceId));
 
-        if ($document && !$document->isEmpty()) {
+        if (!$document->isEmpty()) {
             throw new Exception(Exception::RESOURCE_ALREADY_EXISTS, 'Resource ID is already in use.');
         }
 
