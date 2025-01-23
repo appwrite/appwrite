@@ -541,6 +541,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             if (!$validator->isValid($hostname)) {
                 continue;
             }
+
             $console->setAttribute('platforms', [
                 '$collection' => ID::custom('platforms'),
                 'type' => Origin::CLIENT_TYPE_WEB,
