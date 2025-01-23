@@ -111,7 +111,7 @@ class UsageDump extends Action
     private function handleDatabaseStorage(
         string $id,
         string $key,
-        string $time,
+        ?string $time,
         string $period,
         Database $dbForProject,
         array &$projectDocuments,
@@ -279,7 +279,7 @@ class UsageDump extends Action
     private function createStatsDocument(
         string $id,
         string $period,
-        string $time,
+        ?string $time,
         string $key,
         int $diff,
     ): Document {
