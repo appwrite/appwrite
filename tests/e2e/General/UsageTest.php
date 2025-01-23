@@ -711,7 +711,7 @@ class UsageTest extends Scope
         $this->assertEquals('index.php', $response['body']['entrypoint']);
 
         // Wait for deployment to build.
-        sleep(self::WAIT);
+        sleep(self::WAIT + 20);
 
         $response = $this->client->call(
             Client::METHOD_PATCH,
@@ -782,12 +782,17 @@ class UsageTest extends Scope
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders())
+            ], $this->getHeaders()),
+            [
+                'async' => true,
+            ]
         );
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(202, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($functionId, $response['body']['functionId']);
+
+        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
