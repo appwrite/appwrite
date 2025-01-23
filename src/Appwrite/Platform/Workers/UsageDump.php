@@ -132,8 +132,6 @@ class UsageDump extends Action
 
         switch (\count($data)) {
             case METRIC_COLLECTION_LEVEL_STORAGE:
-                Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
-
                 $databaseInternalId = $data[0];
                 $collectionInternalId = $data[1];
                 $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
@@ -168,7 +166,6 @@ class UsageDump extends Action
                 break;
 
             case METRIC_DATABASE_LEVEL_STORAGE:
-                Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                 $databaseInternalId = $data[0];
                 $databaseId = "database_{$databaseInternalId}";
 
@@ -268,10 +265,7 @@ class UsageDump extends Action
                 foreach ($keys as $metric) {
                     $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
                 }
-
-                break;
-            default:
-                Console::log('Unknown storage level.');
+                
                 break;
         }
     }
