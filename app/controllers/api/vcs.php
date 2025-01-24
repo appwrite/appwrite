@@ -900,7 +900,7 @@ App::post('/v1/vcs/github/events')
 
             var_dump([
                 'providerRepositoryId' => $providerRepositoryId,
-                'repository' => $repository,
+                'parsedPayload' => $parsedPayload,
                 'projectId' => $projectId,
             ]);
 //            if (empty($projectId)) {
