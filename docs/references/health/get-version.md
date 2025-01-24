@@ -1,1 +1,0 @@
-Get the version of Appwrite that this instance is currently running.
