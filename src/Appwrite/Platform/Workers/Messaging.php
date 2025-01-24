@@ -22,6 +22,8 @@ use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Fast2SMS;
+use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
@@ -439,6 +441,12 @@ class Messaging extends Action
                     'apiKey' => $user,
                     'apiSecret' => $password
                 ],
+                'fast2sms' => [
+                    'senderId' => $user,
+                    'apiKey' => $password,
+                    'messageId' => $smsDSN->getParam('messageId'),
+                    'useDLT' => $smsDSN->getParam('useDLT'),
+                ],
                 default => null
             },
             'options' => match ($host) {
@@ -465,14 +473,13 @@ class Messaging extends Action
                 $data = $this->buildSmsMessage($message, $provider);
 
                 try {
-                    $adapter->send($data);
+                    $result = $adapter->send($data);
                 } catch (\Throwable $th) {
                     throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
             };
         }, $batches));
     }
-
 
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
@@ -503,6 +510,13 @@ class Messaging extends Action
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
                 $credentials['apiSecret'] ??  ''
+            ),
+            'fast2sms' => new Fast2SMS(
+                $credentials['apiKey'] ?? '',
+                $credentials['senderId'] ?? '',
+                $credentials['messageId'] ?? '',
+                [],
+                $credentials['useDLT'] ?? true
             ),
             default => null
         };
