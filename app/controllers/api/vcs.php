@@ -891,12 +891,18 @@ App::post('/v1/vcs/github/events')
             $parsedPayload = $github->getEvent($event, $payload);
             $providerInstallationId = $parsedPayload["installationId"] ?? '';
 
+
             $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
                 Query::equal('installationId', [$providerInstallationId]),
             ]));
 
             $projectId = $repository->getAttribute('projectId');
-            var_dump($projectId);
+
+            var_dump([
+                'providerInstallationId' => $providerInstallationId,
+                'repository' => $repository,
+                'projectId' => $projectId,
+            ]);
 //            if (empty($projectId)) {
 //                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Project was not found");
 //            }
