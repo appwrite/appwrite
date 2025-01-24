@@ -9489,7 +9489,8 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "ssr-22"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -10147,7 +10148,8 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "ssr-22"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -25417,7 +25419,8 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "ssr-22"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -26021,7 +26024,8 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "ssr-22"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
