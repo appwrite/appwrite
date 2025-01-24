@@ -887,6 +887,7 @@ App::post('/v1/vcs/github/events')
         function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
 
             $payload = $request->getRawPayload();
+            $event = $request->getHeader('x-github-event', '');
             $parsedPayload = $github->getEvent($event, $payload);
             $providerInstallationId = $parsedPayload["installationId"] ?? '';
 
@@ -936,7 +937,7 @@ App::post('/v1/vcs/github/events')
                 throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
             }
 
-            $event = $request->getHeader('x-github-event', '');
+
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
