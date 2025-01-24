@@ -1,10 +1,14 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -34,7 +38,6 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
-use Utopia\Fetch\Client;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
@@ -269,15 +272,22 @@ App::get('/v1/vcs/github/authorize')
     ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createGitHubInstallation')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
-    ->label('sdk.methodType', 'webAuth')
-    ->label('sdk.hide', true)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createGitHubInstallation',
+        description: '/docs/references/vcs/create-github-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::HTML,
+        type: MethodType::WEBAUTH,
+        hide: true,
+    ))
     ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
     ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->inject('request')
@@ -444,13 +454,18 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('Get files and directories of a VCS repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getRepositoryContents')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VCS_CONTENT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getRepositoryContents',
+        description: '/docs/references/vcs/get-repository-contents.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VCS_CONTENT_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
@@ -505,13 +520,18 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     ->desc('Detect runtime settings from source code')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createRepositoryDetection')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DETECTION)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createRepositoryDetection',
+        description: '/docs/references/vcs/create-repository-detection.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DETECTION,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
@@ -577,13 +597,18 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listRepositories')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listRepositories',
+        description: '/docs/references/vcs/list-repositories.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('gitHub')
@@ -672,13 +697,18 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('Create repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createRepository')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createRepository',
+        description: '/docs/references/vcs/create-repository.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('name', '', new Text(256), 'Repository name (slug)')
     ->param('private', '', new Boolean(false), 'Mark repository public or private')
@@ -779,13 +809,18 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('Get repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getRepository')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getRepository',
+        description: '/docs/references/vcs/get-repository.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->inject('gitHub')
@@ -828,13 +863,18 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listRepositoryBranches')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BRANCH_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listRepositoryBranches',
+        description: '/docs/references/vcs/list-repository-branches.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BRANCH_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->inject('gitHub')
@@ -885,55 +925,8 @@ App::post('/v1/vcs/github/events')
     ->inject('queueForBuilds')
     ->action(
         function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
-
             $payload = $request->getRawPayload();
-            $event = $request->getHeader('x-github-event', '');
-            $parsedPayload = $github->getEvent($event, $payload);
-            $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
-
-
-            $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-            ]));
-
-            $projectId = $repository->getAttribute('projectId');
-
-            var_dump([
-                'providerRepositoryId' => $providerRepositoryId,
-                'parsedPayload' => $parsedPayload,
-                'projectId' => $projectId,
-            ]);
-//            if (empty($projectId)) {
-//                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Project was not found");
-//            }
-//
-//            $project = $dbForPlatform->getDocument('projects', $projectId);
-//
-//            if($project->getAttribute('region') !== System::getEnv('_APP_REGION')){
-//                $networkDomains = [];
-//                $tmp = explode(',', System::getEnv('_APP_NETWORK_DOMAINS'));
-//                foreach ($tmp as $domain) {
-//                    $parts = explode('=', $domain);
-//                    $networkDomains[$parts[0]] = $parts[1];
-//                }
-//
-//                $targetUrl = 'https://'.$networkDomains[$project->getAttribute('region')].'/v1/vcs/github/events';
-//                $client = new Client();
-//                foreach ($request->getHeaders() as $name => $value) {
-//                    $client->addHeader($name, $value);
-//                }
-//
-//                try {
-//                    $client->fetch(
-//                        url: $targetUrl,
-//                        method: Client::METHOD_POST,
-//                        body: $payload
-//                    );
-//                } catch (Throwable $th) {
-//                    throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Error while redirecting to $targetUrl");
-//                }
-//            }
-
+            var_dump(['payload' => $payload]);
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
@@ -943,10 +936,10 @@ App::post('/v1/vcs/github/events')
                 throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
             }
 
-
+            $event = $request->getHeader('x-github-event', '');
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-
+            $parsedPayload = $github->getEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
@@ -954,8 +947,8 @@ App::post('/v1/vcs/github/events')
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                 $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
-                $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                 $providerInstallationId = $parsedPayload["installationId"] ?? '';
+                $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
@@ -1064,13 +1057,18 @@ App::get('/v1/vcs/installations')
     ->desc('List installations')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listInstallations')
-    ->label('sdk.description', '/docs/references/vcs/list-installations.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INSTALLATION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listInstallations',
+        description: '/docs/references/vcs/list-installations.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -1130,13 +1128,18 @@ App::get('/v1/vcs/installations/:installationId')
     ->desc('Get installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getInstallation')
-    ->label('sdk.description', '/docs/references/vcs/get-installation.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INSTALLATION)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getInstallation',
+        description: '/docs/references/vcs/get-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
     ->inject('project')
@@ -1159,12 +1162,19 @@ App::delete('/v1/vcs/installations/:installationId')
     ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'deleteInstallation')
-    ->label('sdk.description', '/docs/references/vcs/delete-installation.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'deleteInstallation',
+        description: '/docs/references/vcs/delete-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
     ->inject('project')
@@ -1192,12 +1202,18 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->desc('Authorize external deployment')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'updateExternalDeployments')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'updateExternalDeployments',
+        description: '/docs/references/vcs/update-external-deployments.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('repositoryId', '', new Text(256), 'VCS Repository Id')
     ->param('providerPullRequestId', '', new Text(256), 'GitHub Pull Request Id')
