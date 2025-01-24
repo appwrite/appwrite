@@ -889,18 +889,18 @@ App::post('/v1/vcs/github/events')
             $payload = $request->getRawPayload();
             $event = $request->getHeader('x-github-event', '');
             $parsedPayload = $github->getEvent($event, $payload);
-            $providerInstallationId = $parsedPayload["installationId"] ?? '';
+            $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
 
 
             $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
-                Query::equal('installationId', [$providerInstallationId]),
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
             ]));
 
-            $projectId = $repository->getAttribute('projectId');
+            $projectId = $installation->getAttribute('projectId');
 
             var_dump([
-                'providerInstallationId' => $providerInstallationId,
-                'repository' => $repository,
+                'providerRepositoryId' => $providerRepositoryId,
+                '$repository' => $repository,
                 'projectId' => $projectId,
             ]);
 //            if (empty($projectId)) {
@@ -955,6 +955,7 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                 $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
                 $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
+                $providerInstallationId = $parsedPayload["installationId"] ?? '';
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
