@@ -1746,6 +1746,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('scheme', '', new Text(256), 'Platform client scheme. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) {
@@ -1768,7 +1769,8 @@ App::post('/v1/projects/:projectId/platforms')
             'name' => $name,
             'key' => $key,
             'store' => $store,
-            'hostname' => $hostname
+            'hostname' => $hostname,
+            'scheme' => $scheme,
         ]);
 
         $platform = $dbForPlatform->createDocument('platforms', $platform);

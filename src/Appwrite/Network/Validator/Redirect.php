@@ -14,11 +14,13 @@ use Utopia\Validator\Host;
 class Redirect extends Host
 {
     /**
-     * @param array $whitelist
+     * @param array $hostnames White list of allowed hostnames
+     * @param array $schemes White list of allowed schemes
      */
-    public function __construct(array $whitelist)
+    public function __construct(array $hostnames, array $schemes)
     {
-        parent::__construct($whitelist);
+        $this->schemes = $schemes;
+        parent::__construct($hostnames);
     }
 
     /**
@@ -45,30 +47,17 @@ class Redirect extends Host
     public function isValid($value): bool
     {
         // `parse_url` returns false for URL with only a scheme
-        // We need to check for this case separately
+        // We need to handle parsing the scheme manually
         if (preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
             $scheme = strtolower($matches[1]);
-            return $scheme !== 'javascript';
         }
 
-        // `parse_url` returns false for invalid URLs
-        $url = \parse_url($value);
-        if ($url === false || !isset($url["scheme"])) {
-            return false;
+        // If the scheme is not http or https, check the hostname
+        if (\in_array($scheme, ["http", "https"])) {
+            return parent::isValid($value);
         }
 
-        // If scheme is javascript, it's an XSS vector
-        $scheme = strtolower($url["scheme"]);
-        if ($scheme === "javascript") {
-            return false;
-        }
-
-        // If scheme is not http or https, we don't need to check the host
-        // Allow deep links to other user apps.
-        if (!\in_array($scheme, ["http", "https"])) {
-            return true;
-        }
-
-        return parent::isValid($value);
+        // Otherwise, check the scheme whitelist
+        return \in_array($scheme, $this->schemes);
     }
 }

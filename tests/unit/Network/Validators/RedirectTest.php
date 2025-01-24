@@ -10,26 +10,18 @@ class RedirectTest extends TestCase
     public function redirectsProvider(): array
     {
         return [
-            "custom scheme" => [[], "exp://192.168.0.1", true],
-            "only scheme with triple slash" => [[], "myapp:///", true],
-            "only scheme" => [[], "myapp://", true],
-            "javascript scheme" => [[], "javascript://alert(1)", false],
-            "invalid url" => [[], "192.168.0.1", false],
-            "scheme case + invalid host" => [
-                ["notexample.com"],
-                "HTTPS://example.com",
-                false,
-            ],
-            "scheme case + valid host" => [
-                ["example.com"],
-                "HTTPS://example.com",
-                true,
-            ],
-            "javascript scheme with different case" => [[], "JaVaScRiPt://alert(1)", false],
-            "multiple slashes after scheme" => [[], "myapp:////", true],
+            "expo scheme" => [[], ["exp"], "exp://192.168.0.1", true],
+            "custom scheme" => [[], ["myapp"], "myapp://", true],
+            "custom scheme triple slash" => [[], ["myapp"], "myapp:///", true],
             "scheme with special chars" => [[], "my-app+custom.123://", true],
-            "empty string" => [[], "", false],
+            "url https" => [["example.com"], [], "https://example.com", true],
+            "url http" => [["example.com"], [], "http://example.com", true],
             "malformed scheme" => [[], "http:/example.com", false],
+            "invalid url" => [[], [], "example.com", false],
+            "invalid host" => [["notexample.com"], [], "https://example.com", false],
+            "javascript scheme" => [[], "javascript://alert(1)", false],
+            "javascript scheme with different case" => [[], "JaVaScRiPt://alert(1)", false],
+            "empty string" => [[], "", false],
         ];
     }
 
@@ -37,11 +29,12 @@ class RedirectTest extends TestCase
      * @dataProvider redirectsProvider
      */
     public function testIsValid(
-        array $allowList,
+        array $hostnames,
+        array $schemes,
         string $value,
         bool $expected
     ): void {
-        $validator = new Redirect($allowList);
+        $validator = new Redirect($hostnames, $schemes);
 
         $this->assertEquals($expected, $validator->isValid($value));
     }
