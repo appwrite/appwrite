@@ -881,10 +881,16 @@ App::post('/v1/vcs/github/events')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
+    ->inject('project')
     ->action(
-        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
+        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds, Document $project) use ($createGitDeployments) {
             $payload = $request->getRawPayload();
-            var_dump(['payload' => $payload]);
+
+            var_dump([
+                'project'=> $project,
+                $request->getHeaders()
+            ]);
+
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
