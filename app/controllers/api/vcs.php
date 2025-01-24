@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
@@ -33,6 +34,7 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
+use Utopia\Fetch\Client;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
@@ -881,15 +883,49 @@ App::post('/v1/vcs/github/events')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
-    ->inject('project')
     ->action(
-        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds, Document $project) use ($createGitDeployments) {
-            $payload = $request->getRawPayload();
+        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
 
-            var_dump([
-                'project'=> $project,
-                $request->getHeaders()
-            ]);
+            $payload = $request->getRawPayload();
+            $parsedPayload = $github->getEvent($event, $payload);
+            $providerInstallationId = $parsedPayload["installationId"] ?? '';
+
+            $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
+                Query::equal('installationId', [$providerInstallationId]),
+            ]));
+
+            $projectId = $repository->getAttribute('projectId');
+            var_dump($projectId);
+//            if (empty($projectId)) {
+//                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Project was not found");
+//            }
+//
+//            $project = $dbForPlatform->getDocument('projects', $projectId);
+//
+//            if($project->getAttribute('region') !== System::getEnv('_APP_REGION')){
+//                $networkDomains = [];
+//                $tmp = explode(',', System::getEnv('_APP_NETWORK_DOMAINS'));
+//                foreach ($tmp as $domain) {
+//                    $parts = explode('=', $domain);
+//                    $networkDomains[$parts[0]] = $parts[1];
+//                }
+//
+//                $targetUrl = 'https://'.$networkDomains[$project->getAttribute('region')].'/v1/vcs/github/events';
+//                $client = new Client();
+//                foreach ($request->getHeaders() as $name => $value) {
+//                    $client->addHeader($name, $value);
+//                }
+//
+//                try {
+//                    $client->fetch(
+//                        url: $targetUrl,
+//                        method: Client::METHOD_POST,
+//                        body: $payload
+//                    );
+//                } catch (Throwable $th) {
+//                    throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Error while redirecting to $targetUrl");
+//                }
+//            }
 
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
@@ -903,7 +939,7 @@ App::post('/v1/vcs/github/events')
             $event = $request->getHeader('x-github-event', '');
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $parsedPayload = $github->getEvent($event, $payload);
+
 
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
@@ -911,7 +947,6 @@ App::post('/v1/vcs/github/events')
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                 $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
-                $providerInstallationId = $parsedPayload["installationId"] ?? '';
                 $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
