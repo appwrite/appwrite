@@ -1360,7 +1360,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
 
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-    if ($project->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+    if (!empty($project->getAttribute('region')) && $project->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
         var_dump([
             'x-projectId' => $projectId,
             'projectId'       => $project->getId(),
