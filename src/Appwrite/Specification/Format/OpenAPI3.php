@@ -131,10 +131,8 @@ class OpenAPI3 extends Format
 
             $additionalMethods = null;
             if (is_array($sdk)) {
-                $mainSdk = array_shift($sdk);
                 $additionalMethods = $sdk;
-
-                $sdk = $mainSdk;
+                $sdk = $sdk[0];
             }
 
             /**
@@ -202,14 +200,16 @@ class OpenAPI3 extends Format
 
 
             if (!empty($additionalMethods)) {
-                $temp['x-appwrite']['additional-methods'] = [];
+                $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $method) {
                     /** @var \Appwrite\SDK\Method $method */
+                    $desc = $method->getDescriptionFilePath();
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
                         'parameters' => [],
                         'required' => [],
-                        'responses' => []
+                        'responses' => [],
+                        'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
                     foreach ($method->getParameters() as $name => $param) {
@@ -228,7 +228,7 @@ class OpenAPI3 extends Format
                         ];
                     }
 
-                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
+                    $temp['x-appwrite']['methods'][] = $additionalMethod;
                 }
             }
 

@@ -7854,7 +7854,30 @@
                         "server"
                     ],
                     "packaging": false,
-                    "additional-methods": [
+                    "methods": [
+                        {
+                            "name": "createDocument",
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documentId",
+                                "data"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/document"
+                                }
+                            ],
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        },
                         {
                             "name": "createDocuments",
                             "parameters": [
@@ -7872,7 +7895,8 @@
                                     "code": 201,
                                     "model": "#\/components\/schemas\/documentList"
                                 }
-                            ]
+                            ],
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
                         }
                     ],
                     "auth": {
