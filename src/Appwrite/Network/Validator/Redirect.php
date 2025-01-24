@@ -48,9 +48,10 @@ class Redirect extends Host
     {
         // `parse_url` returns false for URL with only a scheme
         // We need to handle parsing the scheme manually
-        if (preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
-            $scheme = strtolower($matches[1]);
+        if (!preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
+            return false;
         }
+        $scheme = strtolower($matches[1]);
 
         // If the scheme is not http or https, check the hostname
         if (\in_array($scheme, ["http", "https"])) {

@@ -1232,7 +1232,7 @@ App::setResource('schemes', function (array $platforms) {
             Origin::CLIENT_TYPE_FLUTTER_REACT_NATIVE_IOS,
             Origin::CLIENT_TYPE_FLUTTER_REACT_NATIVE_ANDROID
         ])) {
-            schemes[] = $platform['scheme'];
+            $schemes[] = $platform['scheme'];
         }
     }
 
