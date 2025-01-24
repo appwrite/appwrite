@@ -896,11 +896,11 @@ App::post('/v1/vcs/github/events')
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
             ]));
 
-            $projectId = $installation->getAttribute('projectId');
+            $projectId = $repository->getAttribute('projectId');
 
             var_dump([
                 'providerRepositoryId' => $providerRepositoryId,
-                '$repository' => $repository,
+                'repository' => $repository,
                 'projectId' => $projectId,
             ]);
 //            if (empty($projectId)) {
