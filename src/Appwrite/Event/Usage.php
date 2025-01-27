@@ -7,8 +7,13 @@ use Utopia\Queue\Connection;
 
 class Usage extends Event
 {
+    public const TYPE_USAGE_DUMP = 'usage-dump';
+    public const TYPE_USAGE_COUNT = 'usage-count';
+
     protected array $metrics = [];
     protected array $reduce  = [];
+
+    protected string $type = self::TYPE_USAGE_DUMP;
 
     public function __construct(protected Connection $connection)
     {
@@ -17,6 +22,12 @@ class Usage extends Event
         $this
             ->setQueue(Event::USAGE_QUEUE_NAME)
             ->setClass(Event::USAGE_CLASS_NAME);
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+        return $this;
     }
 
     /**
@@ -61,6 +72,7 @@ class Usage extends Event
             'project' => $this->project,
             'reduce'  => $this->reduce,
             'metrics' => $this->metrics,
+            'type' => $this->type,
         ];
     }
 

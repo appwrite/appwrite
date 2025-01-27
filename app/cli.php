@@ -5,6 +5,7 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
@@ -204,6 +205,9 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 }, ['queue']);
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
+}, ['queue']);
+CLI::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
