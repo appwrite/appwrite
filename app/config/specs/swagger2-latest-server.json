@@ -4,11 +4,11 @@
         "version": "1.6.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
-        "termsOfService": "[HOSTNAME]\/policy\/terms",
+        "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
         "contact": {
             "name": "Appwrite Team",
-            "url": "[HOSTNAME]\/support",
-            "email": "team@localhost.test"
+            "url": "https:\/\/appwrite.io\/support",
+            "email": "team@appwrite.io"
         },
         "license": {
             "name": "BSD-3-Clause",
@@ -17059,7 +17059,7 @@
                                 },
                                 "maximumFileSize": {
                                     "type": "integer",
-                                    "description": "Maximum file size allowed in bytes. Maximum allowed value is 0B.",
+                                    "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
                                     "x-example": 1
                                 },
@@ -17259,7 +17259,7 @@
                                 },
                                 "maximumFileSize": {
                                     "type": "integer",
-                                    "description": "Maximum file size allowed in bytes. Maximum allowed value is 0B.",
+                                    "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
                                     "x-example": 1
                                 },
@@ -26865,6 +26865,6 @@
     },
     "externalDocs": {
         "description": "Full API docs, specs and tutorials",
-        "url": "[HOSTNAME]\/docs"
+        "url": "https:\/\/appwrite.io\/docs"
     }
 }
