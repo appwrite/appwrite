@@ -66,7 +66,7 @@ class UsageDump extends Action
                 }
 
                 $dbForProject = $getProjectDB($project);
-                $dbForLogs = $getLogsDB($dbForProject);
+                $dbForLogs = $getLogsDB($project);
                 $projectDocuments = [];
                 $databaseCache = [];
                 $collectionSizeCache = [];
