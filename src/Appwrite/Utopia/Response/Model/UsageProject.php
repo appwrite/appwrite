@@ -82,6 +82,18 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('databasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of requests per period.',
@@ -170,6 +182,18 @@ class UsageProject extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
+            ])
+            ->addRule('databasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database writes.',
+                'default' => 0,
+                'example' => 0,
             ])
         ;
     }
