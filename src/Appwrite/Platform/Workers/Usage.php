@@ -505,9 +505,9 @@ class Usage extends Action
         foreach ($this->periods as $period => $format) {
             $time = 'inf' === $period ? null : \date($format, \time());
             $id = \md5("{$time}_{$period}_{$metric}");
-            $current = $dbForLogs->getDocument('stats', $id);
+            $current = $dbForLogs->getDocument('usage', $id);
             if ($current->isEmpty()) {
-                $dbForLogs->createDocument('stats', new Document([
+                $dbForLogs->createDocument('usage', new Document([
                     '$id' => $id,
                     'metric' => $metric,
                     'period' => $period,
@@ -516,7 +516,7 @@ class Usage extends Action
                 ]));
                 Console::success('Usage logs created for metric: ' . $metric . ' period:'. $period);
             } else {
-                $dbForLogs->updateDocument('stats', $id, $current->setAttribute('value', $value));
+                $dbForLogs->updateDocument('usage', $id, $current->setAttribute('value', $value));
                 Console::success('Usage logs updated for metric: ' . $metric . ' period:'. $period);
             }
         }

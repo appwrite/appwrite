@@ -115,7 +115,7 @@ class UsageDump extends Action
                 );
 
                 $dbForLogs->createOrUpdateDocumentsWithIncrease(
-                    collection: 'stats',
+                    collection: 'usage',
                     attribute: 'value',
                     documents: $projectDocuments
                 );
