@@ -18034,6 +18034,7 @@
                             "gif",
                             "png",
                             "webp",
+                            "heic",
                             "avif"
                         ],
                         "x-enum-name": "ImageFormat",
