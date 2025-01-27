@@ -501,7 +501,7 @@ class Usage extends Action
     }
 
     protected function createOrUpdateMetric(Database $dbForLogs, string $region, string $metric, int $value)
-    {        
+    {
         foreach ($this->periods as $period => $format) {
             $time = 'inf' === $period ? null : \date($format, \time());
             $id = \md5("{$time}_{$period}_{$metric}");
