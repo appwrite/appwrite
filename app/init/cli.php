@@ -7,6 +7,14 @@
  */
 
 require_once(__DIR__ . '/app.php');
+/**
+ * We need http resources for CLI tasks like
+ * - Specs
+ * - Migrate
+ * - Doctor
+ * and more
+ */
+require_once(__DIR__ . '/http.php');
 
 
 use Appwrite\Event\Certificate;
