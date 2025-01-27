@@ -160,6 +160,39 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
