@@ -38,6 +38,7 @@ class UsageDump extends Action
         $this
             ->inject('message')
             ->inject('getProjectDB')
+            ->inject('getLogsDB')
             ->callback([$this, 'action']);
     }
 
@@ -48,7 +49,7 @@ class UsageDump extends Action
      * @throws Exception
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, callable $getProjectDB): void
+    public function action(Message $message, callable $getProjectDB, callable $getLogsDB): void
     {
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
@@ -65,6 +66,7 @@ class UsageDump extends Action
                 }
 
                 $dbForProject = $getProjectDB($project);
+                $dbForLogs = $getLogsDB($dbForProject);
                 $projectDocuments = [];
                 $databaseCache = [];
                 $collectionSizeCache = [];
@@ -112,6 +114,11 @@ class UsageDump extends Action
                     documents: $projectDocuments
                 );
 
+                $dbForLogs->createOrUpdateDocumentsWithIncrease(
+                    collection: 'stats',
+                    attribute: 'value',
+                    documents: $projectDocuments
+                );
                 $end = \microtime(true);
                 Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys. ' Time: '.($end - $start).'s');
             }
