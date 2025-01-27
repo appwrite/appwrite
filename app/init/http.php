@@ -45,8 +45,6 @@ use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
-
 if (!App::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks

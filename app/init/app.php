@@ -1,5 +1,7 @@
 <?php
 
+use Utopia\App;
+
 /**
  * App init
  *
@@ -1137,3 +1139,6 @@ function getDevice($root): Device
         }
     }
 }
+
+/** App mode is required by Workers and CLIs */
+App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
