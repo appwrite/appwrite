@@ -108,6 +108,17 @@ class UsageDump extends Action
                     }
                 }
 
+                /**
+                 * Create clone to dual write
+                 * This is required as first request to db
+                 * modifies the document's details like internal ID
+                 * which will conflict in new DB
+                 */
+                $clonedProjectDoucments = [];
+                foreach ($projectDocuments as $document) {
+                    $clonedProjectDoucments[] = new Document($document->getArrayCopy());
+                }
+
                 $dbForProject->createOrUpdateDocumentsWithIncrease(
                     collection: 'stats',
                     attribute: 'value',
@@ -117,7 +128,7 @@ class UsageDump extends Action
                 $dbForLogs->createOrUpdateDocumentsWithIncrease(
                     collection: 'usage',
                     attribute: 'value',
-                    documents: $projectDocuments
+                    documents: $clonedProjectDoucments
                 );
                 $end = \microtime(true);
                 Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys. ' Time: '.($end - $start).'s');
