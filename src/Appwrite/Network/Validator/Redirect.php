@@ -13,11 +13,13 @@ use Utopia\Validator\Host;
  */
 class Redirect extends Host
 {
+    protected array $schemes = [];
+
     /**
      * @param array $hostnames White list of allowed hostnames
      * @param array $schemes White list of allowed schemes
      */
-    public function __construct(array $hostnames, array $schemes)
+    public function __construct(array $hostnames = [], array $schemes = [])
     {
         $this->schemes = $schemes;
         parent::__construct($hostnames);
