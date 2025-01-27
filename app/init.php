@@ -301,6 +301,16 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_USERS_ACTIVE = 'users.mau';
+const METRIC_WEBHOOKS = 'webhooks';
+const METRIC_PLATFORMS = 'platforms';
+const METRIC_PROVIDERS = 'providers';
+const METRIC_TOPICS = 'topics';
+const METRIC_KEYS = 'keys';
+const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
+const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 
 // Resource types
 
