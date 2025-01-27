@@ -36293,22 +36293,22 @@
                     "x-example": []
                 },
                 "databasesReads": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database reads.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 },
                 "databasesWrites": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database writes.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -36394,22 +36394,22 @@
                     "x-example": []
                 },
                 "databaseReads": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database reads.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 },
                 "databaseWrites": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database writes.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -37169,22 +37169,22 @@
                     "x-example": []
                 },
                 "databasesReads": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database reads.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 },
                 "databasesWrites": {
-                    "type": "object",
+                    "type": "array",
                     "description": "An array of aggregated number of database writes.",
-                    "x-example": 0,
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
-                    }
+                    },
+                    "x-example": []
                 }
             },
             "required": [
