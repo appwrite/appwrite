@@ -4,11 +4,11 @@
         "version": "1.6.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
-        "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
+        "termsOfService": "[HOSTNAME]\/policy\/terms",
         "contact": {
             "name": "Appwrite Team",
-            "url": "https:\/\/appwrite.io\/support",
-            "email": "team@appwrite.io"
+            "url": "[HOSTNAME]\/support",
+            "email": "team@localhost.test"
         },
         "license": {
             "name": "BSD-3-Clause",
@@ -9768,6 +9768,6 @@
     },
     "externalDocs": {
         "description": "Full API docs, specs and tutorials",
-        "url": "https:\/\/appwrite.io\/docs"
+        "url": "[HOSTNAME]\/docs"
     }
 }
