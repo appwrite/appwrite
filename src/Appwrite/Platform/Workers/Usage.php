@@ -18,6 +18,14 @@ use Utopia\System\System;
 class Usage extends Action
 {
     /**
+     * Date format for different periods
+     */
+    protected array $periods = [
+        '1h' => 'Y-m-d H:00',
+        '1d' => 'Y-m-d 00:00',
+        'inf' => '0000-00-00 00:00'
+    ];
+    /**
      * Log Error Callback
      *
      * @var callable
@@ -493,22 +501,24 @@ class Usage extends Action
     }
 
     protected function createOrUpdateMetric(Database $dbForLogs, string $region, string $metric, int $value)
-    {
-        $id = md5(self::INFINITY_PERIOD . $metric);
-        $current = $dbForLogs->getDocument('stats', $id);
-
-        if ($current->isEmpty()) {
-            $dbForLogs->createDocument('stats', new Document([
-                '$id' => $id,
-                'metric' => $metric,
-                'period' => 'inf',
-                'region' => $region,
-                'value' => $value,
-            ]));
-            Console::success('Usage logs created for metric: ' . $metric);
-        } else {
-            $dbForLogs->updateDocument('stats', $id, $current->setAttribute('value', $value));
-            Console::success('Usage logs updated for metric: ' . $metric);
+    {        
+        foreach ($this->periods as $period => $format) {
+            $time = 'inf' === $period ? null : \date($format, \time());
+            $id = \md5("{$time}_{$period}_{$metric}");
+            $current = $dbForLogs->getDocument('stats', $id);
+            if ($current->isEmpty()) {
+                $dbForLogs->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'metric' => $metric,
+                    'period' => $period,
+                    'region' => $region,
+                    'value' => $value,
+                ]));
+                Console::success('Usage logs created for metric: ' . $metric . ' period:'. $period);
+            } else {
+                $dbForLogs->updateDocument('stats', $id, $current->setAttribute('value', $value));
+                Console::success('Usage logs updated for metric: ' . $metric . ' period:'. $period);
+            }
         }
     }
 }
