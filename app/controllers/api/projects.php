@@ -10,13 +10,16 @@ use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -61,13 +64,20 @@ App::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'projects.create')
+    ->label('audits.resource', 'project/{response.$id}')
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'create')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'create',
+        description: '/docs/references/projects/create.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
@@ -229,9 +239,6 @@ App::post('/v1/projects')
             if ($create || $projectTables) {
                 $audit = new Audit($dbForProject);
                 $audit->setup();
-
-                $abuse = new TimeLimit('', 0, 1, $dbForProject);
-                $abuse->setup();
             }
 
             if (!$create && $sharedTablesV1) {
@@ -241,17 +248,6 @@ App::post('/v1/projects')
                     '$id' => ID::custom('audit'),
                     '$permissions' => [Permission::create(Role::any())],
                     'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('abuse'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'abuse',
                     'attributes' => $attributes,
                     'indexes' => $indexes,
                     'documentSecurity' => true
@@ -299,12 +295,18 @@ App::get('/v1/projects')
     ->desc('List projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'list')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'list',
+        description: '/docs/references/projects/list.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -358,12 +360,18 @@ App::get('/v1/projects/:projectId')
     ->desc('Get project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'get')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'get',
+        description: '/docs/references/projects/get.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -382,12 +390,20 @@ App::patch('/v1/projects/:projectId')
     ->desc('Update project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'update')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'update',
+        description: '/docs/references/projects/update.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -429,12 +445,18 @@ App::patch('/v1/projects/:projectId/team')
     ->desc('Update project team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateTeam')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateTeam',
+        description: '/docs/references/projects/update-team.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
     ->inject('response')
@@ -497,12 +519,18 @@ App::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateServiceStatus')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateServiceStatus',
+        description: '/docs/references/projects/update-service-status.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
@@ -528,12 +556,18 @@ App::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateServiceStatusAll')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateServiceStatusAll',
+        description: '/docs/references/projects/update-service-status-all.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
@@ -562,12 +596,18 @@ App::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateApiStatus')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateApiStatus',
+        description: '/docs/references/projects/update-api-status.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('api', '', new WhiteList(array_keys(Config::getParam('apis')), true), 'API name.')
     ->param('status', null, new Boolean(), 'API status.')
@@ -593,12 +633,18 @@ App::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateApiStatusAll')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateApiStatusAll',
+        description: '/docs/references/projects/update-api-status-all.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('status', null, new Boolean(), 'API status.')
     ->inject('response')
@@ -627,12 +673,18 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateOAuth2')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateOAuth2',
+        description: '/docs/references/projects/update-oauth2.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
     ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
@@ -671,12 +723,18 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->desc('Update project sessions emails')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSessionAlerts')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateSessionAlerts',
+        description: '/docs/references/projects/update-session-alerts.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('alerts', false, new Boolean(true), 'Set to true to enable session emails.')
     ->inject('response')
@@ -702,12 +760,18 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->desc('Update project memberships privacy attributes')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateMembershipsPrivacy')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateMembershipsPrivacy',
+        description: '/docs/references/projects/update-memberships-privacy.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('userName', true, new Boolean(true), 'Set to true to show userName to members of a team.')
     ->param('userEmail', true, new Boolean(true), 'Set to true to show email to members of a team.')
@@ -737,12 +801,18 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthLimit')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthLimit',
+        description: '/docs/references/projects/update-auth-limit.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('limit', false, new Range(0, APP_LIMIT_USERS), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
     ->inject('response')
@@ -768,12 +838,18 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthDuration')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthDuration',
+        description: '/docs/references/projects/update-auth-duration.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('duration', 31536000, new Range(0, 31536000), 'Project session length in seconds. Max length: 31536000 seconds.')
     ->inject('response')
@@ -799,12 +875,18 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthStatus')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthStatus',
+        description: '/docs/references/projects/update-auth-status.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
@@ -833,12 +915,18 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthPasswordHistory')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthPasswordHistory',
+        description: '/docs/references/projects/update-auth-password-history.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default value is 0')
     ->inject('response')
@@ -864,12 +952,18 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthPasswordDictionary')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthPasswordDictionary',
+        description: '/docs/references/projects/update-auth-password-dictionary.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
     ->inject('response')
@@ -895,12 +989,18 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Enable or disable checking user passwords for similarity with their personal data.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updatePersonalDataCheck')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updatePersonalDataCheck',
+        description: '/docs/references/projects/update-personal-data-check.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(false), 'Set whether or not to check a password for similarity with personal data. Default is false.')
     ->inject('response')
@@ -926,12 +1026,18 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthSessionsLimit')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateAuthSessionsLimit',
+        description: '/docs/references/projects/update-auth-sessions-limit.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-' . APP_LIMIT_USER_SESSIONS_MAX . '. Default is ' . APP_LIMIT_USER_SESSIONS_DEFAULT)
     ->inject('response')
@@ -957,12 +1063,18 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->desc('Update the mock numbers for the project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateMockNumbers')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateMockNumbers',
+        description: '/docs/references/projects/update-mock-numbers.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('numbers', '', new ArrayList(new MockNumber(), 10), 'An array of mock numbers and their corresponding verification codes (OTPs). Each number should be a valid E.164 formatted phone number. Maximum of 10 numbers are allowed.')
     ->inject('response')
@@ -996,12 +1108,21 @@ App::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'projects.delete')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'delete',
+        description: '/docs/references/projects/delete.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('user')
@@ -1032,12 +1153,18 @@ App::post('/v1/projects/:projectId/webhooks')
     ->desc('Create webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createWebhook')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'createWebhook',
+        description: '/docs/references/projects/create-webhook.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_WEBHOOK,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
@@ -1090,12 +1217,18 @@ App::get('/v1/projects/:projectId/webhooks')
     ->desc('List webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listWebhooks')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'listWebhooks',
+        description: '/docs/references/projects/list-webhooks.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_WEBHOOK_LIST,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1122,12 +1255,18 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getWebhook')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'getWebhook',
+        description: '/docs/references/projects/get-webhook.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_WEBHOOK,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
@@ -1156,12 +1295,18 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateWebhook')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateWebhook',
+        description: '/docs/references/projects/update-webhook.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_WEBHOOK,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
@@ -1215,12 +1360,18 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateWebhookSignature')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateWebhookSignature',
+        description: '/docs/references/projects/update-webhook-signature.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_WEBHOOK,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
@@ -1254,11 +1405,19 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteWebhook')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'deleteWebhook',
+        description: '/docs/references/projects/delete-webhook.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
@@ -1293,12 +1452,18 @@ App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createKey')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'createKey',
+        description: '/docs/references/projects/create-key.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_KEY,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
@@ -1343,12 +1508,18 @@ App::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listKeys')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'listKeys',
+        description: '/docs/references/projects/list-keys.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_KEY_LIST,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1375,12 +1546,18 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getKey')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'getKey',
+        description: '/docs/references/projects/get-key.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_KEY,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->inject('response')
@@ -1409,12 +1586,18 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateKey')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateKey',
+        description: '/docs/references/projects/update-key.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_KEY,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
@@ -1455,11 +1638,19 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteKey')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'deleteKey',
+        description: '/docs/references/projects/delete-key.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->inject('response')
@@ -1494,12 +1685,18 @@ App::post('/v1/projects/:projectId/jwts')
     ->groups(['api', 'projects'])
     ->desc('Create JWT')
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createJWT')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'createJWT',
+        description: '/docs/references/projects/create-jwt.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for JWT key. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
@@ -1529,13 +1726,20 @@ App::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.create')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'platforms.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createPlatform')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'createPlatform',
+        description: '/docs/references/projects/create-platform.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PLATFORM,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
@@ -1580,12 +1784,18 @@ App::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listPlatforms')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'listPlatforms',
+        description: '/docs/references/projects/list-platforms.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PLATFORM_LIST,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1612,12 +1822,18 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getPlatform')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'getPlatform',
+        description: '/docs/references/projects/get-platform.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PLATFORM,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->inject('response')
@@ -1646,12 +1862,18 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updatePlatform')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updatePlatform',
+        description: '/docs/references/projects/update-platform.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PLATFORM,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
@@ -1693,12 +1915,21 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.delete')
+    ->label('audits.resource', 'project/{request.projectId}/platform/${request.platformId}')
     ->label('scope', 'platforms.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deletePlatform')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'deletePlatform',
+        description: '/docs/references/projects/delete-platform.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->inject('response')
@@ -1733,12 +1964,18 @@ App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmtp')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateSmtp',
+        description: '/docs/references/projects/update-smtp.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -1823,11 +2060,18 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createSmtpTest')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'createSmtpTest',
+        description: '/docs/references/projects/create-smtp-test.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
     ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
@@ -1882,12 +2126,18 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getSmsTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'getSmsTemplate',
+        description: '/docs/references/projects/get-sms-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SMS_TEMPLATE,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -1923,12 +2173,18 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getEmailTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'getEmailTemplate',
+        description: '/docs/references/projects/get-email-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EMAIL_TEMPLATE,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -1975,12 +2231,18 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmsTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateSmsTemplate',
+        description: '/docs/references/projects/update-sms-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SMS_TEMPLATE,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2015,12 +2277,18 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateEmailTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'updateEmailTemplate',
+        description: '/docs/references/projects/update-email-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EMAIL_TEMPLATE,
+            )
+        ]
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2065,12 +2333,19 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteSmsTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'deleteSmsTemplate',
+        description: '/docs/references/projects/delete-sms-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SMS_TEMPLATE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2108,12 +2383,19 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Reset custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteEmailTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        name: 'deleteEmailTemplate',
+        description: '/docs/references/projects/delete-email-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EMAIL_TEMPLATE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])

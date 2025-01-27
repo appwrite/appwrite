@@ -175,6 +175,8 @@ jobs:
     name: Benchmark
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -235,6 +237,7 @@ jobs:
           path: benchmark.json
           retention-days: 7
       - name: Find Comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: peter-evans/find-comment@v3
         id: fc
         with:
@@ -242,6 +245,7 @@ jobs:
           comment-author: 'github-actions[bot]'
           body-includes: Benchmark results
       - name: Comment on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}

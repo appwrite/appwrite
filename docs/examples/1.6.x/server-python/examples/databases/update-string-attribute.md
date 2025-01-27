@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.databases import Databases
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,6 +14,6 @@ result = databases.update_string_attribute(
     key = '',
     required = False,
     default = '<DEFAULT>',
-    size = None, # optional
+    size = 1, # optional
     new_key = '' # optional
 )

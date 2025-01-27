@@ -32,6 +32,7 @@ use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
@@ -58,15 +59,17 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
+            ->inject('project')
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('queueForUsage')
-            ->callback(fn (Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $queueForUsage));
+            ->callback(fn (Message $message, Document $project, Log $log, Database $dbForProject, Device $deviceForFiles, Usage $queueForUsage) => $this->action($message, $project, $log, $dbForProject, $deviceForFiles, $queueForUsage));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
@@ -76,6 +79,7 @@ class Messaging extends Action
      */
     public function action(
         Message $message,
+        Document $project,
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
@@ -89,14 +93,13 @@ class Messaging extends Action
         }
 
         $type = $payload['type'] ?? '';
-        $project = new Document($payload['project'] ?? []);
 
         switch ($type) {
             case MESSAGE_SEND_TYPE_INTERNAL:
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $queueForUsage, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
@@ -275,7 +278,7 @@ class Messaging extends Action
                                         Query::equal('identifier', [$result['recipient']])
                                     ]);
 
-                                    if ($target instanceof Document && !$target->isEmpty()) {
+                                    if (!$target->isEmpty()) {
                                         $dbForProject->updateDocument(
                                             'targets',
                                             $target->getId(),
@@ -287,7 +290,7 @@ class Messaging extends Action
                         } catch (\Throwable $e) {
                             $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
-                            $errorTotal = count($deliveryErrors);
+                            $errorTotal = \count($deliveryErrors);
                             $queueForUsage
                                 ->setProject($project)
                                 ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
@@ -333,7 +336,6 @@ class Messaging extends Action
             $message->setAttribute('status', MessageStatus::SENT);
         }
 
-
         $message->removeAttribute('to');
 
         foreach ($providers as $provider) {
@@ -377,7 +379,7 @@ class Messaging extends Action
         }
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
@@ -456,24 +458,14 @@ class Messaging extends Action
             $adapter->getMaxMessagesPerRequest()
         );
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage) {
-            return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage) {
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter) {
+            return function () use ($batch, $message, $provider, $adapter) {
                 $message->setAttribute('to', $batch);
 
                 $data = $this->buildSmsMessage($message, $provider);
 
                 try {
                     $adapter->send($data);
-
-                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
-                    if (!empty($countryCode)) {
-                        $queueForUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                    $queueForUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
                 } catch (\Throwable $th) {
                     throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
@@ -676,8 +668,8 @@ class Messaging extends Action
     private function buildPushMessage(Document $message): Push
     {
         $to = $message['to'];
-        $title = $message['data']['title'];
-        $body = $message['data']['body'];
+        $title = $message['data']['title'] ?? null;
+        $body = $message['data']['body'] ?? null;
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
         $image = $message['data']['image']['url'] ?? null;
@@ -686,6 +678,21 @@ class Messaging extends Action
         $color = $message['data']['color'] ?? null;
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
+        $contentAvailable = $message['data']['contentAvailable'] ?? null;
+        $critical = $message['data']['critical'] ?? null;
+        $priority = $message['data']['priority'] ?? null;
+
+        if ($title === '') {
+            $title = null;
+        }
+        if ($body === '') {
+            $body = null;
+        }
+        if ($priority !== null) {
+            $priority = $priority === 'high'
+                ? Priority::HIGH
+                : Priority::NORMAL;
+        }
 
         return new Push(
             $to,
@@ -698,7 +705,10 @@ class Messaging extends Action
             $icon,
             $color,
             $tag,
-            $badge
+            $badge,
+            $contentAvailable,
+            $critical,
+            $priority
         );
     }
 

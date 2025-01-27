@@ -9,6 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\System\System;
@@ -37,6 +38,17 @@ abstract class ScheduleBase extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
+    }
+
+    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    {
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            }
+        }
     }
 
     /**

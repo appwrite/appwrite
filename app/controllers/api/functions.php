@@ -14,6 +14,11 @@ use Appwrite\Functions\Validator\Headers;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
@@ -24,7 +29,6 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -143,13 +147,18 @@ App::post('/v1/functions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'function.create')
     ->label('audits.resource', 'function/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/functions/create-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'create',
+        description: '/docs/references/functions/create-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_FUNCTION,
+            )
+        ],
+    ))
     ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -180,22 +189,23 @@ App::post('/v1/functions')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('timelimit')
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
     ->inject('dbForPlatform')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // Temporary abuse check
-        $abuseCheck = function () use ($project, $dbForProject, $response) {
+        $abuseCheck = function () use ($project, $timelimit, $response) {
             $abuseKey = "projectId:{projectId},url:{url}";
             $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
-            $timeLimit = new TimeLimit($abuseKey, $abuseLimit, $abuseTime, $dbForProject);
+            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{url}', '/v1/functions');
@@ -203,7 +213,7 @@ App::post('/v1/functions')
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
             $limit = $timeLimit->limit();
-            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $abuseTime;
+            $time = $timeLimit->time() + $abuseTime;
 
             $response
                 ->addHeader('X-RateLimit-Limit', $limit)
@@ -400,6 +410,7 @@ App::post('/v1/functions')
             $allEvents = Event::generateEvents('rules.[ruleId].create', [
                 'ruleId' => $rule->getId(),
             ]);
+
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],
@@ -434,13 +445,18 @@ App::get('/v1/functions')
     ->desc('List functions')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/functions/list-functions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'list',
+        description: '/docs/references/functions/list-functions.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -495,13 +511,18 @@ App::get('/v1/functions/runtimes')
     ->desc('List runtimes')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listRuntimes')
-    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listRuntimes',
+        description: '/docs/references/functions/list-runtimes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_RUNTIME_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->action(function (Response $response) {
         $runtimes = Config::getParam('runtimes');
@@ -529,13 +550,18 @@ App::get('/v1/functions/specifications')
     ->desc('List available function runtime specifications')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listSpecifications')
-    ->label('sdk.description', '/docs/references/functions/list-specifications.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listSpecifications',
+        description: '/docs/references/functions/list-specifications.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SPECIFICATION_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('plan')
     ->action(function (Response $response, array $plan) {
@@ -566,13 +592,18 @@ App::get('/v1/functions/:functionId')
     ->desc('Get function')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/functions/get-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'get',
+        description: '/docs/references/functions/get-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -591,12 +622,18 @@ App::get('/v1/functions/:functionId/usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getFunctionUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getFunctionUsage',
+        description: '/docs/references/functions/get-function-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -696,12 +733,18 @@ App::get('/v1/functions/usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getUsage',
+        description: '/docs/references/functions/get-functions-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTIONS,
+            )
+        ]
+    ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -799,13 +842,18 @@ App::put('/v1/functions/:functionId')
     ->label('event', 'functions.[functionId].update')
     ->label('audits.event', 'function.update')
     ->label('audits.resource', 'function/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/functions/update-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'update',
+        description: '/docs/references/functions/update-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
@@ -999,13 +1047,20 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getDeploymentDownload')
-    ->label('sdk.description', '/docs/references/functions/get-deployment-download.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getDeploymentDownload',
+        description: '/docs/references/functions/get-deployment-download.md',
+        auth: [AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::ANY,
+        type: MethodType::LOCATION
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1088,13 +1143,18 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'updateDeployment')
-    ->label('sdk.description', '/docs/references/functions/update-function-deployment.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'updateDeployment',
+        description: '/docs/references/functions/update-function-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1151,12 +1211,19 @@ App::delete('/v1/functions/:functionId')
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/functions/delete-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'delete',
+        description: '/docs/references/functions/delete-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1199,16 +1266,21 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('audits.event', 'deployment.create')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createDeployment')
-    ->label('sdk.methodType', 'upload')
-    ->label('sdk.description', '/docs/references/functions/create-deployment.md')
-    ->label('sdk.packaging', true)
-    ->label('sdk.request.type', 'multipart/form-data')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createDeployment',
+        description: '/docs/references/functions/create-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_DEPLOYMENT,
+            )
+        ],
+        requestType: 'multipart/form-data',
+        type: MethodType::UPLOAD,
+        packaging: true,
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
     ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
@@ -1416,13 +1488,18 @@ App::get('/v1/functions/:functionId/deployments')
     ->desc('List deployments')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listDeployments')
-    ->label('sdk.description', '/docs/references/functions/list-deployments.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listDeployments',
+        description: '/docs/references/functions/list-deployments.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT_LIST,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -1500,13 +1577,18 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Get deployment')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getDeployment')
-    ->label('sdk.description', '/docs/references/functions/get-deployment.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getDeployment',
+        description: '/docs/references/functions/get-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1547,12 +1629,19 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteDeployment')
-    ->label('sdk.description', '/docs/references/functions/delete-deployment.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'deleteDeployment',
+        description: '/docs/references/functions/delete-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1613,11 +1702,18 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createBuild')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createBuild',
+        description: '/docs/references/functions/create-build.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
@@ -1681,12 +1777,18 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'updateDeploymentBuild')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUILD)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'updateDeploymentBuild',
+        description: '/docs/references/functions/update-deployment-build.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BUILD,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1770,15 +1872,20 @@ App::post('/v1/functions/:functionId/executions')
     ->label('scope', 'execution.write')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].create')
-    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createExecution')
-    ->label('sdk.description', '/docs/references/functions/create-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_MULTIPART)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION)
-    ->label('sdk.request.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createExecution',
+        description: '/docs/references/functions/create-execution.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_EXECUTION,
+            )
+        ],
+        contentType: ContentType::MULTIPART,
+        requestType: 'application/json',
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
@@ -2173,13 +2280,18 @@ App::get('/v1/functions/:functionId/executions')
     ->desc('List executions')
     ->label('scope', 'execution.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listExecutions')
-    ->label('sdk.description', '/docs/references/functions/list-executions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listExecutions',
+        description: '/docs/references/functions/list-executions.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION_LIST,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -2261,13 +2373,18 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->desc('Get execution')
     ->label('scope', 'execution.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getExecution')
-    ->label('sdk.description', '/docs/references/functions/get-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getExecution',
+        description: '/docs/references/functions/get-execution.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
@@ -2312,12 +2429,19 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->label('event', 'functions.[functionId].executions.[executionId].delete')
     ->label('audits.event', 'executions.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteExecution')
-    ->label('sdk.description', '/docs/references/functions/delete-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'deleteExecution',
+        description: '/docs/references/functions/delete-execution.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
@@ -2382,13 +2506,18 @@ App::post('/v1/functions/:functionId/variables')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.create')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createVariable')
-    ->label('sdk.description', '/docs/references/functions/create-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createVariable',
+        description: '/docs/references/functions/create-variable.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
@@ -2445,13 +2574,21 @@ App::get('/v1/functions/:functionId/variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listVariables')
-    ->label('sdk.description', '/docs/references/functions/list-variables.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+    ->label(
+        'sdk',
+        new Method(
+            namespace: 'functions',
+            name: 'listVariables',
+            description: '/docs/references/functions/list-variables.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_VARIABLE_LIST,
+                )
+            ],
+        )
+    )
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
@@ -2473,13 +2610,21 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getVariable')
-    ->label('sdk.description', '/docs/references/functions/get-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label(
+        'sdk',
+        new Method(
+            namespace: 'functions',
+            name: 'getVariable',
+            description: '/docs/references/functions/get-variable.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_VARIABLE,
+                )
+            ],
+        )
+    )
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
@@ -2515,13 +2660,18 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'updateVariable')
-    ->label('sdk.description', '/docs/references/functions/update-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'updateVariable',
+        description: '/docs/references/functions/update-variable.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
@@ -2577,12 +2727,19 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteVariable')
-    ->label('sdk.description', '/docs/references/functions/delete-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'deleteVariable',
+        description: '/docs/references/functions/delete-variable.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
@@ -2624,13 +2781,18 @@ App::get('/v1/functions/templates')
     ->desc('List function templates')
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listTemplates')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.description', '/docs/references/functions/list-templates.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listTemplates',
+        description: '/docs/references/functions/list-templates.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION_LIST,
+            )
+        ]
+    ))
     ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
     ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
     ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
@@ -2662,13 +2824,18 @@ App::get('/v1/functions/templates/:templateId')
     ->desc('Get function template')
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getTemplate')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.description', '/docs/references/functions/get-template.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getTemplate',
+        description: '/docs/references/functions/get-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION,
+            )
+        ]
+    ))
     ->param('templateId', '', new Text(128), 'Template ID.')
     ->inject('response')
     ->action(function (string $templateId, Response $response) {

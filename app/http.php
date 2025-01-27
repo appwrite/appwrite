@@ -10,10 +10,8 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -44,7 +42,7 @@ $http = new Server(
 );
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
-$totalWorkers = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+$totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
@@ -200,11 +198,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $audit->setup();
         }
 
-        if ($dbForPlatform->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForPlatform);
-            $adapter->setup();
-        }
-
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
         $consoleCollections = $collections['console'];
@@ -341,7 +334,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     }
 
     $app = new App('UTC');
-    $app->setCompression(true);
+    $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
@@ -393,7 +386,14 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $sdk = $route->getLabel("sdk", false);
+
+            $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
+            if (!empty($sdk)) {
+                /** @var Appwrite\SDK\Method $sdk */
+                $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            }
+
             $log->setAction($action);
             $log->addTag('service', $action);
 
