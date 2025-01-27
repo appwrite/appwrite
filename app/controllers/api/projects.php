@@ -1749,7 +1749,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('scheme', '', new Text(256), 'Platform client scheme. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, string $scheme, Response $response, Database $dbForPlatform) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {

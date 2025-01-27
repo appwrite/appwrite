@@ -1225,12 +1225,12 @@ App::setResource('schemes', function (array $platforms) {
 
     foreach ($platforms as $platform) {
         if (!empty($platform['scheme']) && in_array($platform['type'], [
-            Origin::CLIENT_TYPE_IOS,
+            Origin::CLIENT_TYPE_APPLE_IOS,
             Origin::CLIENT_TYPE_ANDROID,
             Origin::CLIENT_TYPE_FLUTTER_IOS,
             Origin::CLIENT_TYPE_FLUTTER_ANDROID,
-            Origin::CLIENT_TYPE_FLUTTER_REACT_NATIVE_IOS,
-            Origin::CLIENT_TYPE_FLUTTER_REACT_NATIVE_ANDROID
+            Origin::CLIENT_TYPE_REACT_NATIVE_IOS,
+            Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID
         ])) {
             $schemes[] = $platform['scheme'];
         }
