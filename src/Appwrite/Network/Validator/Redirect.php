@@ -48,19 +48,34 @@ class Redirect extends Host
      */
     public function isValid($value): bool
     {
-        // `parse_url` returns false for URL with only a scheme
-        // We need to handle parsing the scheme manually
-        if (!preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
+        if (empty($value)) {
             return false;
         }
-        $scheme = strtolower($matches[1]);
 
-        // If the scheme is not http or https, check the hostname
-        if (\in_array($scheme, ["http", "https"])) {
+        $url = parse_url($value);
+        if (!isset($url["scheme"])) {
+            // `parse_url` does not URLs without hostname.
+            // We handle this scenario with regex
+            if (!preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
+                return false;
+            }
+
+            $scheme = strtolower($matches[1]);
+        } else {
+            $scheme = strtolower($url["scheme"]);
+        }
+
+        // These are dangerous schemes
+        if (in_array($scheme, ["javascript", "data", "blob", "file"])) {
+            return false;
+        }
+
+        // Check hostname if scheme is http or https
+        if (in_array($scheme, ["http", "https"])) {
             return parent::isValid($value);
         }
 
-        // Otherwise, check the scheme whitelist
-        return \in_array($scheme, $this->schemes);
+        // Check scheme against white list
+        return in_array($scheme, $this->schemes);
     }
 }
