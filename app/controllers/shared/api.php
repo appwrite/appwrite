@@ -90,6 +90,98 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
     }
 };
 
+$usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
+    $value = 1;
+    if ($event === Database::EVENT_DOCUMENT_DELETE) {
+        $value = -1;
+    }
+
+    switch (true) {
+        case $document->getCollection() === 'teams':
+            $queueForUsage
+                ->addMetric(METRIC_TEAMS, $value); // per project
+            break;
+        case $document->getCollection() === 'users':
+            $queueForUsage
+                ->addMetric(METRIC_USERS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case $document->getCollection() === 'sessions': // sessions
+            $queueForUsage
+                ->addMetric(METRIC_SESSIONS, $value); //per project
+            break;
+        case $document->getCollection() === 'databases': // databases
+            $queueForUsage
+                ->addMetric(METRIC_DATABASES, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
+            $parts = explode('_', $document->getCollection());
+            $databaseInternalId = $parts[1] ?? 0;
+            $queueForUsage
+                ->addMetric(METRIC_COLLECTIONS, $value) // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
+            ;
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
+            $parts = explode('_', $document->getCollection());
+            $databaseInternalId   = $parts[1] ?? 0;
+            $collectionInternalId = $parts[3] ?? 0;
+            $queueForUsage
+                ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+            break;
+        case $document->getCollection() === 'buckets': //buckets
+            $queueForUsage
+                ->addMetric(METRIC_BUCKETS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'bucket_'): // files
+            $parts = explode('_', $document->getCollection());
+            $bucketInternalId  = $parts[1];
+            $queueForUsage
+                ->addMetric(METRIC_FILES, $value) // per project
+                ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
+                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
+                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+            break;
+        case $document->getCollection() === 'functions':
+            $queueForUsage
+                ->addMetric(METRIC_FUNCTIONS, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case $document->getCollection() === 'deployments':
+            $queueForUsage
+                ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
+                ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value) // per function
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
+            break;
+        default:
+            break;
+    }
+};
+
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -344,10 +436,11 @@ App::init()
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
+    ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Database $dbForProject, callable $timelimit, string $mode) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $timelimit, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -448,6 +541,26 @@ App::init()
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
+
+        // Clone the queues, to prevent events triggered by the database listener
+        // from overwriting the events that are supposed to be triggered in the shutdown hook.
+        $queueForEventsClone = new Event($queue);
+        $queueForFunctions = new Func($queue);
+        $queueForWebhooks = new Webhook($queue);
+        $queueForRealtime = new Realtime();
+
+        $dbForProject
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
