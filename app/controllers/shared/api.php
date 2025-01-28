@@ -58,7 +58,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
         return;
@@ -74,17 +74,20 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
         ->from($queueForEvents)
         ->trigger();
 
-    $queueForWebhooks
-        ->from($queueForEvents)
-        ->trigger();
 
-    if ($queueForEvents->getProject()->getId() === 'console') {
-        return;
+    /** Trigger webhooks events only if a project has them enabled */
+    if (!empty($project->getAttribute('webhooks'))) {
+        $queueForWebhooks
+            ->from($queueForEvents)
+            ->trigger();
     }
 
-    $queueForRealtime
-        ->from($queueForEvents)
-        ->trigger();
+    /** Trigger realtime events only for non console events */
+    if ($queueForEvents->getProject()->getId() !== 'console') {
+        $queueForRealtime
+            ->from($queueForEvents)
+            ->trigger();
+    }
 };
 
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
@@ -185,13 +188,14 @@ App::init()
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
+    ->inject('queueForAudits')
     ->inject('project')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -243,9 +247,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => 'Dynamic Key',
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -253,6 +258,8 @@ App::init()
 
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    $queueForAudits->setUser($user);
                 }
             } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
@@ -264,9 +271,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => $key->getAttribute('name', 'UNKNOWN'),
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -301,6 +309,8 @@ App::init()
                             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
+
+                    $queueForAudits->setUser($user);
                 }
             }
         }
@@ -363,11 +373,20 @@ App::init()
         }
 
         /** Do not allow access to disabled services */
-        $service = $route->getLabel('sdk.namespace', '');
-        if (!empty($service)) {
+        /**
+         * @var ?\Appwrite\SDK\Method $method
+         */
+        $method = $route->getLabel('sdk', false);
+
+        if (is_array($method)) {
+            $method = $method[0];
+        }
+
+        if (!empty($method)) {
+            $namespace = $method->getNamespace();
             if (
-                array_key_exists($service, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$service]
+                array_key_exists($namespace, $project->getAttribute('services', []))
+                && !$project->getAttribute('services', [])[$namespace]
                 && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
@@ -506,9 +525,17 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
+            ->setHostname($request->getHostname())
             ->setEvent($route->getLabel('audits.event', ''))
-            ->setProject($project)
-            ->setUser($user);
+            ->setProject($project);
+
+        /* If a session exists, use the user associated with the session */
+        if (!$user->isEmpty()) {
+            $userClone = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
+        }
 
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
@@ -526,6 +553,7 @@ App::init()
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
                 $document,
                 $response,
                 $queueForEventsClone->from($queueForEvents),
@@ -678,16 +706,23 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            $queueForWebhooks
-                ->from($queueForEvents)
-                ->trigger();
-
             $queueForFunctions
                 ->from($queueForEvents)
                 ->trigger();
 
             if ($project->getId() !== 'console') {
                 $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+
+            /** Trigger webhooks events only if a project has them enabled
+             * A future optimisation is to only trigger webhooks if the webhook is "enabled"
+             * But it might have performance implications on the API due to the number of webhooks etc.
+             * Some profiling is needed to see if this is a problem.
+            */
+            if (!empty($project->getAttribute('webhooks'))) {
+                $queueForWebhooks
                     ->from($queueForEvents)
                     ->trigger();
             }
@@ -708,10 +743,32 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
+            $userClone = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
+        } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
+            /**
+             * User in the request is empty, and no user was set for auditing previously.
+             * This indicates:
+             * - No API Key was used.
+             * - No active session exists.
+             *
+             * Therefore, we consider this an anonymous request and create a relevant user.
+             */
+            $user = new Document([
+                '$id' => '',
+                'status' => true,
+                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
+                'password' => '',
+                'name' => 'Guest',
+            ]);
+
             $queueForAudits->setUser($user);
         }
 
-        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
+        if (!empty($queueForAudits->getResource()) && !$queueForAudits->getUser()->isEmpty()) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints

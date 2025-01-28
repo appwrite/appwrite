@@ -202,6 +202,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
@@ -733,12 +734,19 @@ Database::addFilter(
         $data = \json_decode($message->getAttribute('data', []), true);
         $providerType = $message->getAttribute('providerType', '');
 
-        if ($providerType === MESSAGE_TYPE_EMAIL) {
-            $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
-        } elseif ($providerType === MESSAGE_TYPE_SMS) {
-            $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
-        } else {
-            $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);
+        switch ($providerType) {
+            case MESSAGE_TYPE_EMAIL:
+                $searchValues[] = $data['subject'];
+                $searchValues[] = MESSAGE_TYPE_EMAIL;
+                break;
+            case MESSAGE_TYPE_SMS:
+                $searchValues[] = $data['content'];
+                $searchValues[] = MESSAGE_TYPE_SMS;
+                break;
+            case MESSAGE_TYPE_PUSH:
+                $searchValues[] = $data['title'] ?? '';
+                $searchValues[] = MESSAGE_TYPE_PUSH;
+                break;
         }
 
         $search = \implode(' ', \array_filter($searchValues));
@@ -762,7 +770,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 }, Database::VAR_DATETIME);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
-    $elements = $attribute['formatOptions']['elements'];
+    $elements = $attribute['formatOptions']['elements'] ?? [];
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
@@ -873,6 +881,12 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+            'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
@@ -1826,6 +1840,10 @@ App::setResource('requestTimestamp', function ($request) {
 }, ['request']);
 
 App::setResource('plan', function (array $plan = []) {
+    return [];
+});
+
+App::setResource('smsRates', function () {
     return [];
 });
 

@@ -4,6 +4,7 @@ namespace Appwrite\GraphQL\Types;
 
 use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
+use Appwrite\SDK\Method;
 use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
@@ -78,6 +79,7 @@ class Mapper
     public static function route(
         App $utopia,
         Route $route,
+        Method $method,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -86,10 +88,27 @@ class Mapper
             }
         }
 
-        $names = $route->getLabel('sdk.response.model', 'none');
-        $models = \is_array($names)
-            ? \array_map(static fn ($m) => static::$models[$m], $names)
-            : [static::$models[$names]];
+        $responses = $method->getResponses() ?? [];
+
+        // If responses is an array, map each response to its model
+        if (\is_array($responses)) {
+            $models = [];
+            foreach ($responses as $response) {
+                $modelName = $response->getModel();
+
+                if (\is_array($modelName)) {
+                    foreach ($modelName as $name) {
+                        $models[] = static::$models[$name];
+                    }
+                } else {
+                    $models[] = static::$models[$modelName];
+                }
+            }
+        } else {
+            // If single response, get its model and wrap in array
+            $modelName = $responses->getModel();
+            $models = [static::$models[$modelName]];
+        }
 
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));
@@ -98,13 +117,25 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
+                $methodParameters = $method->getParameters();
+
+                if (!empty($methodParameters)) {
+                    if (!array_key_exists($name, $methodParameters)) {
+                        continue;
+                    }
+                    $optional = $methodParameters[$name]['optional'];
+                } else {
+                    $optional = $parameter['optional'];
+                }
+
                 if ($name === 'queries') {
                     $list = true;
                 }
+
                 $parameterType = Mapper::param(
                     $utopia,
                     $parameter['validator'],
-                    !$parameter['optional'],
+                    !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [

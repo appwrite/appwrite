@@ -334,7 +334,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     }
 
     $app = new App('UTC');
-    $app->setCompression(true);
+    $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
@@ -386,7 +386,14 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $sdk = $route->getLabel("sdk", false);
+
+            $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
+            if (!empty($sdk)) {
+                /** @var Appwrite\SDK\Method $sdk */
+                $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            }
+
             $log->setAction($action);
             $log->addTag('service', $action);
 

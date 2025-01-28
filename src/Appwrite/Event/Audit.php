@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Audit extends Event
@@ -11,6 +10,7 @@ class Audit extends Event
     protected string $mode = '';
     protected string $userAgent = '';
     protected string $ip = '';
+    protected string $hostname = '';
 
     public function __construct(protected Connection $connection)
     {
@@ -114,20 +114,37 @@ class Audit extends Event
     }
 
     /**
-     * Executes the event and sends it to the audit worker.
+     * Set the hostname.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @param string $hostname
+     *
+     * @return self
      */
-    public function trigger(): string|bool
+    public function setHostname(string $hostname): self
     {
-        if ($this->paused) {
-            return false;
-        }
+        $this->hostname = $hostname;
 
-        $client = new Client($this->queue, $this->connection);
+        return $this;
+    }
 
-        return $client->enqueue([
+    /**
+     * Get the hostname.
+     *
+     * @return string
+     */
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Prepare payload for queue.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -136,6 +153,7 @@ class Audit extends Event
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
             'event' => $this->event,
-        ]);
+            'hostname' => $this->hostname
+        ];
     }
 }

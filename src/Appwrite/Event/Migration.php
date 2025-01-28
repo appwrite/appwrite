@@ -3,7 +3,6 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Migration extends Event
@@ -68,23 +67,16 @@ class Migration extends Event
     }
 
     /**
-     * Executes the migration event and sends it to the migrations worker.
+     * Prepare the payload for the migration event.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,
-        ]);
+        ];
     }
 }
