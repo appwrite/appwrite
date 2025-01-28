@@ -528,7 +528,7 @@ App::error()
         if ($document->getAttribute('blocked')) {
             App::setResource('error', fn () => new Exception(Exception::QUERY_BLOCKED));
         } else {
-            App::setResource('error', fn() => new Exception(Exception::QUERY_TIMEOUT));
+            App::setResource('error', fn () => new Exception(Exception::QUERY_TIMEOUT));
         }
     });
 
