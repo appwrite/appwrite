@@ -48,8 +48,6 @@ class Messaging extends Action
 {
     private ?Local $localDevice = null;
 
-    private array $dsns = [];
-
     private ?SMSAdapter $adapter = null;
 
     public static function getName(): string
@@ -63,7 +61,7 @@ class Messaging extends Action
     public function __construct()
     {
 
-        $this->adapter = $this->createInternalSMSAdapter($this->dsns);
+        $this->adapter = $this->createInternalSMSAdapter();
 
         $this
             ->desc('Messaging worker')
@@ -674,7 +672,7 @@ class Messaging extends Action
         return $this->localDevice;
     }
 
-    private function createInternalSMSAdapter(array $dsns): ?SMSAdapter
+    private function createInternalSMSAdapter(): ?SMSAdapter
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             Console::warning('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
@@ -683,10 +681,11 @@ class Messaging extends Action
 
         $providers = System::getEnv('_APP_SMS_PROVIDER', '');
 
+        $dsns = [];
         if (!empty($providers)) {
             $providers = explode(',', $providers);
             foreach ($providers as $provider) {
-                $this->dsns[] = new DSN($provider);
+                $dsns[] = new DSN($provider);
             }
         }
 
