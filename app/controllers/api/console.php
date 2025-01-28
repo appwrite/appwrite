@@ -122,12 +122,12 @@ App::get('v1/console/resources/:resourceId')
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'console')
-    ->label('sdk.method', 'checkResourceAvailability')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.method', 'getResourceAvailability')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{userId}')
+    ->label('abuse-key', 'userId:{userId}, url:{url}')
+    ->label('abuse-time', 60)
     ->param('resourceId', '', new UID(), 'ID of the resource.')
     ->param('type', '', new WhiteList(['rules']), 'Resource type.')
     ->inject('response')
@@ -136,7 +136,7 @@ App::get('v1/console/resources/:resourceId')
         $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $resourceId));
 
         if (!$document->isEmpty()) {
-            throw new Exception(Exception::RESOURCE_ALREADY_EXISTS, 'Resource ID is already in use.');
+            throw new Exception(Exception::RESOURCE_ALREADY_EXISTS);
         }
 
         $response->noContent();
