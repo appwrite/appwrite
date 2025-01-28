@@ -62,19 +62,7 @@ class Messaging extends Action
      */
     public function __construct()
     {
-        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
-        }
-
-        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
-
-        if (!empty($providers)) {
-            $providers = explode(',', $providers);
-            foreach ($providers as $provider) {
-                $this->dsns[] = new DSN($provider);
-            }
-        }
-
+        
         $this->adapter = $this->createInternalSMSAdapter($this->dsns);
 
         $this
@@ -402,6 +390,11 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
+        if ($this->adapter === null) {
+            Console::warning('Skipped SMS processing. SMS adapter is not set.');
+            return;
+        }
+
         if ($project->isEmpty()) {
             throw new \Exception('Project not set in payload');
         }
@@ -681,8 +674,22 @@ class Messaging extends Action
         return $this->localDevice;
     }
 
-    private function createInternalSMSAdapter(array $dsns): SMSAdapter
+    private function createInternalSMSAdapter(array $dsns): ?SMSAdapter
     {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
+            Console::warning('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
+            return null;
+        }
+
+        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
+
+        if (!empty($providers)) {
+            $providers = explode(',', $providers);
+            foreach ($providers as $provider) {
+                $this->dsns[] = new DSN($provider);
+            }
+        }
+
         if (count($dsns) === 1) {
             $provider = $this->createProviderFromDSN($dsns[0]);
             $adapter = $this->getSmsAdapter($provider);
