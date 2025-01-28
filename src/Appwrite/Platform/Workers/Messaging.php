@@ -423,7 +423,6 @@ class Messaging extends Action
 
         try {
             $result = $this->adapter->send($sms);
-            var_dump($result);
         } catch (\Throwable $th) {
             throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
         }
