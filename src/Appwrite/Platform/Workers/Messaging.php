@@ -416,8 +416,8 @@ class Messaging extends Action
 
         $from = System::getEnv('_APP_SMS_FROM', '');
         $sms = new SMS(
-            $recipients, 
-            $message->getAttribute('data')['content'], 
+            $recipients,
+            $message->getAttribute('data')['content'],
             $from
         );
 

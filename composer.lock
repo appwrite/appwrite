@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "232f9dd47974029f8dcd24ad4cbe6ae9",
+    "content-hash": "b688586471d8fc6cc39ba144044795f9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3878,16 +3878,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "dev-update-fast2sms-adapter",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "01a20625dbe1d552e09084f81c8e3b9ccc25bae5"
+                "reference": "4ba356a3aa382802727f7e13e0f0152bcc1fc535"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/01a20625dbe1d552e09084f81c8e3b9ccc25bae5",
-                "reference": "01a20625dbe1d552e09084f81c8e3b9ccc25bae5",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/4ba356a3aa382802727f7e13e0f0152bcc1fc535",
+                "reference": "4ba356a3aa382802727f7e13e0f0152bcc1fc535",
                 "shasum": ""
             },
             "require": {
@@ -3923,9 +3923,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/update-fast2sms-adapter"
+                "source": "https://github.com/utopia-php/messaging/tree/0.14.1"
             },
-            "time": "2025-01-28T04:58:00+00:00"
+            "time": "2025-01-28T06:14:28+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8503,9 +8503,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/messaging": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
