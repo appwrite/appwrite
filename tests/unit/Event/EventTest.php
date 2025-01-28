@@ -7,7 +7,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Client;
 
-require_once __DIR__ . '/../../../app/init.php';
+require_once __DIR__ . '/../../../app/init/http.php';
 
 class EventTest extends TestCase
 {
