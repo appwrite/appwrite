@@ -98,27 +98,36 @@ class Schema
             foreach ($routes as $route) {
                 /** @var Route $route */
 
-                $namespace = $route->getLabel('sdk.namespace', '');
-                $method = $route->getLabel('sdk.method', '');
-                $name = $namespace . \ucfirst($method);
+                /** @var \Appwrite\SDK\Method $sdk  */
+                $sdk = $route->getLabel('sdk', false);
 
-                if (empty($name)) {
+                if (empty($sdk)) {
                     continue;
                 }
 
-                foreach (Mapper::route($utopia, $route, $complexity) as $field) {
-                    switch ($route->getMethod()) {
-                        case 'GET':
-                            $queries[$name] = $field;
-                            break;
-                        case 'POST':
-                        case 'PUT':
-                        case 'PATCH':
-                        case 'DELETE':
-                            $mutations[$name] = $field;
-                            break;
-                        default:
-                            throw new \Exception("Unsupported method: {$route->getMethod()}");
+                if (!\is_array($sdk)) {
+                    $sdk = [$sdk];
+                }
+
+                foreach ($sdk as $method) {
+                    $namespace = $method->getNamespace();
+                    $methodName = $method->getMethodName();
+                    $name = $namespace . \ucfirst($methodName);
+
+                    foreach (Mapper::route($utopia, $route, $method, $complexity) as $field) {
+                        switch ($route->getMethod()) {
+                            case 'GET':
+                                $queries[$name] = $field;
+                                break;
+                            case 'POST':
+                            case 'PUT':
+                            case 'PATCH':
+                            case 'DELETE':
+                                $mutations[$name] = $field;
+                                break;
+                            default:
+                                throw new \Exception("Unsupported method: {$route->getMethod()}");
+                        }
                     }
                 }
             }
@@ -230,7 +239,7 @@ class Schema
                     'args' => \array_merge(
                         Mapper::args('id'),
                         \array_map(
-                            fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                            fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
                             $attributes
                         )
                     ),

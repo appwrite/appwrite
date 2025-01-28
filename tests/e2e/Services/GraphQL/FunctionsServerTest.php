@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -25,6 +24,7 @@ class FunctionsServerTest extends Scope
             'variables' => [
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
+                'entrypoint' => 'index.php',
                 'runtime' => 'php-8.0',
                 'execute' => [Role::any()->toString()],
             ]
@@ -80,13 +80,12 @@ class FunctionsServerTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php/code.tar.gz";
+
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
                     'functionId' => $function['_id'],
-                    'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
                 ]
@@ -94,7 +93,7 @@ class FunctionsServerTest extends Scope
             'map' => \json_encode([
                 'code' => ["variables.code"]
             ]),
-            'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
+            'code' => $this->packageFunction('php'),
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -105,26 +104,59 @@ class FunctionsServerTest extends Scope
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
 
-        sleep(15);
+        // Poll get deployment until an error, or status is either 'ready' or 'failed'
+        $deployment = $deployment['body']['data']['functionsCreateDeployment'];
+        $deploymentId = $deployment['_id'];
 
-        return $deployment['body']['data']['functionsCreateDeployment'];
+        $query = $this->getQuery(self::$GET_DEPLOYMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'functionId' => $function['_id'],
+                'deploymentId' => $deploymentId,
+            ]
+        ];
+
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), $gqlPayload);
+
+            $this->assertIsArray($deployment['body']['data']);
+            $this->assertArrayNotHasKey('errors', $deployment['body']);
+
+            $deployment = $deployment['body']['data']['functionsGetDeployment'];
+
+            if (
+                $deployment['status'] === 'ready'
+                || $deployment['status'] === 'failed'
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['status']);
+
+        return $deployment;
     }
 
     /**
-     * * @depends testCreateFunction
      * @depends testCreateDeployment
-     * @param $function
+     * @param $deployment
      * @return array
      * @throws \Exception
      */
-    public function testCreateExecution($function): array
+    public function testCreateExecution($deployment): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $deployment['resourceId'],
             ]
         ];
 
@@ -140,33 +172,31 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @depends testGetDeployment
-     * @param $function
      * @param $deployment
-     * @return array
+     * @return void
      * @throws \Exception
      */
-    public function testCreateRetryBuild($function, $deployment): void
+    public function testCreateRetryBuild($deployment): void
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$RETRY_BUILD);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $deployment['resourceId'],
                 'deploymentId' => $deployment['_id'],
                 'buildId' => $deployment['buildId'],
             ]
         ];
 
-        $retryBuild = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsArray($retryBuild['body']['errors']);
-        $this->assertEquals("Build not failed", $retryBuild['body']['errors'][0]['message']);
+        $this->assertIsNotArray($response['body']);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testGetFunctions(): array
@@ -272,20 +302,19 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @depends testCreateDeployment
-     * @param $function
+     * @param $deployment
      * @return array
      * @throws \Exception
      */
-    public function testGetDeployment($function, $deployment)
+    public function testGetDeployment($deployment)
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$GET_DEPLOYMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $deployment['resourceId'],
                 'deploymentId' => $deployment['_id'],
             ]
         ];
@@ -334,21 +363,19 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @depends testCreateExecution
-     * @param $function
      * @param $execution
      * @return array
      * @throws \Exception
      */
-    public function testGetExecution($function, $execution): array
+    public function testGetExecution($execution): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$GET_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $execution['functionId'],
                 'executionId' => $execution['_id'],
             ]
         ];
@@ -382,6 +409,8 @@ class FunctionsServerTest extends Scope
                 'functionId' => $function['_id'],
                 'name' => 'Test Function Updated',
                 'execute' => [Role::any()->toString()],
+                'entrypoint' => 'index.php',
+                'runtime' => 'php-8.0',
                 'vars' => [
                     'name' => 'John Doe',
                     'age' => 42,
@@ -403,20 +432,18 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @depends testCreateDeployment
-     * @param $function
      * @param $deployment
      * @throws \Exception
      */
-    public function testDeleteDeployment($function, $deployment): void
+    public function testDeleteDeployment($deployment): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$DELETE_DEPLOYMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $deployment['resourceId'],
                 'deploymentId' => $deployment['_id'],
             ]
         ];
@@ -428,22 +455,23 @@ class FunctionsServerTest extends Scope
 
         $this->assertIsNotArray($response['body']);
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        return $deployment;
     }
 
     /**
-     * @depends testCreateFunction
      * @depends testDeleteDeployment
-     * @param $function
+     * @param $deployment
      * @throws \Exception
      */
-    public function testDeleteFunction($function): void
+    public function testDeleteFunction($deployment): void
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$DELETE_FUNCTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['_id'],
+                'functionId' => $deployment['resourceId'],
             ]
         ];
 

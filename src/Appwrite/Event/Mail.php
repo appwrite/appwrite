@@ -2,21 +2,26 @@
 
 namespace Appwrite\Event;
 
-use Resque;
-use Utopia\Database\Document;
+use Utopia\Queue\Connection;
 
 class Mail extends Event
 {
     protected string $recipient = '';
-    protected string $from = '';
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
     protected array $smtp = [];
+    protected array $variables = [];
+    protected string $bodyTemplate = '';
+    protected array $attachment = [];
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::MAILS_QUEUE_NAME)
+            ->setClass(Event::MAILS_CLASS_NAME);
     }
 
     /**
@@ -66,29 +71,6 @@ class Mail extends Event
     }
 
     /**
-     * Sets from for the mail event.
-     *
-     * @param string $from
-     * @return self
-     */
-    public function setFrom(string $from): self
-    {
-        $this->from = $from;
-
-        return $this;
-    }
-
-    /**
-     * Returns from for mail event.
-     *
-     * @return string
-     */
-    public function getFrom(): string
-    {
-        return $this->from;
-    }
-
-    /**
      * Sets body for the mail event.
      *
      * @param string $body
@@ -135,6 +117,29 @@ class Mail extends Event
     }
 
     /**
+     * Sets bodyTemplate for the mail event.
+     *
+     * @param string $bodyTemplate
+     * @return self
+     */
+    public function setbodyTemplate(string $bodyTemplate): self
+    {
+        $this->bodyTemplate = $bodyTemplate;
+
+        return $this;
+    }
+
+    /**
+     * Returns subject for the mail event.
+     *
+     * @return string
+     */
+    public function getbodyTemplate(): string
+    {
+        return $this->bodyTemplate;
+    }
+
+    /**
      * Set SMTP Host
      *
      * @param string $host
@@ -166,7 +171,7 @@ class Mail extends Event
      */
     public function setSmtpUsername(string $username): self
     {
-        $this->smtp['username'];
+        $this->smtp['username'] = $username;
         return $this;
     }
 
@@ -178,7 +183,19 @@ class Mail extends Event
      */
     public function setSmtpPassword(string $password): self
     {
-        $this->smtp['password'];
+        $this->smtp['password'] = $password;
+        return $this;
+    }
+
+    /**
+     * Set SMTP secure
+     *
+     * @param string $password
+     * @return self
+     */
+    public function setSmtpSecure(string $secure): self
+    {
+        $this->smtp['secure'] = $secure;
         return $this;
     }
 
@@ -191,6 +208,18 @@ class Mail extends Event
     public function setSmtpSenderEmail(string $senderEmail): self
     {
         $this->smtp['senderEmail'] = $senderEmail;
+        return $this;
+    }
+
+    /**
+     * Set SMTP sender name
+     *
+     * @param string $senderName
+     * @return self
+     */
+    public function setSmtpSenderName(string $senderName): self
+    {
+        $this->smtp['senderName'] = $senderName;
         return $this;
     }
 
@@ -247,6 +276,16 @@ class Mail extends Event
     }
 
     /**
+     * Get SMTP secure
+     *
+     * @return string
+     */
+    public function getSmtpSecure(): string
+    {
+        return $this->smtp['secure'] ?? '';
+    }
+
+    /**
      * Get SMTP sender email
      *
      * @return string
@@ -254,6 +293,16 @@ class Mail extends Event
     public function getSmtpSenderEmail(): string
     {
         return $this->smtp['senderEmail'] ?? '';
+    }
+
+    /**
+     * Get SMTP sender name
+     *
+     * @return string
+     */
+    public function getSmtpSenderName(): string
+    {
+        return $this->smtp['senderName'] ?? '';
     }
 
     /**
@@ -267,21 +316,103 @@ class Mail extends Event
     }
 
     /**
-     * Executes the event and sends it to the mails worker.
+     * Get Email Variables
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    public function getVariables(): array
     {
-        return Resque::enqueue($this->queue, $this->class, [
-            'from' => $this->from,
+        return $this->variables;
+    }
+
+    /**
+     * Set Email Variables
+     *
+     * @param array $variables
+     * @return self
+     */
+    public function setVariables(array $variables): self
+    {
+        $this->variables = $variables;
+        return $this;
+    }
+
+    /**
+     * Set attachment
+     * @param string $content
+     * @param string $filename
+     * @param string $encoding
+     * @param string $type
+     * @return self
+     */
+    public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
+    {
+        $this->attachment = [
+            'content' => base64_encode($content),
+            'filename' => $filename,
+            'encoding' => $encoding,
+            'type' => $type,
+        ];
+        return $this;
+    }
+
+    /**
+     * Get attachment
+     *
+     * @return array
+     */
+    public function getAttachment(): array
+    {
+        return $this->attachment;
+    }
+
+    /**
+     * Reset attachment
+     *
+     * @return self
+     */
+    public function resetAttachment(): self
+    {
+        $this->attachment = [];
+        return $this;
+    }
+
+    /**
+     * Reset
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->project = null;
+        $this->recipient = '';
+        $this->name = '';
+        $this->subject = '';
+        $this->body = '';
+        $this->variables = [];
+        $this->bodyTemplate = '';
+        $this->attachment = [];
+        return $this;
+    }
+
+    /**
+     * Prepare the payload for the event
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
+            'project' => $this->project,
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
+            'bodyTemplate' => $this->bodyTemplate,
             'body' => $this->body,
             'smtp' => $this->smtp,
+            'variables' => $this->variables,
+            'attachment' => $this->attachment,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 }

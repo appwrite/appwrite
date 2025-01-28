@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   traefik:
     image: traefik:2.2
@@ -27,7 +25,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -64,11 +62,15 @@ services:
       - redis
       # - clamav
     environment:
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -288,7 +290,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -323,6 +324,7 @@ services:
       - MYSQL_DATABASE=appwrite
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
+      - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
   maildev:
@@ -372,20 +374,6 @@ services:
   #   - REDIS_HOSTS=redis
   #   ports:
   #   - "8081:8081"
-
-  # resque:
-  #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   ports:
-  #     - "5678:5678"
-  #   environment:
-  #     - RESQUE_WEB_HOST=redis
-  #     - RESQUE_WEB_PORT=6379
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
-
 
   # webgrind:
   #   image: 'jokkedk/webgrind:latest'

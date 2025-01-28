@@ -29,7 +29,7 @@ trait TeamsBaseServer
          * Test for FAILURE
          */
 
-        return [];
+        return $data;
     }
 
     /**
@@ -51,6 +51,7 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
+        $this->assertFalse($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userName']);
         $this->assertNotEmpty($response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
@@ -58,6 +59,67 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test that sensitive fields are not hidden, as we are on console
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+
+        // Assert that sensitive fields are present
+        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
+
+        /**
+         * Update project settings to show sensitive fields
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test that sensitive fields are shown
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+
+        // Assert that sensitive fields are present
+        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
 
         /**
          * Test for FAILURE
@@ -123,10 +185,7 @@ trait TeamsBaseServer
         // $this->assertContains('team:'.$teamUid.'/admin', $response['body']['roles']);
         // $this->assertContains('team:'.$teamUid.'/editor', $response['body']['roles']);
 
-        /**
-         * Test for FAILURE
-         */
-
+        // test for resending invitation
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -137,7 +196,11 @@ trait TeamsBaseServer
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -268,7 +331,6 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);

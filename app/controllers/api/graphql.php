@@ -1,8 +1,14 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -14,20 +20,41 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
+App::init()
+    ->groups(['graphql'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if (
+            array_key_exists('graphql', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['graphql']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+    });
+
 App::get('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.hide', true)
-    ->label('sdk.description', '/docs/references/graphql/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'get',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        hide: true,
+        description: '/docs/references/graphql/get.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->param('query', '', new Text(0, 0), 'The query to execute.')
@@ -58,20 +85,25 @@ App::get('/v1/graphql')
     });
 
 App::post('/v1/graphql/mutation')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'mutation')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'mutation',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
@@ -103,20 +135,25 @@ App::post('/v1/graphql/mutation')
     });
 
 App::post('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'query')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        name: 'query',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
@@ -161,9 +198,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -183,7 +220,7 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);

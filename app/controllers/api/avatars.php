@@ -1,26 +1,32 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Utopia\Validator\URL;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Image\Image;
-use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
@@ -54,15 +60,15 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+        ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
         ->setContentType('image/png')
         ->file($data);
     unset($image);
 };
 
-$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger) {
     try {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -75,7 +81,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         }
 
         if (empty($gitHubSession)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'GitHub session not found.');
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND, 'GitHub session not found.');
         }
 
         $provider = $gitHubSession->getAttribute('provider', '');
@@ -83,8 +89,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $accessTokenExpiry = $gitHubSession->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -115,13 +121,13 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
                 $index = 0;
                 do {
                     $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                    $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
 
                     $gitHubSession = new Document();
@@ -153,55 +159,30 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             'id' => $githubId
         ];
     } catch (Exception $error) {
-        if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace('console');
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-
-            $log->setAction('avatarsGetGitHub');
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('GitHub error log pushed with status code: ' . $responseCode);
-        }
-
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
-
         return [];
     }
-
-    return [];
 };
 
 App::get('/v1/avatars/credit-cards/:code')
-    ->desc('Get Credit Card Icon')
+    ->desc('Get credit card icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resource', 'avatar/credit-card')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getCreditCard')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getCreditCard',
+        description: '/docs/references/avatars/get-credit-card.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -210,18 +191,25 @@ App::get('/v1/avatars/credit-cards/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
-    ->desc('Get Browser Icon')
+    ->desc('Get browser icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resource', 'avatar/browser')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getBrowser')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-browser.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getBrowser',
+        description: '/docs/references/avatars/get-browser.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -230,18 +218,25 @@ App::get('/v1/avatars/browsers/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/flags/:code')
-    ->desc('Get Country Flag')
+    ->desc('Get country flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resource', 'avatar/flag')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getFlag')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-flag.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getFlag',
+        description: '/docs/references/avatars/get-flag.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -250,18 +245,25 @@ App::get('/v1/avatars/flags/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/image')
-    ->desc('Get Image from URL')
+    ->desc('Get image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resource', 'avatar/image')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getImage')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-image.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getImage',
+        description: '/docs/references/avatars/get-image.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE
+    ))
     ->param('url', '', new URL(['http', 'https']), 'Image URL which you want to crop.')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
@@ -276,15 +278,28 @@ App::get('/v1/avatars/image')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $fetch = @\file_get_contents($url, false);
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
 
-        if (!$fetch) {
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
-            $image = new Image($fetch);
-        } catch (\Exception $exception) {
+            $image = new Image($res->getBody());
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
 
@@ -293,25 +308,32 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
     });
 
 App::get('/v1/avatars/favicon')
-    ->desc('Get Favicon')
+    ->desc('Get favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resource', 'avatar/favicon')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getFavicon')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getFavicon',
+        description: '/docs/references/avatars/get-favicon.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE
+    ))
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
     ->action(function (string $url, Response $response) {
@@ -326,31 +348,33 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $curl = \curl_init();
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
 
-        \curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 3,
-            CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => \sprintf(
-                APP_USERAGENT,
-                App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
-            ),
-        ]);
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        $html = \curl_exec($curl);
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->setUserAgent(\sprintf(
+                    APP_USERAGENT,
+                    System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                    System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+                ))
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        \curl_close($curl);
-
-        if (!$html) {
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
-        @$doc->loadHTML($html);
+        @$doc->loadHTML($res->getBody());
 
         $links = $doc->getElementsByTagName('link');
         $outputHref = '';
@@ -399,47 +423,67 @@ App::get('/v1/avatars/favicon')
             $outputExt = 'ico';
         }
 
-        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            $data = @\file_get_contents($outputHref, false);
+        $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
 
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($outputHref);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        if ($res->getStatusCode() !== 200) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
+        $data = $res->getBody();
+
+        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
         }
 
-        $fetch = @\file_get_contents($outputHref, false);
-
-        if (!$fetch) {
-            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
-        }
-
-        $image = new Image($fetch);
+        $image = new Image($data);
         $image->crop((int) $width, (int) $height);
         $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
     });
 
 App::get('/v1/avatars/qr')
-    ->desc('Get QR Code')
+    ->desc('Get QR code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getQR')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-qr.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getQR',
+        description: '/docs/references/avatars/get-qr.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
     ->param('size', 400, new Range(1, 1000), 'QR code size. Pass an integer between 1 to 1000. Defaults to 400.', true)
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
@@ -464,23 +508,30 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
 
 App::get('/v1/avatars/initials')
-    ->desc('Get User Initials')
+    ->desc('Get user initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache.resource', 'avatar/initials')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'avatars')
-    ->label('sdk.method', 'getInitials')
-    ->label('sdk.methodType', 'location')
-    ->label('sdk.description', '/docs/references/avatars/get-initials.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        name: 'getInitials',
+        description: '/docs/references/avatars/get-initials.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
     ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -490,12 +541,11 @@ App::get('/v1/avatars/initials')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['background' => '#FFA1CE'], // Default (Pink)
-            ['background' => '#FDC584'], // Orange
-            ['background' => '#94DBD1'], // Green
-            ['background' => '#A1C4FF'], // Blue
-            ['background' => '#FFA1CE'], // Pink
-            ['background' => '#CBB1FC'] // Purple
+            ['background' => '#FD366E'], // Default (Pink)
+            ['background' => '#FE9567'], // Orange
+            ['background' => '#7C67FE'], // Purple
+            ['background' => '#68A3FE'], // Blue
+            ['background' => '#85DBD8'], // Mint
         ];
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
@@ -503,15 +553,17 @@ App::get('/v1/avatars/initials')
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = null;
+        $initials = '';
         $code = 0;
 
         foreach ($words as $key => $w) {
-            $initials .= $w[0] ?? '';
-            $code += (isset($w[0])) ? \ord($w[0]) : 0;
+            if (ctype_alnum($w[0] ?? '')) {
+                $initials .= $w[0];
+                $code += ord($w[0]);
 
-            if ($key == 1) {
-                break;
+                if ($key == 1) {
+                    break;
+                }
             }
         }
 
@@ -529,8 +581,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
+        $image->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
@@ -545,16 +597,14 @@ App::get('/v1/avatars/initials')
         $image->setImageFormat("png");
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
-        //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
-
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
     });
 
 App::get('/v1/cards/cloud')
-    ->desc('Get Front Of Cloud Card')
+    ->desc('Get front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -569,14 +619,14 @@ App::get('/v1/cards/cloud')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -587,7 +637,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -707,7 +757,7 @@ App::get('/v1/cards/cloud')
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -755,13 +805,13 @@ App::get('/v1/cards/cloud')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
 
 App::get('/v1/cards/cloud-back')
-    ->desc('Get Back Of Cloud Card')
+    ->desc('Get back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -776,14 +826,14 @@ App::get('/v1/cards/cloud-back')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -793,7 +843,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -833,13 +883,13 @@ App::get('/v1/cards/cloud-back')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
 
 App::get('/v1/cards/cloud-og')
-    ->desc('Get OG Image From Cloud Card')
+    ->desc('Get OG image From Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -854,14 +904,14 @@ App::get('/v1/cards/cloud-og')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -876,7 +926,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -1091,7 +1141,7 @@ App::get('/v1/cards/cloud-og')
 
         $textName = new \ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textName->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $textName->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $textName->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -1223,7 +1273,7 @@ App::get('/v1/cards/cloud-og')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });

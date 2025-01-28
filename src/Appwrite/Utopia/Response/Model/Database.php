@@ -36,7 +36,7 @@ class Database extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Database enabled.',
+                'description' => 'If database is enabled. Can be \'enabled\' or \'disabled\'. When disabled, the database is inaccessible to users, but remains accessible to Server SDKs using API keys.',
                 'default' => true,
                 'example' => false,
             ])

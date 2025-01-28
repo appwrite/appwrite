@@ -1,7 +1,10 @@
 <?php
 
-use Appwrite\Utopia\Response;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -9,18 +12,21 @@ use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
 App::get('/v1/locale')
-    ->desc('Get User Locale')
+    ->desc('Get user locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/locale/get-locale.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE)
-    ->label('sdk.offline.model', '/localed')
-    ->label('sdk.offline.key', 'current')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'get',
+        description: '/docs/references/locale/get-locale.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE,
+            )
+        ]
+    ))
     ->inject('request')
     ->inject('response')
     ->inject('locale')
@@ -63,24 +69,27 @@ App::get('/v1/locale')
 
         $response
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
 App::get('/v1/locale/codes')
-    ->desc('List Locale Codes')
+    ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCodes')
-    ->label('sdk.description', '/docs/references/locale/list-locale-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE_CODE_LIST)
-    ->label('sdk.offline.model', '/locale/localeCode')
-    ->label('sdk.offline.key', 'current')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listCodes',
+        description: '/docs/references/locale/list-locale-codes.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE_CODE_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->action(function (Response $response) {
         $codes = Config::getParam('locale-codes');
@@ -91,18 +100,21 @@ App::get('/v1/locale/codes')
     });
 
 App::get('/v1/locale/countries')
-    ->desc('List Countries')
+    ->desc('List countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountries')
-    ->label('sdk.description', '/docs/references/locale/list-countries.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
-    ->label('sdk.offline.model', '/locale/countries')
-    ->label('sdk.offline.response.key', 'code')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listCountries',
+        description: '/docs/references/locale/list-countries.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
@@ -124,18 +136,21 @@ App::get('/v1/locale/countries')
     });
 
 App::get('/v1/locale/countries/eu')
-    ->desc('List EU Countries')
+    ->desc('List EU countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountriesEU')
-    ->label('sdk.description', '/docs/references/locale/list-countries-eu.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
-    ->label('sdk.offline.model', '/locale/countries/eu')
-    ->label('sdk.offline.response.key', 'code')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listCountriesEU',
+        description: '/docs/references/locale/list-countries-eu.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
@@ -159,18 +174,21 @@ App::get('/v1/locale/countries/eu')
     });
 
 App::get('/v1/locale/countries/phones')
-    ->desc('List Countries Phone Codes')
+    ->desc('List countries phone codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountriesPhones')
-    ->label('sdk.description', '/docs/references/locale/list-countries-phones.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
-    ->label('sdk.offline.model', '/locale/countries/phones')
-    ->label('sdk.offline.response.key', 'countryCode')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listCountriesPhones',
+        description: '/docs/references/locale/list-countries-phones.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PHONE_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
@@ -193,18 +211,21 @@ App::get('/v1/locale/countries/phones')
     });
 
 App::get('/v1/locale/continents')
-    ->desc('List Continents')
+    ->desc('List continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listContinents')
-    ->label('sdk.description', '/docs/references/locale/list-continents.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
-    ->label('sdk.offline.model', '/locale/continents')
-    ->label('sdk.offline.response.key', 'code')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listContinents',
+        description: '/docs/references/locale/list-continents.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CONTINENT_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
@@ -225,18 +246,21 @@ App::get('/v1/locale/continents')
     });
 
 App::get('/v1/locale/currencies')
-    ->desc('List Currencies')
+    ->desc('List currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCurrencies')
-    ->label('sdk.description', '/docs/references/locale/list-currencies.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
-    ->label('sdk.offline.model', '/locale/currencies')
-    ->label('sdk.offline.response.key', 'code')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listCurrencies',
+        description: '/docs/references/locale/list-currencies.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CURRENCY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->action(function (Response $response) {
         $list = Config::getParam('locale-currencies');
@@ -248,18 +272,21 @@ App::get('/v1/locale/currencies')
 
 
 App::get('/v1/locale/languages')
-    ->desc('List Languages')
+    ->desc('List languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listLanguages')
-    ->label('sdk.description', '/docs/references/locale/list-languages.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
-    ->label('sdk.offline.model', '/locale/languages')
-    ->label('sdk.offline.response.key', 'code')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        name: 'listLanguages',
+        description: '/docs/references/locale/list-languages.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LANGUAGE_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->action(function (Response $response) {
         $list = Config::getParam('locale-languages');

@@ -4,6 +4,7 @@ namespace Appwrite\GraphQL\Types;
 
 use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
+use Appwrite\SDK\Method;
 use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
@@ -50,6 +51,7 @@ class Mapper
         $defaults = [
             'boolean' => Type::boolean(),
             'string' => Type::string(),
+            'payload' => Type::string(),
             'integer' => Type::int(),
             'double' => Type::float(),
             'datetime' => Type::string(),
@@ -77,6 +79,7 @@ class Mapper
     public static function route(
         App $utopia,
         Route $route,
+        Method $method,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -85,10 +88,27 @@ class Mapper
             }
         }
 
-        $names = $route->getLabel('sdk.response.model', 'none');
-        $models = \is_array($names)
-            ? \array_map(static fn($m) => static::$models[$m], $names)
-            : [static::$models[$names]];
+        $responses = $method->getResponses() ?? [];
+
+        // If responses is an array, map each response to its model
+        if (\is_array($responses)) {
+            $models = [];
+            foreach ($responses as $response) {
+                $modelName = $response->getModel();
+
+                if (\is_array($modelName)) {
+                    foreach ($modelName as $name) {
+                        $models[] = static::$models[$name];
+                    }
+                } else {
+                    $models[] = static::$models[$modelName];
+                }
+            }
+        } else {
+            // If single response, get its model and wrap in array
+            $modelName = $responses->getModel();
+            $models = [static::$models[$modelName]];
+        }
 
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));
@@ -97,13 +117,25 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
+                $methodParameters = $method->getParameters();
+
+                if (!empty($methodParameters)) {
+                    if (!array_key_exists($name, $methodParameters)) {
+                        continue;
+                    }
+                    $optional = $methodParameters[$name]['optional'];
+                } else {
+                    $optional = $parameter['optional'];
+                }
+
                 if ($name === 'queries') {
                     $list = true;
                 }
+
                 $parameterType = Mapper::param(
                     $utopia,
                     $parameter['validator'],
-                    !$parameter['optional'],
+                    !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [
@@ -150,7 +182,7 @@ class Mapper
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
                         (array)$object,
-                        fn($key) => !\str_starts_with($key, '_'),
+                        fn ($key) => !\str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
 
@@ -165,7 +197,7 @@ class Mapper
             $fields['status'] = [
                 'type' => Type::string(),
                 'description' => 'Status',
-                'resolve' => static fn($object, $args, $context, $info) => 'OK',
+                'resolve' => static fn ($object, $args, $context, $info) => 'OK',
             ];
         }
 
@@ -235,6 +267,7 @@ class Mapper
             case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
+            case 'Appwrite\Event\Validator\FunctionEvent':
             case 'Utopia\Validator\HexColor':
             case 'Utopia\Validator\Host':
             case 'Utopia\Validator\IP':
@@ -256,10 +289,12 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
             case 'Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
             case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
             case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
             case 'Utopia\Database\Validator\Permissions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Projects':

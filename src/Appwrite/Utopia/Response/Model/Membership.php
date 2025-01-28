@@ -36,13 +36,13 @@ class Membership extends Model
             ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User name.',
+                'description' => 'User name. Hide this attribute by toggling membership privacy in the Console.',
                 'default' => '',
                 'example' => 'John Doe',
             ])
             ->addRule('userEmail', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User email address.',
+                'description' => 'User email address. Hide this attribute by toggling membership privacy in the Console.',
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
@@ -73,6 +73,12 @@ class Membership extends Model
             ->addRule('confirm', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'User confirmation status, true if the user has joined the team or false otherwise.',
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('mfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by toggling membership privacy in the Console.',
                 'default' => false,
                 'example' => false,
             ])

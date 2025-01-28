@@ -1,67 +1,85 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Event\Messaging;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\Host;
+use Appwrite\Platform\Workers\Deletes;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
-    ->desc('Create Team')
+    ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'team.create')
     ->label('audits.resource', 'team/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/teams/create-team.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'create',
+        description: '/docs/references/teams/create-team.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TEAM,
+            )
+        ]
+    ))
     ->param('teamId', '', new CustomId(), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-    ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
+    ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -69,7 +87,7 @@ App::post('/v1/teams')
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
         try {
-            $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
+            $team = Authorization::skip(fn () => $dbForProject->createDocument('teams', new Document([
                 '$id' => $teamId,
                 '$permissions' => [
                     Permission::read(Role::team($teamId)),
@@ -114,13 +132,13 @@ App::post('/v1/teams')
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         if (!empty($user->getId())) {
-            $events->setParam('userId', $user->getId());
+            $queueForEvents->setParam('userId', $user->getId());
         }
 
         $response
@@ -129,34 +147,52 @@ App::post('/v1/teams')
     });
 
 App::get('/v1/teams')
-    ->desc('List Teams')
+    ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/teams/list-teams.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
-    ->label('sdk.offline.model', '/teams')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'list',
+        description: '/docs/references/teams/list-teams.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $teamId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('teams', $teamId);
 
@@ -179,18 +215,21 @@ App::get('/v1/teams')
     });
 
 App::get('/v1/teams/:teamId')
-    ->desc('Get Team')
+    ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/teams/get-team.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->label('sdk.offline.model', '/teams')
-    ->label('sdk.offline.key', '{teamId}')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'get',
+        description: '/docs/references/teams/get-team.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -206,17 +245,21 @@ App::get('/v1/teams/:teamId')
     });
 
 App::get('/v1/teams/:teamId/prefs')
-    ->desc('Get Team Preferences')
+    ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'getPrefs')
-    ->label('sdk.description', '/docs/references/teams/get-team-prefs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
-    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'getPrefs',
+        description: '/docs/references/teams/get-team-prefs.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -234,28 +277,31 @@ App::get('/v1/teams/:teamId/prefs')
     });
 
 App::put('/v1/teams/:teamId')
-    ->desc('Update Name')
+    ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'team.update')
     ->label('audits.resource', 'team/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updateName')
-    ->label('sdk.description', '/docs/references/teams/update-team-name.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->label('sdk.offline.model', '/teams')
-    ->label('sdk.offline.key', '{teamId}')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'updateName',
+        description: '/docs/references/teams/update-team-name.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEAM,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -271,33 +317,37 @@ App::put('/v1/teams/:teamId')
             return $dbForProject->updateDocument('teams', $team->getId(), $team);
         });
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::put('/v1/teams/:teamId/prefs')
-    ->desc('Update Preferences')
+    ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'team.update')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updatePrefs')
-    ->label('sdk.description', '/docs/references/teams/update-team-prefs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
-    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'updatePrefs',
+        description: '/docs/references/teams/update-team-prefs.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PREFERENCES,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -307,30 +357,39 @@ App::put('/v1/teams/:teamId/prefs')
 
         $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
-    ->desc('Delete Team')
+    ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'team.delete')
     ->label('audits.resource', 'team/{request.teamId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/teams/delete-team.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'delete',
+        description: '/docs/references/teams/delete-team.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
+    ->inject('getProjectDB')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
+    ->inject('project')
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -342,11 +401,16 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $deletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $deletes = new Deletes();
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
 
-        $events
+        if ($project->getId() === 'console') {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_TEAM_PROJECTS)
+                ->setDocument($team);
+        }
+
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
@@ -355,7 +419,7 @@ App::delete('/v1/teams/:teamId')
     });
 
 App::post('/v1/teams/:teamId/memberships')
-    ->desc('Create Team Membership')
+    ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
@@ -363,30 +427,57 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('audits.event', 'membership.create')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('audits.userId', '{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'createMembership')
-    ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'createMembership',
+        description: '/docs/references/teams/create-team-membership.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
+    ))
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('email', '', new Email(), 'Email of the new team member.', true)
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('roles', [], function (Document $project) {
+        if ($project->getId() === 'console') {
+            ;
+            $roles = array_keys(Config::getParam('roles', []));
+            array_filter($roles, function ($role) {
+                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+            });
+            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+        }
+        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('mails')
-    ->inject('messaging')
-    ->inject('events')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+    ->inject('queueForMails')
+    ->inject('queueForMessaging')
+    ->inject('queueForEvents')
+    ->inject('timelimit')
+    ->inject('queueForUsage')
+    ->inject('plan')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $url = htmlentities($url);
+        if (empty($url)) {
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
+            }
+        }
 
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
@@ -394,7 +485,7 @@ App::post('/v1/teams/:teamId/memberships')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-        if (!$isPrivilegedUser && !$isAppUser && empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -421,20 +512,20 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
 
-        if (empty($invitee)) { // Create new user if no user with same email found
+        if ($invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
-            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+            if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
@@ -442,9 +533,17 @@ App::post('/v1/teams/:teamId/memberships')
                 }
             }
 
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
             try {
                 $userId = ID::unique();
-                $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -456,6 +555,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'phone' => empty($phone) ? null : $phone,
                     'emailVerification' => false,
                     'status' => true,
+                    // TODO: Set password empty?
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
@@ -472,7 +572,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name])
+                    'search' => implode(' ', [$userId, $email, $name]),
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -485,94 +585,146 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
-        $secret = Auth::tokenGenerator();
-
-        $membershipId = ID::unique();
-        $membership = new Document([
-            '$id' => $membershipId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($invitee->getId())),
-                Permission::update(Role::team($team->getId(), 'owner')),
-                Permission::delete(Role::user($invitee->getId())),
-                Permission::delete(Role::team($team->getId(), 'owner')),
-            ],
-            'userId' => $invitee->getId(),
-            'userInternalId' => $invitee->getInternalId(),
-            'teamId' => $team->getId(),
-            'teamInternalId' => $team->getInternalId(),
-            'roles' => $roles,
-            'invited' => DateTime::now(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
-            'confirm' => ($isPrivilegedUser || $isAppUser),
-            'secret' => Auth::hash($secret),
-            'search' => implode(' ', [$membershipId, $invitee->getId()])
+        $membership = $dbForProject->findOne('memberships', [
+            Query::equal('userInternalId', [$invitee->getInternalId()]),
+            Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
-        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
-            try {
-                $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
-            }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+        if ($membership->isEmpty()) {
+            $secret = Auth::tokenGenerator();
 
-            $dbForProject->deleteCachedDocument('users', $invitee->getId());
+            $membershipId = ID::unique();
+            $membership = new Document([
+                '$id' => $membershipId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($invitee->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($invitee->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
+                'userId' => $invitee->getId(),
+                'userInternalId' => $invitee->getInternalId(),
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
+                'roles' => $roles,
+                'invited' => DateTime::now(),
+                'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
+                'confirm' => ($isPrivilegedUser || $isAppUser),
+                'secret' => Auth::hash($secret),
+                'search' => implode(' ', [$membershipId, $invitee->getId()])
+            ]);
+
+            $membership = ($isPrivilegedUser || $isAppUser) ?
+                Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                $dbForProject->createDocument('memberships', $membership);
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
         } else {
-            try {
-                $membership = $dbForProject->createDocument('memberships', $membership);
-            } catch (Duplicate $th) {
-                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
+            $membership->setAttribute('invited', DateTime::now());
+
+            if ($isPrivilegedUser || $isAppUser) {
+                $membership->setAttribute('joined', DateTime::now());
+                $membership->setAttribute('confirm', true);
             }
 
+            $membership = ($isPrivilegedUser || $isAppUser) ?
+                Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
+                $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        }
+
+
+        if ($isPrivilegedUser || $isAppUser) {
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
+        } else {
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+                $body = $locale->getText("emails.invitation.body");
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-
-                $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
-                if ($smtpEnabled && !empty($customTemplate)) {
-                    $body = $customTemplate['message'];
-                    $subject = $customTemplate['subject'];
-                    $from = $customTemplate['senderName'];
-                }
 
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-
-                $body
-                    ->setParam('{{subject}}', $subject)
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message
+                    ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                    ->setParam('{{name}}', $user->getAttribute('name'))
-                    ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
-                    ->setParam('{{redirect}}', $url)
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
-                    ->setParam('{{project}}', $projectName)
-                    ->setParam('{{direction}}', $locale->getText('settings.direction'))
-                    ->setParam('{{bg-body}}', '#f7f7f7')
-                    ->setParam('{{bg-content}}', '#ffffff')
-                    ->setParam('{{text-content}}', '#000000');
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
+                $body = $message->render();
 
-                $body = $body->render();
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
 
-                $mails
+                $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $queueForMails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $queueForMails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
+                }
+
+                $emailVariables = [
+                    'owner' => $user->getAttribute('name'),
+                    'direction' => $locale->getText('settings.direction'),
+                    /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+                    'user' => $name,
+                    'team' => $team->getAttribute('name'),
+                    'redirect' => $url,
+                    'project' => $projectName
+                ];
+
+                $queueForMails
                     ->setSubject($subject)
                     ->setBody($body)
-                    ->setFrom($from)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
-                    ->trigger()
-                ;
+                    ->setVariables($emailVariables)
+                    ->trigger();
+
             } elseif (!empty($phone)) {
+                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
@@ -583,14 +735,44 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
-                $messaging
-                    ->setRecipient($phone)
-                    ->setMessage($message)
-                    ->trigger();
+                $messageDoc = new Document([
+                    '$id' => ID::unique(),
+                    'data' => [
+                        'content' => $message,
+                    ],
+                ]);
+
+                $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                    ->setMessage($messageDoc)
+                    ->setRecipients([$phone])
+                    ->setProviderType('SMS');
+
+                if (isset($plan['authPhone'])) {
+                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
+                    $timelimit
+                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+
+                    $abuse = new Abuse($timelimit);
+                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                        $helper = PhoneNumberUtil::getInstance();
+                        $countryCode = $helper->parse($phone)->getCountryCode();
+
+                        if (!empty($countryCode)) {
+                            $queueForUsage
+                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        }
+                    }
+                    $queueForUsage
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                        ->setProject($project)
+                        ->trigger();
+                }
             }
         }
 
-        $events
+        $queueForEvents
+            ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -607,44 +789,63 @@ App::post('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships')
-    ->desc('List Team Memberships')
+    ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'listMemberships')
-    ->label('sdk.description', '/docs/references/teams/list-team-members.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
-    ->label('sdk.offline.model', '/teams/{teamId}/memberships')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'listMemberships',
+        description: '/docs/references/teams/list-team-members.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP_LIST,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Database $dbForProject) {
-
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -668,16 +869,53 @@ App::get('/v1/teams/:teamId/memberships')
             max: APP_LIMIT_COUNT
         );
 
-        $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
+        $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
-            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-            $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+            $user = !empty(array_filter($membershipsPrivacy))
+                ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+                : new Document();
+
+            if ($membershipsPrivacy['mfa']) {
+                $mfa = $user->getAttribute('mfa', false);
+
+                if ($mfa) {
+                    $totp = TOTP::getAuthenticatorFromUser($user);
+                    $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                    $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                    $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                    if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                        $mfa = false;
+                    }
+                }
+
+                $membership->setAttribute('mfa', $mfa);
+            }
+
+            if ($membershipsPrivacy['userName']) {
+                $membership->setAttribute('userName', $user->getAttribute('name'));
+            }
+
+            if ($membershipsPrivacy['userEmail']) {
+                $membership->setAttribute('userEmail', $user->getAttribute('email'));
+            }
+
+            $membership->setAttribute('teamName', $team->getAttribute('name'));
 
             return $membership;
         }, $memberships);
@@ -689,23 +927,27 @@ App::get('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Get Team Membership')
+    ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'getMembership')
-    ->label('sdk.description', '/docs/references/teams/get-team-member.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
-    ->label('sdk.offline.model', '/teams/{teamId}/memberships')
-    ->label('sdk.offline.key', '{membershipId}')
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'getMembership',
+        description: '/docs/references/teams/get-team-member.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -719,40 +961,92 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-        $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        ;
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
+
+        $user = !empty(array_filter($membershipsPrivacy))
+            ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+            : new Document();
+
+        if ($membershipsPrivacy['mfa']) {
+            $mfa = $user->getAttribute('mfa', false);
+
+            if ($mfa) {
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
+            }
+
+            $membership->setAttribute('mfa', $mfa);
+        }
+
+        if ($membershipsPrivacy['userName']) {
+            $membership->setAttribute('userName', $user->getAttribute('name'));
+        }
+
+        if ($membershipsPrivacy['userEmail']) {
+            $membership->setAttribute('userEmail', $user->getAttribute('email'));
+        }
+
+        $membership->setAttribute('teamName', $team->getAttribute('name'));
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Update Membership Roles')
+    ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'membership.update')
     ->label('audits.resource', 'team/{request.teamId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updateMembershipRoles')
-    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'updateMembership',
+        description: '/docs/references/teams/update-team-membership.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
+    ->param('roles', [], function (Document $project) {
+        if ($project->getId() === 'console') {
+            ;
+            $roles = array_keys(Config::getParam('roles', []));
+            array_filter($roles, function ($role) {
+                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+            });
+            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+        }
+        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -786,9 +1080,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /**
          * Replace membership on profile
          */
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
-        $events
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
@@ -802,20 +1097,25 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
-    ->desc('Update Team Membership Status')
+    ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
     ->label('audits.event', 'membership.update')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('audits.userId', '{request.userId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updateMembershipStatus')
-    ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'updateMembershipStatus',
+        description: '/docs/references/teams/update-team-membership-status.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MEMBERSHIP,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('userId', '', new UID(), 'User ID.')
@@ -826,8 +1126,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -836,14 +1136,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
-        $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
+        $team = Authorization::skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
@@ -854,11 +1154,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
-        if ($user->isEmpty()) {
+        $hasSession = !$user->isEmpty();
+        if (!$hasSession) {
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userId') !== $user->getId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -871,99 +1172,119 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
-        // Log user in
+        // Create session for the user if not logged in
+        if (!$hasSession) {
+            Authorization::setRole(Role::user($user->getId())->toString());
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $record = $geodb->get($request->getIP());
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
+            $secret = Auth::tokenGenerator();
+            $session = new Document(array_merge([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $user->getAttribute('email'),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['email'],
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-        $secret = Auth::tokenGenerator();
-        $session = new Document(array_merge([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => Auth::SESSION_PROVIDER_EMAIL,
-            'providerUid' => $user->getAttribute('email'),
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $session = $dbForProject->createDocument('sessions', $session);
 
-        $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+            Authorization::setRole(Role::user($userId)->toString());
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
 
-        Authorization::setRole(Role::user($userId)->toString());
+            $response
+                ->addCookie(
+                    name: Auth::$cookieName . '_legacy',
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true
+                )
+                ->addCookie(
+                    name: Auth::$cookieName,
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true,
+                    sameSite: Config::getParam('cookieSamesite')
+                )
+            ;
+        }
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        $events
+        $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
 
-        if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
-        }
-
-        $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
-
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
 
 App::delete('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Delete Team Membership')
+    ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'membership.delete')
     ->label('audits.resource', 'team/{request.teamId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'deleteMembership')
-    ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'deleteMembership',
+        description: '/docs/references/teams/delete-team-membership.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
-        }
-
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
@@ -978,22 +1299,26 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
-        $events
+        $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
@@ -1003,16 +1328,21 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::get('/v1/teams/:teamId/logs')
-    ->desc('List Team Logs')
+    ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'listLogs')
-    ->label('sdk.description', '/docs/references/teams/get-team-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('sdk', new Method(
+        namespace: 'teams',
+        name: 'listLogs',
+        description: '/docs/references/teams/get-team-logs.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
+    ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -1027,7 +1357,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;

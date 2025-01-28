@@ -34,7 +34,7 @@ class Event extends Validator
     public function isValid($value): bool
     {
         $events = Config::getParam('events', []);
-        $parts = \explode('.', $value);
+        $parts = \explode('.', $value ?? '');
         $count = \count($parts);
 
         if ($count < 2 || $count > 7) {
@@ -45,12 +45,6 @@ class Event extends Validator
          * Identify all sections of the pattern.
          */
         $type = $parts[0] ?? false;
-
-        if ($type == 'functions') {
-            $this->message = 'Triggering a function on a function event is not allowed.';
-            return false;
-        }
-
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
         $hasSubSubResource = $count > 5 && $hasSubResource && ($events[$type][$parts[2]][$parts[4]]['$resource'] ?? false);

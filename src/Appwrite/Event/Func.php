@@ -3,20 +3,29 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Func extends Event
 {
+    public const TYPE_ASYNC_WRITE = 'async_write';
+
     protected string $jwt = '';
     protected string $type = '';
-    protected string $data = '';
+    protected string $body = '';
+    protected string $path = '';
+    protected string $method = '';
+    protected array $headers = [];
+    protected ?string $functionId = null;
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            ->setClass(Event::FUNCTIONS_CLASS_NAME);
     }
 
     /**
@@ -40,6 +49,28 @@ class Func extends Event
     public function getFunction(): ?Document
     {
         return $this->function;
+    }
+
+    /**
+     * Sets function id for the function event.
+     *
+     * @param string $functionId
+     */
+    public function setFunctionId(string $functionId): self
+    {
+        $this->functionId = $functionId;
+
+        return $this;
+    }
+
+    /**
+     * Returns set function id for the function event.
+     *
+     * @return string|null
+     */
+    public function getFunctionId(): ?string
+    {
+        return $this->functionId;
     }
 
     /**
@@ -89,37 +120,53 @@ class Func extends Event
     }
 
     /**
-     * Sets custom data for the function event.
+     * Sets custom body for the function event.
      *
-     * @param string $data
+     * @param string $body
      * @return self
      */
-    public function setData(string $data): self
+    public function setBody(string $body): self
     {
-        $this->data = $data;
+        $this->body = $body;
 
         return $this;
     }
 
     /**
-     * Returns set custom data for the function event.
+     * Sets custom method for the function event.
      *
-     * @return string
+     * @param string $method
+     * @return self
      */
-    public function getData(): string
+    public function setMethod(string $method): self
     {
-        return $this->data;
+        $this->method = $method;
+
+        return $this;
     }
 
     /**
-     * Sets JWT for the function event.
+     * Sets custom path for the function event.
      *
-     * @param string $jwt
+     * @param string $path
      * @return self
      */
-    public function setJWT(string $jwt): self
+    public function setPath(string $path): self
     {
-        $this->jwt = $jwt;
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom headers for the function event.
+     *
+     * @param string $headers
+     * @return self
+     */
+    public function setHeaders(array $headers): self
+    {
+        $this->headers = $headers;
 
         return $this;
     }
@@ -135,49 +182,41 @@ class Func extends Event
     }
 
     /**
-     * Executes the function event and sends it to the functions worker.
+     * Sets JWT for the function event.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @param string $jwt
+     * @return self
      */
-    public function trigger(): string|bool
+    public function setJWT(string $jwt): self
     {
-        if ($this->paused) {
-            return false;
-        }
+        $this->jwt = $jwt;
+        return $this;
+    }
 
-        $client = new Client($this->queue, $this->connection);
-
+    /**
+     * Prepare payload for the function event.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
+            'functionId' => $this->functionId,
             'execution' => $this->execution,
             'type' => $this->type,
             'jwt' => $this->jwt,
             'payload' => $this->payload,
             'events' => $events,
-            'data' => $this->data,
-        ]);
-    }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
+            'body' => $this->body,
+            'path' => $this->path,
+            'headers' => $this->headers,
+            'method' => $this->method,
+        ];
     }
 }

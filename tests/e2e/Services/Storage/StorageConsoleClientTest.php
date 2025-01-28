@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Storage;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 
@@ -38,12 +38,15 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(4, count($response['body']));
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['bucketsTotal']);
-        $this->assertIsArray($response['body']['filesTotal']);
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(7, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['bucketsTotal']);
+        $this->assertIsNumeric($response['body']['filesTotal']);
+        $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsArray($response['body']['buckets']);
+        $this->assertIsArray($response['body']['files']);
+        $this->assertIsArray($response['body']['storage']);
     }
 
     public function testGetStorageBucketUsage()
@@ -71,7 +74,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '32h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // TODO: Uncomment once we implement check for missing bucketId in the usage endpoint.
 
@@ -82,7 +85,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -94,10 +97,12 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 3);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['filesTotal']);
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(5, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['filesTotal']);
+        $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsArray($response['body']['files']);
+        $this->assertIsArray($response['body']['storage']);
     }
 }

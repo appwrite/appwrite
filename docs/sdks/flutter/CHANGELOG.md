@@ -1,3 +1,75 @@
+## 13.0.0
+
+* Fixed realtime reconnection issues
+* Support for Appwrite 1.6
+* Update dependencies
+* Added `scheduledAt` attribute to `Execution` response model
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
+## 12.0.4
+
+* Fixed concurrent modification error when closing realtime socket
+
+## 12.0.3
+
+* Upgrade dependencies
+
+## 12.0.2
+
+* Fixed realtime multiple subscription issues
+
+## 12.0.1
+
+* Fixed parameters using enum types
+
+## 12.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
+## 11.0.1
+
+* Fix between queries
+
+## 11.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+
+## 10.0.1
+
+* Added a new `label` function to the `Role` helper class
+* Update internal variable names to prevent name collision
+* Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648)
+
+## 10.0.0
+
+* Support for Appwrite 1.4.0
+* New endpoints for fetching user identities
+* New endpoints for listing locale codes
+* Updated documentation
+* Breaking changes:
+  * The `createFunction` method has a new signature.
+  * The `createExecution` method has a new signature.
+  * The `updateFunction` method has a new signature.
+  * The `createDeployment` method no longer requires an entrypoint.
+  * The `updateFile` method now includes the ability to update the file name.
+  * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
+## 9.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
 ## 9.0.0
 
 * Added relationships support
@@ -53,7 +125,7 @@
     4.  `greaterEqual` renamed to `greaterThanEqual`
 * `User` response model is now renamed to `Account`
 
-**Full Changelog for Appwrite 1.0.0 can be found here**: 
+**Full Changelog for Appwrite 1.0.0 can be found here**:
 https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 7.0.0
@@ -106,7 +178,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 3.0.0
 - Support for Appwrite 0.12
-- **BREAKING** Updated database service to adapt 0.12 API 
+- **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
 - [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
 
@@ -179,12 +251,12 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0
 - Upgraded all underlying dependencies to null safe version
 - BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
-- [Anonymous login](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateAnonymousSession)
-- [JWT Support](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateJWT)
+- [Anonymous login](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createAnonymousSession)
+- [JWT Support](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createJWT)
 - Fallback Cookies for Flutter Web if 3rd party cookies are blocked
 - Custom User Agent Support
-- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
+- [Update membership roles](https://appwrite.io/docs/references/cloud/client-flutter/teams?sdk=flutter#updateMembershipRoles)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 
 ## 0.5.0-dev.1
 

@@ -2,8 +2,9 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\DSN\DSN;
+use Utopia\Queue\Connection;
 
 class Database extends Event
 {
@@ -12,9 +13,11 @@ class Database extends Event
     protected ?Document $collection = null;
     protected ?Document $document = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this->setClass(Event::DATABASE_CLASS_NAME);
     }
 
     /**
@@ -96,15 +99,27 @@ class Database extends Event
         return $this->document;
     }
 
-    /**
-     * Executes the event and send it to the database worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
+    public function getQueue(): string
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        try {
+            $dsn = new DSN($this->getProject()->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
+        }
+
+        $this->queue = $dsn->getHost();
+        return $this->queue;
+    }
+
+    /**
+     * Prepare the payload for the event
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'type' => $this->type,
@@ -112,6 +127,6 @@ class Database extends Event
             'document' => $this->document,
             'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 }

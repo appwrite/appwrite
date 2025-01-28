@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -26,6 +25,7 @@ class FunctionsClientTest extends Scope
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
                 'runtime' => 'php-8.0',
+                'entrypoint' => 'index.php',
                 'execute' => [Role::any()->toString()],
             ]
         ];
@@ -35,7 +35,6 @@ class FunctionsClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
-
 
         $this->assertIsArray($function['body']['data']);
         $this->assertArrayNotHasKey('errors', $function['body']);
@@ -82,13 +81,12 @@ class FunctionsClientTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php/code.tar.gz";
+
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
                     'functionId' => $function['_id'],
-                    'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
                 ]
@@ -96,7 +94,7 @@ class FunctionsClientTest extends Scope
             'map' => \json_encode([
                 'code' => ["variables.code"]
             ]),
-            'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
+            'code' => $this->packageFunction('php')
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -108,9 +106,44 @@ class FunctionsClientTest extends Scope
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
 
-        sleep(15);
+        // Poll get deployment until an error, or status is either 'ready' or 'failed'
+        $deployment = $deployment['body']['data']['functionsCreateDeployment'];
+        $deploymentId = $deployment['_id'];
 
-        return $deployment['body']['data']['functionsCreateDeployment'];
+        $query = $this->getQuery(self::$GET_DEPLOYMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'functionId' => $function['_id'],
+                'deploymentId' => $deploymentId,
+            ]
+        ];
+
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $gqlPayload);
+
+            $this->assertIsArray($deployment['body']['data']);
+            $this->assertArrayNotHasKey('errors', $deployment['body']);
+
+            $deployment = $deployment['body']['data']['functionsGetDeployment'];
+
+            if (
+                $deployment['status'] === 'ready'
+                || $deployment['status'] === 'failed'
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['status']);
+
+        return $deployment;
     }
 
     /**

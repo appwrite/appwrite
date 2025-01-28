@@ -2,17 +2,21 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Connection;
 
 class Certificate extends Event
 {
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
+            ->setClass(Event::CERTIFICATES_CLASS_NAME);
     }
 
     /**
@@ -62,17 +66,16 @@ class Certificate extends Event
     }
 
     /**
-     * Executes the event and sends it to the certificates worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        return [
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck
-        ]);
+        ];
     }
 }

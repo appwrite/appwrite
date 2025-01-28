@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Event
 {
@@ -26,6 +27,9 @@ class Event
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
+    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
+    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -38,25 +42,45 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
+    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
     protected array $params = [];
+    protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected ?string $userId = null;
     protected bool $paused = false;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param Connection $connection
      * @return void
      */
-    public function __construct(string $queue, string $class)
+    public function __construct(protected Connection $connection)
     {
-        $this->queue = $queue;
-        $this->class = $class;
+    }
+
+    /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
     }
 
     /**
@@ -113,7 +137,6 @@ class Event
     public function setProject(Document $project): self
     {
         $this->project = $project;
-
         return $this;
     }
 
@@ -141,6 +164,18 @@ class Event
     }
 
     /**
+     * Set user ID for this event.
+     *
+     * @return self
+     */
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
      * Get user responsible for triggering this event.
      *
      * @return ?Document
@@ -151,14 +186,27 @@ class Event
     }
 
     /**
+     * Get user responsible for triggering this event.
+     */
+    public function getUserId(): ?string
+    {
+        return $this->userId;
+    }
+
+    /**
      * Set payload for this event.
      *
      * @param array $payload
+     * @param array $sensitive
      * @return self
      */
-    public function setPayload(array $payload): self
+    public function setPayload(array $payload, array $sensitive = []): self
     {
         $this->payload = $payload;
+
+        foreach ($sensitive as $key) {
+            $this->sensitive[$key] = true;
+        }
 
         return $this;
     }
@@ -235,6 +283,13 @@ class Event
         return $this;
     }
 
+    public function setParamSensitive(string $key): self
+    {
+        $this->sensitive[$key] = true;
+
+        return $this;
+    }
+
     /**
      * Get param of event.
      *
@@ -257,6 +312,27 @@ class Event
     }
 
     /**
+     * Get trimmed values for sensitive/large payload fields.
+     * Override this method in child classes to add more fields to trim.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+                '$internalId' => $this->project->getInternalId(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -268,13 +344,30 @@ class Event
             return false;
         }
 
-        return Resque::enqueue($this->queue, $this->class, [
+        /** The getter is required since events like Databases need to override the queue name depending on the project */
+        $client = new Client($this->getQueue(), $this->connection);
+
+        // Merge the base payload with any trimmed values
+        $payload = array_merge($this->preparePayload(), $this->trimPayload());
+
+        return $client->enqueue($payload);
+    }
+
+    /**
+     * Prepare payload for queue. Can be overridden by child classes to customize payload.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 
     /**
@@ -285,6 +378,7 @@ class Event
     public function reset(): self
     {
         $this->params = [];
+        $this->sensitive = [];
 
         return $this;
     }
@@ -445,9 +539,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -455,7 +549,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }
@@ -475,20 +569,21 @@ class Event
     }
 
     /**
-     * Get the value of paused
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function isPaused(): bool
+    public function from(Event $event): self
     {
-        return $this->paused;
-    }
-
-    /**
-     * Set the value of paused
-     */
-    public function setPaused(bool $paused): self
-    {
-        $this->paused = $paused;
-
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        $this->context = $event->context;
         return $this;
     }
 }

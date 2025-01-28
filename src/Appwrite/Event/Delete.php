@@ -2,21 +2,26 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Connection;
 
 class Delete extends Event
 {
     protected string $type = '';
     protected ?Document $document = null;
+    protected ?string $resourceType = null;
     protected ?string $resource = null;
     protected ?string $datetime = null;
     protected ?string $hourlyUsageRetentionDatetime = null;
 
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::DELETE_QUEUE_NAME)
+            ->setClass(Event::DELETE_CLASS_NAME);
     }
 
     /**
@@ -103,6 +108,19 @@ class Delete extends Event
     }
 
     /**
+     * Sets the resource type for the delete event.
+     *
+     * @param string $resourceType
+     * @return self
+     */
+    public function setResourceType(string $resourceType): self
+    {
+        $this->resourceType = $resourceType;
+
+        return $this;
+    }
+
+    /**
      * Returns the set document for the delete event.
      *
      * @return null|Document
@@ -112,22 +130,21 @@ class Delete extends Event
         return $this->document;
     }
 
-
     /**
-     * Executes this event and sends it to the deletes worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        return [
             'project' => $this->project,
             'type' => $this->type,
             'document' => $this->document,
             'resource' => $this->resource,
+            'resourceType' => $this->resourceType,
             'datetime' => $this->datetime,
-            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
-        ]);
+            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime
+        ];
     }
 }

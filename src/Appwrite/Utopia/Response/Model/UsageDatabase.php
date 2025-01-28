@@ -12,20 +12,71 @@ class UsageDatabase extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('collectionsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of collections.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('storageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of total storage used in bytes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databaseReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databaseWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of collections.',
+                'description' => 'Aggregated  number of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated  number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('storage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated storage used in bytes per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databaseReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database reads.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databaseWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database writes.',
                 'default' => [],
                 'example' => [],
                 'array' => true

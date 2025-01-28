@@ -33,6 +33,24 @@ class ConsoleVariables extends Model
                 'description' => 'Defines if usage stats are enabled. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'.',
                 'default' => '',
                 'example' => 'enabled',
+            ])
+            ->addRule('_APP_VCS_ENABLED', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if VCS (Version Control System) is enabled.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('_APP_DOMAIN_ENABLED', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if main domain is configured. If so, custom domains can be created.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('_APP_ASSISTANT_ENABLED', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if AI assistant is enabled.',
+                'default' => false,
+                'example' => true,
             ]);
     }
 

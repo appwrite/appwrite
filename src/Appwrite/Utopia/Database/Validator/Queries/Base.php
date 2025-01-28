@@ -2,16 +2,15 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Extend\Exception;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
-use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Filter;
-use Utopia\Database\Validator\Query\Order;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Order;
 
 class Base extends Queries
 {
@@ -25,7 +24,7 @@ class Base extends Queries
     public function __construct(string $collection, array $allowedAttributes)
     {
         $config = Config::getParam('collections', []);
-        $collections = array_merge($config['console'], $config['projects'], $config['buckets'], $config['databases']);
+        $collections = array_merge($config['projects'], $config['buckets'], $config['databases'], $config['console']);
         $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
@@ -67,7 +66,7 @@ class Base extends Queries
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes),
+            new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
             new Order($attributes),
         ];
 

@@ -138,9 +138,40 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+            ->addRule('authMockNumbers', [
+                'type' => Response::MODEL_MOCK_NUMBER,
+                'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
+                'default' => [],
+                'array' => true,
+                'example' => [new \stdClass()],
+            ])
+            ->addRule('authSessionAlerts', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to send session alert emails to users.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsUserName', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user names in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsUserEmail', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user emails in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsMfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user MFA status in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('oAuthProviders', [
+                'type' => Response::MODEL_AUTH_PROVIDER,
+                'description' => 'List of Auth Providers.',
                 'default' => [],
                 'example' => [new \stdClass()],
                 'array' => true,
@@ -166,13 +197,6 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Status for custom SMTP',
@@ -180,11 +204,23 @@ class Project extends Model
                 'example' => false,
                 'array' => false
             ])
-            ->addRule('smtpSender', [
+            ->addRule('smtpSenderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender name',
+                'default' => '',
+                'example' => 'John Appwrite',
+            ])
+            ->addRule('smtpSenderEmail', [
                 'type' => self::TYPE_STRING,
                 'description' => 'SMTP sender email',
                 'default' => '',
                 'example' => 'john@appwrite.io',
+            ])
+            ->addRule('smtpReplyTo', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to email',
+                'default' => '',
+                'example' => 'support@appwrite.io',
             ])
             ->addRule('smtpHost', [
                 'type' => self::TYPE_STRING,
@@ -215,6 +251,18 @@ class Project extends Model
                 'description' => 'SMTP server secure protocol',
                 'default' => '',
                 'example' => 'tls',
+            ])
+            ->addRule('pingCount', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times the ping was received for this project.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('pingedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last ping datetime in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
 
@@ -284,7 +332,9 @@ class Project extends Model
         // SMTP
         $smtp = $document->getAttribute('smtp', []);
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
-        $document->setAttribute('smtpSender', $smtp['sender'] ?? '');
+        $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
+        $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
+        $document->setAttribute('smtpReplyTo', $smtp['replyTo'] ?? '');
         $document->setAttribute('smtpHost', $smtp['host'] ?? '');
         $document->setAttribute('smtpPort', $smtp['port'] ?? '');
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
@@ -314,6 +364,11 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
+        $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
+        $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
+        $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
+        $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
@@ -321,9 +376,9 @@ class Project extends Model
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
-        // Providers
-        $providers = Config::getParam('providers', []);
-        $providerValues = $document->getAttribute('authProviders', []);
+        // OAuth Providers
+        $providers = Config::getParam('oAuthProviders', []);
+        $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
@@ -341,7 +396,7 @@ class Project extends Model
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('oAuthProviders', $projectProviders);
 
         return $document;
     }
