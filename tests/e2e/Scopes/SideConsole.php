@@ -4,7 +4,7 @@ namespace Tests\E2E\Scopes;
 
 trait SideConsole
 {
-    public function getHeaders(bool $devKey = false): array
+    public function getHeaders(bool $devKey = true): array
     {
         return [
             'origin' => 'http://localhost',

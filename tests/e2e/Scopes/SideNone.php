@@ -4,7 +4,7 @@ namespace Tests\E2E\Scopes;
 
 trait SideNone
 {
-    public function getHeaders(bool $devKey): array
+    public function getHeaders(bool $devKey = true): array
     {
         return [];
     }
