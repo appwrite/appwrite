@@ -1024,7 +1024,7 @@ return [
         'code' => 400,
     ],
 
-	/* Slow queries */
+    /* Slow queries */
     Exception::QUERY_BLOCKED => [
         'name' => Exception::QUERY_BLOCKED,
         'description' => 'Request blocked after exceeding the maximum number of timeouts',

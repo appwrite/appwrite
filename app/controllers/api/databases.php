@@ -18,7 +18,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -462,7 +461,7 @@ App::init()
             $request->getParam('queries')
         ]));
         /** @var Document $document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $key));
         if ($document->getAttribute('blocked') === true) {
             throw new Exception(Exception::QUERY_BLOCKED);
         }
@@ -474,7 +473,7 @@ App::error()
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (Throwable $error, Request $request, Database $dbForProject) {
-        if ($error instanceof Timeout) {
+        if ($error instanceof TimeoutException) {
             $route = Request::getRoute();
             $collectionId = $route->getParamValue('collectionId');
             $databaseId = $route->getParamValue('databaseId');
@@ -482,7 +481,7 @@ App::error()
 
             $queriesValidator = new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE);
             if (!$queriesValidator->isValid($queries)) {
-                App::setResource('error', fn() => new Exception(Exception::GENERAL_SERVER_ERROR));
+                App::setResource('error', fn () => new Exception(Exception::GENERAL_SERVER_ERROR));
                 return;
             }
 
@@ -493,9 +492,9 @@ App::error()
             ]));
 
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
+            $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $key));
             if ($document->isEmpty()) {
-                $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
+                $document = Authorization::skip(fn () => $dbForProject->createDocument('slowQueries', new Document([
                     '$id' => $key,
                     'blocked' => false,
                     'count' => 1,
@@ -510,15 +509,15 @@ App::error()
                 if ($document->getAttribute('count') >= $max) {
                     $document->setAttribute('blocked', true);
                 }
-                $document = Authorization::skip(fn() => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
+                $document = Authorization::skip(fn () => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
             }
 
             if ($document->getAttribute('blocked') === true) {
-                App::setResource('error', fn() => new Exception(Exception::QUERY_BLOCKED));
+                App::setResource('error', fn () => new Exception(Exception::QUERY_BLOCKED));
                 return;
             }
 
-            App::setResource('error', fn() => new Exception(Exception::QUERY_TIMEOUT));
+            App::setResource('error', fn () => new Exception(Exception::QUERY_TIMEOUT));
         }
     });
 
@@ -997,8 +996,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1290,8 +1288,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3514,13 +3511,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-        $timeout = App::getEnv('_APP_SLOW_QUERIES') === 'enabled' 
-			? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT')
-			: null;
+        $timeout = App::getEnv('_APP_SLOW_QUERIES') === 'enabled'
+            ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT')
+            : null;
 
         if (App::isDevelopment() && intval($request->getHeader('x-appwrite-timeout')) > 0) {
             $timeout = intval($request->getHeader('x-appwrite-timeout'));
-			$dbForProject->setTimeout($timeout);
+            $dbForProject->setTimeout($timeout);
         }
 
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
@@ -4529,13 +4526,18 @@ App::get('/v1/databases/:databaseId/slow-queries')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('scope', 'documents.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listSlowQueries')
-    ->label('sdk.description', '/docs/references/databases/list-slow-queries.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SLOW_QUERY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listSlowQueries',
+        description: '/docs/references/databases/list-slow-queries.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SLOW_QUERY_LIST,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
@@ -4544,7 +4546,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('databaseId', [$databaseId]);
 
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
@@ -4568,12 +4570,18 @@ App::get('/v1/databases/:databaseId/slow-queries/:slowQueryId')
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getSlowQuery')
-    ->label('sdk.description', '/docs/references/databases/get-slow-query.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SLOW_QUERY)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getSlowQuery',
+        description: '/docs/references/databases/get-slow-query.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SLOW_QUERY,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('slowQueryId', '', new UID(), 'Document ID.')
     ->inject('response')
@@ -4592,24 +4600,32 @@ App::delete('/v1/databases/:databaseId/slow-queries/:slowQueryId')
     ->desc('Delete slow query')
     ->desc('List  Documents')
     ->groups(['api', 'database'])
-    ->label('docs', false)
     ->label('scope', 'documents.write')
     ->label('usage.metric', 'documents.{scope}.requests.delete')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'deleteSlowQuery')
-    ->label('sdk.description', '/docs/references/databases/delete-slow-query.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('docs', false)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'deleteSlowQuery',
+        description: '/docs/references/databases/delete-slow-query.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('slowQueryId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $slowQueryId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $slowQueryId);
+
         if ($document->isEmpty() || $document->getAttribute('databaseId') !== $databaseId) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
+
         $dbForProject->deleteDocument('slowQueries', $slowQueryId);
 
         $response->noContent();

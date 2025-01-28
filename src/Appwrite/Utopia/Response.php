@@ -2,10 +2,6 @@
 
 namespace Appwrite\Utopia;
 
-use Exception;
-use Utopia\Swoole\Response as SwooleResponse;
-use Swoole\Http\Response as SwooleHTTPResponse;
-use Utopia\Database\Document;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -88,6 +84,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\SlowQuery;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
@@ -110,13 +107,11 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\SlowQuery;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
-// Keep last
 use Utopia\Database\Document;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -784,7 +779,7 @@ class Response extends SwooleResponse
     /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param $filter Filter The response filter to set
      *
      * @return void
      */

@@ -261,8 +261,8 @@ class Exception extends \Exception
     public const MIGRATION_IN_PROGRESS             = 'migration_in_progress';
     public const MIGRATION_PROVIDER_ERROR          = 'migration_provider_error';
 
-    
-	/** Timeout */
+
+    /** Timeout */
     public const QUERY_BLOCKED                     = 'query_blocked';
     public const QUERY_TIMEOUT                     = 'query_timeout';
 
