@@ -67,20 +67,6 @@ use Utopia\Validator\WhiteList;
 \ini_set('default_socket_timeout', -1);
 \error_reporting(E_ALL);
 
-
-\stream_context_set_default([ // Set global user agent and http settings
-    'http' => [
-        'method' => 'GET',
-        'user_agent' => \sprintf(
-            APP_USERAGENT,
-            System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-        ),
-        'timeout' => 2,
-    ],
-]);
-
-
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
@@ -268,6 +254,18 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+
+\stream_context_set_default([ // Set global user agent and http settings
+    'http' => [
+        'method' => 'GET',
+        'user_agent' => \sprintf(
+            APP_USERAGENT,
+            System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+        ),
+        'timeout' => 2,
+    ],
+]);
 
 $register = new Registry();
 
