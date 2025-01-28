@@ -26,9 +26,9 @@ jobs:
           ABUSE_ENABLED=$(grep -oP '^_APP_OPTIONS_ABUSE=\K\w+' .env || echo 'disabled')
 
           if [ "$ABUSE_ENABLED" = "enabled" ]; then
-            echo 'test_suffixes=["CustomClient", "CustomServer"]' >> $GITHUB_OUTPUT
+            echo 'test_suffixes=["Base", "CustomClient", "CustomServer"]' >> $GITHUB_OUTPUT
           else
-            echo 'test_suffixes=["ConsoleClient"]' >> $GITHUB_OUTPUT
+            echo 'test_suffixes=["Base", "ConsoleClient"]' >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Docker Buildx
