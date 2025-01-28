@@ -135,9 +135,9 @@ Add your language code to [codes.php](https://github.com/appwrite/appwrite/blob/
     ...
 ```
 
-Finally, load your translation file in `init.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init.php#L270).
+Finally, load your translation file in `app.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init/app.php#L270).
 
-> Please make sure to keep both `codes.php` and `init.php` in the alphabetical order A-Z.
+> Please make sure to keep both `codes.php` and `app.php` in the alphabetical order A-Z.
 
 ## 4. Test the translations
 
