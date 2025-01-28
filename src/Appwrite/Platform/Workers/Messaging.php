@@ -22,6 +22,8 @@ use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Fast2SMS;
+use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
@@ -46,6 +48,8 @@ class Messaging extends Action
 {
     private ?Local $localDevice = null;
 
+    private ?SMSAdapter $adapter = null;
+
     public static function getName(): string
     {
         return 'messaging';
@@ -56,6 +60,9 @@ class Messaging extends Action
      */
     public function __construct()
     {
+
+        $this->adapter = $this->createInternalSMSAdapter();
+
         $this
             ->desc('Messaging worker')
             ->inject('message')
@@ -381,98 +388,36 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
-        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
+        if ($this->adapter === null) {
+            Console::warning('Skipped SMS processing. SMS adapter is not set.');
+            return;
         }
 
         if ($project->isEmpty()) {
             throw new \Exception('Project not set in payload');
         }
 
-        Console::log('Project: ' . $project->getId());
-
+        Console::log('Processing project: ' . $project->getId());
         $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
-
         if (\in_array($project->getId(), $denyList)) {
             Console::error('Project is in the deny list. Skipping...');
             return;
         }
 
-        $smsDSN = new DSN(System::getEnv('_APP_SMS_PROVIDER'));
-        $host = $smsDSN->getHost();
-        $password = $smsDSN->getPassword();
-        $user = $smsDSN->getUser();
-
-        $log->addTag('type', $host);
-
-        $from = System::getEnv('_APP_SMS_FROM');
-
-        $provider = new Document([
-            '$id' => ID::unique(),
-            'provider' => $host,
-            'type' => MESSAGE_TYPE_SMS,
-            'name' => 'Internal SMS',
-            'enabled' => true,
-            'credentials' => match ($host) {
-                'twilio' => [
-                    'accountSid' => $user,
-                    'authToken' => $password,
-                    // Twilio Messaging Service SIDs always start with MG
-                    // https://www.twilio.com/docs/messaging/services
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
-                ],
-                'textmagic' => [
-                    'username' => $user,
-                    'apiKey' => $password
-                ],
-                'telesign' => [
-                    'customerId' => $user,
-                    'apiKey' => $password
-                ],
-                'msg91' => [
-                    'senderId' => $user,
-                    'authKey' => $password,
-                    'templateId' => $smsDSN->getParam('templateId', $from),
-                ],
-                'vonage' => [
-                    'apiKey' => $user,
-                    'apiSecret' => $password
-                ],
-                default => null
-            },
-            'options' => match ($host) {
-                'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') ? null : $from
-                ],
-                default => [
-                    'from' => $from
-                ]
-            }
-        ]);
-
-        $adapter = $this->getSmsAdapter($provider);
-
-        $batches = \array_chunk(
+        $from = System::getEnv('_APP_SMS_FROM', '');
+        $sms = new SMS(
             $recipients,
-            $adapter->getMaxMessagesPerRequest()
+            $message->getAttribute('data')['content'],
+            $from
         );
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter) {
-            return function () use ($batch, $message, $provider, $adapter) {
-                $message->setAttribute('to', $batch);
-
-                $data = $this->buildSmsMessage($message, $provider);
-
-                try {
-                    $adapter->send($data);
-                } catch (\Throwable $th) {
-                    throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
-                }
-            };
-        }, $batches));
+        try {
+            $result = $this->adapter->send($sms);
+        } catch (\Throwable $th) {
+            throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
+        }
     }
-
 
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
@@ -503,6 +448,12 @@ class Messaging extends Action
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
                 $credentials['apiSecret'] ??  ''
+            ),
+            'fast2sms' => new Fast2SMS(
+                $credentials['apiKey'] ?? '',
+                $credentials['senderId'] ?? '',
+                $credentials['messageId'] ?? '',
+                $credentials['useDLT'] ?? true
             ),
             default => null
         };
@@ -719,5 +670,128 @@ class Messaging extends Action
         }
 
         return $this->localDevice;
+    }
+
+    private function createInternalSMSAdapter(): ?SMSAdapter
+    {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
+            Console::warning('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
+            return null;
+        }
+
+        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
+
+        $dsns = [];
+        if (!empty($providers)) {
+            $providers = explode(',', $providers);
+            foreach ($providers as $provider) {
+                $dsns[] = new DSN($provider);
+            }
+        }
+
+        if (count($dsns) === 1) {
+            $provider = $this->createProviderFromDSN($dsns[0]);
+            $adapter = $this->getSmsAdapter($provider);
+            return $adapter;
+        }
+
+        $defaultDSN = null;
+        $localDSNs = [];
+
+        /** @var DSN $dsn */
+        foreach ($dsns as $dsn) {
+            if ($dsn->getParam('local', '') === 'default') {
+                $defaultDSN = $dsn;
+            } else {
+                $localDSNs[] = $dsn;
+            }
+        }
+
+        if ($defaultDSN === null) {
+            throw new \Exception('No default SMS provider found');
+        }
+
+        $defaultProvider = $this->createProviderFromDSN($defaultDSN);
+        $adapter = $this->getSmsAdapter($defaultProvider);
+        $geosms = new GEOSMS($adapter);
+
+        /** @var DSN $localDSN */
+        foreach ($localDSNs as $localDSN) {
+            try {
+                $provider = $this->createProviderFromDSN($localDSN);
+                $adapter = $this->getSmsAdapter($provider);
+            } catch (\Exception) {
+                Console::warning('Unable to create adapter: ' . $localDSN->getHost());
+                continue;
+            }
+
+            $callingCode = $localDSN->getParam('local', '');
+            if (empty($callingCode)) {
+                Console::warning('Unable to register adapter: ' . $localDSN->getHost() . '. Missing `local` parameter.');
+                continue;
+            }
+
+            $geosms->setLocal($callingCode, $adapter);
+        }
+        return $geosms;
+    }
+
+    private function createProviderFromDSN(DSN $dsn): Document
+    {
+        $host = $dsn->getHost();
+        $password = $dsn->getPassword();
+        $user = $dsn->getUser();
+        $from = System::getEnv('_APP_SMS_FROM');
+
+        $provider = new Document([
+            '$id' => ID::unique(),
+            'provider' => $host,
+            'type' => MESSAGE_TYPE_SMS,
+            'name' => 'Internal SMS',
+            'enabled' => true,
+            'credentials' => match ($host) {
+                'twilio' => [
+                    'accountSid' => $user,
+                    'authToken' => $password,
+                    // Twilio Messaging Service SIDs always start with MG
+                    // https://www.twilio.com/docs/messaging/services
+                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
+                ],
+                'textmagic' => [
+                    'username' => $user,
+                    'apiKey' => $password
+                ],
+                'telesign' => [
+                    'customerId' => $user,
+                    'apiKey' => $password
+                ],
+                'msg91' => [
+                    'senderId' => $user,
+                    'authKey' => $password,
+                    'templateId' => $dsn->getParam('templateId', $from),
+                ],
+                'vonage' => [
+                    'apiKey' => $user,
+                    'apiSecret' => $password
+                ],
+                'fast2sms' => [
+                    'senderId' => $user,
+                    'apiKey' => $password,
+                    'messageId' => $dsn->getParam('messageId'),
+                    'useDLT' => $dsn->getParam('useDLT'),
+                ],
+                default => null
+            },
+            'options' => match ($host) {
+                'twilio' => [
+                    'from' => \str_starts_with($from, 'MG') ? null : $from
+                ],
+                default => [
+                    'from' => $from
+                ]
+            }
+        ]);
+
+        return $provider;
     }
 }
