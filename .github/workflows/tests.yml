@@ -28,9 +28,9 @@ jobs:
           ABUSE_ENABLED=$(grep -oP '^_APP_OPTIONS_ABUSE=\K\w+' .env || echo 'disabled')
 
           if [ "$ABUSE_ENABLED" = "enabled" ]; then
-            echo 'test_suffixes=["Base", "CustomClient", "CustomServer"]' >> $GITHUB_OUTPUT
+            echo 'test_suffixes=["Base", "CustomClientTest", "CustomServerTest"]' >> $GITHUB_OUTPUT
           else
-            echo 'test_suffixes=["Base", "ConsoleClient"]' >> $GITHUB_OUTPUT
+            echo 'test_suffixes=["Base", "ConsoleClientTest"]' >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Docker Buildx
@@ -183,7 +183,7 @@ jobs:
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
-            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }}/${{ matrix.service }}${{ matrix.test_suffix }}Test.php --debug
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }}/${{ matrix.service }}${{ matrix.test_suffix }}.php --debug
 
   benchmarking:
     name: Benchmark
