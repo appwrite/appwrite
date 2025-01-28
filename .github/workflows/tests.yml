@@ -20,6 +20,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Detect test types
+        id: detect-tests
+        run: |
+          ABUSE_ENABLED=$(grep -oP '^_APP_OPTIONS_ABUSE=\K\w+' .env || echo 'disabled')
+
+          if [ "$ABUSE_ENABLED" = "enabled" ]; then
+            echo 'test_suffixes=["CustomClient", "CustomServer"]' >> $GITHUB_OUTPUT
+          else
+            echo 'test_suffixes=["ConsoleClient"]' >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -127,6 +138,7 @@ jobs:
             Messaging,
             Migrations
           ]
+        test_suffix: ${{ fromJSON(needs.setup.outputs.test_suffixes) }}
         tables-mode: [
           'Project',
           'Shared V1',
@@ -150,7 +162,7 @@ jobs:
           docker compose up -d
           sleep 30
 
-      - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
+      - name: Run ${{ matrix.service }} ${{ matrix.test_suffix }} tests (${{ matrix.tables-mode }})
         run: |
           if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
             echo "Using shared tables V1"
@@ -169,7 +181,7 @@ jobs:
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
-            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }}/${{ matrix.service }}${{ matrix.test_suffix }}Test.php --debug
 
   benchmarking:
     name: Benchmark
