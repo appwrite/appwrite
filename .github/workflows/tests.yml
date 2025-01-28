@@ -164,7 +164,7 @@ jobs:
           docker compose up -d
           sleep 30
 
-      - name: Run ${{ matrix.service }} ${{ matrix.test_suffix }} tests (${{ matrix.tables-mode }})
+      - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         run: |
           if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
             echo "Using shared tables V1"
