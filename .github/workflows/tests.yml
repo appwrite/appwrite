@@ -14,6 +14,8 @@ jobs:
   setup:
     name: Setup & Build Appwrite Image
     runs-on: ubuntu-latest
+    outputs:
+      test_suffixes: ${{ steps.detect-tests.outputs.test_suffixes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
