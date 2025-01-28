@@ -19,6 +19,51 @@ const METRIC_PROJECT_LEVEL_STORAGE = 2;
 class UsageDump extends Action
 {
     protected array $stats = [];
+
+    /**
+     * Metrics to skip writing to logsDB
+     * As these metrics are calculated separately
+     * by logs DB
+     * @var array
+     */
+    protected array $skipBaseMetrics = [
+        METRIC_DATABASES => true,
+        METRIC_BUCKETS => true,
+        METRIC_USERS => true,
+        METRIC_FUNCTIONS => true,
+        METRIC_TEAMS => true,
+        METRIC_MESSAGES => true,
+        METRIC_USERS_ACTIVE => true,
+        METRIC_WEBHOOKS => true,
+        METRIC_PLATFORMS => true,
+        METRIC_PROVIDERS => true,
+        METRIC_TOPICS => true,
+        METRIC_KEYS => true,
+        METRIC_FILES => true,
+        METRIC_FILES_STORAGE => true,
+        METRIC_DEPLOYMENTS_STORAGE => true,
+        METRIC_BUILDS_STORAGE => true,
+        METRIC_DEPLOYMENTS => true,
+        METRIC_BUILDS => true,
+        METRIC_COLLECTIONS => true,
+        METRIC_DOCUMENTS => true,
+    ];
+
+    /**
+     * Skip metrics associated with parent IDs
+     * these need to be checked individually with `str_ends_with`
+     */
+    protected array $skipParentIdMetrics = [
+        '.files',
+        '.files.storage',
+        '.collections',
+        '.documents',
+        '.deployments',
+        '.deployments.storage',
+        '.builds',
+        '.builds.storage',
+    ];
+
     protected array $periods = [
         '1h' => 'Y-m-d H:00',
         '1d' => 'Y-m-d 00:00',
@@ -116,6 +161,14 @@ class UsageDump extends Action
                  */
                 $clonedProjectDoucments = [];
                 foreach ($projectDocuments as $document) {
+                    if (array_key_exists($document->getAttribute('metric'), $this->skipBaseMetrics)) {
+                        continue;
+                    }
+                    foreach ($this->skipParentIdMetrics as $skipMetric) {
+                        if (str_ends_with($document->getAttribute('metric'), $skipMetric)) {
+                            continue;
+                        }
+                    }
                     $clonedProjectDoucments[] = new Document($document->getArrayCopy());
                 }
 
