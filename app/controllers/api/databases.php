@@ -460,9 +460,14 @@ App::init()
             $request->getURI(), // Contains databaseId & collectionId
             $request->getParam('queries')
         ]));
+
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $key));
-        if ($document->getAttribute('blocked') === true) {
+        $document = Authorization::skip(fn () => $dbForProject->getDocument(
+            'slowQueries',
+            $key
+        ));
+
+        if ($document->getAttribute('blocked')) {
             throw new Exception(Exception::QUERY_BLOCKED);
         }
     });
@@ -473,51 +478,57 @@ App::error()
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (Throwable $error, Request $request, Database $dbForProject) {
-        if ($error instanceof TimeoutException) {
-            $route = Request::getRoute();
-            $collectionId = $route->getParamValue('collectionId');
-            $databaseId = $route->getParamValue('databaseId');
-            $queries = $request->getParam('queries', []);
+        if (!$error instanceof TimeoutException) {
+            return;
+        }
 
-            $queriesValidator = new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE);
-            if (!$queriesValidator->isValid($queries)) {
-                App::setResource('error', fn () => new Exception(Exception::GENERAL_SERVER_ERROR));
-                return;
+        $route = Request::getRoute();
+        $collectionId = $route->getParamValue('collectionId');
+        $databaseId = $route->getParamValue('databaseId');
+        $queries = $request->getParam('queries', []);
+
+        $key = md5(json_encode([
+            $request->getMethod(),
+            $request->getURI(),
+            $queries
+        ]));
+
+        /** @var Document $document */
+        $document = Authorization::skip(fn () => $dbForProject->getDocument(
+            'slowQueries',
+            $key
+        ));
+
+        if ($document->isEmpty()) {
+            $document = Authorization::skip(fn () => $dbForProject->createDocument('slowQueries', new Document([
+                '$id' => $key,
+                'blocked' => false,
+                'count' => 1,
+                'queries' => $queries,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'path' => $request->getURI()
+            ])));
+        } else {
+            $document->setAttribute('count', $document->getAttribute('count') + 1);
+            $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 5));
+
+            if ($document->getAttribute('count') >= $max) {
+                $document->setAttribute('blocked', true);
             }
 
-            $key = md5(json_encode([
-                $request->getMethod(),
-                $request->getURI(), // Contains databaseId & collectionId
-                $request->getParam('queries')
-            ]));
+            $document = Authorization::skip(fn () => $dbForProject->updateDocument(
+                'slowQueries',
+                $document->getId(),
+                $document
+            ));
+        }
 
-            /** @var Document $document */
-            $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $key));
-            if ($document->isEmpty()) {
-                $document = Authorization::skip(fn () => $dbForProject->createDocument('slowQueries', new Document([
-                    '$id' => $key,
-                    'blocked' => false,
-                    'count' => 1,
-                    'queries' => $queries,
-                    'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'path' => $request->getURI()
-                ])));
-            } else {
-                $document->setAttribute('count', $document->getAttribute('count') + 1);
-                $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 5));
-                if ($document->getAttribute('count') >= $max) {
-                    $document->setAttribute('blocked', true);
-                }
-                $document = Authorization::skip(fn () => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
-            }
-
-            if ($document->getAttribute('blocked') === true) {
-                App::setResource('error', fn () => new Exception(Exception::QUERY_BLOCKED));
-                return;
-            }
-
-            App::setResource('error', fn () => new Exception(Exception::QUERY_TIMEOUT));
+        // Set the correct exception to pass to the next shutdown hook
+        if ($document->getAttribute('blocked')) {
+            App::setResource('error', fn () => new Exception(Exception::QUERY_BLOCKED));
+        } else {
+            App::setResource('error', fn() => new Exception(Exception::QUERY_TIMEOUT));
         }
     });
 
