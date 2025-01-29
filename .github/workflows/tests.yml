@@ -167,7 +167,7 @@ jobs:
           fi
 
           ABUSE_ENABLED=$(grep -oP '^_APP_OPTIONS_ABUSE=\K\w+' .env || echo 'disabled')
-          TEST_SUFFIXES=$( [[ "$ABUSE_ENABLED" == "enabled" ]] && echo 'CustomClient CustomServer' || echo 'ConsoleClient')
+          TEST_SUFFIXES=$( [[ "$ABUSE_ENABLED" == "enabled" ]] && echo 'CustomServer CustomClient' || echo 'ConsoleClient')
 
           TEST_FOLDER="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
           ALL_TEST_FILES=$(docker compose exec -T appwrite find "$TEST_FOLDER" -type f -name "*Test.php")
