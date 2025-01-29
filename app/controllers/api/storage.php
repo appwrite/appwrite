@@ -21,7 +21,6 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
@@ -1075,12 +1074,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
             ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
         ;
-
-        $transformedAt = $file->getAttribute('transformedAt', '');
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-            $file->setAttribute('transformedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' .  $file->getAttribute('bucketInternalId'), $file->getId(), $file));
-        }
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days

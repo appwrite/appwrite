@@ -2549,17 +2549,6 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => 'transformedAt',
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2628,13 +2617,6 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-            [
-                '$id' => ID::custom('_key_transformedAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['transformedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ]
         ]
     ],
 ];
