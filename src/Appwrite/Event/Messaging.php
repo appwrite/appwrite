@@ -3,7 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Messaging extends Event
 {
@@ -14,9 +14,9 @@ class Messaging extends Event
     protected ?string $scheduledAt = null;
     protected ?string $providerType = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::MESSAGING_QUEUE_NAME)

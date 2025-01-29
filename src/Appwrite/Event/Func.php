@@ -3,7 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Func extends Event
 {
@@ -19,9 +19,9 @@ class Func extends Event
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::FUNCTIONS_QUEUE_NAME)

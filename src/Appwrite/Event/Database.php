@@ -4,7 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Database extends Event
 {
@@ -13,9 +13,9 @@ class Database extends Event
     protected ?Document $collection = null;
     protected ?Document $document = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this->setClass(Event::DATABASE_CLASS_NAME);
     }
