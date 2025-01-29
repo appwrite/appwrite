@@ -6,7 +6,6 @@ use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
-use Appwrite\Platform\Tasks\QueueCount;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
@@ -29,7 +28,6 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
-            ->addAction(QueueCount::getName(), new QueueCount())
             ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
