@@ -344,12 +344,19 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertIsNumeric($logs['body']['total']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testTimeoutCollection(array $data): array
+    public function testTimeouts(): array
     {
-        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'slowQueriesDatabase',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -362,14 +369,11 @@ class DatabasesConsoleClientTest extends Scope
             ],
         ]);
 
+        $collectionId = $collection['body']['$id'];
+
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $data = [
-            '$id' => $collection['body']['$id'],
-            'databaseId' => $collection['body']['databaseId']
-        ];
-
-        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/attributes/string', array_merge([
+        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -382,22 +386,14 @@ class DatabasesConsoleClientTest extends Scope
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
 
-        return $data;
-    }
-
-    /**
-     * @depends testTimeoutCollection
-     */
-    public function testTimeouts(array $data): array
-    {
         for ($i = 0; $i <= 1; $i++) {
-            $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'documentId' => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/longtext.txt'),
+                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -409,12 +405,14 @@ class DatabasesConsoleClientTest extends Scope
 
         $docs = [];
         for ($i = 0; $i <= 5; $i++) { // _APP_SLOW_QUERIES_MAX_HITS = 5
-            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-timeout' => 1,
             ], $this->getHeaders()), [
-                'queries' => ['notEqual("longtext", "appwrite")'],
+                'queries' => [
+                    Query::notEqual('longtext', 'appwrite')->toString(),
+                ],
             ]);
         }
 
@@ -425,7 +423,10 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
 
-        return $data;
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId
+        ];
     }
 
     /**
@@ -438,9 +439,9 @@ class DatabasesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'equal("collectionId", "' . $data['$id'] . '")',
-                'equal("blocked", true)',
-                'orderAsc("$updatedAt")'
+                Query::equal('collectionId', $data['$id'])->toString(),
+                Query::equal('blocked', [true])->toString(),
+                Query::orderAsc('$updatedAt')->toString(),
             ]
         ]);
 

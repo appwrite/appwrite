@@ -10,8 +10,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Validator\JSON;
 
 trait DatabasesBase
 {
@@ -1333,7 +1333,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+        ]));
 
         $this->assertIsArray($movies['body']['indexes']);
         $this->assertCount(8, $movies['body']['indexes']);
@@ -1520,89 +1520,6 @@ trait DatabasesBase
         ], $this->getHeaders()))['headers']['status-code']);
 
         return $data;
-    }
-
-
-    /**
-     * @depends testCreateDatabase
-     */
-    public function testTimeoutCollection(array $data): array
-    {
-        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Slow Queries',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        $this->assertEquals(201, $collection['headers']['status-code']);
-
-        $data = [
-            '$id' => $collection['body']['$id'],
-            'databaseId' => $collection['body']['databaseId']
-        ];
-
-        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'longtext',
-            'size' => 100000000,
-            'required' => false,
-            'default' => null,
-        ]);
-
-        $this->assertEquals($longtext['headers']['status-code'], 202);
-
-        return $data;
-    }
-
-    /**
-     * @depends testTimeoutCollection
-     */
-    public function testTimeouts(array $data): void
-    {
-        for ($i = 0; $i <= 1; $i++) {
-            $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'documentId' => ID::unique(),
-                'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/longtext.txt'),
-                ],
-                'permissions' => [
-                    Permission::read(Role::user($this->getUser()['$id'])),
-                    Permission::update(Role::user($this->getUser()['$id'])),
-                    Permission::delete(Role::user($this->getUser()['$id'])),
-                ]
-            ]);
-        }
-
-        $docs = [];
-        for ($i = 0; $i <= 5; $i++) {  // _APP_SLOW_QUERIES_MAX_HITS = 5
-            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-timeout' => 1,
-            ], $this->getHeaders()), [
-                'queries' => ['notEqual("longtext", "appwrite")'],
-            ]);
-        }
-
-        $this->assertEquals(408, $docs[0]['headers']['status-code']); // insert
-        $this->assertEquals(408, $docs[1]['headers']['status-code']); // update
-        $this->assertEquals(408, $docs[2]['headers']['status-code']); // update
-        $this->assertEquals(408, $docs[3]['headers']['status-code']); // update
-        $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
-        $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
     }
 
     /**
@@ -4869,16 +4786,22 @@ trait DatabasesBase
             ]);
         }
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timeout' => 1,
-        ], $this->getHeaders()), [
-            'queries' => [
+        $docs = [];
+        for ($i = 0; $i <= 5; $i++) {  // _APP_SLOW_QUERIES_MAX_HITS = 5
+            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-timeout' => 1,
+            ], $this->getHeaders()), [
                 Query::notEqual('longtext', 'appwrite')->toString(),
-            ],
-        ]);
+            ]);
+        }
 
-        $this->assertEquals(408, $response['headers']['status-code']);
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // create
+        $this->assertEquals(408, $docs[1]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[2]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[3]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
     }
 }
