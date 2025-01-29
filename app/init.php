@@ -1188,26 +1188,23 @@ App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 App::setResource('platforms', function (Document $project, Document $console) {
-    $platforms = [];
-    $platforms[] = $project->getAttribute('platforms', []);
-    $platforms[] = $console->getAttribute('platforms', []);
-    return $platforms;
+    return [
+        ...$project->getAttribute('platforms', []),
+        ...$console->getAttribute('platforms', []),
+    ];
 }, ['project', 'console']);
 App::setResource('hostnames', function (array $platforms) {
-    // Always allow console hostname
-    $hostnames = [System::getEnv('_APP_CONSOLE_HOSTNAME', 'console')];
-
-    // Add configured hostnames
-    $configured = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    // Allow environment configured hostnames
+    $hostnames = [];
     $validator = new Hostname();
-    foreach ($configured as $hostname) {
+    foreach (explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', '') as $hostname) {
         $hostname = trim($hostname);
         if ($validator->isValid($hostname)) {
             $hostnames[] = $hostname;
         }
     }
 
-    // Add platforms from DB
+    // Add DB configured hostnames
     foreach ($platforms as $platform) {
         if (!empty($platform['hostname']) && in_array($platform['type'], [
             Origin::CLIENT_TYPE_WEB,

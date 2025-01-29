@@ -74,6 +74,12 @@ class Platform extends Model
                 'default' => '',
                 'example' => 'password',
             ])
+            ->addRule('scheme', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed app scheme.',
+                'default' => '',
+                'example' => 'myapp',
+            ])
         ;
     }
 
