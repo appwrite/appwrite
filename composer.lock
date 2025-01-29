@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "84ab61b29ade142659ec0de1e098d752",
+    "content-hash": "1f59ecb2bcbdca704fe481da52f8980d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2453,16 +2453,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.2.2",
+            "version": "v7.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "339ba21476eb184290361542f732ad12c97591ec"
+                "reference": "7ce6078c79a4a7afff931c413d2959d3bffbfb8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/339ba21476eb184290361542f732ad12c97591ec",
-                "reference": "339ba21476eb184290361542f732ad12c97591ec",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/7ce6078c79a4a7afff931c413d2959d3bffbfb8d",
+                "reference": "7ce6078c79a4a7afff931c413d2959d3bffbfb8d",
                 "shasum": ""
             },
             "require": {
@@ -2528,7 +2528,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.2.2"
+                "source": "https://github.com/symfony/http-client/tree/v7.2.3"
             },
             "funding": [
                 {
@@ -2544,7 +2544,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-30T18:35:15+00:00"
+            "time": "2025-01-28T15:51:35+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -4807,16 +4807,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.31",
+            "version": "0.39.32",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "612b2e09286f5bd8fc8a4c4f69ad6d537d103b8d"
+                "reference": "2d02e1305ea5004fb0aec6b2618d6c597659b75c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/612b2e09286f5bd8fc8a4c4f69ad6d537d103b8d",
-                "reference": "612b2e09286f5bd8fc8a4c4f69ad6d537d103b8d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2d02e1305ea5004fb0aec6b2618d6c597659b75c",
+                "reference": "2d02e1305ea5004fb0aec6b2618d6c597659b75c",
                 "shasum": ""
             },
             "require": {
@@ -4852,9 +4852,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.31"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.32"
             },
-            "time": "2025-01-27T16:12:02+00:00"
+            "time": "2025-01-29T04:04:19+00:00"
         },
         {
             "name": "doctrine/annotations",
