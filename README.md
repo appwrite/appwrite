@@ -1,4 +1,4 @@
-> Appwrite Init has concluded! You can check out all the latest announcements [on our Init website](https://appwrite.io/init) :rocket:
+> [Get started with Appwrite](https://cloud.appwrite.io/)
 
 <br />
 <p align="center">
