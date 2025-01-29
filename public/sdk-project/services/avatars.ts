@@ -38,17 +38,7 @@ export class Avatars extends Service {
             let path = '/avatars/browsers/{code}'.replace('{code}', code);
             let payload: Payload = {};
 
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
+            Service.populatePayload(payload, { width, height, quality });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -88,17 +78,7 @@ export class Avatars extends Service {
             let path = '/avatars/credit-cards/{code}'.replace('{code}', code);
             let payload: Payload = {};
 
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
+            Service.populatePayload(payload, { width, height, quality });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -129,9 +109,7 @@ export class Avatars extends Service {
             let path = '/avatars/favicon';
             let payload: Payload = {};
 
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
+            Service.populatePayload(payload, { url });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -172,17 +150,7 @@ export class Avatars extends Service {
             let path = '/avatars/flags/{code}'.replace('{code}', code);
             let payload: Payload = {};
 
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
+            Service.populatePayload(payload, { width, height, quality });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -222,17 +190,7 @@ export class Avatars extends Service {
             let path = '/avatars/image';
             let payload: Payload = {};
 
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
-
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
+            Service.populatePayload(payload, { url, width, height });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -275,21 +233,7 @@ export class Avatars extends Service {
             let path = '/avatars/initials';
             let payload: Payload = {};
 
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
-
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-
-            if (typeof background !== 'undefined') {
-                payload['background'] = background;
-            }
+            Service.populatePayload(payload, { name, width, height, background });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -323,21 +267,7 @@ export class Avatars extends Service {
             let path = '/avatars/qr';
             let payload: Payload = {};
 
-            if (typeof text !== 'undefined') {
-                payload['text'] = text;
-            }
-
-            if (typeof size !== 'undefined') {
-                payload['size'] = size;
-            }
-
-            if (typeof margin !== 'undefined') {
-                payload['margin'] = margin;
-            }
-
-            if (typeof download !== 'undefined') {
-                payload['download'] = download;
-            }
+            Service.populatePayload(payload, { text, size, margin, download });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
