@@ -2627,13 +2627,6 @@ return [
                 'attributes' => ['chunksUploaded'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_transformedAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['transformedAt'],
-                'lengths' => [],
-                'orders' => [],
             ]
         ]
     ],
