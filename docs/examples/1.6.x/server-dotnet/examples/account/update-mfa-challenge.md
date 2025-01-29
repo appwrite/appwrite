@@ -9,7 +9,7 @@ Client client = new Client()
 
 Account account = new Account(client);
 
- result = await account.UpdateMfaChallenge(
+Session result = await account.UpdateMfaChallenge(
     challengeId: "<CHALLENGE_ID>",
     otp: "<OTP>"
 );

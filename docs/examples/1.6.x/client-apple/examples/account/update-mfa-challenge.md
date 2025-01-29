@@ -6,7 +6,7 @@ let client = Client()
 
 let account = Account(client)
 
-let result = try await account.updateMfaChallenge(
+let session = try await account.updateMfaChallenge(
     challengeId: "<CHALLENGE_ID>",
     otp: "<OTP>"
 )
