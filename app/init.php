@@ -122,6 +122,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
 const APP_VERSION_STABLE = '1.6.1';
@@ -770,7 +771,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 }, Database::VAR_DATETIME);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
-    $elements = $attribute['formatOptions']['elements'];
+    $elements = $attribute['formatOptions']['elements'] ?? [];
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 

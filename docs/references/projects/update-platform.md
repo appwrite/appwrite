@@ -1,0 +1,1 @@
+Update a platform by its unique ID. Use this endpoint to update the platform's name, key, platform store ID, or hostname. 
