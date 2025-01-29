@@ -16,8 +16,8 @@ class Redirect extends Host
     protected array $schemes = [];
 
     /**
-     * @param array $hostnames White list of allowed hostnames
-     * @param array $schemes White list of allowed schemes
+     * @param array<string> $hostnames Allow list of allowed hostnames
+     * @param array<string> $schemes Allow list of allowed schemes
      */
     public function __construct(array $hostnames = [], array $schemes = [])
     {
@@ -34,8 +34,14 @@ class Redirect extends Host
      */
     public function getDescription(): string
     {
-        return "HTTP or HTTPS URL host must be one of: " .
-            \implode(", ", $this->whitelist);
+        $hostnames = array_map(function ($hostname) {
+            return "http://`$hostname`";
+        }, $this->hostnames);
+
+        return "URL scheme must be one of the following: " .
+            \implode(", ", $this->schemes) .
+            " or URL hostname must be one of the following: " .
+            \implode(", ", $hostnames);
     }
 
     /**
@@ -48,34 +54,36 @@ class Redirect extends Host
      */
     public function isValid($value): bool
     {
-        if (empty($value)) {
+        if (empty($value) || !\is_string($value)) {
             return false;
         }
 
-        $url = parse_url($value);
-        if (!isset($url["scheme"])) {
-            // `parse_url` does not URLs without hostname.
-            // We handle this scenario with regex
-            if (!preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)) {
-                return false;
-            }
-
-            $scheme = strtolower($matches[1]);
-        } else {
-            $scheme = strtolower($url["scheme"]);
+        // `\parse_url` returns false when the URL contains a scheme without a hostname.
+        // In this case, we use a regex to reliably extract the scheme.
+        $url = \parse_url($value);
+        if (
+            !isset($url["scheme"]) &&
+            !preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)
+        ) {
+            return false;
         }
+        $scheme = $url["scheme"] ?? $matches[1];
+        if (empty($scheme)) {
+            return false;
+        }
+        $scheme = strtolower($scheme);
 
-        // These are dangerous schemes
+        // These are dangerous schemes, may expose XSS vulnerabilities
         if (in_array($scheme, ["javascript", "data", "blob", "file"])) {
             return false;
         }
 
-        // Check hostname if scheme is http or https
+        // When the scheme is HTTP or HTTPS, use the hostname validator.
         if (in_array($scheme, ["http", "https"])) {
             return parent::isValid($value);
         }
 
-        // Check scheme against white list
+        // Otherwise, check if the scheme is allowed.
         return in_array($scheme, $this->schemes);
     }
 }
