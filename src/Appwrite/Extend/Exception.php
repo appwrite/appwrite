@@ -119,6 +119,9 @@ class Exception extends \Exception
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
     public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
+    /** Console */
+    public const RESOURCE_ALREADY_EXISTS           = 'resource_already_exists';
+
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
     public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
