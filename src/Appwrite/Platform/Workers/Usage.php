@@ -30,13 +30,16 @@ class Usage extends Action
      */
     public function __construct()
     {
+
         $this
-            ->desc('Usage worker')
-            ->inject('message')
-            ->inject('project')
-            ->inject('getProjectDB')
-            ->inject('queueForUsageDump')
-            ->callback([$this, 'action']);
+        ->desc('Usage worker')
+        ->inject('message')
+        ->inject('project')
+        ->inject('getProjectDB')
+        ->inject('queueForUsageDump')
+        ->callback(function (Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump) {
+            $this->action($message, $project, $getProjectDB, $queueForUsageDump);
+        });
 
         $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $this->lastTriggeredTime = time();
@@ -57,6 +60,7 @@ class Usage extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+
 
         if (empty($project->getAttribute('database'))) {
             var_dump($payload);
