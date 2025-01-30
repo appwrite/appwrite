@@ -8,7 +8,7 @@ use Utopia\Queue\Connection;
 class Usage extends Event
 {
     public const TYPE_USAGE_DUMP = 'usage-dump';
-    public const TYPE_USAGE_COUNT = 'usage-count';
+    public const TYPE_USAGE_COUNT = 'stats-resources';
 
     protected array $metrics = [];
     protected array $reduce  = [];

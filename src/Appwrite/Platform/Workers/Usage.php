@@ -373,22 +373,22 @@ class Usage extends Action
             try {
                 $this->countForBuckets($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "usageCount", "count_for_buckets_{$project->getId()}"]);
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
                 $this->countForDatabase($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "usageCount", "count_for_database_{$project->getId()}"]);
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
 
             try {
                 $this->countForFunctions($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "usageCount", "count_for_functions_{$project->getId()}"]);
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
         } catch (Throwable $th) {
-            call_user_func_array($this->logError, [$th, "usageCount", "count_for_project_{$project->getId()}"]);
+            call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
 
         Console::info('End of count for: ' . $project->getId());

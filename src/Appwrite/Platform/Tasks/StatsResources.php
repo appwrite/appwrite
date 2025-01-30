@@ -19,7 +19,7 @@ const INFINITY_PERIOD = '_inf_';
  * Runs every hour, schedules project
  * for aggregating resource count
  */
-class UsageCount extends Action
+class StatsResources extends Action
 {
     /**
      * Log Error Callback
@@ -44,7 +44,7 @@ class UsageCount extends Action
 
     public static function getName()
     {
-        return 'usage-count';
+        return 'stats-resources';
     }
 
     public function __construct()
