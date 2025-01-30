@@ -88,7 +88,9 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-stats-usage-dump && \
     chmod +x /usr/local/bin/stats-resources && \
-    chmod +x /usr/local/bin/worker-stats-resources
+    chmod +x /usr/local/bin/worker-stats-resources && \
+    chmod +x /usr/local/bin/worker-usage && \
+    chmod +x /usr/local/bin/worker-usage-dump
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
