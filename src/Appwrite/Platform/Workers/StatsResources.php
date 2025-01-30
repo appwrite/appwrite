@@ -22,10 +22,19 @@ class StatsResources extends Action
         'inf' => '0000-00-00 00:00'
     ];
 
+    /**
+     * @var array $documents
+     *
+     * Array of documents to batch write
+     *
+     */
+    protected array $documents = [];
+
     public static function getName(): string
     {
         return 'stats-resources';
     }
+
 
     /**
      * @throws Exception
@@ -64,6 +73,9 @@ class StatsResources extends Action
             var_dump($payload);
             return;
         }
+
+        // Reset documents for each job
+        $this->documents = [];
 
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
     }
@@ -120,7 +132,7 @@ class StatsResources extends Action
             ];
 
             foreach ($metrics as $metric => $value) {
-                $this->createOrUpdateMetric($dbForLogs, $region, $metric, $value);
+                $this->createStatsDocuments($region, $metric, $value);
             }
 
             try {
@@ -144,6 +156,8 @@ class StatsResources extends Action
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
 
+        $this->writeDocuments($dbForLogs, $project);
+
         Console::info('End of count for: ' . $project->getId());
     }
 
@@ -155,18 +169,65 @@ class StatsResources extends Action
             $files = $dbForProject->count('bucket_' . $bucket->getInternalId());
 
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES);
-            $this->createOrUpdateMetric($dbForLogs, $region, $metric, $files);
+            $this->createStatsDocuments($region, $metric, $files);
 
             $storage = $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeActual');
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
-            $this->createOrUpdateMetric($dbForLogs, $region, $metric, $storage);
+            $this->createStatsDocuments($region, $metric, $storage);
 
             $totalStorage += $storage;
             $totalFiles += $files;
         });
 
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_FILES, $totalFiles);
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_FILES_STORAGE, $totalStorage);
+        $this->createStatsDocuments($region, METRIC_FILES, $totalFiles);
+        $this->createStatsDocuments($region, METRIC_FILES_STORAGE, $totalStorage);
+    }
+
+    /**
+     * Need separate function to count per period data
+     */
+    protected function countImageTransformations(Database $dbForProject, Database $dbForLogs, string $region)
+    {
+        $totalImageTransformations = 0;
+        $totalDailyImageTransformations = 0;
+        $totalHourlyImageTransformations = 0;
+        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalDailyImageTransformations, &$totalHourlyImageTransformations, &$totalImageTransformations) {
+            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
+                Query::isNotNull('transformedAt')
+            ]);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $this->createStatsDocuments($region, $metric, $imageTransformations, 'inf');
+            $totalImageTransformations += $imageTransformations;
+
+            // hourly
+            $time = \date($this->periods['1h'], \time());
+            $start = $time;
+            $end = (new \DateTime($start))->format('Y-m-d H:59:59');
+            $hourlyImageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
+                Query::greaterThanEqual('transformedAt', $start),
+                Query::lessThanEqual('transformedAt', $end),
+            ]);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $this->createStatsDocuments($region, $metric, $hourlyImageTransformations, '1h');
+            $totalHourlyImageTransformations += $hourlyImageTransformations;
+
+            // daily
+            $time = \date($this->periods['1d'], \time());
+            $start = $time;
+            $end = (new \DateTime($start))->format('Y-m-d 11:59:59');
+
+            $dailyImageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
+                Query::greaterThanEqual('transformedAt', $start),
+                Query::lessThanEqual('transformedAt', $end),
+            ]);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $this->createStatsDocuments($region, $metric, $dailyImageTransformations, '1d');
+            $totalDailyImageTransformations += $dailyImageTransformations;
+
+        });
+
+        $this->createStatsDocuments($region, METRIC_IMAGES_TRANSFORMATIONS, $totalImageTransformations, 'inf');
+
     }
 
     protected function countForDatabase(Database $dbForProject, Database $dbForLogs, string $region)
@@ -178,7 +239,7 @@ class StatsResources extends Action
             $collections = $dbForProject->count('database_' . $database->getInternalId());
 
             $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS);
-            $this->createOrUpdateMetric($dbForLogs, $region, $metric, $collections);
+            $this->createStatsDocuments($region, $metric, $collections);
 
             $documents = $this->countForCollections($dbForProject, $dbForLogs, $database, $region);
 
@@ -186,8 +247,8 @@ class StatsResources extends Action
             $totalCollections += $collections;
         });
 
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_COLLECTIONS, $totalCollections);
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_DOCUMENTS, $totalDocuments);
+        $this->createStatsDocuments($region, METRIC_COLLECTIONS, $totalCollections);
+        $this->createStatsDocuments($region, METRIC_DOCUMENTS, $totalDocuments);
     }
     protected function countForCollections(Database $dbForProject, Database $dbForLogs, Document $database, string $region): int
     {
@@ -196,13 +257,13 @@ class StatsResources extends Action
             $documents = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-            $this->createOrUpdateMetric($dbForLogs, $region, $metric, $documents);
+            $this->createStatsDocuments($region, $metric, $documents);
 
             $databaseDocuments += $documents;
         });
 
         $metric = str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_DOCUMENTS);
-        $this->createOrUpdateMetric($dbForLogs, $region, $metric, $databaseDocuments);
+        $this->createStatsDocuments($region, $metric, $databaseDocuments);
 
         return $databaseDocuments;
     }
@@ -211,13 +272,13 @@ class StatsResources extends Action
     {
         $deploymentsStorage = $dbForProject->sum('deployments', 'size');
         $buildsStorage = $dbForProject->sum('builds', 'size');
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_BUILDS_STORAGE, $buildsStorage);
+        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
+        $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
 
         $deployments = $dbForProject->count('deployments');
         $builds = $dbForProject->count('builds');
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_DEPLOYMENTS, $deployments);
-        $this->createOrUpdateMetric($dbForLogs, $region, METRIC_BUILDS, $builds);
+        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $deployments);
+        $this->createStatsDocuments($region, METRIC_BUILDS, $builds);
 
 
         $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $dbForLogs, $region) {
@@ -225,19 +286,19 @@ class StatsResources extends Action
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
             ]);
-            $this->createOrUpdateMetric($dbForLogs, $region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
 
             $functionDeployments = $dbForProject->count('deployments', [
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
             ]);
-            $this->createOrUpdateMetric($dbForLogs, $region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
 
             /**
              * As deployments and builds have 1-1 relationship,
              * the count for one should match the other
              */
-            $this->createOrUpdateMetric($dbForLogs, $region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), $functionDeployments);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), $functionDeployments);
 
             $functionBuildsStorage = 0;
 
@@ -249,29 +310,45 @@ class StatsResources extends Action
                 $functionBuildsStorage += $build->getAttribute('size', 0);
             });
 
-            $this->createOrUpdateMetric($dbForLogs, $region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
         });
     }
 
-    protected function createOrUpdateMetric(Database $dbForLogs, string $region, string $metric, int $value)
+    protected function createStatsDocuments(string $region, string $metric, int $value, ?string $period = null)
     {
-        foreach ($this->periods as $period => $format) {
-            $time = 'inf' === $period ? null : \date($format, \time());
-            $id = \md5("{$time}_{$period}_{$metric}");
-            $current = $dbForLogs->getDocument('usage', $id);
-            if ($current->isEmpty()) {
-                $dbForLogs->createDocument('usage', new Document([
+        if ($period === null) {
+            foreach ($this->periods as $period => $format) {
+                $time = 'inf' === $period ? null : \date($format, \time());
+                $id = \md5("{$time}_{$period}_{$metric}");
+
+                $this->documents[] = new Document([
                     '$id' => $id,
                     'metric' => $metric,
                     'period' => $period,
                     'region' => $region,
                     'value' => $value,
-                ]));
-                Console::success('Usage logs created for metric: ' . $metric . ' period:'. $period);
-            } else {
-                $dbForLogs->updateDocument('usage', $id, $current->setAttribute('value', $value));
-                Console::success('Usage logs updated for metric: ' . $metric . ' period:'. $period);
+                ]);
             }
+        } else {
+            $time = 'inf' === $period ? null : \date($this->periods[$period], \time());
+            $id = \md5("{$time}_{$period}_{$metric}");
+            $this->documents[] = new Document([
+                '$id' => $id,
+                'metric' => $metric,
+                'period' => $period,
+                'region' => $region,
+                'value' => $value,
+            ]);
         }
+    }
+
+    protected function writeDocuments(Database $dbForLogs, Document $project): void
+    {
+        $dbForLogs->createOrUpdateDocuments(
+            'stats',
+            $this->documents
+        );
+        $this->documents = [];
+        Console::success('Stats  written to logs db for project: ' . $project->getId() . '(' . $project->getInternalId() . ')');
     }
 }

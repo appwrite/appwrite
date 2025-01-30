@@ -237,8 +237,6 @@ const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
 const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
-
-
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
@@ -269,6 +267,8 @@ const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
 const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
+const METRIC_IMAGES_TRANSFORMATIONS = 'images.transformations';
+const METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS = '{bucketInternalId}.images.transformations';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
