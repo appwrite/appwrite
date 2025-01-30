@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\UsageDump;
+use Appwrite\Event\StatsUsageDump;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
