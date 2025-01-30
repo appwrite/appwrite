@@ -32,24 +32,24 @@ class Redirect extends Host
      *
      * @return string
      */
-     public function getDescription(): string
-     {
-         $schemes = '';
-         if (!empty($this->schemes)) {
-             $schemes = "URL scheme must be one of the following: " . implode(", ", array_map(function ($scheme) {
-                 return "`$scheme`://";
-             }, $this->schemes));
-         }
+    public function getDescription(): string
+    {
+        $schemes = '';
+        if (!empty($this->schemes)) {
+            $schemes = "URL scheme must be one of the following: " . implode(", ", array_map(function ($scheme) {
+                return "`$scheme`://";
+            }, $this->schemes));
+        }
 
-         $hostnames = '';
-         if (!empty($this->hostnames)) {
-             $hostnames = "URL hostname must be one of the following: " . implode(", ", array_map(function ($hostname) {
-                 return "http://`$hostname`";
-             }, $this->hostnames));
-         }
+        $hostnames = '';
+        if (!empty($this->hostnames)) {
+            $hostnames = "URL hostname must be one of the following: " . implode(", ", array_map(function ($hostname) {
+                return "http://`$hostname`";
+            }, $this->hostnames));
+        }
 
         return $schemes . ($schemes && $hostnames ? " or " : "") . $hostnames;
-     }
+    }
 
     /**
      * Is valid
@@ -69,7 +69,7 @@ class Redirect extends Host
         // In this case, we use a regex to reliably extract the scheme.
         $url = \parse_url($value);
         if (
-            !isset($url["scheme"]) &&
+            !isset($url["hostname"]) &&
             !preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)
         ) {
             return false;
@@ -86,7 +86,7 @@ class Redirect extends Host
         }
 
         // When the scheme is HTTP or HTTPS, use the hostname validator.
-        if (in_array($scheme, ["http", "https"])) {
+        if (empty($scheme) || in_array($scheme, ["http", "https"])) {
             return parent::isValid($value);
         }
 

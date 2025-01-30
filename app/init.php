@@ -1205,7 +1205,7 @@ App::setResource('hostnames', function (array $platforms) {
         }
     }
 
-    // Add DB configured hostnames
+    // Add database configured hostnames
     foreach ($platforms as $platform) {
         if (!empty($platform['hostname']) && in_array($platform['type'], [
             Origin::CLIENT_TYPE_WEB,
@@ -1217,9 +1217,14 @@ App::setResource('hostnames', function (array $platforms) {
 
     return \array_unique($hostnames);
 }, ['platforms']);
-App::setResource('schemes', function (array $platforms) {
+App::setResource('schemes', function (array $platforms, Document $project) {
     // Allow expo development scheme by default
     $schemes = ['exp'];
+
+    // Allow `appwrite-callback-${projectId}` scheme by default
+    if (!empty($project) && $project->getId() !== 'console') {
+        $schemes[] = 'appwrite-callback-' .  $project->getId();
+    }
 
     foreach ($platforms as $platform) {
         if (!empty($platform['key']) && $platform['type'] === Origin::CLIENT_TYPE_SCHEME) {
@@ -1228,7 +1233,7 @@ App::setResource('schemes', function (array $platforms) {
     }
 
     return \array_unique($schemes);
-}, ['platforms']);
+}, ['platforms', 'project']);
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
