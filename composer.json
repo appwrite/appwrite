@@ -84,7 +84,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.39.30",
+        "appwrite/sdk-generator": "dev-feat-route-muliplexing",
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
@@ -102,5 +102,11 @@
             "php-http/discovery": false,
             "tbachert/spi": false
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/appwrite/sdk-generator"
+        }
+    ]
 }

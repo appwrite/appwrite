@@ -224,10 +224,17 @@ class Swagger2 extends Format
 
                     foreach ($method->getResponses() as $response) {
                         /** @var \Appwrite\SDK\Response $response */
-                        $additionalMethod['responses'][] = [
-                            'code' => $response->getCode(),
-                            'model' => '#/definitions/' . $response->getModel()
-                        ];
+                        if (\is_array($response->getModel())) {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                            ];
+                        } else {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => '#/definitions/' . $response->getModel()
+                            ];
+                        }
                     }
 
                     $temp['x-appwrite']['methods'][] = $additionalMethod;

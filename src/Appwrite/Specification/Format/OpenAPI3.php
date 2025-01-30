@@ -222,10 +222,17 @@ class OpenAPI3 extends Format
 
                     foreach ($method->getResponses() as $response) {
                         /** @var \Appwrite\SDK\Response $response */
-                        $additionalMethod['responses'][] = [
-                            'code' => $response->getCode(),
-                            'model' => '#/components/schemas/' . $response->getModel()
-                        ];
+                        if (\is_array($response->getModel())) {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
+                            ];
+                        } else {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => '#/components/schemas/' . $response->getModel()
+                            ];
+                        }
                     }
 
                     $temp['x-appwrite']['methods'][] = $additionalMethod;
