@@ -5,10 +5,10 @@ use Utopia\Database\Helpers\ID;
 
 $logsCollection = [];
 
-$logsCollection['usage'] = [
+$logsCollection['stats'] = [
     '$collection' => ID::custom(Database::METADATA),
-    '$id' => ID::custom('usage'),
-    'name' => 'usage',
+    '$id' => ID::custom('stats'),
+    'name' => 'stats',
     'attributes' => [
         [
             '$id' => ID::custom('metric'),
