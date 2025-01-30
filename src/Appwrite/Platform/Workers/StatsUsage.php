@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\StatsUsageDump;
+use Appwrite\Event\UsageDump;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -21,7 +21,7 @@ class StatsUsage extends Action
 
     public static function getName(): string
     {
-        return 'stats-usage';
+        return 'usage';
     }
 
     /**
@@ -45,7 +45,7 @@ class StatsUsage extends Action
     /**
      * @param Message $message
      * @param callable $getProjectDB
-     * @param StatsUsageDump $queueForStatsUsageDump
+     * @param StatsUsageDump $queueForUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
@@ -184,12 +184,8 @@ class StatsUsage extends Action
                     $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
                     $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
                     $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
-                    $buildsSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS)));
-                    $buildsFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED)));
                     $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
                     $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
-                    $buildsComputeSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS)));
-                    $buildsComputeFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED)));
                     $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
                     $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
@@ -214,20 +210,6 @@ class StatsUsage extends Action
                         ];
                     }
 
-                    if (!empty($buildsSuccess['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_SUCCESS,
-                            'value' => ($buildsSuccess['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsFailed['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_FAILED,
-                            'value' => ($buildsFailed['value'] * -1),
-                        ];
-                    }
-
                     if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
                             'key' => METRIC_BUILDS_STORAGE,
@@ -239,20 +221,6 @@ class StatsUsage extends Action
                         $metrics[] = [
                             'key' => METRIC_BUILDS_COMPUTE,
                             'value' => ($buildsCompute['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsComputeSuccess['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_COMPUTE_SUCCESS,
-                            'value' => ($buildsComputeSuccess['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsComputeFailed['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_COMPUTE_FAILED,
-                            'value' => ($buildsComputeFailed['value'] * -1),
                         ];
                     }
 
