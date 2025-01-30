@@ -1023,4 +1023,16 @@ return [
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
     ],
+
+    /* Slow queries */
+    Exception::QUERY_BLOCKED => [
+        'name' => Exception::QUERY_BLOCKED,
+        'description' => 'Request blocked after exceeding the maximum number of timeouts',
+        'code' => 403,
+    ],
+    Exception::QUERY_TIMEOUT => [
+        'name' => Exception::QUERY_TIMEOUT,
+        'description' => 'Request timed out, this query will be blocked if it keeps timing out, try adjusting the "queries" parameter or adding indexes for the queried attributes.',
+        'code' => 408,
+    ],
 ];

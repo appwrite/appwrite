@@ -12,7 +12,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Validator\JSON;
 
 trait DatabasesBase
 {
@@ -1334,7 +1333,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+        ]));
 
         $this->assertIsArray($movies['body']['indexes']);
         $this->assertCount(8, $movies['body']['indexes']);
@@ -4787,16 +4786,22 @@ trait DatabasesBase
             ]);
         }
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timeout' => 1,
-        ], $this->getHeaders()), [
-            'queries' => [
+        $docs = [];
+        for ($i = 0; $i <= 5; $i++) {  // _APP_SLOW_QUERIES_MAX_HITS = 5
+            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-timeout' => 1,
+            ], $this->getHeaders()), [
                 Query::notEqual('longtext', 'appwrite')->toString(),
-            ],
-        ]);
+            ]);
+        }
 
-        $this->assertEquals(408, $response['headers']['status-code']);
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // create
+        $this->assertEquals(408, $docs[1]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[2]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[3]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
     }
 }

@@ -1,0 +1,1 @@
+Delete a slow query by its unique ID.

@@ -84,6 +84,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\SlowQuery;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
@@ -111,7 +112,6 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
-// Keep last
 use Utopia\Database\Document;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -151,6 +151,10 @@ class Response extends SwooleResponse
     public const MODEL_INDEX_LIST = 'indexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+
+    public const MODEL_SLOW_QUERY = 'slowQuery';
+
+    public const MODEL_SLOW_QUERY_LIST = 'slowQueryList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -384,6 +388,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
+            ->setModel(new BaseList('Slow Query List', self::MODEL_SLOW_QUERY_LIST, 'slowQueries', self::MODEL_SLOW_QUERY))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -482,6 +487,7 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
+            ->setModel(new SlowQuery())
             // Tests (keep last)
             ->setModel(new Mock());
 
@@ -773,7 +779,7 @@ class Response extends SwooleResponse
     /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param $filter Filter The response filter to set
      *
      * @return void
      */

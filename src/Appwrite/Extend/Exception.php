@@ -261,6 +261,11 @@ class Exception extends \Exception
     public const MIGRATION_IN_PROGRESS             = 'migration_in_progress';
     public const MIGRATION_PROVIDER_ERROR          = 'migration_provider_error';
 
+
+    /** Timeout */
+    public const QUERY_BLOCKED                     = 'query_blocked';
+    public const QUERY_TIMEOUT                     = 'query_timeout';
+
     /** Realtime */
     public const REALTIME_MESSAGE_FORMAT_INVALID   = 'realtime_message_format_invalid';
     public const REALTIME_TOO_MANY_MESSAGES        = 'realtime_too_many_messages';

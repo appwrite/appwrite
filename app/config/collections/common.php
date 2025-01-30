@@ -2637,4 +2637,93 @@ return [
             ]
         ]
     ],
+    'slowQueries' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('slowQueries'),
+        'name' => 'slowQueries',
+        'attributes' => [
+            [
+                '$id' => ID::custom('blocked'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => true,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('count'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('queries'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 410002,
+                'signed' => false,
+                'required' => true,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('path'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2500,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('databaseId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('collectionId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_database_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['databaseId', 'collectionId'],
+                'lengths' => [],
+                'orders' => []
+            ],
+            [
+                '$id' => '_key_blocked',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['blocked', 'databaseId', 'collectionId'],
+                'lengths' => [],
+                'orders' => []
+            ]
+        ],
+    ],
 ];
