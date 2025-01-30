@@ -13639,7 +13639,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an email message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -13987,7 +13987,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update a push notification by its unique ID.\n",
+                "description": "Update a push notification by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14297,7 +14297,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an SMS message by its unique ID.\n",
+                "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",

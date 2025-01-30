@@ -231,7 +231,7 @@ App::init()
             if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
                 try {
                     $payload = $jwtObj->decode($authKey);
@@ -606,6 +606,12 @@ App::init()
 
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                    }
+
+                    $transformedAt = $file->getAttribute('transformedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                        $file->setAttribute('transformedAt', DateTime::now());
+                        Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
                     }
                 }
 
