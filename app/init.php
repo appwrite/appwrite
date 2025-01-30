@@ -1198,7 +1198,7 @@ App::setResource('hostnames', function (array $platforms) {
     // Allow environment configured hostnames
     $hostnames = [];
     $validator = new Hostname();
-    foreach (explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', '') as $hostname) {
+    foreach (explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', '')) as $hostname) {
         $hostname = trim($hostname);
         if ($validator->isValid($hostname)) {
             $hostnames[] = $hostname;
@@ -1222,15 +1222,8 @@ App::setResource('schemes', function (array $platforms) {
     $schemes = ['exp'];
 
     foreach ($platforms as $platform) {
-        if (!empty($platform['scheme']) && in_array($platform['type'], [
-            Origin::CLIENT_TYPE_APPLE_IOS,
-            Origin::CLIENT_TYPE_ANDROID,
-            Origin::CLIENT_TYPE_FLUTTER_IOS,
-            Origin::CLIENT_TYPE_FLUTTER_ANDROID,
-            Origin::CLIENT_TYPE_REACT_NATIVE_IOS,
-            Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID
-        ])) {
-            $schemes[] = $platform['scheme'];
+        if (!empty($platform['key']) && $platform['type'] === Origin::CLIENT_TYPE_SCHEME) {
+            $schemes[] = $platform['key'];
         }
     }
 

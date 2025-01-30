@@ -41,13 +41,13 @@ class Platform extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.',
+                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, react-native-android, react-native-ios, scheme and unity.',
                 'default' => '',
                 'example' => 'web',
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Platform Key. iOS bundle ID or Android package name.  Empty string for other platforms.',
+                'description' => 'Platform Key. iOS bundle ID or Android package name or app scheme.  Empty string for other platforms.',
                 'default' => '',
                 'example' => 'com.company.appname',
             ])
@@ -73,12 +73,6 @@ class Platform extends Model
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',
-            ])
-            ->addRule('scheme', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Allowed app scheme.',
-                'default' => '',
-                'example' => 'myapp',
             ])
         ;
     }

@@ -565,17 +565,6 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('scheme'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 256,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]
         ],
         'indexes' => [
             [
