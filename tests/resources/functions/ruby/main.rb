@@ -14,6 +14,8 @@ def main(context)
         'APPWRITE_FUNCTION_USER_ID' => context.req.headers['x-appwrite-user-id'] || '',
         'APPWRITE_FUNCTION_JWT' => context.req.headers['x-appwrite-user-jwt'] || '',
         'APPWRITE_FUNCTION_PROJECT_ID' => ENV['APPWRITE_FUNCTION_PROJECT_ID'] || '',
+        'APPWRITE_FUNCTION_EXECUTION_ID' => context.req.headers['x-appwrite-execution-id'] || '',
+        'APPWRITE_FUNCTION_CLIENT_IP' => context.req.headers['x-appwrite-client-ip'] || '',
         'CUSTOM_VARIABLE' => ENV['CUSTOM_VARIABLE'] || ''
     })
 end

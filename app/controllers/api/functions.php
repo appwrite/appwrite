@@ -2007,6 +2007,8 @@ App::post('/v1/functions/:functionId/executions')
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -2014,6 +2016,7 @@ App::post('/v1/functions/:functionId/executions')
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $headers['x-appwrite-client-ip'] = $request->getIP();
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
@@ -2035,7 +2038,7 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        $executionId = ID::unique();
+
 
         $status = $async ? 'waiting' : 'processing';
 

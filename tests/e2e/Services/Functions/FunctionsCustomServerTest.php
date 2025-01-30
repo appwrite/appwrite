@@ -1304,6 +1304,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($execution['body']['errors']);
 
         $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
 
         $executions = $this->listExecutions($functionId);
 

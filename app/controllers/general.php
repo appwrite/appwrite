@@ -227,6 +227,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         ]);
 
         $headers = \array_merge([], $requestHeaders);
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = '';
@@ -234,6 +236,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $headers['x-appwrite-client-ip'] = $request->getIP();
 
         $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
@@ -255,7 +258,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
         }
 
-        $executionId = ID::unique();
 
         $execution = new Document([
             '$id' => $executionId,

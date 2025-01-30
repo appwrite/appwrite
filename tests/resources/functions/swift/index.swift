@@ -12,6 +12,8 @@ func main(req: RequestValue, res: RequestResponse) throws -> RequestResponse {
         "APPWRITE_FUNCTION_USER_ID": req.variables["APPWRITE_FUNCTION_USER_ID"],
         "APPWRITE_FUNCTION_JWT": req.variables["APPWRITE_FUNCTION_JWT"],
         "APPWRITE_FUNCTION_PROJECT_ID": req.variables["APPWRITE_FUNCTION_PROJECT_ID"],
+        "APPWRITE_FUNCTION_EXECUTION_ID": req.variables["APPWRITE_FUNCTION_EXECUTION_ID"],
+        "APPWRITE_FUNCTION_CLIENT_IP": req.variables["APPWRITE_FUNCTION_CLIENT_IP"],
         "CUSTOM_VARIABLE": req.variables["CUSTOM_VARIABLE"]
     ])
 }

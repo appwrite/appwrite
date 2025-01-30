@@ -118,19 +118,24 @@ class FunctionsCustomClientTest extends Scope
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
+    
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
             'async' => true
         ]);
         $executionId = $execution['body']['$id'];
         $this->assertEquals(202, $execution['headers']['status-code']);
-
+    
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
         }, 10000, 500);
-
+    
         return [
             'functionId' => $functionId
         ];

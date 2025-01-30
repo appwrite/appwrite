@@ -17,5 +17,7 @@ def main(context):
         'APPWRITE_FUNCTION_USER_ID' : context.req.headers.get('x-appwrite-user-id', ''),
         'APPWRITE_FUNCTION_JWT' : context.req.headers.get('x-appwrite-user-jwt', ''),
         'APPWRITE_FUNCTION_PROJECT_ID' : os.environ.get('APPWRITE_FUNCTION_PROJECT_ID',''),
+        'APPWRITE_FUNCTION_EXECUTION_ID': context.req.headers.get('x-appwrite-execution-id', ''),
+        'APPWRITE_FUNCTION_CLIENT_IP': context.req.headers.get('x-appwrite-client-ip', ''),
         'CUSTOM_VARIABLE' : os.environ.get('CUSTOM_VARIABLE',''),
     })

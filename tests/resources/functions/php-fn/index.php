@@ -16,8 +16,10 @@ return function ($context) {
         'APPWRITE_FUNCTION_EVENT_DATA' => $context->req->bodyRaw ?? '',
         'APPWRITE_FUNCTION_DATA' => $context->req->bodyRaw ?? '',
         'APPWRITE_FUNCTION_USER_ID' => $context->req->headers['x-appwrite-user-id'] ?? '',
-        'APPWRITE_FUNCTION_JWT' =>  $context->req->headers['x-appwrite-user-jwt'] ?? '',
+        'APPWRITE_FUNCTION_JWT' => $context->req->headers['x-appwrite-user-jwt'] ?? '',
         'APPWRITE_FUNCTION_PROJECT_ID' => \getenv('APPWRITE_FUNCTION_PROJECT_ID') ?: '',
+        'APPWRITE_FUNCTION_EXECUTION_ID' => $context->req->headers['x-appwrite-execution-id'] ?? '',
+        'APPWRITE_FUNCTION_CLIENT_IP' => $context->req->headers['x-appwrite-client-ip'] ?? '',
         'CUSTOM_VARIABLE' => \getenv('CUSTOM_VARIABLE') ?: '',
     ]);
 };
