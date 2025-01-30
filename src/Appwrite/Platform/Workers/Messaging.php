@@ -60,7 +60,6 @@ class Messaging extends Action
      */
     public function __construct()
     {
-
         $this->adapter = $this->createInternalSMSAdapter();
 
         $this
