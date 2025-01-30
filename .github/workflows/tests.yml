@@ -171,15 +171,59 @@ jobs:
             -e _APP_DATABASE_SHARED_TABLES_V1 \
             appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude=devKeys
 
-          if [ "${{ matrix.service }}" == "Projects" ]; then
-            export _APP_OPTIONS_ABUSE=enabled
+  e2e_dev_keys:
+    name: E2E Service Test
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        tables-mode: [
+          'Project',
+          'Shared V1',
+          'Shared V2',
+        ]
 
-            docker compose exec -T \
-              -e _APP_OPTIONS_ABUSE \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --group=devKeys
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 30
+
+      - name: Run Projects tests with dev keys in ${{ matrix.tables-mode }} table mode
+        run: |
+          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+            echo "Using shared tables V1"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+            echo "Using shared tables V2"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=
+          else
+            echo "Using project tables"
+            export _APP_DATABASE_SHARED_TABLES=
+            export _APP_DATABASE_SHARED_TABLES_V1=
           fi
+
+          export _APP_OPTIONS_ABUSE=enabled
+
+          docker compose exec -T \
+            -e _APP_OPTIONS_ABUSE \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
 
   benchmarking:
     name: Benchmark
