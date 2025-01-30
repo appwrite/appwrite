@@ -195,7 +195,7 @@ class StatsResources extends Action
             $imageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
                 Query::isNotNull('transformedAt')
             ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $imageTransformations, 'inf');
             $totalImageTransformations += $imageTransformations;
 
@@ -207,7 +207,7 @@ class StatsResources extends Action
                 Query::greaterThanEqual('transformedAt', $start),
                 Query::lessThanEqual('transformedAt', $end),
             ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $hourlyImageTransformations, '1h');
             $totalHourlyImageTransformations += $hourlyImageTransformations;
 
@@ -220,13 +220,13 @@ class StatsResources extends Action
                 Query::greaterThanEqual('transformedAt', $start),
                 Query::lessThanEqual('transformedAt', $end),
             ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_IMAGES_TRANSFORMATIONS);
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $dailyImageTransformations, '1d');
             $totalDailyImageTransformations += $dailyImageTransformations;
 
         });
 
-        $this->createStatsDocuments($region, METRIC_IMAGES_TRANSFORMATIONS, $totalImageTransformations, 'inf');
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations, 'inf');
 
     }
 
