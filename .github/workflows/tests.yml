@@ -145,22 +145,6 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
-      - name: Build Docker Image if Cache Missed
-        if: steps.cache-docker-image.outputs.cache-hit != 'true'
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: false
-          tags: ${{ env.IMAGE }}
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
-          build-args: |
-            DEBUG=false
-            TESTING=true
-            VERSION=dev
-
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
