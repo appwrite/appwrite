@@ -138,7 +138,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Load Cache
-        id: cache-docker-image
         uses: actions/cache@v4
         with:
           key: ${{ env.CACHE_KEY }}
