@@ -53,16 +53,16 @@ class StatsResources extends Action
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
 
-        Console::title("Usage count V1");
+        Console::title("Stats resources V1");
 
-        Console::success('Usage count: Started');
+        Console::success('Stats resources: started');
 
-        $interval = (int) System::getEnv('_APP_USAGE_COUNT_INTERVAL', '3600');
+        $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
         Console::loop(function () use ($queueForStatsResources) {
             $this->enqueueProjects($queueForStatsResources);
         }, $interval);
 
-        Console::log("Usage count: Exited");
+        Console::log("Stats resources: exited");
     }
 
     /**
