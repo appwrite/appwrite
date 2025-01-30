@@ -97,12 +97,14 @@ class Execution extends Model
                 'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
+                'sensitive' => true,
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
+                'sensitive' => true,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
