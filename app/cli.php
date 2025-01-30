@@ -5,6 +5,7 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
@@ -208,6 +209,9 @@ CLI::setResource('queueForCertificates', function (Connection $queue) {
 }, ['queue']);
 CLI::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
+}, ['queue']);
+CLI::setResource('queueForStatsResources', function (Connection $queue) {
+    return new StatsResources($queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
