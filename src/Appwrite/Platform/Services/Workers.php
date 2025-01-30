@@ -11,6 +11,7 @@ use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
+use Appwrite\Platform\Workers\StatsResources;
 use Appwrite\Platform\Workers\Usage;
 use Appwrite\Platform\Workers\UsageDump;
 use Appwrite\Platform\Workers\Webhooks;
@@ -34,7 +35,7 @@ class Workers extends Service
             ->addAction(UsageDump::getName(), new UsageDump())
             ->addAction(Usage::getName(), new Usage())
             ->addAction(Migrations::getName(), new Migrations())
-
+            ->addAction(StatsResources::getName(), new StatsResources())
         ;
     }
 }
