@@ -231,7 +231,7 @@ App::init()
             if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
                 try {
                     $payload = $jwtObj->decode($authKey);

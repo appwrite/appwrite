@@ -2,10 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -15,7 +14,6 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -27,6 +25,7 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Migrations extends Action
 {
@@ -206,48 +205,26 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function generateAPIKey(Document $project): Document
+    protected function generateAPIKey(Document $project): string
     {
-        $generatedSecret = bin2hex(\random_bytes(128));
-
-        $key = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'projectInternalId' => $project->getInternalId(),
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
-            'name' => 'Transfer API Key',
             'scopes' => [
                 'users.read',
                 'users.write',
                 'teams.read',
                 'teams.write',
-                'databases.read',
-                'databases.write',
-                'collections.read',
-                'collections.write',
-                'documents.read',
-                'documents.write',
                 'buckets.read',
                 'buckets.write',
                 'files.read',
                 'files.write',
                 'functions.read',
                 'functions.write',
-            ],
-            'expire' => null,
-            'sdks' => [],
-            'accessedAt' => null,
-            'secret' => $generatedSecret,
+            ]
         ]);
 
-        $this->dbForPlatform->createDocument('keys', $key);
-        $this->dbForPlatform->purgeCachedDocument('projects', $project->getId());
-
-        return $key;
+        return API_KEY_DYNAMIC . '_' . $apiKey;
     }
 
     /**
@@ -275,7 +252,7 @@ class Migrations extends Action
 
                 $credentials['projectId'] = $credentials['projectId'] ?? $projectDocument->getId();
                 $credentials['endpoint'] = $credentials['endpoint'] ?? 'http://appwrite/v1';
-                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey['secret'];
+                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
 
                 $migration->setAttribute('credentials', $credentials);
             }
@@ -285,7 +262,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration, $tempAPIKey->getAttribute('secret'));
+            $destination = $this->processDestination($migration, $tempAPIKey);
 
             $source->report();
 
@@ -381,10 +358,6 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errorMessages);
             }
         } finally {
-            if (! $tempAPIKey->isEmpty()) {
-                $this->removeAPIKey($tempAPIKey);
-            }
-
             $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') === 'failed') {
