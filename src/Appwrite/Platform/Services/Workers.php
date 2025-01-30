@@ -14,6 +14,10 @@ use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\StatsResources;
 use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Platform\Workers\StatsUsageDump;
+/** remove */
+use Appwrite\Platform\Workers\Usage;
+use Appwrite\Platform\Workers\UsageDump;
+/** /remove */
 use Appwrite\Platform\Workers\Webhooks;
 use Utopia\Platform\Service;
 
@@ -36,6 +40,10 @@ class Workers extends Service
             ->addAction(StatsUsage::getName(), new StatsUsage())
             ->addAction(Migrations::getName(), new Migrations())
             ->addAction(StatsResources::getName(), new StatsResources())
+            /** Remove */
+            ->addAction(UsageDump::getName(), new UsageDump())
+            ->addAction(Usage::getName(), new Usage())
+            /** /remove */
         ;
     }
 }

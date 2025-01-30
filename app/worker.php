@@ -13,8 +13,12 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+/** remove */
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
+/** /remove */
+use Appwrite\Event\Usage;
+use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -257,6 +261,17 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
+/** remove */
+Server::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+    return new StatsUsage($queue);
+}, ['queue']);
+
+Server::setResource('queueForUsageDump', function (Connection $queue) {
+    return new UsageDump($queue);
+    return new StatsUsageDump($queue);
+}, ['queue']);
+/** /remove */
 Server::setResource('queueForStatsUsage', function (Connection $queue) {
     return new StatsUsage($queue);
 }, ['queue']);

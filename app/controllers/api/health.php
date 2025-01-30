@@ -788,7 +788,7 @@ App::get('/v1/health/queue/usage')
     ->action(function (int|string $threshold, Connection $queue, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::USAGE_QUEUE_NAME, $queue);
+        $client = new Client(Event::STATS_USAGE_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
@@ -995,7 +995,7 @@ App::get('/v1/health/queue/failed/:name')
         Event::AUDITS_QUEUE_NAME,
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
-        Event::USAGE_QUEUE_NAME,
+        Event::STATS_USAGE_QUEUE_NAME,
         Event::STATS_USAGE_DUMP_QUEUE_NAME,
         Event::WEBHOOK_QUEUE_NAME,
         Event::CERTIFICATES_QUEUE_NAME,

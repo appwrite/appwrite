@@ -3,10 +3,9 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
-class StatsUsage extends Event
+class Usage extends Event
 {
     protected array $metrics = [];
     protected array $reduce  = [];
@@ -16,8 +15,8 @@ class StatsUsage extends Event
         parent::__construct($connection);
 
         $this
-            ->setQueue(Event::STATS_USAGE_QUEUE_NAME)
-            ->setClass(Event::STATS_USAGE_CLASS_NAME);
+            ->setQueue(Event::USAGE_QUEUE_NAME)
+            ->setClass(Event::USAGE_CLASS_NAME);
     }
 
     /**
@@ -42,6 +41,7 @@ class StatsUsage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
+
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
@@ -51,17 +51,28 @@ class StatsUsage extends Event
     }
 
     /**
+     * Prepare the payload for the usage event.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
+            'project' => $this->project,
+            'reduce'  => $this->reduce,
+            'metrics' => $this->metrics,
+        ];
+    }
+
+    /**
      * Sends metrics to the usage worker.
      *
      * @return string|bool
      */
     public function trigger(): string|bool
     {
-        $client = new Client($this->queue, $this->connection);
-        return $client->enqueue([
-            'project' => $this->getProject(),
-            'reduce'  => $this->reduce,
-            'metrics' => $this->metrics,
-        ]);
+        parent::trigger();
+        $this->metrics = [];
+        return true;
     }
 }

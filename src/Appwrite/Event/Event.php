@@ -24,11 +24,19 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    /** remove */
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
+    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
+    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+    /** /remove */
+
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResources';
+
+    public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
+    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
 
     public const STATS_USAGE_DUMP_QUEUE_NAME = 'v1-stats-usage-dump';
     public const STATS_USAGE_DUMP_CLASS_NAME = 'StatsUsageDumpV1';
