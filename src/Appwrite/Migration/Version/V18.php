@@ -219,7 +219,7 @@ class V18 extends Migration
                     };
 
                     if ($user->isEmpty()) {
-                        // The audit userId could already be an internal Id.
+                        // The audit userId could already be an internal ID.
                         // Otherwise, the user could have been deleted.
                         // Nonetheless, there's nothing else we can do here.
                         break;

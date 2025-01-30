@@ -89,9 +89,9 @@ class Comment
                 $text .= "| :- | :-  | :-  | :- |\n";
 
                 $generateImage = function (string $status) use ($protocol, $hostname) {
-                    $extention = $status === 'building' ? 'gif' : 'png';
+                    $extension = $status === 'building' ? 'gif' : 'png';
                     $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
-                    $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+                    $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extension . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extension . '"></picture>';
 
                     return $imageUrl;
                 };

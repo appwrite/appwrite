@@ -205,7 +205,7 @@ class HealthTest extends Scope
     public function testGetAntiVirusHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ANITVIRUS_HEALTH);
+        $query = $this->getQuery(self::$GET_ANTIVIRUS_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];

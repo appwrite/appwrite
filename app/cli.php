@@ -23,7 +23,7 @@ use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-// overwriting runtimes to be architectur agnostic for CLI
+// overwriting runtimes to be architecture agnostic for CLI
 Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes

@@ -1,1 +1,2 @@
-Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.
+Get a database by its unique ID.
+This endpoint response returns a JSON object with the database metadata.

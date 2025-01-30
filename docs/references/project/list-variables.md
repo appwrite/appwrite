@@ -1,1 +1,2 @@
-Get a list of all project variables. These variables will be accessible in all Appwrite Functions at runtime.
+Get a list of all project variables.
+These variables will be accessible in all Appwrite Functions at runtime.

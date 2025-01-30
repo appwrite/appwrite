@@ -187,7 +187,7 @@ class Gitlab extends OAuth2
 
 
     /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the Tenant ID from the JSON stored in appSecret. Defaults to 'common' as a fallback
      *
      * @return string
      */

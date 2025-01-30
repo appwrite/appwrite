@@ -3,7 +3,7 @@ Thank you for sending the PR! We appreciate you spending the time to work on the
 
 Help us understand your motivation by explaining why you decided to make this change.
 
-You can learn more about contributing to appwrite here: https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md
+You can learn more about contributing to appwrite here: https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md
 
 Happy contributing!
 
@@ -23,5 +23,5 @@ Happy contributing!
 
 ## Checklist
 
-- [ ] Have you read the [Contributing Guidelines on issues](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md)?
+- [ ] Have you read the [Contributing Guidelines on issues](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md)?
 - [ ] If the PR includes a change to an API's metadata (desc, label, params, etc.), does it also include updated API specs and example docs?

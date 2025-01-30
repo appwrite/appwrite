@@ -39,7 +39,7 @@ class Install extends Action
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
-        /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
+        /** @var array<string, array<string, string>> $vars array where key is variable name and value is variable */
         $vars = [];
 
         foreach ($config as $category) {

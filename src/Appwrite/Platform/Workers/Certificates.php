@@ -119,7 +119,7 @@ class Certificates extends Action
          * 2. Save document to database
          * 3. Update all domains documents with current certificate ID
          *
-         * Note: Renewals are checked and scheduled from maintenence worker
+         * Note: Renewals are checked and scheduled from maintenance worker
          */
 
         // Get current certificate
@@ -181,7 +181,7 @@ class Certificates extends Action
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
             $certificate->setAttribute('attempts', $attempts);
 
-            // Store cuttent time as renew date to ensure another attempt in next maintenance cycle
+            // Store current time as renew date to ensure another attempt in next maintenance cycle
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
@@ -423,7 +423,7 @@ class Certificates extends Action
     }
 
     /**
-     * Method to make sure information about error is delivered to admnistrator.
+     * Method to make sure information about error is delivered to administrator.
      *
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message

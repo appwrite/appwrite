@@ -1,1 +1,3 @@
-Create a new user. Password provided must be hashed with the [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST /users](https://appwrite.io/docs/server/users#usersCreate) endpoint to create users with a plain text password.
+Create a new user.
+Password provided must be hashed with the [Scrypt](https://github.com/Tarsnap/scrypt) algorithm.
+Use the [POST /users](https://appwrite.io/docs/server/users#usersCreate) endpoint to create users with a plain text password.

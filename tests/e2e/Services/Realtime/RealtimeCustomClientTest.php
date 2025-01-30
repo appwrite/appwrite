@@ -229,7 +229,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 
@@ -426,7 +426,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*.verification.*", $response['data']['events']);
         $this->assertContains("users.*", $response['data']['events']);
         /**
-         * Test Acoount Prefs Update
+         * Test Account Prefs Update
          */
         $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',

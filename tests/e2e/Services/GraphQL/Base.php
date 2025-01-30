@@ -184,7 +184,7 @@ trait Base
     public static string $GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
     public static string $GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
     public static string $GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
-    public static string $GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
+    public static string $GET_ANTIVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
     public static string $GET_LOCALE = 'get_locale';
@@ -1784,7 +1784,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$GET_ANITVIRUS_HEALTH:
+            case self::$GET_ANTIVIRUS_HEALTH:
                 return 'query getAntivirusHealth {
                     healthGetAntivirus {
                         version

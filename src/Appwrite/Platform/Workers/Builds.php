@@ -261,7 +261,7 @@ class Builds extends Action
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
                 }
             } elseif ($isNewBuild && $isVcsEnabled) {
-                // VCS and VCS+Temaplte
+                // VCS and VCS+Template
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
                 $rootDirectory = $function->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');

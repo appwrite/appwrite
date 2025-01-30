@@ -708,7 +708,7 @@ App::get('/v1/migrations/firebase/redirect')
             return;
         }
 
-        // OAuth Authroization
+        // OAuth Authorization
         if (!empty($code)) {
             $oauth2 = new OAuth2Firebase(
                 System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),

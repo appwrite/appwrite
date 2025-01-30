@@ -154,11 +154,11 @@ To keep our services easy to understand within Docker we follow a naming convent
 `appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
 
-Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+Other contains should be named the same as their service, for example `redis` should just be called `redis`.
 
 ##### Security
 
-- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
+- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/main/docs/specs/authentication.drawio.svg)
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)

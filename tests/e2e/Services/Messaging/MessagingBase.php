@@ -21,9 +21,9 @@ trait MessagingBase
         $providersParams = [
             'sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
+                'from' => 'sender-email@my-domain.example.com',
             ],
             'mailgun' => [
                 'providerId' => ID::unique(),
@@ -31,7 +31,7 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
                 'fromName' => 'sender name',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
                 'isEuRegion' => false,
             ],
             'smtp' => [
@@ -129,7 +129,7 @@ trait MessagingBase
     {
         $providersParams = [
             'sendgrid' => [
-                'name' => 'Sengrid2',
+                'name' => 'Sendgrid2',
                 'apiKey' => 'my-apikey',
             ],
             'mailgun' => [
@@ -434,7 +434,7 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
-            'from' => 'sender-email@my-domain.com',
+            'from' => 'sender-email@my-domain.example.com',
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);

@@ -1,1 +1,2 @@
-Get a list of all the current user function execution logs. You can use the query params to filter your results.
+Get a list of all the current user function execution logs.
+You can use the query params to filter your results.

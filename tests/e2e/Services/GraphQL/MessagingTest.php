@@ -21,10 +21,10 @@ class MessagingTest extends Scope
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
@@ -32,7 +32,7 @@ class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
                 'fromName' => 'Sender Name',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
                 'isEuRegion' => false,
             ],
             'Twilio' => [
@@ -120,7 +120,7 @@ class MessagingTest extends Scope
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => $providers[0]['_id'],
-                'name' => 'Sengrid2',
+                'name' => 'Sendgrid2',
                 'apiKey' => 'my-apikey',
             ],
             'Mailgun' => [
@@ -382,10 +382,10 @@ class MessagingTest extends Scope
         $providerParam = [
             'sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
@@ -1073,7 +1073,7 @@ class MessagingTest extends Scope
                 'messageId' => ID::unique(),
                 'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
-                'body' => 'Push Notifiaction Body',
+                'body' => 'Push Notification Body',
             ],
         ];
         $push = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1119,7 +1119,7 @@ class MessagingTest extends Scope
                 'status' => 'draft',
                 'topics' => [$push['topics'][0]],
                 'title' => 'Push Notification Title',
-                'body' => 'Push Notifiaction Body',
+                'body' => 'Push Notification Body',
             ],
         ];
         $push = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

@@ -1,1 +1,3 @@
-Use this endpoint to create a JSON Web Token for user by its unique ID. You can use the resulting JWT to authenticate on behalf of the user. The JWT secret will become invalid if the session it uses gets deleted.
+Use this endpoint to create a JSON Web Token for user by its unique ID.
+You can use the resulting JWT to authenticate on behalf of the user.
+The JWT secret will become invalid if the session it uses gets deleted.

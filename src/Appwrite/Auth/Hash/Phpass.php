@@ -118,7 +118,7 @@ class Phpass extends Hash
      *
      * @return String $output
      * @since 0.1.0
-     * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
+     * @throws Exception Throws an Exception if the $count parameter is not a positive integer.
      */
     protected function getRandomBytes(int $count, array $options): string
     {
@@ -151,7 +151,7 @@ class Phpass extends Hash
      *
      * @return String $output
      * @since 0.1.0
-     * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
+     * @throws Exception Throws an Exception if the $count parameter is not a positive integer.
      */
     protected function encode64($input, $count)
     {

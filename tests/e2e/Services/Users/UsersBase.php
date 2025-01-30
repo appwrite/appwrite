@@ -179,7 +179,7 @@ trait UsersBase
     }
 
     /**
-     * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
+     * Tries to login into all accounts created with hashed password. Ensures hash verifying logic.
      *
      * @depends testCreateUser
      */
@@ -1202,7 +1202,7 @@ trait UsersBase
 
         $errorType = "user_target_already_exists";
         $user1Id = "user1";
-        $statusCodeForUserPhoneAlredyExists = 409;
+        $statusCodeForUserPhoneAlreadyExists = 409;
 
         // adding same number ($updatedNumber) to different user i.e user1
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user1Id . '/phone', array_merge([
@@ -1211,7 +1211,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'number' => $updatedNumber,
         ]);
-        $this->assertEquals($response['headers']['status-code'], $statusCodeForUserPhoneAlredyExists);
+        $this->assertEquals($response['headers']['status-code'], $statusCodeForUserPhoneAlreadyExists);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($response['body']['type'], $errorType);
 
@@ -1465,7 +1465,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'providerId' => ID::unique(),
-            'name' => 'Sengrid1',
+            'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
             'from' => 'from@domain.com',
         ]);

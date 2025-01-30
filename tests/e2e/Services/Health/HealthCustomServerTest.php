@@ -459,14 +459,14 @@ class HealthCustomServerTest extends Scope
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=appwrite.io', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=letsencrypt.org', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
-        $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
+        $this->assertEquals('/CN=letsencrypt.org', $response['body']['name']);
+        $this->assertEquals('letsencrypt.org', $response['body']['subjectSN']);
         $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
