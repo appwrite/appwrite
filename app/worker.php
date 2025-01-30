@@ -13,8 +13,12 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\StatsUsageDump;
+/** remove */
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
+/** /remove */
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -173,6 +177,39 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
 });
@@ -224,12 +261,23 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
+/** remove */
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
+    return new StatsUsage($queue);
 }, ['queue']);
 
 Server::setResource('queueForUsageDump', function (Connection $queue) {
     return new UsageDump($queue);
+    return new StatsUsageDump($queue);
+}, ['queue']);
+/** /remove */
+Server::setResource('queueForStatsUsage', function (Connection $queue) {
+    return new StatsUsage($queue);
+}, ['queue']);
+
+Server::setResource('queueForStatsUsageDump', function (Connection $queue) {
+    return new StatsUsageDump($queue);
 }, ['queue']);
 
 Server::setResource('queue', function (Group $pools) {

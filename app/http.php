@@ -17,7 +17,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -156,6 +155,79 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
 
 include __DIR__ . '/controllers/general.php';
 
+function createDatabase(App $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+{
+    $max = 10;
+    $sleep = 1;
+    $attempts = 0;
+
+    do {
+        try {
+            $attempts++;
+            $resource = $app->getResource($resourceKey);
+            /* @var $database Database */
+            $database = is_callable($resource) ? $resource() : $resource;
+            break; // exit loop on success
+        } catch (\Exception $e) {
+            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+            $pools->reclaim();
+            if ($attempts >= $max) {
+                throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+
+    Console::success("[Setup] - $dbName database init started...");
+
+    // Attempt to create the database
+    try {
+        Console::info("  └── Creating database: $dbName...");
+        $database->create();
+    } catch (\Exception $e) {
+        Console::info("  └── Skip: metadata table already exists");
+    }
+
+    // Process collections
+    foreach ($collections as $key => $collection) {
+        if (($collection['$collection'] ?? '') !== Database::METADATA) {
+            continue;
+        }
+
+        if (!$database->getCollection($key)->isEmpty()) {
+            continue;
+        }
+
+        Console::info("    └── Creating collection: {$collection['$id']}...");
+
+        $attributes = array_map(fn ($attr) => new Document([
+            '$id' => ID::custom($attr['$id']),
+            'type' => $attr['type'],
+            'size' => $attr['size'],
+            'required' => $attr['required'],
+            'signed' => $attr['signed'],
+            'array' => $attr['array'],
+            'filters' => $attr['filters'],
+            'default' => $attr['default'] ?? null,
+            'format' => $attr['format'] ?? ''
+        ]), $collection['attributes']);
+
+        $indexes = array_map(fn ($index) => new Document([
+            '$id' => ID::custom($index['$id']),
+            'type' => $index['type'],
+            'attributes' => $index['attributes'],
+            'lengths' => $index['lengths'],
+            'orders' => $index['orders'],
+        ]), $collection['indexes']);
+
+        $database->createCollection($key, $attributes, $indexes);
+    }
+
+    if ($extraSetup) {
+        $extraSetup($database);
+    }
+}
+
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
@@ -164,140 +236,75 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         /** @var Group $pools */
         App::setResource('pools', fn () => $pools);
 
-        // wait for database to be ready
-        $attempts = 0;
-        $max = 10;
-        $sleep = 1;
-
-        do {
-            try {
-                $attempts++;
-                $dbForPlatform = $app->getResource('dbForPlatform');
-                /** @var Utopia\Database\Database $dbForPlatform */
-                break; // leave the do-while if successful
-            } catch (\Throwable $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-
-        Console::success('[Setup] - Server database init started...');
-
-        try {
-            Console::success('[Setup] - Creating console database...');
-            $dbForPlatform->create();
-        } catch (Duplicate) {
-            Console::success('[Setup] - Skip: metadata table already exists');
-        }
-
-        if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
-            $audit = new Audit($dbForPlatform);
-            $audit->setup();
-        }
-
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
-        $consoleCollections = $collections['console'];
-        foreach ($consoleCollections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
-            if (!$dbForPlatform->getCollection($key)->isEmpty()) {
-                continue;
-            }
 
-            Console::success('[Setup] - Creating console collection: ' . $collection['$id'] . '...');
+        // create logs database first, `getLogsDB` is a callable.
+        createDatabase($app, 'getLogsDB', 'logs', $collections['logs'], $pools);
 
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-            $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-
-            $dbForPlatform->createCollection($key, $attributes, $indexes);
-        }
-
-        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() && !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
-            Console::success('[Setup] - Creating default bucket...');
-            $dbForPlatform->createDocument('buckets', new Document([
-                '$id' => ID::custom('default'),
-                '$collection' => ID::custom('buckets'),
-                'name' => 'Default',
-                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
-                'allowedFileExtensions' => [],
-                'enabled' => true,
-                'compression' => 'gzip',
-                'encryption' => true,
-                'antivirus' => true,
-                'fileSecurity' => true,
-                '$permissions' => [
-                    Permission::create(Role::any()),
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'search' => 'buckets Default',
-            ]));
-
-            $bucket = $dbForPlatform->getDocument('buckets', 'default');
-
-            Console::success('[Setup] - Creating files collection for default bucket...');
-            $files = $collections['buckets']['files'] ?? [];
-            if (empty($files)) {
-                throw new Exception('Files collection is not configured.');
+        // create appwrite database, `dbForPlatform` is a direct access call.
+        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
+            if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($dbForPlatform);
+                $audit->setup();
             }
 
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), $files['attributes']);
-            $indexes = \array_map(fn (array $index) => new Document($index), $files['indexes']);
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
+                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+                Console::info("    └── Creating default bucket...");
+                $dbForPlatform->createDocument('buckets', new Document([
+                    '$id' => ID::custom('default'),
+                    '$collection' => ID::custom('buckets'),
+                    'name' => 'Default',
+                    'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
+                    'allowedFileExtensions' => [],
+                    'enabled' => true,
+                    'compression' => 'gzip',
+                    'encryption' => true,
+                    'antivirus' => true,
+                    'fileSecurity' => true,
+                    '$permissions' => [
+                        Permission::create(Role::any()),
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                    'search' => 'buckets Default',
+                ]));
 
-            $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
-        }
+                $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
-        $projectCollections = $collections['projects'];
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-
-        $cache = $app->getResource('cache');
-
-        foreach ($sharedTablesV2 as $hostname) {
-            $adapter = $pools
-                ->get($hostname)
-                ->pop()
-                ->getResource();
-
-            $dbForProject = (new Database($adapter, $cache))
-                ->setDatabase('appwrite')
-                ->setSharedTables(true)
-                ->setTenant(null)
-                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
-
-            try {
-                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
-                $dbForProject->create();
-            } catch (Duplicate) {
-                Console::success('[Setup] - Skip: metadata table already exists');
-            }
-
-            foreach ($projectCollections as $key => $collection) {
-                if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
-                if (!$dbForProject->getCollection($key)->isEmpty()) {
-                    continue;
+                Console::info("    └── Creating files collection for default bucket...");
+                $files = $collections['buckets']['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
                 }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                $attributes = array_map(fn ($attr) => new Document([
+                    '$id' => ID::custom($attr['$id']),
+                    'type' => $attr['type'],
+                    'size' => $attr['size'],
+                    'required' => $attr['required'],
+                    'signed' => $attr['signed'],
+                    'array' => $attr['array'],
+                    'filters' => $attr['filters'],
+                    'default' => $attr['default'] ?? null,
+                    'format' => $attr['format'] ?? ''
+                ]), $files['attributes']);
 
-                Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
+                $indexes = array_map(fn ($index) => new Document([
+                    '$id' => ID::custom($index['$id']),
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]), $files['indexes']);
 
-                $dbForProject->createCollection($key, $attributes, $indexes);
+                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
-        }
+        });
 
         $pools->reclaim();
-
         Console::success('[Setup] - Server database init completed...');
     });
 

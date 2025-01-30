@@ -5,6 +5,8 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\StatsResources;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
@@ -160,6 +162,39 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -171,6 +206,12 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 }, ['queue']);
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
+}, ['queue']);
+CLI::setResource('queueForStatsUsage', function (Connection $queue) {
+    return new StatsUsage($queue);
+}, ['queue']);
+CLI::setResource('queueForStatsResources', function (Connection $queue) {
+    return new StatsResources($queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

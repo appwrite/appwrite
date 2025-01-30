@@ -536,12 +536,12 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(503, $response['headers']['status-code']);
     }
 
-    public function testUsageDumpSuccess()
+    public function testStatsUsageDumpSuccess()
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage-dump', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -553,7 +553,7 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump?threshold=0', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage-dump?threshold=0', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
