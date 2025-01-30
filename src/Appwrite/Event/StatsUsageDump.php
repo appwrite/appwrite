@@ -4,7 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Queue\Connection;
 
-class UsageDump extends Event
+class StatsUsageDump extends Event
 {
     protected array $stats;
 
@@ -13,8 +13,8 @@ class UsageDump extends Event
         parent::__construct($connection);
 
         $this
-            ->setQueue(Event::USAGE_DUMP_QUEUE_NAME)
-            ->setClass(Event::USAGE_DUMP_CLASS_NAME);
+            ->setQueue(Event::STATS_USAGE_DUMP_QUEUE_NAME)
+            ->setClass(Event::STATS_USAGE_DUMP_CLASS_NAME);
     }
 
     /**

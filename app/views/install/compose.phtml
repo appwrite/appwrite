@@ -677,11 +677,11 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-worker-usage-dump:
+  appwrite-worker-stats-usage-dump:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-usage-dump
+    entrypoint: worker-stats-usage-dump
     <<: *x-logging
-    container_name: appwrite-worker-usage-dump
+    container_name: appwrite-worker-stats-usage-dump
     restart: unless-stopped
     networks:
       - appwrite

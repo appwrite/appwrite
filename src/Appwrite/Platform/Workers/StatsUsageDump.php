@@ -16,7 +16,7 @@ const METRIC_COLLECTION_LEVEL_STORAGE = 4;
 const METRIC_DATABASE_LEVEL_STORAGE = 3;
 const METRIC_PROJECT_LEVEL_STORAGE = 2;
 
-class UsageDump extends Action
+class StatsUsageDump extends Action
 {
     protected array $stats = [];
 
@@ -72,7 +72,7 @@ class UsageDump extends Action
 
     public static function getName(): string
     {
-        return 'usage-dump';
+        return 'stats-usage-dump';
     }
 
     /**

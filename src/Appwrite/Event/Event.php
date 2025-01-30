@@ -30,8 +30,8 @@ class Event
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResources';
 
-    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
-    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+    public const STATS_USAGE_DUMP_QUEUE_NAME = 'v1-stats-usage-dump';
+    public const STATS_USAGE_DUMP_CLASS_NAME = 'StatsUsageDumpV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';

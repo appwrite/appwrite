@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\UsageDump;
+use Appwrite\Event\StatsUsageDump;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -34,9 +34,9 @@ class Usage extends Action
         ->desc('Usage worker')
         ->inject('message')
         ->inject('getProjectDB')
-        ->inject('queueForUsageDump')
-        ->callback(function (Message $message, callable $getProjectDB, UsageDump $queueForUsageDump) {
-            $this->action($message, $getProjectDB, $queueForUsageDump);
+        ->inject('queueForStatsUsageDump')
+        ->callback(function (Message $message, callable $getProjectDB, StatsUsageDump $queueForStatsUsageDump) {
+            $this->action($message, $getProjectDB, $queueForStatsUsageDump);
         });
 
         $this->lastTriggeredTime = time();
@@ -45,12 +45,12 @@ class Usage extends Action
     /**
      * @param Message $message
      * @param callable $getProjectDB
-     * @param UsageDump $queueForUsageDump
+     * @param StatsUsageDump $queueForStatsUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, callable $getProjectDB, UsageDump $queueForUsageDump): void
+    public function action(Message $message, callable $getProjectDB, StatsUsageDump $queueForStatsUsageDump): void
     {
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
@@ -93,7 +93,7 @@ class Usage extends Action
         ) {
             Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
 
-            $queueForUsageDump
+            $queueForStatsUsageDump
                 ->setStats($this->stats)
                 ->trigger();
 

@@ -47,7 +47,6 @@ class StatsResources extends Action
      * @param Message $message
      * @param Document $project
      * @param callable $getProjectDB
-     * @param UsageDump $queueForUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
