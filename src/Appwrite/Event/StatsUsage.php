@@ -6,7 +6,7 @@ use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
-class Usage extends Event
+class StatsUsage extends Event
 {
     protected array $metrics = [];
     protected array $reduce  = [];

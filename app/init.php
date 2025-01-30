@@ -32,7 +32,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
@@ -1188,8 +1188,8 @@ App::setResource('queueForAudits', function (Connection $queue) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
+App::setResource('queueForStatsUsage', function (Connection $queue) {
+    return new StatsUsage($queue);
 }, ['queue']);
 App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);

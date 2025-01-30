@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
@@ -46,13 +46,13 @@ class Functions extends Action
             ->inject('dbForProject')
             ->inject('queueForFunctions')
             ->inject('queueForEvents')
-            ->inject('queueForUsage')
+            ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $isResourceBlocked));
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked): void
+    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -137,7 +137,7 @@ class Functions extends Action
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForFunctions: $queueForFunctions,
-                        queueForUsage: $queueForUsage,
+                        queueForStatsUsage: $queueForStatsUsage,
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
@@ -177,7 +177,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    queueForUsage: $queueForUsage,
+                    queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -199,7 +199,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    queueForUsage: $queueForUsage,
+                    queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -284,7 +284,7 @@ class Functions extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
-     * @param Usage $queueForUsage
+     * @param StatsUsage $queueForStatsUsage
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
@@ -308,7 +308,7 @@ class Functions extends Action
         Log $log,
         Database $dbForProject,
         Func $queueForFunctions,
-        Usage $queueForUsage,
+        StatsUsage $queueForStatsUsage,
         Event $queueForEvents,
         Document $project,
         Document $function,
@@ -552,7 +552,7 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Trigger usage queue */
-            $queueForUsage
+            $queueForStatsUsage
                 ->setProject($project)
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)

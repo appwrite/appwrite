@@ -12,7 +12,7 @@ use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\StatsResources;
-use Appwrite\Platform\Workers\Usage;
+use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Platform\Workers\StatsUsageDump;
 use Appwrite\Platform\Workers\Webhooks;
 use Utopia\Platform\Service;
@@ -33,7 +33,7 @@ class Workers extends Service
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Webhooks::getName(), new Webhooks())
             ->addAction(StatsUsageDump::getName(), new StatsUsageDump())
-            ->addAction(Usage::getName(), new Usage())
+            ->addAction(StatsUsage::getName(), new StatsUsage())
             ->addAction(Migrations::getName(), new Migrations())
             ->addAction(StatsResources::getName(), new StatsResources())
         ;

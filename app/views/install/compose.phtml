@@ -649,10 +649,10 @@ $image = $this->getParam('image', '');
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
-  appwrite-worker-usage:
+  appwrite-worker-stats-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-usage
-    container_name: appwrite-worker-usage
+    entrypoint: worker-stats-usage
+    container_name: appwrite-worker-stats-usage
     <<: *x-logging
     restart: unless-stopped
     networks:

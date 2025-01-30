@@ -6,7 +6,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsResources;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
@@ -207,8 +207,8 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-CLI::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
+CLI::setResource('queueForStatsUsage', function (Connection $queue) {
+    return new StatsUsage($queue);
 }, ['queue']);
 CLI::setResource('queueForStatsResources', function (Connection $queue) {
     return new StatsResources($queue);

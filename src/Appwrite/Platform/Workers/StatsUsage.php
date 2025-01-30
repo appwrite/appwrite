@@ -11,7 +11,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
-class Usage extends Action
+class StatsUsage extends Action
 {
     private array $stats = [];
     private int $lastTriggeredTime = 0;
@@ -21,7 +21,7 @@ class Usage extends Action
 
     public static function getName(): string
     {
-        return 'usage';
+        return 'stats-usage';
     }
 
     /**

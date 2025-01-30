@@ -13,7 +13,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
@@ -257,8 +257,8 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
-Server::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
+Server::setResource('queueForStatsUsage', function (Connection $queue) {
+    return new StatsUsage($queue);
 }, ['queue']);
 
 Server::setResource('queueForStatsUsageDump', function (Connection $queue) {
