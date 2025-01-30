@@ -32,17 +32,24 @@ class Redirect extends Host
      *
      * @return string
      */
-    public function getDescription(): string
-    {
-        $hostnames = array_map(function ($hostname) {
-            return "http://`$hostname`";
-        }, $this->hostnames);
+     public function getDescription(): string
+     {
+         $schemes = '';
+         if (!empty($this->schemes)) {
+             $schemes = "URL scheme must be one of the following: " . implode(", ", array_map(function ($scheme) {
+                 return "`$scheme`://";
+             }, $this->schemes));
+         }
 
-        return "URL scheme must be one of the following: " .
-            \implode(", ", $this->schemes) .
-            " or URL hostname must be one of the following: " .
-            \implode(", ", $hostnames);
-    }
+         $hostnames = '';
+         if (!empty($this->hostnames)) {
+             $hostnames = "URL hostname must be one of the following: " . implode(", ", array_map(function ($hostname) {
+                 return "http://`$hostname`";
+             }, $this->hostnames));
+         }
+
+        return $schemes . ($schemes && $hostnames ? " or " : "") . $hostnames;
+     }
 
     /**
      * Is valid
