@@ -23,6 +23,7 @@ class Origin extends Validator
     public const CLIENT_TYPE_UNITY = 'unity';
     public const CLIENT_TYPE_REACT_NATIVE_IOS = 'react-native-ios';
     public const CLIENT_TYPE_REACT_NATIVE_ANDROID = 'react-native-android';
+    public const CLIENT_TYPE_SCHEME = 'scheme';
 
 
     public const SCHEME_TYPE_HTTP = 'http';
@@ -92,6 +93,8 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_APPLE_TVOS:
                 case self::CLIENT_TYPE_REACT_NATIVE_IOS:
                 case self::CLIENT_TYPE_REACT_NATIVE_ANDROID:
+                case self::CLIENT_TYPE_UNITY:
+                case self::CLIENT_TYPE_SCHEME:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
 

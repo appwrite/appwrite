@@ -21536,7 +21536,8 @@
                                         "android",
                                         "unity",
                                         "react-native-ios",
-                                        "react-native-android"
+                                        "react-native-android",
+                                        "scheme"
                                     ],
                                     "x-enum-name": "PlatformType",
                                     "x-enum-keys": []
@@ -21549,7 +21550,7 @@
                                 },
                                 "key": {
                                     "type": "string",
-                                    "description": "Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.",
+                                    "description": "Package name for Android or bundle ID for iOS or macOS or app scheme. Max length: 256 chars.",
                                     "default": "",
                                     "x-example": "<KEY>"
                                 },
@@ -35785,12 +35786,12 @@
                 },
                 "type": {
                     "type": "string",
-                    "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.",
+                    "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, react-native-android, react-native-ios, scheme and unity.",
                     "x-example": "web"
                 },
                 "key": {
                     "type": "string",
-                    "description": "Platform Key. iOS bundle ID or Android package name.  Empty string for other platforms.",
+                    "description": "Platform Key. iOS bundle ID or Android package name or app scheme.  Empty string for other platforms.",
                     "x-example": "com.company.appname"
                 },
                 "store": {
