@@ -10,6 +10,8 @@ class RedirectTest extends TestCase
     public function redirectsProvider(): array
     {
         return [
+            "localhost" => [["localhost"], [], "http://localhost", true],
+            "localhost-no-scheme" => [["localhost"], [], "localhost", false],
             "expo scheme" => [[], ["exp"], "exp://192.168.0.1", true],
             "custom scheme" => [[], ["myapp"], "myapp://", true],
             "custom scheme triple slash" => [[], ["myapp"], "myapp:///", true],

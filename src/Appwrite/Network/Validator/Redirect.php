@@ -65,32 +65,22 @@ class Redirect extends Host
             return false;
         }
 
-        // `\parse_url` returns false when the URL contains a scheme without a hostname.
-        // In this case, we use a regex to reliably extract the scheme.
-        $url = \parse_url($value);
-        if (
-            !isset($url["hostname"]) &&
-            !preg_match('/^([a-z][a-z0-9+\.-]*):\/+$/i', $value, $matches)
-        ) {
-            return false;
+        // Then check for scheme
+        $scheme = '';
+        if (preg_match('/^([a-z][a-z0-9+\.-]*):\/+/i', $value, $matches)) {
+            $scheme = strtolower($matches[1]);
         }
-        $scheme = $url["scheme"] ?? $matches[1];
-        if (empty($scheme)) {
-            return false;
-        }
-        $scheme = strtolower($scheme);
 
         // These are dangerous schemes, may expose XSS vulnerabilities
         if (in_array($scheme, ["javascript", "data", "blob", "file"])) {
             return false;
         }
 
-        // When the scheme is HTTP or HTTPS, use the hostname validator.
-        if (empty($scheme) || in_array($scheme, ["http", "https"])) {
-            return parent::isValid($value);
+        // When the scheme is in the allowed list, the URL is valid.
+        if (!empty($this->schemes) && in_array($scheme, $this->schemes)) {
+            return true;
         }
 
-        // Otherwise, check if the scheme is allowed.
-        return in_array($scheme, $this->schemes);
+        return parent::isValid($value);
     }
 }
