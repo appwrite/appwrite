@@ -14,6 +14,11 @@ use Appwrite\Functions\Validator\Headers;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
@@ -133,376 +138,23 @@ include_once __DIR__ . '/../shared/api.php';
 //         ->setTemplate($template);
 // };
 
-// App::post('/v1/functions')
-//     ->groups(['api', 'functions'])
-//     ->desc('Create function')
-//     ->label('scope', 'functions.write')
-//     ->label('event', 'functions.[functionId].create')
-//     ->label('audits.event', 'function.create')
-//     ->label('audits.resource', 'function/{response.$id}')
-//     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-//     ->label('sdk.namespace', 'functions')
-//     ->label('sdk.method', 'create')
-//     ->label('sdk.description', '/docs/references/functions/create-function.md')
-//     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-//     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-//     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-//     ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-//     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-//     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
-//     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-//     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
-//     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-//     ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
-//     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
-//     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
-//     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
-//     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-//     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
-//     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-//     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
-//     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
-//     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-//     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-//     ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true)
-//     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
-//     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
-//     ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
-//     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
-//         $plan,
-//         Config::getParam('runtime-specifications', []),
-//         App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-//         App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
-//     ), 'Runtime specification for the function and builds.', true, ['plan'])
-//     ->inject('request')
-//     ->inject('response')
-//     ->inject('dbForProject')
-//     ->inject('project')
-//     ->inject('user')
-//     ->inject('queueForEvents')
-//     ->inject('queueForBuilds')
-//     ->inject('dbForConsole')
-//     ->inject('gitHub')
-//     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
-//         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
-
-//         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
-
-//         if (!empty($allowList) && !\in_array($runtime, $allowList)) {
-//             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
-//         }
-
-//         // build from template
-//         $template = new Document([]);
-//         if (
-//             !empty($templateRepository)
-//             && !empty($templateOwner)
-//             && !empty($templateRootDirectory)
-//             && !empty($templateVersion)
-//         ) {
-//             $template->setAttribute('repositoryName', $templateRepository)
-//                 ->setAttribute('ownerName', $templateOwner)
-//                 ->setAttribute('rootDirectory', $templateRootDirectory)
-//                 ->setAttribute('version', $templateVersion);
-//         }
-
-//         $installation = $dbForConsole->getDocument('installations', $installationId);
-
-//         if (!empty($installationId) && $installation->isEmpty()) {
-//             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-//         }
-
-//         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
-//             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
-//         }
-
-//         $function = $dbForProject->createDocument('functions', new Document([
-//             '$id' => $functionId,
-//             'execute' => $execute,
-//             'enabled' => $enabled,
-//             'live' => true,
-//             'logging' => $logging,
-//             'name' => $name,
-//             'runtime' => $runtime,
-//             'deploymentInternalId' => '',
-//             'deployment' => '',
-//             'events' => $events,
-//             'schedule' => $schedule,
-//             'scheduleInternalId' => '',
-//             'scheduleId' => '',
-//             'timeout' => $timeout,
-//             'entrypoint' => $entrypoint,
-//             'commands' => $commands,
-//             'scopes' => $scopes,
-//             'search' => implode(' ', [$functionId, $name, $runtime]),
-//             'version' => 'v4',
-//             'installationId' => $installation->getId(),
-//             'installationInternalId' => $installation->getInternalId(),
-//             'providerRepositoryId' => $providerRepositoryId,
-//             'repositoryId' => '',
-//             'repositoryInternalId' => '',
-//             'providerBranch' => $providerBranch,
-//             'providerRootDirectory' => $providerRootDirectory,
-//             'providerSilentMode' => $providerSilentMode,
-//             'specification' => $specification
-//         ]));
-
-//         $schedule = Authorization::skip(
-//             fn () => $dbForConsole->createDocument('schedules', new Document([
-//                 'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-//                 'resourceType' => 'function',
-//                 'resourceId' => $function->getId(),
-//                 'resourceInternalId' => $function->getInternalId(),
-//                 'resourceUpdatedAt' => DateTime::now(),
-//                 'projectId' => $project->getId(),
-//                 'schedule'  => $function->getAttribute('schedule'),
-//                 'active' => false,
-//             ]))
-//         );
-
-//         $function->setAttribute('scheduleId', $schedule->getId());
-//         $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
-
-//         // Git connect logic
-//         if (!empty($providerRepositoryId)) {
-//             $teamId = $project->getAttribute('teamId', '');
-
-//             $repository = $dbForConsole->createDocument('repositories', new Document([
-//                 '$id' => ID::unique(),
-//                 '$permissions' => [
-//                     Permission::read(Role::team(ID::custom($teamId))),
-//                     Permission::update(Role::team(ID::custom($teamId), 'owner')),
-//                     Permission::update(Role::team(ID::custom($teamId), 'developer')),
-//                     Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-//                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-//                 ],
-//                 'installationId' => $installation->getId(),
-//                 'installationInternalId' => $installation->getInternalId(),
-//                 'projectId' => $project->getId(),
-//                 'projectInternalId' => $project->getInternalId(),
-//                 'providerRepositoryId' => $providerRepositoryId,
-//                 'resourceId' => $function->getId(),
-//                 'resourceInternalId' => $function->getInternalId(),
-//                 'resourceType' => 'function',
-//                 'providerPullRequestIds' => []
-//             ]));
-
-//             $function->setAttribute('repositoryId', $repository->getId());
-//             $function->setAttribute('repositoryInternalId', $repository->getInternalId());
-//         }
-
-//         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-
-//         if (!empty($providerRepositoryId)) {
-//             // Deploy VCS
-//             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
-//         } elseif (!$template->isEmpty()) {
-//             // Deploy non-VCS from template
-//             $deploymentId = ID::unique();
-//             $deployment = $dbForProject->createDocument('deployments', new Document([
-//                 '$id' => $deploymentId,
-//                 '$permissions' => [
-//                     Permission::read(Role::any()),
-//                     Permission::update(Role::any()),
-//                     Permission::delete(Role::any()),
-//                 ],
-//                 'resourceId' => $function->getId(),
-//                 'resourceInternalId' => $function->getInternalId(),
-//                 'resourceType' => 'functions',
-//                 'entrypoint' => $function->getAttribute('entrypoint', ''),
-//                 'commands' => $function->getAttribute('commands', ''),
-//                 'type' => 'manual',
-//                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
-//                 'activate' => true,
-//             ]));
-
-//             $queueForBuilds
-//                 ->setType(BUILD_TYPE_DEPLOYMENT)
-//                 ->setResource($function)
-//                 ->setDeployment($deployment)
-//                 ->setTemplate($template);
-//         }
-
-//         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-//         if (!empty($functionsDomain)) {
-//             $ruleId = ID::unique();
-//             $routeSubdomain = ID::unique();
-//             $domain = "{$routeSubdomain}.{$functionsDomain}";
-
-//             $rule = Authorization::skip(
-//                 fn () => $dbForConsole->createDocument('rules', new Document([
-//                     '$id' => $ruleId,
-//                     'projectId' => $project->getId(),
-//                     'projectInternalId' => $project->getInternalId(),
-//                     'domain' => $domain,
-//                     'resourceType' => 'function',
-//                     'resourceId' => $function->getId(),
-//                     'resourceInternalId' => $function->getInternalId(),
-//                     'status' => 'verified',
-//                     'certificateId' => '',
-//                 ]))
-//             );
-
-//             /** Trigger Webhook */
-//             $ruleModel = new Rule();
-//             $ruleCreate =
-//                 $queueForEvents
-//                 ->setClass(Event::WEBHOOK_CLASS_NAME)
-//                 ->setQueue(Event::WEBHOOK_QUEUE_NAME);
-
-//             $ruleCreate
-//                 ->setProject($project)
-//                 ->setEvent('rules.[ruleId].create')
-//                 ->setParam('ruleId', $rule->getId())
-//                 ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
-//                 ->trigger();
-
-//             /** Trigger Functions */
-//             $ruleCreate
-//                 ->setClass(Event::FUNCTIONS_CLASS_NAME)
-//                 ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-//                 ->trigger();
-
-//             /** Trigger realtime event */
-//             $allEvents = Event::generateEvents('rules.[ruleId].create', [
-//                 'ruleId' => $rule->getId(),
-//             ]);
-//             $target = Realtime::fromPayload(
-//                 // Pass first, most verbose event pattern
-//                 event: $allEvents[0],
-//                 payload: $rule,
-//                 project: $project
-//             );
-//             Realtime::send(
-//                 projectId: 'console',
-//                 payload: $rule->getArrayCopy(),
-//                 events: $allEvents,
-//                 channels: $target['channels'],
-//                 roles: $target['roles']
-//             );
-//             Realtime::send(
-//                 projectId: $project->getId(),
-//                 payload: $rule->getArrayCopy(),
-//                 events: $allEvents,
-//                 channels: $target['channels'],
-//                 roles: $target['roles']
-//             );
-//         }
-
-//         $queueForEvents->setParam('functionId', $function->getId());
-
-//         $response
-//             ->setStatusCode(Response::STATUS_CODE_CREATED)
-//             ->dynamic($function, Response::MODEL_FUNCTION);
-//     });
-
-App::get('/v1/functions')
-    ->groups(['api', 'functions'])
-    ->desc('List functions')
-    ->label('scope', 'functions.read')
-    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/functions/list-functions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
-    ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $functionId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('functions', $functionId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Function '{$functionId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-
-        $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries),
-            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_FUNCTION_LIST);
-    });
-
-App::get('/v1/functions/runtimes')
-    ->groups(['api', 'functions'])
-    ->desc('List runtimes')
-    ->label('scope', 'functions.read')
-    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listRuntimes')
-    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
-    ->inject('response')
-    ->action(function (Response $response) {
-        $runtimes = Config::getParam('runtimes');
-
-        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
-
-        $allowed = [];
-        foreach ($runtimes as $id => $runtime) {
-            if (!empty($allowList) && !\in_array($id, $allowList)) {
-                continue;
-            }
-
-            $runtime['$id'] = $id;
-            $allowed[] = $runtime;
-        }
-
-        $response->dynamic(new Document([
-            'total' => count($allowed),
-            'runtimes' => $allowed
-        ]), Response::MODEL_RUNTIME_LIST);
-    });
-
 App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
     ->desc('List available function runtime specifications')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listSpecifications')
-    ->label('sdk.description', '/docs/references/functions/list-specifications.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listSpecifications',
+        description: '/docs/references/functions/list-specifications.md',
+        auth: [AuthType::KEY, AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SPECIFICATION_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('plan')
     ->action(function (Response $response, array $plan) {
@@ -533,13 +185,18 @@ App::get('/v1/functions/:functionId')
     ->desc('Get function')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/functions/get-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'get',
+        description: '/docs/references/functions/get-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -558,12 +215,18 @@ App::get('/v1/functions/:functionId/usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getFunctionUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getFunctionUsage',
+        description: '/docs/references/functions/get-function-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -663,12 +326,18 @@ App::get('/v1/functions/usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getUsage',
+        description: '/docs/references/functions/get-functions-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_FUNCTIONS,
+            )
+        ]
+    ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -758,220 +427,25 @@ App::get('/v1/functions/usage')
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
-// App::put('/v1/functions/:functionId')
-//     ->groups(['api', 'functions'])
-//     ->desc('Update function')
-//     ->label('scope', 'functions.write')
-//     ->label('event', 'functions.[functionId].update')
-//     ->label('audits.event', 'function.update')
-//     ->label('audits.resource', 'function/{response.$id}')
-//     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-//     ->label('sdk.namespace', 'functions')
-//     ->label('sdk.method', 'update')
-//     ->label('sdk.description', '/docs/references/functions/update-function.md')
-//     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-//     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-//     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-//     ->param('functionId', '', new UID(), 'Function ID.')
-//     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-//     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
-//     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-//     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
-//     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-//     ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
-//     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
-//     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
-//     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
-//     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-//     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
-//     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
-//     ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
-//     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
-//     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-//     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-//     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
-//         $plan,
-//         Config::getParam('runtime-specifications', []),
-//         App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-//         App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
-//     ), 'Runtime specification for the function and builds.', true, ['plan'])
-//     ->inject('request')
-//     ->inject('response')
-//     ->inject('dbForProject')
-//     ->inject('project')
-//     ->inject('queueForEvents')
-//     ->inject('queueForBuilds')
-//     ->inject('dbForConsole')
-//     ->inject('gitHub')
-//     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
-//         // TODO: If only branch changes, re-deploy
-//         $function = $dbForProject->getDocument('functions', $functionId);
-
-//         if ($function->isEmpty()) {
-//             throw new Exception(Exception::FUNCTION_NOT_FOUND);
-//         }
-
-//         $installation = $dbForConsole->getDocument('installations', $installationId);
-
-//         if (!empty($installationId) && $installation->isEmpty()) {
-//             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-//         }
-
-//         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
-//             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
-//         }
-
-//         if ($function->isEmpty()) {
-//             throw new Exception(Exception::FUNCTION_NOT_FOUND);
-//         }
-
-//         if (empty($runtime)) {
-//             $runtime = $function->getAttribute('runtime');
-//         }
-
-//         $enabled ??= $function->getAttribute('enabled', true);
-
-//         $repositoryId = $function->getAttribute('repositoryId', '');
-//         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
-
-//         if (empty($entrypoint)) {
-//             $entrypoint = $function->getAttribute('entrypoint', '');
-//         }
-
-//         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
-
-//         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
-//         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
-//             $repositories = $dbForConsole->find('repositories', [
-//                 Query::equal('projectInternalId', [$project->getInternalId()]),
-//                 Query::equal('resourceInternalId', [$function->getInternalId()]),
-//                 Query::equal('resourceType', ['function']),
-//                 Query::limit(100),
-//             ]);
-
-//             foreach ($repositories as $repository) {
-//                 $dbForConsole->deleteDocument('repositories', $repository->getId());
-//             }
-
-//             $providerRepositoryId = '';
-//             $installationId = '';
-//             $providerBranch = '';
-//             $providerRootDirectory = '';
-//             $providerSilentMode = true;
-//             $repositoryId = '';
-//             $repositoryInternalId = '';
-//         }
-
-//         // Git connect logic
-//         if (!$isConnected && !empty($providerRepositoryId)) {
-//             $teamId = $project->getAttribute('teamId', '');
-
-//             $repository = $dbForConsole->createDocument('repositories', new Document([
-//                 '$id' => ID::unique(),
-//                 '$permissions' => [
-//                     Permission::read(Role::team(ID::custom($teamId))),
-//                     Permission::update(Role::team(ID::custom($teamId), 'owner')),
-//                     Permission::update(Role::team(ID::custom($teamId), 'developer')),
-//                     Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-//                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-//                 ],
-//                 'installationId' => $installation->getId(),
-//                 'installationInternalId' => $installation->getInternalId(),
-//                 'projectId' => $project->getId(),
-//                 'projectInternalId' => $project->getInternalId(),
-//                 'providerRepositoryId' => $providerRepositoryId,
-//                 'resourceId' => $function->getId(),
-//                 'resourceInternalId' => $function->getInternalId(),
-//                 'resourceType' => 'function',
-//                 'providerPullRequestIds' => []
-//             ]));
-
-//             $repositoryId = $repository->getId();
-//             $repositoryInternalId = $repository->getInternalId();
-//         }
-
-//         $live = true;
-
-//         if (
-//             $function->getAttribute('name') !== $name ||
-//             $function->getAttribute('entrypoint') !== $entrypoint ||
-//             $function->getAttribute('commands') !== $commands ||
-//             $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
-//             $function->getAttribute('runtime') !== $runtime
-//         ) {
-//             $live = false;
-//         }
-
-//         $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
-
-//         // Enforce Cold Start if spec limits change.
-//         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
-//             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-//             try {
-//                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
-//             } catch (\Throwable $th) {
-//                 // Don't throw if the deployment doesn't exist
-//                 if ($th->getCode() !== 404) {
-//                     throw $th;
-//                 }
-//             }
-//         }
-
-//         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-//             'execute' => $execute,
-//             'name' => $name,
-//             'runtime' => $runtime,
-//             'events' => $events,
-//             'schedule' => $schedule,
-//             'timeout' => $timeout,
-//             'enabled' => $enabled,
-//             'live' => $live,
-//             'logging' => $logging,
-//             'entrypoint' => $entrypoint,
-//             'commands' => $commands,
-//             'scopes' => $scopes,
-//             'installationId' => $installation->getId(),
-//             'installationInternalId' => $installation->getInternalId(),
-//             'providerRepositoryId' => $providerRepositoryId,
-//             'repositoryId' => $repositoryId,
-//             'repositoryInternalId' => $repositoryInternalId,
-//             'providerBranch' => $providerBranch,
-//             'providerRootDirectory' => $providerRootDirectory,
-//             'providerSilentMode' => $providerSilentMode,
-//             'specification' => $specification,
-//             'search' => implode(' ', [$functionId, $name, $runtime]),
-//         ])));
-
-//         // Redeploy logic
-//         if (!$isConnected && !empty($providerRepositoryId)) {
-//             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
-//         }
-
-//         // Inform scheduler if function is still active
-//         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-//         $schedule
-//             ->setAttribute('resourceUpdatedAt', DateTime::now())
-//             ->setAttribute('schedule', $function->getAttribute('schedule'))
-//             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-//         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-
-//         $queueForEvents->setParam('functionId', $function->getId());
-
-//         $response->dynamic($function, Response::MODEL_FUNCTION);
-//     });
-
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getDeploymentDownload')
-    ->label('sdk.description', '/docs/references/functions/get-deployment-download.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getDeploymentDownload',
+        description: '/docs/references/functions/get-deployment-download.md',
+        auth: [AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::ANY,
+        type: MethodType::LOCATION
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -1066,8 +540,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1095,12 +569,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         ])));
 
         // Inform scheduler if function is still active
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1117,19 +591,26 @@ App::delete('/v1/functions/:functionId')
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/functions/delete-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'delete',
+        description: '/docs/references/functions/delete-function.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1142,11 +623,11 @@ App::delete('/v1/functions/:functionId')
         }
 
         // Inform scheduler to no longer run function
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false);
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -1156,225 +637,6 @@ App::delete('/v1/functions/:functionId')
 
         $response->noContent();
     });
-
-// App::post('/v1/functions/:functionId/deployments')
-//     ->groups(['api', 'functions'])
-//     ->desc('Create deployment')
-//     ->label('scope', 'functions.write')
-//     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
-//     ->label('audits.event', 'deployment.create')
-//     ->label('audits.resource', 'function/{request.functionId}')
-//     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-//     ->label('sdk.namespace', 'functions')
-//     ->label('sdk.method', 'createDeployment')
-//     ->label('sdk.methodType', 'upload')
-//     ->label('sdk.description', '/docs/references/functions/create-deployment.md')
-//     ->label('sdk.packaging', true)
-//     ->label('sdk.request.type', 'multipart/form-data')
-//     ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-//     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-//     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
-//     ->param('functionId', '', new UID(), 'Function ID.')
-//     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
-//     ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
-//     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-//     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
-//     ->inject('request')
-//     ->inject('response')
-//     ->inject('dbForProject')
-//     ->inject('queueForEvents')
-//     ->inject('project')
-//     ->inject('deviceForFunctions')
-//     ->inject('deviceForLocal')
-//     ->inject('queueForBuilds')
-//     ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
-
-//         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
-
-//         $function = $dbForProject->getDocument('functions', $functionId);
-
-//         if ($function->isEmpty()) {
-//             throw new Exception(Exception::FUNCTION_NOT_FOUND);
-//         }
-
-//         if ($entrypoint === null) {
-//             $entrypoint = $function->getAttribute('entrypoint', '');
-//         }
-
-//         if ($commands === null) {
-//             $commands = $function->getAttribute('commands', '');
-//         }
-
-//         if (empty($entrypoint)) {
-//             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
-//         }
-
-//         $file = $request->getFiles('code');
-
-//         // GraphQL multipart spec adds files with index keys
-//         if (empty($file)) {
-//             $file = $request->getFiles(0);
-//         }
-
-//         if (empty($file)) {
-//             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
-//         }
-
-//         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-//         $fileSizeValidator = new FileSize(System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
-//         $upload = new Upload();
-
-//         // Make sure we handle a single file and multiple files the same way
-//         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-//         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-//         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-
-//         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-//             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
-//         }
-
-//         $contentRange = $request->getHeader('content-range');
-//         $deploymentId = ID::unique();
-//         $chunk = 1;
-//         $chunks = 1;
-
-//         if (!empty($contentRange)) {
-//             $start = $request->getContentRangeStart();
-//             $end = $request->getContentRangeEnd();
-//             $fileSize = $request->getContentRangeSize();
-//             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
-//             // TODO make `end >= $fileSize` in next breaking version
-//             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
-//                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
-//             }
-
-//             // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-//             if ($end === $fileSize - 1 || $end === $fileSize) {
-//                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
-//                 $chunks = $chunk = -1;
-//             } else {
-//                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-//                 $chunks = (int) ceil($fileSize / ($end + 1 - $start));
-//                 $chunk = (int) ($start / ($end + 1 - $start)) + 1;
-//             }
-//         }
-
-//         if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
-//             throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
-//         }
-
-//         if (!$upload->isValid($fileTmpName)) {
-//             throw new Exception(Exception::STORAGE_INVALID_FILE);
-//         }
-
-//         // Save to storage
-//         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
-//         $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-//         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-//         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
-//         if (!$deployment->isEmpty()) {
-//             $chunks = $deployment->getAttribute('chunksTotal', 1);
-//             $metadata = $deployment->getAttribute('metadata', []);
-//             if ($chunk === -1) {
-//                 $chunk = $chunks;
-//             }
-//         }
-
-//         $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
-
-//         if (empty($chunksUploaded)) {
-//             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
-//         }
-
-//         $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
-
-//         if ($chunksUploaded === $chunks) {
-//             if ($activate) {
-//                 // Remove deploy for all other deployments.
-//                 $activeDeployments = $dbForProject->find('deployments', [
-//                     Query::equal('activate', [true]),
-//                     Query::equal('resourceId', [$functionId]),
-//                     Query::equal('resourceType', ['functions'])
-//                 ]);
-
-//                 foreach ($activeDeployments as $activeDeployment) {
-//                     $activeDeployment->setAttribute('activate', false);
-//                     $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
-//                 }
-//             }
-
-//             $fileSize = $deviceForFunctions->getFileSize($path);
-
-//             if ($deployment->isEmpty()) {
-//                 $deployment = $dbForProject->createDocument('deployments', new Document([
-//                     '$id' => $deploymentId,
-//                     '$permissions' => [
-//                         Permission::read(Role::any()),
-//                         Permission::update(Role::any()),
-//                         Permission::delete(Role::any()),
-//                     ],
-//                     'resourceInternalId' => $function->getInternalId(),
-//                     'resourceId' => $function->getId(),
-//                     'resourceType' => 'functions',
-//                     'buildInternalId' => '',
-//                     'entrypoint' => $entrypoint,
-//                     'commands' => $commands,
-//                     'path' => $path,
-//                     'size' => $fileSize,
-//                     'search' => implode(' ', [$deploymentId, $entrypoint]),
-//                     'activate' => $activate,
-//                     'metadata' => $metadata,
-//                     'type' => $type
-//                 ]));
-//             } else {
-//                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
-//             }
-
-//             // Start the build
-//             $queueForBuilds
-//                 ->setType(BUILD_TYPE_DEPLOYMENT)
-//                 ->setResource($function)
-//                 ->setDeployment($deployment);
-//         } else {
-//             if ($deployment->isEmpty()) {
-//                 $deployment = $dbForProject->createDocument('deployments', new Document([
-//                     '$id' => $deploymentId,
-//                     '$permissions' => [
-//                         Permission::read(Role::any()),
-//                         Permission::update(Role::any()),
-//                         Permission::delete(Role::any()),
-//                     ],
-//                     'resourceInternalId' => $function->getInternalId(),
-//                     'resourceId' => $function->getId(),
-//                     'resourceType' => 'functions',
-//                     'buildInternalId' => '',
-//                     'entrypoint' => $entrypoint,
-//                     'commands' => $commands,
-//                     'path' => $path,
-//                     'size' => $fileSize,
-//                     'chunksTotal' => $chunks,
-//                     'chunksUploaded' => $chunksUploaded,
-//                     'search' => implode(' ', [$deploymentId, $entrypoint]),
-//                     'activate' => $activate,
-//                     'metadata' => $metadata,
-//                     'type' => $type
-//                 ]));
-//             } else {
-//                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
-//             }
-//         }
-
-//         $metadata = null;
-
-//         $queueForEvents
-//             ->setParam('functionId', $function->getId())
-//             ->setParam('deploymentId', $deployment->getId());
-
-//         $response
-//             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-//             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
-//     });
 
 App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
@@ -1736,14 +998,20 @@ App::post('/v1/functions/:functionId/executions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createExecution')
-    ->label('sdk.description', '/docs/references/functions/create-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_MULTIPART)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION)
-    ->label('sdk.request.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createExecution',
+        description: '/docs/references/functions/create-execution.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_EXECUTION,
+            )
+        ],
+        contentType: ContentType::MULTIPART,
+        requestType: 'application/json',
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
@@ -1755,13 +1023,13 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('request')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1953,7 +1221,7 @@ App::post('/v1/functions/:functionId/executions')
                     'userId' => $user->getId()
                 ];
 
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
@@ -2139,13 +1407,18 @@ App::get('/v1/functions/:functionId/executions')
     ->desc('List executions')
     ->label('scope', 'execution.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listExecutions')
-    ->label('sdk.description', '/docs/references/functions/list-executions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listExecutions',
+        description: '/docs/references/functions/list-executions.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION_LIST,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -2228,13 +1501,18 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->desc('Get execution')
     ->label('scope', 'execution.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getExecution')
-    ->label('sdk.description', '/docs/references/functions/get-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getExecution',
+        description: '/docs/references/functions/get-execution.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_EXECUTION,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
@@ -2279,19 +1557,26 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->label('event', 'functions.[functionId].executions.[executionId].delete')
     ->label('audits.event', 'executions.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteExecution')
-    ->label('sdk.description', '/docs/references/functions/delete-execution.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'deleteExecution',
+        description: '/docs/references/functions/delete-execution.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents) {
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2317,7 +1602,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         }
 
         if ($status === 'scheduled') {
-            $schedule = $dbForConsole->findOne('schedules', [
+            $schedule = $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
                 Query::equal('active', [true]),
@@ -2328,7 +1613,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 
@@ -2362,8 +1647,8 @@ App::post('/v1/functions/:functionId/variables')
     ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2397,12 +1682,12 @@ App::post('/v1/functions/:functionId/variables')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2497,8 +1782,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -2529,12 +1814,12 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -2556,8 +1841,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2578,12 +1863,12 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
         // Inform scheduler to pull the latest changes
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->noContent();
     });
@@ -2593,13 +1878,18 @@ App::get('/v1/functions/templates')
     ->desc('List function templates')
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listTemplates')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.description', '/docs/references/functions/list-templates.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listTemplates',
+        description: '/docs/references/functions/list-templates.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION_LIST,
+            )
+        ]
+    ))
     ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
     ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
     ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
@@ -2631,13 +1921,18 @@ App::get('/v1/functions/templates/:templateId')
     ->desc('Get function template')
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getTemplate')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.description', '/docs/references/functions/get-template.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getTemplate',
+        description: '/docs/references/functions/get-template.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TEMPLATE_FUNCTION,
+            )
+        ]
+    ))
     ->param('templateId', '', new Text(128), 'Template ID.')
     ->inject('response')
     ->action(function (string $templateId, Response $response) {

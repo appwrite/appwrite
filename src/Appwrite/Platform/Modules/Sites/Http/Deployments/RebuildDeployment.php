@@ -5,6 +5,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -33,11 +36,18 @@ class RebuildDeployment extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'createBuild')
-            ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-            ->label('sdk.response.model', Response::MODEL_NONE)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'createBuild',
+                description: '/docs/references/functions/create-build.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')

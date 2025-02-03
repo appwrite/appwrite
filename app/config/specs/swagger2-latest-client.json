@@ -4927,7 +4927,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 303,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5009,7 +5009,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 302,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5127,7 +5127,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 304,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5198,7 +5198,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 329,
+                    "weight": 327,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5271,7 +5271,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 328,
+                    "weight": 326,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5768,7 +5768,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 376,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5852,7 +5852,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 380,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7716,6 +7716,11 @@
             "x-globalAttributes": []
         },
         {
+            "name": "sites",
+            "description": "The Sites Service allows you view, create and manage your web applications.",
+            "x-globalAttributes": []
+        },
+        {
             "name": "functions",
             "description": "The Functions Service allows you view, create and manage your Cloud Functions.",
             "x-globalAttributes": []
@@ -9256,15 +9261,10 @@
                         "any"
                     ]
                 },
-                "resourceId": {
+                "functionId": {
                     "type": "string",
-                    "description": "Resource ID.",
+                    "description": "Function ID.",
                     "x-example": "5e5ea6g16897e"
-                },
-                "resourceType": {
-                    "type": "string",
-                    "description": "Resource type.",
-                    "x-example": "sites"
                 },
                 "trigger": {
                     "type": "string",
@@ -9351,8 +9351,7 @@
                 "$createdAt",
                 "$updatedAt",
                 "$permissions",
-                "resourceId",
-                "resourceType",
+                "functionId",
                 "trigger",
                 "status",
                 "requestMethod",

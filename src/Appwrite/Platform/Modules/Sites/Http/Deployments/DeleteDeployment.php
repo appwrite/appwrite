@@ -5,6 +5,10 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,12 +37,19 @@ class DeleteDeployment extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'deleteDeployment')
-            ->label('sdk.description', '/docs/references/sites/delete-deployment.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-            ->label('sdk.response.model', Response::MODEL_NONE)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'deleteDeployment',
+                description: '/docs/references/functions/delete-deployment.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')

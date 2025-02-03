@@ -9,10 +9,14 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -55,13 +59,18 @@ class CreateFunction extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'functions')
-            ->label('sdk.method', 'create')
-            ->label('sdk.description', '/docs/references/functions/create-function.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_FUNCTION)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'create',
+                description: '/docs/references/functions/create-function.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_FUNCTION,
+                    )
+                ],
+            ))
             ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -92,17 +101,48 @@ class CreateFunction extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('timelimit')
             ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
     {
+
+        // Temporary abuse check
+        $abuseCheck = function () use ($project, $timelimit, $response) {
+            $abuseKey = "projectId:{projectId},url:{url}";
+            $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
+            $abuseTime = 86400; // 1 day
+
+            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{url}', '/v1/functions');
+
+            $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = $timeLimit->time() + $abuseTime;
+
+            $response
+                ->addHeader('X-RateLimit-Limit', $limit)
+                ->addHeader('X-RateLimit-Remaining', $remaining)
+                ->addHeader('X-RateLimit-Reset', $time);
+
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            if ($enabled && $abuse->check()) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        };
+
+        $abuseCheck();
+
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -125,7 +165,7 @@ class CreateFunction extends Base
                 ->setAttribute('version', $templateVersion);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -167,7 +207,7 @@ class CreateFunction extends Base
         ]));
 
         $schedule = Authorization::skip(
-            fn () => $dbForConsole->createDocument('schedules', new Document([
+            fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
@@ -186,7 +226,7 @@ class CreateFunction extends Base
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('repositories', new Document([
+            $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),
@@ -246,10 +286,10 @@ class CreateFunction extends Base
         if (!empty($functionsDomain)) {
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
-            $ruleId = md5($domain);
+            $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
             $rule = Authorization::skip(
-                fn () => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForPlatform->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),

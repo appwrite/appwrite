@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\App;
@@ -35,12 +38,18 @@ class CancelDeployment extends Action
             ->label('scope', 'sites.write')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'updateDeploymentBuild')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_BUILD)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'updateDeploymentBuild',
+                description: '/docs/references/functions/update-deployment-build.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_BUILD,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')

@@ -1150,7 +1150,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if(router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 $utopia->getRoute()?->label('router', 'true');
             }
         }
@@ -1180,7 +1180,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if(router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 $utopia->getRoute()?->label('router', 'true');
             }
         }
@@ -1285,7 +1285,9 @@ App::wildcard()
     });
 
 foreach (Config::getParam('services', []) as $service) {
-    include_once $service['controller'];
+    if(!empty($service['controller'])) {
+        include_once $service['controller'];
+    }
 }
 
 // Modules

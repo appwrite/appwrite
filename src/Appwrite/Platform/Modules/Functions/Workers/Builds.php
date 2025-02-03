@@ -687,7 +687,7 @@ class Builds extends Action
             $build->setAttribute('size', $response['size']);
 
             $logs = '';
-            foreach($response['output'] as $log) {
+            foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
             $build->setAttribute('logs', $logs);

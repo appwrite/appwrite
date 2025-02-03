@@ -4,6 +4,10 @@ namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -29,12 +33,19 @@ class DeleteVariable extends Base
             ->label('scope', 'sites.write')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'deleteVariable')
-            ->label('sdk.description', '/docs/references/sites/delete-variable.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-            ->label('sdk.response.model', Response::MODEL_NONE)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'deleteVariable',
+                description: '/docs/references/functions/delete-variable.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
