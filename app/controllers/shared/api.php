@@ -823,20 +823,17 @@ App::shutdown()
                 $resourceType = $parseLabel($resourceType, $responsePayload, $requestParams, $user);
             }
 
-            // Build a deterministic cache key based on the URI and sorted query parameters.
+            // Build a deterministic cache key
             $params = $request->getParams();
             ksort($params);
             $key = md5($request->getURI() . '*' . http_build_query($params) . '*' . APP_CACHE_BUSTER);
-
-            // Create a signature for the payload.
             $signature = md5($data['payload']);
 
-            // Retrieve the cache log from the database.
-            $log = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+            // Create or update the cache log
             $now = DateTime::now();
+            $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
 
-            // Create or update the cache log.
-            if ($log->isEmpty()) {
+            if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $cacheKey,
                     'resource' => $resource,
@@ -845,13 +842,12 @@ App::shutdown()
                     'accessedAt' => $now,
                     'signature' => $signature,
                 ])));
-            } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $log->getAttribute('accessedAt', '')) {
-                $log->setAttribute('accessedAt', $now);
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $log->getId(), $log));
+            } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', '')) {
+                $cacheLog->setAttribute('accessedAt', $now);
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
 
-            // Save the new payload to the cache if the signature has changed.
-            if (signature !== $log->getAttribute('signature')) {
+            if (signature !== $cacheLog->getAttribute('signature')) {
                 $cache = new Cache(
                     new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                 );
