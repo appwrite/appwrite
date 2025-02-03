@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectConsole;
@@ -19,6 +20,7 @@ class ProjectsConsoleClientTest extends Scope
     use ProjectsBase;
     use ProjectConsole;
     use SideClient;
+    use Async;
 
     /**
      * @group smtpAndTemplates
@@ -1411,18 +1413,20 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * List sessions
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-            'Cookie' => $sessionCookie,
-        ]);
+        $this->assertEventually(function () use ($id, $sessionCookie, $sessionId2) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'Cookie' => $sessionCookie,
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $sessions = $response['body']['sessions'];
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $sessions = $response['body']['sessions'];
 
-        $this->assertEquals(1, count($sessions));
-        $this->assertEquals($sessionId2, $sessions[0]['$id']);
+            $this->assertEquals(1, count($sessions));
+            $this->assertEquals($sessionId2, $sessions[0]['$id']);
+        }, 500000, 1000);
 
         /**
          * Reset Limit
