@@ -65,7 +65,7 @@ class ScheduleExecutions extends ScheduleBase
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
                     // TODO: Refactor to use function instead of functionId
-                    ->setFunctionId($schedule['resource']['functionId'])
+                    ->setFunctionId($schedule['resource']['resourceId'])
                     ->setExecution($schedule['resource'])
                     ->setMethod($data['method'] ?? 'POST')
                     ->setPath($data['path'] ?? '/')

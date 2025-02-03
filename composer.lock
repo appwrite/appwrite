@@ -3682,12 +3682,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "0d535f3820a0a73b5ba03c5af27b83c0694d8368"
+                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/0d535f3820a0a73b5ba03c5af27b83c0694d8368",
-                "reference": "0d535f3820a0a73b5ba03c5af27b83c0694d8368",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
+                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
                 "shasum": ""
             },
             "require": {
@@ -3721,7 +3721,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/fix-prevent-duplicate-compression"
             },
-            "time": "2024-12-02T16:47:45+00:00"
+            "time": "2025-02-03T12:02:35+00:00"
         },
         {
             "name": "utopia-php/image",
