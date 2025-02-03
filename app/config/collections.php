@@ -4053,9 +4053,9 @@ $projectCollections = array_merge([
                 'size' => 1000000,
                 'signed' => true,
                 'required' => false,
-                'default' => [],
-                'array' => true,
-                'filters' => ['json'],
+                'default' => '',
+                'array' => false,
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('sourceType'),

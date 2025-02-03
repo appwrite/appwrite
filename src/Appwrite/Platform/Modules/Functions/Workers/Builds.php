@@ -176,7 +176,7 @@ class Builds extends Action
                 'runtime' => $resource->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower($deviceForFunctions->getType()),
-                'logs' => [],
+                'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
                 'size' => 0
@@ -612,10 +612,8 @@ class Builds extends Action
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    $currentChunks = $build->getAttribute('logs', []);
+                                    $currentLogs = $build->getAttribute('logs', '');
 
-                                    // Parse styled&timestamped logs
-                                    $streamChunks = [];
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
                                         if (empty($streamLog)) {
@@ -625,13 +623,11 @@ class Builds extends Action
                                         $streamLog = \str_replace("{APPWRITE_LINEBREAK_PLACEHOLDER}", "\n", $streamLog);
                                         $streamParts = \explode(" ", $streamLog, 2);
 
-                                        $currentChunks[] = [
-                                            'timestamp' => $streamParts[0] ?? '',
-                                            'content' => $streamParts[1] ?? ''
-                                        ];
+                                        // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
+                                        $currentLogs .= $streamParts[1];
                                     }
 
-                                    $build = $build->setAttribute('logs', $currentChunks);
+                                    $build = $build->setAttribute('logs', $currentLogs);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
@@ -685,7 +681,12 @@ class Builds extends Action
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            // $build->setAttribute('logs', $response['output']); // TODO: Figure out how to write them all at the end
+
+            $logs = '';
+            foreach($response['output'] as $log) {
+                $logs .= $log['content'];
+            }
+            $build->setAttribute('logs', $logs);
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
@@ -739,13 +740,7 @@ class Builds extends Action
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
 
-            $datetime = new \DateTime();
-            $build->setAttribute('logs', [
-                [
-                    'timestamp' => $datetime->format('Y-m-d\TH:i:s.vP'),
-                    'content' => "[31m" . $th->getMessage() . "[0m"
-                ]
-            ]);
+            $build->setAttribute('logs', "[31m" . $th->getMessage() . "[0m");
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
