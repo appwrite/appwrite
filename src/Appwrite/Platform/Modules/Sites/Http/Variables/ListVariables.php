@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -28,13 +31,21 @@ class ListVariables extends Base
             ->desc('List variables')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'listVariables')
-            ->label('sdk.description', '/docs/references/sites/list-variables.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+            ->label(
+                'sdk',
+                new Method(
+                    namespace: 'sites',
+                    name: 'listVariables',
+                    description: '/docs/references/sites/list-variables.md',
+                    auth: [AuthType::KEY],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_VARIABLE_LIST,
+                        )
+                    ],
+                )
+            )
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')

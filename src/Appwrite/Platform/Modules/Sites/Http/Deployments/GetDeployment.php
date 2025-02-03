@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -29,23 +32,28 @@ class GetDeployment extends Action
             ->desc('Get deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'getDeployment')
-            ->label('sdk.description', '/docs/references/sites/get-deployment.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'getDeployment',
+                description: '/docs/references/sites/get-deployment.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_DEPLOYMENT,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForConsole)
+    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -70,7 +78,7 @@ class GetDeployment extends Action
         $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
 
-        $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+        $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
             Query::equal("projectInternalId", [$project->getInternalId()]),
             Query::equal("resourceType", ["deployment"]),
             Query::equal("resourceInternalId", [$deployment->getInternalId()])

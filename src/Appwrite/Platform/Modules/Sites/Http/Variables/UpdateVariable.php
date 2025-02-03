@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -31,13 +34,18 @@ class UpdateVariable extends Base
             ->label('scope', 'sites.write')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'updateVariable')
-            ->label('sdk.description', '/docs/references/sites/update-variable.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_VARIABLE)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'updateVariable',
+                description: '/docs/references/functions/update-variable.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_VARIABLE,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)

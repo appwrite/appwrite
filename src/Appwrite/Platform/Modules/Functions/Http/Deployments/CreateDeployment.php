@@ -5,6 +5,10 @@ namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -46,16 +50,21 @@ class CreateDeployment extends Action
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'functions')
-            ->label('sdk.method', 'createDeployment')
-            ->label('sdk.methodType', 'upload')
-            ->label('sdk.description', '/docs/references/functions/create-deployment.md')
-            ->label('sdk.packaging', true)
-            ->label('sdk.request.type', 'multipart/form-data')
-            ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+            ->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'createDeployment',
+                description: '/docs/references/functions/create-deployment.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_ACCEPTED,
+                        model: Response::MODEL_DEPLOYMENT,
+                    )
+                ],
+                requestType: 'multipart/form-data',
+                type: MethodType::UPLOAD,
+                packaging: true,
+            ))
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
             ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)

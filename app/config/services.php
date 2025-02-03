@@ -178,7 +178,7 @@ return [
         'name' => 'Sites',
         'subtitle' => 'The Sites Service allows you view, create and manage your web applications.',
         'description' => '/docs/services/sites.md',
-        'controller' => 'api/sites.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/sites',

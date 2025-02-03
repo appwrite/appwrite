@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -36,24 +39,29 @@ class CreateVariable extends Base
             ->label('scope', 'sites.write')
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'createVariable')
-            ->label('sdk.description', '/docs/references/sites/create-variable.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_VARIABLE)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'createVariable',
+                description: '/docs/references/sites/create-variable.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_VARIABLE,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForConsole)
+    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
