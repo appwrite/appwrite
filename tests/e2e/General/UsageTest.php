@@ -540,7 +540,7 @@ class UsageTest extends Scope
         $documentsTotal = $data['documentsTotal'];
         $databaseStorageTotal = $data['storageTotal']['databases'];
 
-        sleep(self::WAIT);
+        \sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,

@@ -66,8 +66,6 @@ class UsageDump extends Action
 
                 $dbForProject = $getProjectDB($project);
                 $projectDocuments = [];
-                $databaseCache = [];
-                $collectionSizeCache = [];
 
                 Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys . ' Started');
                 $start = \microtime(true);
@@ -89,27 +87,18 @@ class UsageDump extends Action
                                 $period,
                                 $dbForProject,
                                 $projectDocuments,
-                                $databaseCache,
-                                $collectionSizeCache
                             );
                             continue;
                         }
 
-                        $projectDocuments[] = new Document([
-                            '$id' => $id,
-                            'period' => $period,
-                            'time' => $time,
-                            'metric' => $key,
-                            'value' => $value,
-                            'region' => System::getEnv('_APP_REGION', 'default'),
-                        ]);
+                        $this->addStatsDocument($projectDocuments, $id, $period, $time, $key, $value);
                     }
                 }
 
                 $dbForProject->createOrUpdateDocumentsWithIncrease(
                     collection: 'stats',
                     attribute: 'value',
-                    documents: $projectDocuments
+                    documents: \array_values($projectDocuments)
                 );
 
                 $end = \microtime(true);
@@ -127,8 +116,6 @@ class UsageDump extends Action
         string $period,
         Database $dbForProject,
         array &$projectDocuments,
-        array &$databaseCache,
-        array &$collectionSizeCache,
     ): void {
         $data = \explode('.', $key);
         $value = 0;
@@ -147,24 +134,12 @@ class UsageDump extends Action
                 $databaseInternalId = $data[0];
                 $collectionInternalId = $data[1];
                 $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
-
-                if (!isset($collectionSizeCache[$collectionId])) {
-                    try {
-                        $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
-                    } catch (\Exception $e) {
-                        if (!$e instanceof NotFound) {
-                            throw $e;
-                        }
-                        $collectionSizeCache[$collectionId] = 0;
-                    }
-                }
-
-                $value = $collectionSizeCache[$collectionId];
+                $value = $dbForProject->getSizeOfCollection($collectionId);
                 $diff = $value - $previousValue;
 
                 Console::info('['.DateTime::now().'] Collection: '.$collectionId. ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
 
-                if ($diff === 0) {
+                if ($diff <= 0) {
                     break;
                 }
 
@@ -175,7 +150,7 @@ class UsageDump extends Action
                 ];
 
                 foreach ($keys as $metric) {
-                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
                 }
                 break;
 
@@ -183,38 +158,16 @@ class UsageDump extends Action
                 $databaseInternalId = $data[0];
                 $databaseId = "database_{$databaseInternalId}";
 
-                if (!isset($databaseCache[$databaseId])) {
-                    try {
-                        $databaseCache[$databaseId] = $dbForProject->find($databaseId);
-                    } catch (\Exception $e) {
-                        if (!$e instanceof NotFound) {
-                            throw $e;
-                        }
-                        $databaseCache[$databaseId] = [];
-                    }
-                }
-
-                foreach ($databaseCache[$databaseId] as $collection) {
+                foreach ($dbForProject->find($databaseId) as $collection) {
                     $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
-
-                    if (!isset($collectionSizeCache[$collectionId])) {
-                        try {
-                            $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
-                        } catch (\Exception $e) {
-                            if (!$e instanceof NotFound) {
-                                throw $e;
-                            }
-                            $collectionSizeCache[$collectionId] = 0;
-                        }
-                    }
-                    $value += $collectionSizeCache[$collectionId];
+                    $value += $dbForProject->getSizeOfCollection($collectionId);
                 }
 
                 $diff = $value - $previousValue;
 
                 Console::info('['.DateTime::now().'] Database: '.$databaseId. ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
 
-                if ($diff === 0) {
+                if ($diff <= 0) {
                     break;
                 }
 
@@ -224,50 +177,17 @@ class UsageDump extends Action
                 ];
 
                 foreach ($keys as $metric) {
-                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
                 }
                 break;
 
             case METRIC_PROJECT_LEVEL_STORAGE:
-                if (!isset($databaseCache['*'])) {
-                    try {
-                        $databaseCache['*'] = $dbForProject->find('databases');
-                    } catch (\Exception $e) {
-                        if (!$e instanceof NotFound) {
-                            throw $e;
-                        }
-                        $databaseCache['*'] = [];
-                    }
-                }
-
-                foreach ($databaseCache['*'] as $database) {
+                foreach ($dbForProject->find('databases') as $database) {
                     $databaseId = "database_{$database->getInternalId()}";
-                    if (!isset($databaseCache[$databaseId])) {
-                        try {
-                            $databaseCache[$databaseId] = $dbForProject->find($databaseId);
-                        } catch (\Exception $e) {
-                            if (!$e instanceof NotFound) {
-                                throw $e;
-                            }
-                            $databaseCache[$databaseId] = [];
-                        }
-                    }
 
-                    foreach ($databaseCache[$databaseId] as $collection) {
+                    foreach ($dbForProject->find($databaseId) as $collection) {
                         $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
-
-                        if (!isset($collectionSizeCache[$collectionId])) {
-                            try {
-                                $collectionSizeCache[$collectionId] = $dbForProject->getSizeOfCollection($collectionId);
-                            } catch (\Exception $e) {
-                                if (!$e instanceof NotFound) {
-                                    throw $e;
-                                }
-                                $collectionSizeCache[$collectionId] = 0;
-                            }
-                        }
-
-                        $value += $collectionSizeCache[$collectionId];
+                        $value += $dbForProject->getSizeOfCollection($collectionId);
                     }
                 }
 
@@ -279,7 +199,7 @@ class UsageDump extends Action
 
                 Console::info('['.DateTime::now().'] Project: '. $project . ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
 
-                if ($diff === 0) {
+                if ($diff <= 0) {
                     break;
                 }
 
@@ -288,21 +208,29 @@ class UsageDump extends Action
                 ];
 
                 foreach ($keys as $metric) {
-                    $projectDocuments[] = $this->createStatsDocument($id, $period, $time, $metric, $diff);
+                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
                 }
 
                 break;
         }
     }
 
-    private function createStatsDocument(
+    private function addStatsDocument(
+        array &$projectDocuments,
         string $id,
         string $period,
         ?string $time,
         string $key,
         int $diff,
-    ): Document {
-        return new Document([
+    ): void {
+        $unique = "{$id}.{$period}.{$time}.{$key}";
+
+        if (isset($projectDocuments[$unique])) {
+            $projectDocuments[$key]['value'] += $diff;
+            return;
+        }
+
+        $projectDocuments[$unique] = new Document([
             '$id' => $id,
             'period' => $period,
             'time' => $time,
