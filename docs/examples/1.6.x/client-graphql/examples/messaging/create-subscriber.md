@@ -17,6 +17,7 @@ mutation {
             providerId
             providerType
             identifier
+            expired
         }
         userId
         userName
