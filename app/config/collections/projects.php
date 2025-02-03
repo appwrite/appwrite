@@ -1942,9 +1942,9 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_function'),
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['functionId'],
+                'attributes' => ['resourceInternalId', 'resourceType', 'resourceId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2066,6 +2066,17 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['encrypt']
+            ],
+            [
+                '$id' => ID::custom('secret'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('search'),

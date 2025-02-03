@@ -10,12 +10,12 @@ return [
     ],
     Specification::S_1VCPU_512MB => [
         'slug' => Specification::S_1VCPU_512MB,
-        'memory' => 4096, // TODO: Revert this, it was just for QA server
+        'memory' => 512,
         'cpus' => 1
     ],
     Specification::S_1VCPU_1GB => [
         'slug' => Specification::S_1VCPU_1GB,
-        'memory' => 4096, // TODO: Revert this, it was just for QA server
+        'memory' => 1024,
         'cpus' => 1
     ],
     Specification::S_2VCPU_2GB => [

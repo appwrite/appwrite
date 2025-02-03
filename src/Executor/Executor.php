@@ -144,6 +144,11 @@ class Executor
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
 
+        // Temporary fix for race condition
+        if($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
+            return true; // OK, removal already in progress
+        }
+
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
