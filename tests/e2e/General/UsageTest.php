@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 namespace Tests\E2E\General;
 
@@ -937,7 +937,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($functionId, $response['body']['resourceId']);
+        $this->assertEquals($functionId, $response['body']['functionId']);
 
         $executionTime += (int) ($response['body']['duration'] * 1000);
 
@@ -961,7 +961,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($functionId, $response['body']['resourceId']);
+        $this->assertEquals($functionId, $response['body']['functionId']);
 
         if ($response['body']['status'] == 'failed') {
             $failures += 1;
@@ -984,7 +984,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($functionId, $response['body']['resourceId']);
+        $this->assertEquals($functionId, $response['body']['functionId']);
 
         sleep(self::WAIT);
 
