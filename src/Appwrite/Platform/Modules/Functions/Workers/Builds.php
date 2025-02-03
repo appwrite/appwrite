@@ -47,7 +47,8 @@ class Builds extends Action
         $this
             ->desc('Builds worker')
             ->inject('message')
-            ->inject('dbForConsole')
+            ->inject('project')
+            ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('queueForUsage')
@@ -55,12 +56,13 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback([$this, 'action']);
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
      * @param Message $message
-     * @param Database $dbForConsole
+     * @param Document $project
+     * @param Database $dbForPlatform
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @param Usage $queueForUsage
@@ -71,7 +73,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -80,7 +82,6 @@ class Builds extends Action
         }
 
         $type = $payload['type'] ?? '';
-        $project = new Document($payload['project'] ?? []);
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
@@ -93,7 +94,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
                 break;
 
             default:
@@ -106,7 +107,7 @@ class Builds extends Action
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param Usage $queueForUsage
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param GitHub $github
      * @param Document $project
@@ -119,7 +120,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -201,7 +202,7 @@ class Builds extends Action
         $repositoryName = '';
 
         if ($isVcsEnabled) {
-            $installation = $dbForConsole->getDocument('installations', $installationId);
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
@@ -211,8 +212,7 @@ class Builds extends Action
 
         try {
             if ($isNewBuild && !$isVcsEnabled) {
-                // Non-vcs+Template
-
+                // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
                 $templateVersion = $template->getAttribute('version', '');
@@ -234,6 +234,8 @@ class Builds extends Action
                     if ($exit !== 0) {
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
+
+                    Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                     // Ensure directories
                     Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
@@ -401,6 +403,8 @@ class Builds extends Action
                     throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
                 }
 
+                Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
+
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
                 Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
@@ -418,7 +422,7 @@ class Builds extends Action
                 $directorySize = $deviceForFunctions->getFileSize($source);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             /** Request the executor to build the code... */
@@ -426,7 +430,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             /** Trigger Webhook */
@@ -691,7 +695,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             Console::success("Build id: $buildId created");
@@ -721,12 +725,12 @@ class Builds extends Action
 
             // Inform scheduler if function is still active
             if ($resource->getCollection() === 'functions') {
-                $schedule = $dbForConsole->getDocument('schedules', $resource->getAttribute('scheduleId'));
+                $schedule = $dbForPlatform->getDocument('schedules', $resource->getAttribute('scheduleId'));
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
-                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -745,7 +749,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
         } finally {
             /**
@@ -899,7 +903,7 @@ class Builds extends Action
      * @param Document $resource
      * @param string $deploymentId
      * @param Database $dbForProject
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @return void
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -907,7 +911,7 @@ class Builds extends Action
      * @throws Conflict
      * @throws Restricted
      */
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $resource, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $resource, string $deploymentId, Database $dbForProject, Database $dbForPlatform): void
     {
         if ($resource->getAttribute('providerSilentMode', false) === true) {
             return;
@@ -950,7 +954,7 @@ class Builds extends Action
                 $retries++;
 
                 try {
-                    $dbForConsole->createDocument('vcsCommentLocks', new Document([
+                    $dbForPlatform->createDocument('vcsCommentLocks', new Document([
                         '$id' => $commentId
                     ]));
                     break;
@@ -971,7 +975,7 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
-                $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                     Query::equal("projectInternalId", [$project->getInternalId()]),
                     Query::equal("resourceType", ["deployment"]),
                     Query::equal("resourceInternalId", [$deployment->getInternalId()])
@@ -995,7 +999,7 @@ class Builds extends Action
                 $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
-                $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
+                $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
     }

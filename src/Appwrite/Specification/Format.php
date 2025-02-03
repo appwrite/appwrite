@@ -226,6 +226,8 @@ abstract class Format
                         switch ($param) {
                             case 'status':
                                 return 'MessageStatus';
+                            case 'priority':
+                                return 'MessagePriority';
                         }
                         break;
                     case 'createSmtpProvider':

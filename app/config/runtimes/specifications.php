@@ -5,8 +5,8 @@ use Appwrite\Functions\Specification;
 return [
     Specification::S_05VCPU_512MB => [
         'slug' => Specification::S_05VCPU_512MB,
-        'memory' => 4096, // TODO: Revert this, it was just for QA server
-        'cpus' => 1 // TODO: revert this, it's a temporary change to test function performance.
+        'memory' => 512,
+        'cpus' => 0.5
     ],
     Specification::S_1VCPU_512MB => [
         'slug' => Specification::S_1VCPU_512MB,
