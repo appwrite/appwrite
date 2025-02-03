@@ -145,7 +145,7 @@ class Executor
         ], [], true, 30);
 
         // Temporary fix for race condition
-        if($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
+        if ($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
             return true; // OK, removal already in progress
         }
 

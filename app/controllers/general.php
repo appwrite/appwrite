@@ -1285,7 +1285,7 @@ App::wildcard()
     });
 
 foreach (Config::getParam('services', []) as $service) {
-    if(!empty($service['controller'])) {
+    if (!empty($service['controller'])) {
         include_once $service['controller'];
     }
 }

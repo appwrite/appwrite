@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Utopia\Database\Exception\Query as QueryException;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -12,6 +11,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Functions;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
