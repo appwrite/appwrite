@@ -16,13 +16,13 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 
-class RebuildDeployment extends Action
+class CreateBuild extends Action
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'rebuildDeployment';
+        return 'CreateBuild';
     }
 
     public function __construct()
@@ -37,9 +37,9 @@ class RebuildDeployment extends Action
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'createBuild',
-                description: '/docs/references/functions/create-build.md',
+                description: '/docs/references/sites/create-build.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

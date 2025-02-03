@@ -33,9 +33,9 @@ class GetDeployment extends Action
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'getDeployment',
-                description: '/docs/references/functions/get-deployment.md',
+                description: '/docs/references/sites/get-deployment.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

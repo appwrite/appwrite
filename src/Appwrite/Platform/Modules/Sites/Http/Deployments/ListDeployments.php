@@ -37,9 +37,9 @@ class ListDeployments extends Action
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'listDeployments',
-                description: '/docs/references/functions/list-deployments.md',
+                description: '/docs/references/sites/list-deployments.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

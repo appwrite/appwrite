@@ -3,13 +3,13 @@
 namespace Appwrite\Platform\Modules\Sites\Services;
 
 use Appwrite\Platform\Modules\Sites\Http\Deployments\CancelDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\CreateBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\CreateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\DeleteDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\DownloadBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\DownloadDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\GetDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\ListDeployments;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\RebuildDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\UpdateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Logs\DeleteLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\GetLog;
@@ -55,7 +55,7 @@ class Http extends Service
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(DownloadBuild::getName(), new DownloadBuild());
-        $this->addAction(RebuildDeployment::getName(), new RebuildDeployment());
+        $this->addAction(CreateBuild::getName(), new CreateBuild());
         $this->addAction(CancelDeployment::getName(), new CancelDeployment());
 
         // Logs

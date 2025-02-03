@@ -592,6 +592,10 @@ class Functions extends Action
             'functionId' => $function->getId(),
             'executionId' => $execution->getId()
         ]);
+
+        // Ensure all placeholder got related attribute
+        $execution = $execution->setAttribute('functionId', $execution->getAttribute('resourceId'));
+
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],

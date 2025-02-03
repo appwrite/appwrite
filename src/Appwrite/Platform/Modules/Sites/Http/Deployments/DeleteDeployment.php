@@ -38,9 +38,9 @@ class DeleteDeployment extends Action
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'deleteDeployment',
-                description: '/docs/references/functions/delete-deployment.md',
+                description: '/docs/references/sites/delete-deployment.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

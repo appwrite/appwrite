@@ -40,9 +40,9 @@ class CreateVariable extends Base
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'createVariable',
-                description: '/docs/references/functions/create-variable.md',
+                description: '/docs/references/sites/create-variable.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

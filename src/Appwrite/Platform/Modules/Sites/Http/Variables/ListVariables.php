@@ -34,9 +34,9 @@ class ListVariables extends Base
             ->label(
                 'sdk',
                 new Method(
-                    namespace: 'functions',
+                    namespace: 'sites',
                     name: 'listVariables',
-                    description: '/docs/references/functions/list-variables.md',
+                    description: '/docs/references/sites/list-variables.md',
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

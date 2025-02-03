@@ -631,13 +631,18 @@ App::get('/v1/functions/:functionId/deployments')
     ->desc('List deployments')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listDeployments')
-    ->label('sdk.description', '/docs/references/functions/list-deployments.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'listDeployments',
+        description: '/docs/references/functions/list-deployments.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT_LIST,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -715,13 +720,18 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Get deployment')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getDeployment')
-    ->label('sdk.description', '/docs/references/functions/get-deployment.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'getDeployment',
+        description: '/docs/references/functions/get-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DEPLOYMENT,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -762,12 +772,19 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteDeployment')
-    ->label('sdk.description', '/docs/references/functions/delete-deployment.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'deleteDeployment',
+        description: '/docs/references/functions/delete-deployment.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
@@ -828,11 +845,18 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createBuild')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createBuild',
+        description: '/docs/references/functions/create-build.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
@@ -1622,13 +1646,18 @@ App::post('/v1/functions/:functionId/variables')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.create')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createVariable')
-    ->label('sdk.description', '/docs/references/functions/create-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'functions',
+        name: 'createVariable',
+        description: '/docs/references/functions/create-variable.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_VARIABLE,
+            )
+        ]
+    ))
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
@@ -1687,13 +1716,21 @@ App::get('/v1/functions/:functionId/variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listVariables')
-    ->label('sdk.description', '/docs/references/functions/list-variables.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+    ->label(
+        'sdk',
+        new Method(
+            namespace: 'functions',
+            name: 'listVariables',
+            description: '/docs/references/functions/list-variables.md',
+            auth: [AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_VARIABLE_LIST,
+                )
+            ],
+        )
+    )
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')

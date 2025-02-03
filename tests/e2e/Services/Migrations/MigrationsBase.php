@@ -66,6 +66,7 @@ trait MigrationsBase
             $this->assertNotEmpty($response['body']['$id']);
 
             if ($response['body']['status'] === 'failed') {
+                \var_dump($response);
                 $this->fail('Migration failed', json_encode($response['body'], JSON_PRETTY_PRINT));
             }
 
