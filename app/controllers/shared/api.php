@@ -810,46 +810,48 @@ App::shutdown()
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
-        $data = $response->getPayload();
+        if ($useCache) {
+            $resource = $resourceType = null;
+            $data = $response->getPayload();
+            if (!empty($data['payload'])) {
+                $pattern = $route->getLabel('cache.resource', null);
+                if (!empty($pattern)) {
+                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                }
 
-        if ($useCache && !empty($data['payload'])) {
-            $pattern = $route->getLabel('cache.resource', null);
-            if (!empty($resource)) {
-                $resource = $parseLabel($resource, $responsePayload, $requestParams, $user);
-            }
+                $pattern = $route->getLabel('cache.resourceType', null);
+                if (!empty($pattern)) {
+                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                }
 
-            $pattern = $route->getLabel('cache.resourceType', null);
-            if (!empty($resourceType)) {
-                $resourceType = $parseLabel($resourceType, $responsePayload, $requestParams, $user);
-            }
+                $params = $request->getParams();
+                ksort($params);
+                $key = md5($request->getURI() . '*' . http_build_query($params) . '*' . APP_CACHE_BUSTER);
 
-            $params = $request->getParams();
-            ksort($params);
-            $key = md5($request->getURI() . '*' . http_build_query($params) . '*' . APP_CACHE_BUSTER);
-            $signature = md5($data['payload']);
+                $signature = md5($data['payload']);
+                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $now = DateTime::now();
+                if ($cacheLog->isEmpty()) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                        '$id' => $key,
+                        'resource' => $resource,
+                        'resourceType' => $resourceType,
+                        'mimeType' => $response->getContentType(),
+                        'accessedAt' => $now,
+                        'signature' => $signature,
+                    ])));
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', $now);
+                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                }
 
-            $now = DateTime::now();
-            $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
-
-            if ($cacheLog->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $cacheKey,
-                    'resource' => $resource,
-                    'resourceType' => $resourceType,
-                    'mimeType' => $response->getContentType(),
-                    'accessedAt' => $now,
-                    'signature' => $signature,
-                ])));
-            } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', '')) {
-                $cacheLog->setAttribute('accessedAt', $now);
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
-            }
-
-            if (signature !== $cacheLog->getAttribute('signature')) {
-                $cache = new Cache(
-                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                );
-                $cache->save($key, $data['payload']);
+                if ($signature !== $cacheLog->getAttribute('signature')) {
+                    $cache = new Cache(
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                    );
+                    $cache->save($key, $data['payload']);
+                }
             }
         }
 
