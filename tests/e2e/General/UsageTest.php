@@ -65,6 +65,12 @@ class UsageTest extends Scope
         return $date->format(self::$formatTz);
     }
 
+    public static function getExpectedStorage(): array {
+        return [
+            'databases' => 1_261_568,
+        ];
+    }
+
     public function testPrepareUsersStats(): array
     {
         $usersTotal = 0;
@@ -518,6 +524,7 @@ class UsageTest extends Scope
             'databasesTotal' => $databasesTotal,
             'collectionsTotal' => $collectionsTotal,
             'documentsTotal' => $documentsTotal,
+            'storageTotal' => self::getExpectedStorage(),
         ]);
     }
 
@@ -531,6 +538,7 @@ class UsageTest extends Scope
         $databasesTotal = $data['databasesTotal'];
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
+        $databaseStorageTotal = $data['storageTotal']['databases'];
 
         sleep(self::WAIT);
 
@@ -552,6 +560,7 @@ class UsageTest extends Scope
         $this->validateDates($response['body']['requests']);
         $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
         $this->assertEquals($documentsTotal, $response['body']['documentsTotal']);
+        $this->assertEquals($databaseStorageTotal, $response['body']['databasesStorageTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -565,6 +574,7 @@ class UsageTest extends Scope
         $this->validateDates($response['body']['collections']);
         $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
         $this->validateDates($response['body']['documents']);
+        $this->assertEquals($databaseStorageTotal, $response['body']['storageTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -574,9 +584,9 @@ class UsageTest extends Scope
 
         $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
         $this->validateDates($response['body']['collections']);
-
         $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
         $this->validateDates($response['body']['documents']);
+        $this->assertEquals($databaseStorageTotal, $response['body']['storageTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -588,67 +598,6 @@ class UsageTest extends Scope
         $this->validateDates($response['body']['documents']);
 
         return $data;
-    }
-
-    public function testDatabaseStoragePrepare(): array
-    {
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'databaseId' => 'unique()',
-                'name' => 'dbStorageStats',
-            ]
-        );
-
-        $this->assertNotEmpty($response['body']['$id']);
-        $databaseId = $response['body']['$id'];
-
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'collectionId' => 'unique()',
-                'name' => 'collectionStorageStats',
-                'documentSecurity' => false,
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::create(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ]
-        );
-
-        $this->assertNotEmpty($response['body']['$id']);
-        $collectionId = $response['body']['$id'];
-
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'key' => 'data',
-                'size' => 100000,
-                'required' => true,
-            ]
-        );
-
-        return [
-            'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
-        ];
     }
 
     /** @depends testDatabaseStats */
