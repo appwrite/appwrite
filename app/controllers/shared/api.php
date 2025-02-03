@@ -823,13 +823,11 @@ App::shutdown()
                 $resourceType = $parseLabel($resourceType, $responsePayload, $requestParams, $user);
             }
 
-            // Build a deterministic cache key
             $params = $request->getParams();
             ksort($params);
             $key = md5($request->getURI() . '*' . http_build_query($params) . '*' . APP_CACHE_BUSTER);
             $signature = md5($data['payload']);
 
-            // Create or update the cache log
             $now = DateTime::now();
             $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
 
