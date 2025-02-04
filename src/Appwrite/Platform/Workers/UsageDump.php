@@ -85,17 +85,22 @@ class UsageDump extends Action
 
                         if (\str_contains($key, METRIC_DATABASES_STORAGE)) {
                             static::handleDatabaseStorage(
-                                $id,
+                                $projectDocuments,
                                 $key,
                                 $time,
                                 $period,
                                 $dbForProject,
-                                $projectDocuments,
                             );
                             continue;
                         }
 
-                        static::addStatsDocument($projectDocuments, $id, $period, $time, $key, $value);
+                        static::addStatsDocument(
+                            $projectDocuments,
+                            $period,
+                            $time,
+                            $key,
+                            $value
+                        );
                     }
                 }
 
@@ -121,20 +126,22 @@ class UsageDump extends Action
     }
 
     private static function handleDatabaseStorage(
-        string $id,
+        array &$projectDocuments,
         string $key,
         ?string $time,
         string $period,
         Database $dbForProject,
-        array &$projectDocuments,
     ): void {
         $data = \explode('.', $key);
         $value = 0;
         $unique = static::getUniqueKey($key, $period, $time);
 
+        Console::info("[PROCESSING] {$unique}");
+
         if (isset(static::$seenMetrics[$unique])) {
             Console::log("[DUPLICATE CALL] handleDatabaseStorage() called twice for: {$unique}");
             debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            return;
         }
 
         static::$seenMetrics[$unique] = true;
@@ -183,7 +190,13 @@ class UsageDump extends Action
                 \var_dump('[PROCESSING COLLECTION KEYS] ' . \json_encode($keys));
 
                 foreach ($keys as $metric) {
-                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                    static::addStatsDocument(
+                        $projectDocuments,
+                        $period,
+                        $time,
+                        $metric,
+                        $diff
+                    );
                 }
 
                 break;
@@ -235,7 +248,13 @@ class UsageDump extends Action
                 \var_dump('[PROCESSING DATABASE KEYS] ' . \json_encode($keys));
 
                 foreach ($keys as $metric) {
-                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                    static::addStatsDocument(
+                        $projectDocuments,
+                        $period,
+                        $time,
+                        $metric,
+                        $diff
+                    );
                 }
 
                 break;
@@ -305,7 +324,13 @@ class UsageDump extends Action
                 \var_dump('[PROCESSING PROJECT KEYS] ' . \json_encode($keys));
 
                 foreach ($keys as $metric) {
-                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                    static::addStatsDocument(
+                        $projectDocuments,
+                        $period,
+                        $time,
+                        $metric,
+                        $diff
+                    );
                 }
 
                 break;
@@ -314,26 +339,25 @@ class UsageDump extends Action
 
     private static function addStatsDocument(
         array &$projectDocuments,
-        string $id,
         string $period,
         ?string $time,
         string $key,
         int $diff
     ): void {
-        $unique = static::getUniqueKey($key, $period, $time);
+        $id = \md5("{$time}_{$period}_{$key}");
 
-        if (isset($projectDocuments[$unique])) {
-            Console::log("[DUPLICATE DETECTED] Metric: {$unique} (Incrementing by {$diff})");
-            Console::log("Previous Value: " . $projectDocuments[$unique]['value']);
-            \debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+//        if (isset($projectDocuments[$unique])) {
+//            Console::log("[DUPLICATE DETECTED] Metric: {$unique} (Incrementing by {$diff})");
+//            Console::log("Previous Value: " . $projectDocuments[$unique]['value']);
+//            \debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+//
+//            $projectDocuments[$unique]['value'] += $diff;
+//            return;
+//        }
+//
+//        Console::log("[ADDING] New metric: {$unique} (Value: {$diff})");
 
-            $projectDocuments[$unique]['value'] += $diff;
-            return;
-        }
-
-        Console::log("[ADDING] New metric: {$unique} (Value: {$diff})");
-
-        $projectDocuments[$unique] = new Document([
+        $projectDocuments[] = new Document([
             '$id' => $id,
             'period' => $period,
             'time' => $time,
