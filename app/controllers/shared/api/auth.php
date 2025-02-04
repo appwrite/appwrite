@@ -5,6 +5,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -57,44 +58,44 @@ App::init()
 
         $auths = $project->getAttribute('auths', []);
         switch ($route->getLabel('auth.type', '')) {
-            case 'emailPassword':
-                if (($auths['emailPassword'] ?? true) === false) {
+            case 'email-password':
+                if (($auths[Config::getParam('auth')['email-password']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');
                 }
                 break;
 
             case 'magic-url':
-                if (($auths['usersAuthMagicURL'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['magic-url']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
 
             case 'anonymous':
-                if (($auths['anonymous'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['anonymous']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
                 }
                 break;
 
             case 'phone':
-                if (($auths['phone'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['phone']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
                 }
                 break;
 
             case 'invites':
-                if (($auths['invites'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['invites']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
                 }
                 break;
 
             case 'jwt':
-                if (($auths['JWT'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['jwt']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
                 }
                 break;
 
             case 'email-otp':
-                if (($auths['emailOTP'] ?? true) === false) {
+                if (($auths[Config::getParam('auth')['email-otp']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
                 }
                 break;

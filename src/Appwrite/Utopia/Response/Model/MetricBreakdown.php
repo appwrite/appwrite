@@ -15,6 +15,7 @@ class MetricBreakdown extends Model
                 'description' => 'Resource ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
+                'required' => false,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -27,6 +28,13 @@ class MetricBreakdown extends Model
                 'description' => 'The value of this metric at the timestamp.',
                 'default' => 0,
                 'example' => 1,
+            ])
+            ->addRule('estimate', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'The estimated value of this metric at the end of the period.',
+                'default' => 0,
+                'example' => 1,
+                'required' => false,
             ]);
     }
 

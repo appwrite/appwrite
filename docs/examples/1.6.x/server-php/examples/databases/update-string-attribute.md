@@ -16,6 +16,6 @@ $result = $databases->updateStringAttribute(
     key: '',
     required: false,
     default: '<DEFAULT>',
-    size: null, // optional
+    size: 1, // optional
     newKey: '' // optional
 );

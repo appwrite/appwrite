@@ -15,7 +15,10 @@ mutation {
         tag: "<TAG>",
         badge: 0,
         draft: false,
-        scheduledAt: ""
+        scheduledAt: "",
+        contentAvailable: false,
+        critical: false,
+        priority: "normal"
     ) {
         _id
         _createdAt

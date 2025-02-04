@@ -11,14 +11,14 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -28,6 +28,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Connection;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -57,8 +58,39 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
+$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+    // Only trigger events for user creation with the database listener.
+    if ($document->getCollection() !== 'users') {
+        return;
+    }
 
+    $queueForEvents
+        ->setEvent('users.[userId].create')
+        ->setParam('userId', $document->getId())
+        ->setPayload($response->output($document, Response::MODEL_USER));
+
+    // Trigger functions, webhooks, and realtime events
+    $queueForFunctions
+        ->from($queueForEvents)
+        ->trigger();
+
+
+    /** Trigger webhooks events only if a project has them enabled */
+    if (!empty($project->getAttribute('webhooks'))) {
+        $queueForWebhooks
+            ->from($queueForEvents)
+            ->trigger();
+    }
+
+    /** Trigger realtime events only for non console events */
+    if ($queueForEvents->getProject()->getId() !== 'console') {
+        $queueForRealtime
+            ->from($queueForEvents)
+            ->trigger();
+    }
+};
+
+$usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
     $value = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
@@ -154,14 +186,16 @@ App::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
+    ->inject('dbForProject')
+    ->inject('queueForAudits')
     ->inject('project')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -197,7 +231,7 @@ App::init()
             if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
                 try {
                     $payload = $jwtObj->decode($authKey);
@@ -213,9 +247,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => 'Dynamic Key',
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -223,6 +258,8 @@ App::init()
 
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    $queueForAudits->setUser($user);
                 }
             } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
@@ -234,9 +271,10 @@ App::init()
                     $user = new Document([
                         '$id' => '',
                         'status' => true,
+                        'type' => Auth::ACTIVITY_TYPE_APP,
                         'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                         'password' => '',
-                        'name' => $project->getAttribute('name', 'Untitled'),
+                        'name' => $key->getAttribute('name', 'UNKNOWN'),
                     ]);
 
                     $role = Auth::USER_ROLE_APPS;
@@ -253,8 +291,8 @@ App::init()
                     $accessedAt = $key->getAttribute('accessedAt', '');
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                         $key->setAttribute('accessedAt', DateTime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
 
                     $sdkValidator = new WhiteList($servers, true);
@@ -267,10 +305,12 @@ App::init()
 
                             /** Update access time as well */
                             $key->setAttribute('accessedAt', Datetime::now());
-                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                            $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
+
+                    $queueForAudits->setUser($user);
                 }
             }
         }
@@ -305,12 +345,48 @@ App::init()
             Authorization::setRole($authRole);
         }
 
+        /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            }
+        }
+
+        /**
+         * Update user last activity
+         */
+        if (!empty($user->getId())) {
+            $accessedAt = $user->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if (APP_MODE_ADMIN !== $mode) {
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                } else {
+                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
+                }
+            }
+        }
+
         /** Do not allow access to disabled services */
-        $service = $route->getLabel('sdk.namespace', '');
-        if (!empty($service)) {
+        /**
+         * @var ?\Appwrite\SDK\Method $method
+         */
+        $method = $route->getLabel('sdk', false);
+
+        if (is_array($method)) {
+            $method = $method[0];
+        }
+
+        if (!empty($method)) {
+            $namespace = $method->getNamespace();
             if (
-                array_key_exists($service, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$service]
+                array_key_exists($namespace, $project->getAttribute('services', []))
+                && !$project->getAttribute('services', [])[$namespace]
                 && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
@@ -353,6 +429,7 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('queue')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -361,9 +438,10 @@ App::init()
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
     ->inject('dbForProject')
+    ->inject('timelimit')
     ->inject('resourceToken')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, Document $resourceToken, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -386,7 +464,7 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
@@ -414,7 +492,7 @@ App::init()
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
             $limit = $timeLimit->limit();
-            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+            $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
@@ -448,18 +526,42 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
+            ->setHostname($request->getHostname())
             ->setEvent($route->getLabel('audits.event', ''))
-            ->setProject($project)
-            ->setUser($user);
+            ->setProject($project);
+
+        /* If a session exists, use the user associated with the session */
+        if (!$user->isEmpty()) {
+            $userClone = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
+        }
 
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
+        // Clone the queues, to prevent events triggered by the database listener
+        // from overwriting the events that are supposed to be triggered in the shutdown hook.
+        $queueForEventsClone = new Event($queue);
+        $queueForFunctions = new Func($queue);
+        $queueForWebhooks = new Webhook($queue);
+        $queueForRealtime = new Realtime();
+
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
@@ -510,10 +612,16 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+
+                    $transformedAt = $file->getAttribute('transformedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                        $file->setAttribute('transformedAt', DateTime::now());
+                        Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                    }
                 }
 
                 $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                    ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
@@ -521,7 +629,7 @@ App::init()
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', 0)
+                    ->addHeader('Expires', '0')
                     ->addHeader('X-Appwrite-Cache', 'miss')
                 ;
             }
@@ -596,11 +704,11 @@ App::shutdown()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForMessaging')
-    ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->inject('mode')
-    ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->inject('queueForWebhooks')
+    ->inject('queueForRealtime')
+    ->inject('dbForProject')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -609,54 +717,25 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            /**
-             * Trigger functions.
-             */
-            if (!$queueForEvents->isPaused()) {
-                $queueForFunctions
+            $queueForFunctions
+                ->from($queueForEvents)
+                ->trigger();
+
+            if ($project->getId() !== 'console') {
+                $queueForRealtime
                     ->from($queueForEvents)
                     ->trigger();
             }
-            /**
-             * Trigger webhooks.
-             */
-            $queueForEvents
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->trigger();
 
-            /**
-             * Trigger realtime.
-             */
-            if ($project->getId() !== 'console') {
-                $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
-                $payload = new Document($queueForEvents->getPayload());
-
-                $db = $queueForEvents->getContext('database');
-                $collection = $queueForEvents->getContext('collection');
-                $bucket = $queueForEvents->getContext('bucket');
-
-                $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
-                    event: $allEvents[0],
-                    payload: $payload,
-                    project: $project,
-                    database: $db,
-                    collection: $collection,
-                    bucket: $bucket,
-                );
-
-                Realtime::send(
-                    projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getRealtimePayload(),
-                    events: $allEvents,
-                    channels: $target['channels'],
-                    roles: $target['roles'],
-                    options: [
-                        'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $queueForEvents->getParam('userId')
-                    ]
-                );
+            /** Trigger webhooks events only if a project has them enabled
+             * A future optimisation is to only trigger webhooks if the webhook is "enabled"
+             * But it might have performance implications on the API due to the number of webhooks etc.
+             * Some profiling is needed to see if this is a problem.
+            */
+            if (!empty($project->getAttribute('webhooks'))) {
+                $queueForWebhooks
+                    ->from($queueForEvents)
+                    ->trigger();
             }
         }
 
@@ -675,10 +754,32 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
+            $userClone = clone $user;
+            // $user doesn't support `type` and can cause unintended effects.
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $queueForAudits->setUser($userClone);
+        } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
+            /**
+             * User in the request is empty, and no user was set for auditing previously.
+             * This indicates:
+             * - No API Key was used.
+             * - No active session exists.
+             *
+             * Therefore, we consider this an anonymous request and create a relevant user.
+             */
+            $user = new Document([
+                '$id' => '',
+                'status' => true,
+                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
+                'password' => '',
+                'name' => 'Guest',
+            ]);
+
             $queueForAudits->setUser($user);
         }
 
-        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
+        if (!empty($queueForAudits->getResource()) && !$queueForAudits->getUser()->isEmpty()) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
@@ -756,8 +857,6 @@ App::shutdown()
             }
         }
 
-
-
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
@@ -775,33 +874,6 @@ App::shutdown()
             $queueForUsage
                 ->setProject($project)
                 ->trigger();
-        }
-
-        /**
-         * Update project last activity
-         */
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
-            }
-        }
-
-        /**
-         * Update user last activity
-         */
-        if (!$user->isEmpty()) {
-            $accessedAt = $user->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
-                $user->setAttribute('accessedAt', DateTime::now());
-
-                if (APP_MODE_ADMIN !== $mode) {
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
-                } else {
-                    $dbForConsole->updateDocument('users', $user->getId(), $user);
-                }
-            }
         }
     });
 

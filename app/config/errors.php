@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -343,11 +348,6 @@ return [
         'name' => Exception::TEAM_NOT_FOUND,
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::TEAM_INVITE_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'User has already been invited or is already a member of this team',
-        'code' => 409,
     ],
     Exception::TEAM_INVITE_NOT_FOUND => [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
@@ -681,7 +681,7 @@ return [
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of attributes has been reached.',
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
@@ -725,6 +725,11 @@ return [
         'name' => Exception::INDEX_INVALID,
         'description' => 'Index invalid.',
         'code' => 400,
+    ],
+    Exception::INDEX_DEPENDENCY => [
+        'name' => Exception::INDEX_DEPENDENCY,
+        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
     ],
 
     /** Project Errors */

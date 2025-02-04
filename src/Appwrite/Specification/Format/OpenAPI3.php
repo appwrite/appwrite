@@ -2,6 +2,8 @@
 
 namespace Appwrite\Specification\Format;
 
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\MethodType;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
@@ -120,28 +122,49 @@ class OpenAPI3 extends Format
         foreach ($this->routes as $route) {
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
-            $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
+            $sdk = $route->getLabel('sdk', false);
 
-            $method = $route->getLabel('sdk.method', \uniqid());
-            $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
-            $produces = $route->getLabel('sdk.response.type', null);
-            $model = $route->getLabel('sdk.response.model', 'none');
-            $routeSecurity = $route->getLabel('sdk.auth', []);
+            if (empty($sdk)) {
+                continue;
+            }
+
+            $additionalMethods = null;
+            if (is_array($sdk)) {
+                $mainSdk = array_shift($sdk);
+                $additionalMethods = $sdk;
+
+                $sdk = $mainSdk;
+            }
+
+            /**
+             * @var \Appwrite\SDK\Method $sdk
+             */
+            $consumes = [$sdk->getRequestType()];
+
+            $method = $sdk->getMethodName() ?? \uniqid();
+
+            if (!empty($method) && is_array($method)) {
+                $method = array_keys($method)[0];
+            }
+
+            $desc = $sdk->getDescriptionFilePath();
+            $produces = ($sdk->getContentType())->value;
+            $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
 
             foreach ($routeSecurity as $value) {
                 switch ($value) {
-                    case APP_AUTH_TYPE_SESSION:
+                    case AuthType::SESSION:
                         $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         break;
-                    case APP_AUTH_TYPE_KEY:
+                    case AuthType::KEY:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
-                    case APP_AUTH_TYPE_JWT:
+                    case AuthType::JWT:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
-                    case APP_AUTH_TYPE_ADMIN:
+                    case AuthType::ADMIN:
                         $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                         break;
                 }
@@ -152,102 +175,140 @@ class OpenAPI3 extends Format
                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
+            $namespace = $sdk->getNamespace() ?? 'default';
+
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
-                'tags' => [$route->getLabel('sdk.namespace', 'default')],
+                'operationId' => $namespace . ucfirst($method),
+                'tags' => [$namespace],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $route->getLabel('sdk.methodType', ''),
-                    'deprecated' => $route->getLabel('sdk.deprecated', false),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                    'type' => $sdk->getType()->value ?? '',
+                    'deprecated' => $sdk->isDeprecated(),
+                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
+                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $route->getLabel('sdk.packaging', false),
-                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
-                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
-                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
+                    'packaging' => $sdk->isPackaging()
                 ],
             ];
 
-            foreach ($this->models as $value) {
-                if (\is_array($model)) {
-                    $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
-                } else {
-                    if ($value->getType() === $model) {
-                        $model = $value;
-                        break;
+
+            if (!empty($additionalMethods)) {
+                $temp['x-appwrite']['additional-methods'] = [];
+                foreach ($additionalMethods as $method) {
+                    /** @var \Appwrite\SDK\Method $method */
+                    $additionalMethod = [
+                        'name' => $method->getMethodName(),
+                        'parameters' => [],
+                        'required' => [],
+                        'responses' => []
+                    ];
+
+                    foreach ($method->getParameters() as $name => $param) {
+                        $additionalMethod['parameters'][] = $name;
+
+                        if (!$param['optional']) {
+                            $additionalMethod['required'][] = $name;
+                        }
                     }
+
+                    foreach ($method->getResponses() as $response) {
+                        /** @var \Appwrite\SDK\Response $response */
+                        $additionalMethod['responses'][] = [
+                            'code' => $response->getCode(),
+                            'model' => '#/components/schemas/' . $response->getModel()
+                        ];
+                    }
+
+                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
                 }
             }
 
-            if (!(\is_array($model)) && $model->isNone()) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                    'description' => in_array($produces, [
-                        'image/*',
-                        'image/jpeg',
-                        'image/gif',
-                        'image/png',
-                        'image/webp',
-                        'image/svg-x',
-                        'image/x-icon',
-                        'image/bmp',
-                    ]) ? 'Image' : 'File',
-                ];
-            } else {
-                if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+            // Handle response models
+            foreach ($sdk->getResponses() as $response) {
+                /** @var \Appwrite\SDK\Response $response */
+                $model = $response->getModel();
 
-                    // model has multiple possible responses, we will use oneOf
-                    foreach ($model as $m) {
-                        $usedModels[] = $m->getType();
+                foreach ($this->models as $value) {
+                    if (\is_array($model)) {
+                        $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
+                    } else {
+                        if ($value->getType() === $model) {
+                            $model = $value;
+                            break;
+                        }
                     }
+                }
 
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                        'description' => $modelDescription,
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
-                                ],
-                            ],
-                        ],
+                if (!(\is_array($model)) && $model->isNone()) {
+                    $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                        'description' => in_array($produces, [
+                            'image/*',
+                            'image/jpeg',
+                            'image/gif',
+                            'image/png',
+                            'image/webp',
+                            'image/svg-x',
+                            'image/x-icon',
+                            'image/bmp',
+                        ]) ? 'Image' : 'File',
                     ];
                 } else {
-                    // Response definition using one type
-                    $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                        'description' => $model->getName(),
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    '$ref' => '#/components/schemas/' . $model->getType(),
+                    if (\is_array($model)) {
+                        $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+
+                        // model has multiple possible responses, we will use oneOf
+                        foreach ($model as $m) {
+                            $usedModels[] = $m->getType();
+                        }
+
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $modelDescription,
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
+                                    ],
                                 ],
                             ],
-                        ],
-                    ];
+                        ];
+                    } else {
+                        // Response definition using one type
+                        $usedModels[] = $model->getType();
+                        $temp['responses'][(string)$response->getCode() ?? '500'] = [
+                            'description' => $model->getName(),
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        '$ref' => '#/components/schemas/' . $model->getType(),
+                                    ],
+                                ],
+                            ],
+                        ];
+                    }
                 }
-            }
 
-            if ($route->getLabel('sdk.response.code', 500) === 204) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+                if (($response->getCode() ?? 500) === 204) {
+                    $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
+                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                }
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
 
-                foreach ($route->getLabel('sdk.auth', []) as $security) {
-                    if (array_key_exists($security, $this->keys)) {
-                        $securities[$security] = [];
+                foreach ($sdk->getAuth() as $security) {
+                    /** @var \Appwrite\SDK\AuthType $security */
+                    if (array_key_exists($security->value, $this->keys)) {
+                        $securities[$security->value] = [];
                     }
                 }
 
@@ -298,7 +359,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
-                        if ($route->getLabel('sdk.methodType', '') === 'upload') {
+                        if ($sdk->getType() === MethodType::UPLOAD) {
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
@@ -422,7 +483,7 @@ class OpenAPI3 extends Format
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
                             if (
-                                $blacklist['namespace'] == $route->getLabel('sdk.namespace', '')
+                                $blacklist['namespace'] == $sdk->getNamespace()
                                 && $blacklist['method'] == $method
                                 && $blacklist['parameter'] == $name
                             ) {
@@ -433,8 +494,8 @@ class OpenAPI3 extends Format
 
                         if ($allowed) {
                             $node['schema']['enum'] = $validator->getList();
-                            $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
-                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
+                            $node['schema']['x-enum-name'] = $this->getEnumName($sdk->getNamespace() ?? '', $method, $name);
+                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($sdk->getNamespace() ?? '', $method, $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
