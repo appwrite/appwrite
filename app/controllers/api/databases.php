@@ -4510,7 +4510,9 @@ App::get('/v1/databases/usage')
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -4562,10 +4564,14 @@ App::get('/v1/databases/usage')
             'collectionsTotal' => $usage[$metrics[1]]['total'],
             'documentsTotal'   => $usage[$metrics[2]]['total'],
             'storageTotal'   => $usage[$metrics[3]]['total'],
+            'databasesReadsTotal' => $usage[$metrics[4]]['total'],
+            'databasesWritesTotal' => $usage[$metrics[5]]['total'],
             'databases'   => $usage[$metrics[0]]['data'],
             'collections' => $usage[$metrics[1]]['data'],
             'documents'   => $usage[$metrics[2]]['data'],
             'storage'   => $usage[$metrics[3]]['data'],
+            'databasesReads' => $usage[$metrics[4]]['data'],
+            'databasesWrites' => $usage[$metrics[5]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -4605,7 +4611,9 @@ App::get('/v1/databases/:databaseId/usage')
         $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
-            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE)
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -4657,9 +4665,13 @@ App::get('/v1/databases/:databaseId/usage')
             'collectionsTotal'   => $usage[$metrics[0]]['total'],
             'documentsTotal'   => $usage[$metrics[1]]['total'],
             'storageTotal'   => $usage[$metrics[2]]['total'],
+            'databaseReadsTotal' => $usage[$metrics[3]]['total'],
+            'databaseWritesTotal' => $usage[$metrics[4]]['total'],
             'collections'   => $usage[$metrics[0]]['data'],
             'documents'   => $usage[$metrics[1]]['data'],
             'storage'   => $usage[$metrics[2]]['data'],
+            'databaseReads'   => $usage[$metrics[3]]['data'],
+            'databaseWrites'   => $usage[$metrics[4]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
