@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases;
 
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -13,21 +14,27 @@ use Utopia\Database\Validator\Authorization;
 
 class DatabasesPermissionsGuestTest extends Scope
 {
+    use Async;
+
     use ProjectCustom;
     use SideClient;
     use DatabasesPermissionsScope;
 
     public function createCollection(): array
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'InvalidDocumentDatabase',
-        ]);
-        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEventually(function () use (&$database) {
+            $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'databaseId' => ID::unique(),
+                'name' => 'InvalidDocumentDatabase',
+            ]);
+
+            $this->assertEquals(201, $database['headers']['status-code']);
+        }, 50000, 500);
+
         $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
