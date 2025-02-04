@@ -196,10 +196,9 @@ class Request extends UtopiaRequest
         $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
             $roles = Authorization::getRoles();
-            $isPrivilegedUser = Auth::isPrivilegedUser($roles);
             $isAppUser = Auth::isAppUser($roles);
 
-            if ($isPrivilegedUser || $isAppUser) {
+            if ($isAppUser) {
                 return $forwardedUserAgent;
             }
         }
