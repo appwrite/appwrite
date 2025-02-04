@@ -609,7 +609,7 @@ App::init()
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
-                $utopia->getRoute()?->label('router', 'true');
+                $utopia->getRoute()?->label('router', true);
                 return;
             }
         }
@@ -842,7 +842,7 @@ App::options()
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
-                $utopia->getRoute()?->label('router', 'true');
+                $utopia->getRoute()?->label('router', true);
                 return;
             }
         }
@@ -1151,7 +1151,7 @@ App::get('/robots.txt')
             $response->text($template->render(false));
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
-                $utopia->getRoute()?->label('router', 'true');
+                $utopia->getRoute()?->label('router', true);
             }
         }
     });
@@ -1181,7 +1181,7 @@ App::get('/humans.txt')
             $response->text($template->render(false));
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
-                $utopia->getRoute()?->label('router', 'true');
+                $utopia->getRoute()?->label('router', true);
             }
         }
     });
@@ -1276,8 +1276,8 @@ App::wildcard()
     ->label('scope', 'global')
     ->inject('utopia')
     ->action(function (App $utopia) {
-        $handeledByRouter = $utopia->getRoute()?->getLabel('router', 'false');
-        if (\boolval($handeledByRouter)) {
+        $handeledByRouter = $utopia->getRoute()?->getLabel('router', false);
+        if ($handeledByRouter === true) {
             return;
         }
 
