@@ -86,6 +86,7 @@ class UsageDump extends Action
                         if (\str_contains($key, METRIC_DATABASES_STORAGE)) {
                             static::handleDatabaseStorage(
                                 $projectDocuments,
+                                $id,
                                 $key,
                                 $time,
                                 $period,
@@ -127,6 +128,7 @@ class UsageDump extends Action
 
     private static function handleDatabaseStorage(
         array &$projectDocuments,
+        string $id,
         string $key,
         ?string $time,
         string $period,
@@ -134,29 +136,18 @@ class UsageDump extends Action
     ): void {
         $data = \explode('.', $key);
         $value = 0;
-        $unique = static::getUniqueKey($key, $period, $time);
-
-        Console::info("[PROCESSING] {$unique}");
-
-        if (isset(static::$seenMetrics[$unique])) {
-            Console::log("[DUPLICATE CALL] handleDatabaseStorage() called twice for: {$unique}");
-            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            return;
-        }
-
-        static::$seenMetrics[$unique] = true;
 
         try {
-            if (isset($projectDocuments[$unique])) {
-                $previousValue = $projectDocuments[$unique]['value'];
-                Console::log("[PREVIOUS VALUE] Found in projectDocuments: {$previousValue} for {$unique}");
+            if (isset($projectDocuments[$id])) {
+                $previousValue = $projectDocuments[$id]['value'];
+                Console::log("[PREVIOUS VALUE] Found in projectDocuments: {$previousValue} for {$id}");
             } else {
                 $previousValue = $dbForProject->getDocument('stats', $id)->getAttribute('value', 0);
-                Console::log("[PREVIOUS VALUE] Fetched from DB: {$previousValue} for {$unique}");
+                Console::log("[PREVIOUS VALUE] Fetched from DB: {$previousValue} for {$id}");
             }
         } catch (\Exception) {
             $previousValue = 0;
-            Console::log("[PREVIOUS VALUE] Defaulted to 0 for {$unique}");
+            Console::log("[PREVIOUS VALUE] Defaulted to 0 for {$id}");
         }
 
         switch (\count($data)) {
@@ -346,18 +337,18 @@ class UsageDump extends Action
     ): void {
         $id = \md5("{$time}_{$period}_{$key}");
 
-//        if (isset($projectDocuments[$unique])) {
-//            Console::log("[DUPLICATE DETECTED] Metric: {$unique} (Incrementing by {$diff})");
-//            Console::log("Previous Value: " . $projectDocuments[$unique]['value']);
-//            \debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-//
-//            $projectDocuments[$unique]['value'] += $diff;
-//            return;
-//        }
-//
-//        Console::log("[ADDING] New metric: {$unique} (Value: {$diff})");
+        if (isset($projectDocuments[$id])) {
+            Console::log("[DUPLICATE DETECTED] Metric: {$id} (Incrementing by {$diff})");
+            Console::log("Previous Value: " . $projectDocuments[$id]['value']);
+            \debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
-        $projectDocuments[] = new Document([
+            $projectDocuments[$id]['value'] += $diff;
+            return;
+        }
+
+        Console::log("[ADDING] New metric: {$id} (Value: {$diff})");
+
+        $projectDocuments[$id] = new Document([
             '$id' => $id,
             'period' => $period,
             'time' => $time,
