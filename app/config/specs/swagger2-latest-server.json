@@ -9074,6 +9074,86 @@
             }
         },
         "\/functions\/{functionId}\/deployments": {
+            "get": {
+                "summary": "List deployments",
+                "operationId": "functionsListDeployments",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Get a list of all the function's code deployments. You can use the query params to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Deployments List",
+                        "schema": {
+                            "$ref": "#\/definitions\/deploymentList"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listDeployments",
+                    "weight": 295,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/list-deployments.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/list-deployments.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: size, buildId, activate, entrypoint, commands, type, size",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    }
+                ]
+            },
             "post": {
                 "summary": "Create deployment",
                 "operationId": "functionsCreateDeployment",
@@ -9161,6 +9241,218 @@
                         "type": "boolean",
                         "x-example": false,
                         "in": "formData"
+                    }
+                ]
+            }
+        },
+        "\/functions\/{functionId}\/deployments\/{deploymentId}": {
+            "get": {
+                "summary": "Get deployment",
+                "operationId": "functionsGetDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Get a code deployment by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Deployment",
+                        "schema": {
+                            "$ref": "#\/definitions\/deployment"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDeployment",
+                    "weight": 296,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/get-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DEPLOYMENT_ID>",
+                        "in": "path"
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete deployment",
+                "operationId": "functionsDeleteDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Delete a code deployment by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDeployment",
+                    "weight": 297,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/delete-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/delete-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DEPLOYMENT_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/functions\/{functionId}\/deployments\/{deploymentId}\/build": {
+            "post": {
+                "summary": "Rebuild deployment",
+                "operationId": "functionsCreateBuild",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createBuild",
+                    "weight": 298,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/create-build.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DEPLOYMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "buildId": {
+                                    "type": "string",
+                                    "description": "Build unique ID.",
+                                    "default": "",
+                                    "x-example": "<BUILD_ID>"
+                                }
+                            }
+                        }
                     }
                 ]
             }
@@ -9571,6 +9863,157 @@
                         "type": "string",
                         "x-example": "<EXECUTION_ID>",
                         "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/functions\/{functionId}\/variables": {
+            "get": {
+                "summary": "List variables",
+                "operationId": "functionsListVariables",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Get a list of all variables of a specific function.",
+                "responses": {
+                    "200": {
+                        "description": "Variables List",
+                        "schema": {
+                            "$ref": "#\/definitions\/variableList"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listVariables",
+                    "weight": 305,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/list-variables.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/list-variables.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create variable",
+                "operationId": "functionsCreateVariable",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.",
+                "responses": {
+                    "201": {
+                        "description": "Variable",
+                        "schema": {
+                            "$ref": "#\/definitions\/variable"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createVariable",
+                    "weight": 304,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/create-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-variable.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "description": "Variable key. Max length: 255 chars.",
+                                    "default": null,
+                                    "x-example": "<KEY>"
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "description": "Variable value. Max length: 8192 chars.",
+                                    "default": null,
+                                    "x-example": "<VALUE>"
+                                },
+                                "secret": {
+                                    "type": "boolean",
+                                    "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "value"
+                            ]
+                        }
                     }
                 ]
             }
@@ -16112,7 +16555,7 @@
         "\/sites\/{siteId}\/deployments": {
             "get": {
                 "summary": "List deployments",
-                "operationId": "functionsListDeployments",
+                "operationId": "sitesListDeployments",
                 "consumes": [
                     "application\/json"
                 ],
@@ -16120,9 +16563,9 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
-                "description": "Get a list of all the project's code deployments. You can use the query params to filter your results.",
+                "description": "Get a list of all the site's code deployments. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Deployments List",
@@ -16137,8 +16580,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/list-deployments.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/list-deployments.md",
+                    "demo": "sites\/list-deployments.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-deployments.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -16194,7 +16637,7 @@
         "\/sites\/{siteId}\/deployments\/{deploymentId}": {
             "get": {
                 "summary": "Get deployment",
-                "operationId": "functionsGetDeployment",
+                "operationId": "sitesGetDeployment",
                 "consumes": [
                     "application\/json"
                 ],
@@ -16202,7 +16645,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
                 "description": "Get a code deployment by its unique ID.",
                 "responses": {
@@ -16219,8 +16662,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/get-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-deployment.md",
+                    "demo": "sites\/get-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-deployment.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -16328,13 +16771,13 @@
             },
             "delete": {
                 "summary": "Delete deployment",
-                "operationId": "functionsDeleteDeployment",
+                "operationId": "sitesDeleteDeployment",
                 "consumes": [
                     "application\/json"
                 ],
                 "produces": [],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
                 "description": "Delete a code deployment by its unique ID.",
                 "responses": {
@@ -16348,8 +16791,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/delete-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/delete-deployment.md",
+                    "demo": "sites\/delete-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/delete-deployment.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -16392,7 +16835,7 @@
         "\/sites\/{siteId}\/deployments\/{deploymentId}\/build": {
             "post": {
                 "summary": "Rebuild deployment",
-                "operationId": "functionsCreateBuild",
+                "operationId": "sitesCreateBuild",
                 "consumes": [
                     "application\/json"
                 ],
@@ -16400,9 +16843,9 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
-                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
+                "description": "Create a new build for an existing site deployment. This endpoint allows you to rebuild a deployment with the updated site configuration, including its install command, build command, and output directory if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -16414,8 +16857,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
+                    "demo": "sites\/create-build.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/create-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -16525,7 +16968,7 @@
         "\/sites\/{siteId}\/variables": {
             "get": {
                 "summary": "List variables",
-                "operationId": "functionsListVariables",
+                "operationId": "sitesListVariables",
                 "consumes": [
                     "application\/json"
                 ],
@@ -16533,9 +16976,9 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
-                "description": "Get a list of all variables of a specific function.",
+                "description": "Get a list of all variables of a specific site.",
                 "responses": {
                     "200": {
                         "description": "Variables List",
@@ -16550,8 +16993,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/list-variables.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/list-variables.md",
+                    "demo": "sites\/list-variables.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-variables.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -16584,7 +17027,7 @@
             },
             "post": {
                 "summary": "Create variable",
-                "operationId": "functionsCreateVariable",
+                "operationId": "sitesCreateVariable",
                 "consumes": [
                     "application\/json"
                 ],
@@ -16592,9 +17035,9 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "functions"
+                    "sites"
                 ],
-                "description": "Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.",
+                "description": "Create a new site environment variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.",
                 "responses": {
                     "201": {
                         "description": "Variable",
@@ -16609,8 +17052,8 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "functions\/create-variable.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-variable.md",
+                    "demo": "sites\/create-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/create-variable.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
