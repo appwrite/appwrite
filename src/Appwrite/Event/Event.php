@@ -66,6 +66,24 @@ class Event
     }
 
     /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
      * Set queue used for this event.
      *
      * @param string $queue
@@ -119,7 +137,6 @@ class Event
     public function setProject(Document $project): self
     {
         $this->project = $project;
-
         return $this;
     }
 
@@ -202,19 +219,6 @@ class Event
     public function getPayload(): array
     {
         return $this->payload;
-    }
-
-    public function getRealtimePayload(): array
-    {
-        $payload = [];
-
-        foreach ($this->payload as $key => $value) {
-            if (!isset($this->sensitive[$key])) {
-                $payload[$key] = $value;
-            }
-        }
-
-        return $payload;
     }
 
     /**
@@ -308,6 +312,27 @@ class Event
     }
 
     /**
+     * Get trimmed values for sensitive/large payload fields.
+     * Override this method in child classes to add more fields to trim.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+                '$internalId' => $this->project->getInternalId(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -319,16 +344,30 @@ class Event
             return false;
         }
 
-        $client = new Client($this->queue, $this->connection);
+        /** The getter is required since events like Databases need to override the queue name depending on the project */
+        $client = new Client($this->getQueue(), $this->connection);
 
-        return $client->enqueue([
+        // Merge the base payload with any trimmed values
+        $payload = array_merge($this->preparePayload(), $this->trimPayload());
+
+        return $client->enqueue($payload);
+    }
+
+    /**
+     * Prepare payload for queue. Can be overridden by child classes to customize payload.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 
     /**
@@ -530,20 +569,21 @@ class Event
     }
 
     /**
-     * Get the value of paused
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function isPaused(): bool
+    public function from(Event $event): self
     {
-        return $this->paused;
-    }
-
-    /**
-     * Set the value of paused
-     */
-    public function setPaused(bool $paused): self
-    {
-        $this->paused = $paused;
-
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        $this->context = $event->context;
         return $this;
     }
 }

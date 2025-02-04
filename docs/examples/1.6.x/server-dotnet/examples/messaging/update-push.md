@@ -1,4 +1,5 @@
 using Appwrite;
+using Appwrite.Enums;
 using Appwrite.Models;
 using Appwrite.Services;
 
@@ -25,5 +26,8 @@ Message result = await messaging.UpdatePush(
     tag: "<TAG>", // optional
     badge: 0, // optional
     draft: false, // optional
-    scheduledAt: "" // optional
+    scheduledAt: "", // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: MessagePriority.Normal // optional
 );

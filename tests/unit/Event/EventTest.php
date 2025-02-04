@@ -3,13 +3,9 @@
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
-use Appwrite\URL\URL;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\DSN\DSN;
-use Utopia\Queue;
 use Utopia\Queue\Client;
-use Utopia\System\System;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -20,19 +16,8 @@ class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $fallbackForRedis = 'redis_main=' . URL::unparse([
-            'scheme' => 'redis',
-            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => System::getEnv('_APP_REDIS_USER', ''),
-            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-        ]);
-
-        $dsn = System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
-        $dsn = explode('=', $dsn);
-        $dsn = $dsn[1] ?? '';
-        $dsn = new DSN($dsn);
-        $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        global $register;
+        $connection = $register->get('pools')->get('queue')->pop()->getResource();
         $this->queue = 'v1-tests' . uniqid();
         $this->object = new Event($connection);
         $this->object->setClass('TestsV1');

@@ -319,10 +319,13 @@ These are the current metrics we collect usage stats for:
 | users | Total number of users per project|
 | executions | Total number of executions per project           | 
 | databases | Total number of databases per project             | 
+| databases.storage | Total amount of storage used by all databases per project (in bytes) |
 | collections | Total number of collections per project | 
 | {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
 | documents | Total number of documents per project             | 
 | {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
 | buckets | Total number of buckets per project               | 
 | files | Total number of files per project                 |
 | {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
@@ -609,6 +612,18 @@ If you need to clear the cache, you can do so by running the following command:
 ```bash
 docker compose exec redis redis-cli FLUSHALL
 ```
+
+## Using preview domains locally
+
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud woekspaces such as Gitpod or GitHub Codespaces.
+
+To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
+
+```
+https://8080-appwrite-appwrite-mjeb3ebilwv.ws-eu116.gitpod.io/ping?preview=672b3c7eab1ac523ccf5.functions.localhost
+```
+
+The path was set to `/ping` intentionally. Visiting `/` for preview domains might trigger Console background worker, and trigger redirect to Console without our preview URL param. Visiting different path ensures this doesnt happen.
 
 ## Tutorials
 

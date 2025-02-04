@@ -2,12 +2,15 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
-use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request as AppwriteRequest;
+use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
-use Swoole\Http\Response as HttpResponse;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -17,7 +20,8 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Request;
+use Utopia\Request as UtopiaRequest;
+use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -27,6 +31,16 @@ class Specs extends Action
     public static function getName(): string
     {
         return 'specs';
+    }
+
+    public function getRequest(): UtopiaRequest
+    {
+        return new AppwriteRequest(new SwooleRequest());
+    }
+
+    public function getResponse(): UtopiaResponse
+    {
+        return new AppwriteResponse(new SwooleResponse());
     }
 
     public function __construct()
@@ -42,13 +56,13 @@ class Specs extends Action
     public function action(string $version, string $mode, Registry $register): void
     {
         $appRoutes = App::getRoutes();
-        $response = new Response(new HttpResponse());
+        $response = $this->getResponse();
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => new Request());
+        App::setResource('request', fn () => $this->getRequest());
         App::setResource('response', fn () => $response);
-        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
@@ -169,58 +183,69 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
-                    $hide = $route->getLabel('sdk.hide', false);
-                    if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                    $sdks = $route->getLabel('sdk', false);
+
+                    if (empty($sdks)) {
                         continue;
                     }
 
-                    /** @var \Utopia\Route $route */
-                    $routeSecurity = $route->getLabel('sdk.auth', []);
-                    $sdkPlatforms = [];
+                    if (!\is_array($sdks)) {
+                        $sdks = [$sdks];
+                    }
 
-                    foreach ($routeSecurity as $value) {
-                        switch ($value) {
-                            case APP_AUTH_TYPE_SESSION:
-                                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                                break;
-                            case APP_AUTH_TYPE_KEY:
-                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
-                            case APP_AUTH_TYPE_JWT:
-                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
-                            case APP_AUTH_TYPE_ADMIN:
-                                $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                                break;
+                    foreach ($sdks as $sdk) {
+                        /** @var \Appwrite\SDK\Method $sdks */
+
+                        $hide = $sdk->isHidden();
+                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                            continue;
                         }
-                    }
 
-                    if (empty($routeSecurity)) {
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                    }
+                        $routeSecurity = $sdk->getAuth();
+                        $sdkPlatforms = [];
 
-                    if (!$route->getLabel('docs', true)) {
-                        continue;
-                    }
+                        foreach ($routeSecurity as $value) {
+                            switch ($value) {
+                                case AuthType::SESSION:
+                                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                                    break;
+                                case AuthType::JWT:
+                                case AuthType::KEY:
+                                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                                    break;
+                                case AuthType::ADMIN:
+                                    $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
+                                    break;
+                            }
+                        }
 
-                    if ($route->getLabel('sdk.mock', false) && !$mocks) {
-                        continue;
-                    }
+                        if (empty($routeSecurity)) {
+                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                        }
 
-                    if (!$route->getLabel('sdk.mock', false) && $mocks) {
-                        continue;
-                    }
+                        if (!$route->getLabel('docs', true)) {
+                            continue;
+                        }
 
-                    if (empty($route->getLabel('sdk.namespace', null))) {
-                        continue;
-                    }
+                        if ($route->getLabel('mock', false) && !$mocks) {
+                            continue;
+                        }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
-                        continue;
-                    }
+                        if (!$route->getLabel('mock', false) && $mocks) {
+                            continue;
+                        }
 
-                    $routes[] = $route;
+                        if (empty($sdk->getNamespace())) {
+                            continue;
+                        }
+
+                        if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
+                            continue;
+                        }
+
+                        $routes[] = $route;
+                    }
                 }
             }
 

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
 class Mail extends Event
@@ -397,16 +396,13 @@ class Mail extends Event
     }
 
     /**
-     * Executes the event and sends it to the mails worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'project' => $this->project,
             'recipient' => $this->recipient,
             'name' => $this->name,
@@ -417,6 +413,6 @@ class Mail extends Event
             'variables' => $this->variables,
             'attachment' => $this->attachment,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 }

@@ -34,6 +34,24 @@ class UsageDatabases extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('storageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of total databases storage in bytes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('databasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databases', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of databases per period.',
@@ -51,6 +69,27 @@ class UsageDatabases extends Model
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('storage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of the aggregated number of databases storage in bytes per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database reads.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database writes.',
                 'default' => [],
                 'example' => [],
                 'array' => true

@@ -11,6 +11,10 @@ use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -32,6 +36,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
@@ -55,13 +60,19 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createMailgunProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-mailgun-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createMailgunProvider',
+        description: '/docs/references/messaging/create-mailgun-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
@@ -142,13 +153,19 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSendgridProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-sendgrid-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createSendgridProvider',
+        description: '/docs/references/messaging/create-sendgrid-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
@@ -217,13 +234,19 @@ App::post('/v1/messaging/providers/smtp')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSmtpProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-smtp-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createSmtpProvider',
+        description: '/docs/references/messaging/create-smtp-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
@@ -304,14 +327,20 @@ App::post('/v1/messaging/providers/msg91')
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('event', 'providers.[providerId].create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createMsg91Provider')
-    ->label('sdk.description', '/docs/references/messaging/create-msg91-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createMsg91Provider',
+        description: '/docs/references/messaging/create-msg91-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
@@ -381,13 +410,19 @@ App::post('/v1/messaging/providers/telesign')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createTelesignProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-telesign-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createTelesignProvider',
+        description: '/docs/references/messaging/create-telesign-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -458,13 +493,19 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createTextmagicProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-textmagic-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createTextmagicProvider',
+        description: '/docs/references/messaging/create-textmagic-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -535,13 +576,19 @@ App::post('/v1/messaging/providers/twilio')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createTwilioProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-twilio-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createTwilioProvider',
+        description: '/docs/references/messaging/create-twilio-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -612,13 +659,19 @@ App::post('/v1/messaging/providers/vonage')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createVonageProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-vonage-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createVonageProvider',
+        description: '/docs/references/messaging/create-vonage-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -689,13 +742,19 @@ App::post('/v1/messaging/providers/fcm')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createFcmProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-fcm-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createFcmProvider',
+        description: '/docs/references/messaging/create-fcm-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
@@ -752,13 +811,19 @@ App::post('/v1/messaging/providers/apns')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createApnsProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-apns-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createApnsProvider',
+        description: '/docs/references/messaging/create-apns-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
@@ -835,13 +900,19 @@ App::get('/v1/messaging/providers')
     ->desc('List providers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listProviders')
-    ->label('sdk.description', '/docs/references/messaging/list-providers.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_LIST)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listProviders',
+        description: '/docs/references/messaging/list-providers.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
@@ -866,6 +937,11 @@ App::get('/v1/messaging/providers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $providerId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
@@ -886,13 +962,19 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->desc('List provider logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listProviderLogs')
-    ->label('sdk.description', '/docs/references/messaging/list-provider-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listProviderLogs',
+        description: '/docs/references/messaging/list-provider-logs.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -974,13 +1056,19 @@ App::get('/v1/messaging/providers/:providerId')
     ->desc('Get provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'getProvider')
-    ->label('sdk.description', '/docs/references/messaging/get-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'getProvider',
+        description: '/docs/references/messaging/get-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
     ->inject('response')
@@ -1001,13 +1089,19 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateMailgunProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-mailgun-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateMailgunProvider',
+        description: '/docs/references/messaging/update-mailgun-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
@@ -1107,13 +1201,19 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSendgridProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-sendgrid-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateSendgridProvider',
+        description: '/docs/references/messaging/update-sendgrid-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1198,13 +1298,19 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSmtpProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-smtp-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateSmtpProvider',
+        description: '/docs/references/messaging/update-smtp-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
@@ -1320,13 +1426,19 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateMsg91Provider')
-    ->label('sdk.description', '/docs/references/messaging/update-msg91-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateMsg91Provider',
+        description: '/docs/references/messaging/update-msg91-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1400,13 +1512,19 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateTelesignProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-telesign-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateTelesignProvider',
+        description: '/docs/references/messaging/update-telesign-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1482,13 +1600,19 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateTextmagicProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-textmagic-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateTextmagicProvider',
+        description: '/docs/references/messaging/update-textmagic-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1564,13 +1688,19 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateTwilioProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-twilio-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateTwilioProvider',
+        description: '/docs/references/messaging/update-twilio-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1646,13 +1776,19 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateVonageProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-vonage-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateVonageProvider',
+        description: '/docs/references/messaging/update-vonage-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1728,13 +1864,19 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateFcmProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateFcmProvider',
+        description: '/docs/references/messaging/update-fcm-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1797,13 +1939,19 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateApnsProvider')
-    ->label('sdk.description', '/docs/references/messaging/update-apns-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateApnsProvider',
+        description: '/docs/references/messaging/update-apns-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
@@ -1892,13 +2040,20 @@ App::delete('/v1/messaging/providers/:providerId')
     ->label('audits.resource', 'provider/{request.$providerId}')
     ->label('event', 'providers.[providerId].delete')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'deleteProvider')
-    ->label('sdk.description', '/docs/references/messaging/delete-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'deleteProvider',
+        description: '/docs/references/messaging/delete-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -1927,13 +2082,19 @@ App::post('/v1/messaging/topics')
     ->label('audits.resource', 'topic/{response.$id}')
     ->label('event', 'topics.[topicId].create')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createTopic')
-    ->label('sdk.description', '/docs/references/messaging/create-topic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createTopic',
+        description: '/docs/references/messaging/create-topic.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
+    ))
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
     ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -1967,13 +2128,19 @@ App::get('/v1/messaging/topics')
     ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listTopics')
-    ->label('sdk.description', '/docs/references/messaging/list-topics.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOPIC_LIST)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listTopics',
+        description: '/docs/references/messaging/list-topics.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
@@ -1998,6 +2165,11 @@ App::get('/v1/messaging/topics')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $topicId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
@@ -2018,13 +2190,19 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->desc('List topic logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listTopicLogs')
-    ->label('sdk.description', '/docs/references/messaging/list-topic-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listTopicLogs',
+        description: '/docs/references/messaging/list-topic-logs.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
+    ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -2107,13 +2285,19 @@ App::get('/v1/messaging/topics/:topicId')
     ->desc('Get topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'getTopic')
-    ->label('sdk.description', '/docs/references/messaging/get-topic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'getTopic',
+        description: '/docs/references/messaging/get-topic.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
+    ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
     ->inject('response')
@@ -2135,13 +2319,19 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('audits.resource', 'topic/{response.$id}')
     ->label('event', 'topics.[topicId].update')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateTopic')
-    ->label('sdk.description', '/docs/references/messaging/update-topic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateTopic',
+        description: '/docs/references/messaging/update-topic.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOPIC,
+            )
+        ]
+    ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', null, new Text(128), 'Topic Name.', true)
     ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -2179,13 +2369,20 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('audits.resource', 'topic/{request.$topicId}')
     ->label('event', 'topics.[topicId].delete')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'deleteTopic')
-    ->label('sdk.description', '/docs/references/messaging/delete-topic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('resourceType', RESOURCE_TYPE_TOPICS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'deleteTopic',
+        description: '/docs/references/messaging/delete-topic.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2219,13 +2416,19 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->label('audits.resource', 'subscriber/{response.$id}')
     ->label('event', 'topics.[topicId].subscribers.[subscriberId].create')
     ->label('scope', 'subscribers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSubscriber')
-    ->label('sdk.description', '/docs/references/messaging/create-subscriber.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createSubscriber',
+        description: '/docs/references/messaging/create-subscriber.md',
+        auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SUBSCRIBER,
+            )
+        ]
+    ))
     ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID to subscribe to.')
     ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
@@ -2312,13 +2515,19 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listSubscribers')
-    ->label('sdk.description', '/docs/references/messaging/list-subscribers.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listSubscribers',
+        description: '/docs/references/messaging/list-subscribers.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SUBSCRIBER_LIST,
+            )
+        ]
+    ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -2352,6 +2561,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $subscriberId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
@@ -2386,13 +2600,19 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->desc('List subscriber logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listSubscriberLogs')
-    ->label('sdk.description', '/docs/references/messaging/list-subscriber-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listSubscriberLogs',
+        description: '/docs/references/messaging/list-subscriber-logs.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ]
+    ))
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -2475,13 +2695,19 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Get subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'getSubscriber')
-    ->label('sdk.description', '/docs/references/messaging/get-subscriber.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'getSubscriber',
+        description: '/docs/references/messaging/get-subscriber.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_SUBSCRIBER,
+            )
+        ]
+    ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
@@ -2517,13 +2743,20 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
     ->label('event', 'topics.[topicId].subscribers.[subscriberId].delete')
     ->label('scope', 'subscribers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'deleteSubscriber')
-    ->label('sdk.description', '/docs/references/messaging/delete-subscriber.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'deleteSubscriber',
+        description: '/docs/references/messaging/delete-subscriber.md',
+        auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('queueForEvents')
@@ -2576,13 +2809,19 @@ App::post('/v1/messaging/messages/email')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createEmail')
-    ->label('sdk.description', '/docs/references/messaging/create-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createEmail',
+        description: '/docs/references/messaging/create-email.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
@@ -2597,11 +2836,11 @@ App::post('/v1/messaging/messages/email')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2690,7 +2929,7 @@ App::post('/v1/messaging/messages/email')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -2728,13 +2967,19 @@ App::post('/v1/messaging/messages/sms')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSms')
-    ->label('sdk.description', '/docs/references/messaging/create-sms.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createSms',
+        description: '/docs/references/messaging/create-sms.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('content', '', new Text(64230), 'SMS Content.')
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
@@ -2744,11 +2989,11 @@ App::post('/v1/messaging/messages/sms')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2806,7 +3051,7 @@ App::post('/v1/messaging/messages/sms')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -2844,36 +3089,45 @@ App::post('/v1/messaging/messages/push')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createPush')
-    ->label('sdk.description', '/docs/references/messaging/create-push.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'createPush',
+        description: '/docs/references/messaging/create-push.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('title', '', new Text(256), 'Title for push notification.')
-    ->param('body', '', new Text(64230), 'Body for push notification.')
+    ->param('title', '', new Text(256), 'Title for push notification.', true)
+    ->param('body', '', new Text(64230), 'Body for push notification.', true)
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
+    ->param('data', null, new JSON(), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
-    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and iOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
+    ->param('badge', -1, new Integer(), 'Badge for push notification. Available only for iOS Platform.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2956,12 +3210,44 @@ App::post('/v1/messaging/messages/push')
 
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge'];
-
-        foreach ($keys as $key) {
-            if (!empty($$key)) {
-                $pushData[$key] = $$key;
-            }
+        if (!empty($title)) {
+            $pushData['title'] = $title;
+        }
+        if (!empty($body)) {
+            $pushData['body'] = $body;
+        }
+        if (!empty($data)) {
+            $pushData['data'] = $data;
+        }
+        if (!empty($action)) {
+            $pushData['action'] = $action;
+        }
+        if (!empty($image)) {
+            $pushData['image'] = $image;
+        }
+        if (!empty($icon)) {
+            $pushData['icon'] = $icon;
+        }
+        if (!empty($sound)) {
+            $pushData['sound'] = $sound;
+        }
+        if (!empty($color)) {
+            $pushData['color'] = $color;
+        }
+        if (!empty($tag)) {
+            $pushData['tag'] = $tag;
+        }
+        if ($badge >= 0) {
+            $pushData['badge'] = $badge;
+        }
+        if ($contentAvailable) {
+            $pushData['contentAvailable'] = true;
+        }
+        if ($critical) {
+            $pushData['critical'] = true;
+        }
+        if (!empty($priority)) {
+            $pushData['priority'] = $priority;
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
@@ -2982,7 +3268,7 @@ App::post('/v1/messaging/messages/push')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -3017,13 +3303,19 @@ App::get('/v1/messaging/messages')
     ->desc('List messages')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listMessages')
-    ->label('sdk.description', '/docs/references/messaging/list-messages.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE_LIST)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listMessages',
+        description: '/docs/references/messaging/list-messages.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE_LIST,
+            )
+        ],
+    ))
     ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
@@ -3048,6 +3340,11 @@ App::get('/v1/messaging/messages')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $messageId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
@@ -3068,13 +3365,19 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->desc('List message logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listMessageLogs')
-    ->label('sdk.description', '/docs/references/messaging/list-message-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listMessageLogs',
+        description: '/docs/references/messaging/list-message-logs.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -3157,13 +3460,19 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ->desc('List message targets')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'listTargets')
-    ->label('sdk.description', '/docs/references/messaging/list-message-targets.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'listTargets',
+        description: '/docs/references/messaging/list-message-targets.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TARGET_LIST,
+            )
+        ],
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
@@ -3202,6 +3511,11 @@ App::get('/v1/messaging/messages/:messageId/targets')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
@@ -3222,13 +3536,19 @@ App::get('/v1/messaging/messages/:messageId')
     ->desc('Get message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'getMessage')
-    ->label('sdk.description', '/docs/references/messaging/get-message.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'getMessage',
+        description: '/docs/references/messaging/get-message.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
     ->inject('response')
@@ -3249,13 +3569,19 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateEmail')
-    ->label('sdk.description', '/docs/references/messaging/update-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateEmail',
+        description: '/docs/references/messaging/update-email.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
@@ -3270,11 +3596,11 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('attachments', null, new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3326,7 +3652,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3341,7 +3667,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3356,7 +3682,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3449,13 +3775,19 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSms')
-    ->label('sdk.description', '/docs/references/messaging/update-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updateSms',
+        description: '/docs/references/messaging/update-sms.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
@@ -3465,11 +3797,11 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3521,7 +3853,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3536,7 +3868,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3551,7 +3883,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3604,13 +3936,19 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('audits.resource', 'message/{response.$id}')
     ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updatePush')
-    ->label('sdk.description', '/docs/references/messaging/update-push.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'updatePush',
+        description: '/docs/references/messaging/update-push.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MESSAGE,
+            )
+        ]
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
@@ -3627,13 +3965,16 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('badge', null, new Integer(), 'Badge for push notification. Available only for iOS platforms.', true)
     ->param('draft', null, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('contentAvailable', null, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', null, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('priority', null, new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3685,7 +4026,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
+            $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
@@ -3700,7 +4041,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($currentScheduledAt)) {
-            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
             if ($schedule->isEmpty()) {
@@ -3715,7 +4056,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3770,6 +4111,18 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (!\is_null($badge)) {
             $pushData['badge'] = $badge;
+        }
+
+        if (!\is_null($contentAvailable)) {
+            $pushData['contentAvailable'] = $contentAvailable;
+        }
+
+        if (!\is_null($critical)) {
+            $pushData['critical'] = $critical;
+        }
+
+        if (!\is_null($priority)) {
+            $pushData['priority'] = $priority;
         }
 
         if (!\is_null($image)) {
@@ -3842,19 +4195,26 @@ App::delete('/v1/messaging/messages/:messageId')
     ->label('audits.resource', 'message/{request.messageId}')
     ->label('event', 'messages.[messageId].delete')
     ->label('scope', 'messages.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/messaging/delete-message.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('resourceType', RESOURCE_TYPE_MESSAGES)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        name: 'delete',
+        description: '/docs/references/messaging/delete-message.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForEvents')
     ->inject('response')
-    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Response $response) {
+    ->action(function (string $messageId, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3877,7 +4237,7 @@ App::delete('/v1/messaging/messages/:messageId')
 
                 if (!empty($scheduleId)) {
                     try {
-                        $dbForConsole->deleteDocument('schedules', $scheduleId);
+                        $dbForPlatform->deleteDocument('schedules', $scheduleId);
                     } catch (Exception) {
                         // Ignore
                     }

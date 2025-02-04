@@ -13,6 +13,6 @@ const result = await databases.updateStringAttribute(
     '', // key
     false, // required
     '<DEFAULT>', // default
-    null, // size (optional)
+    1, // size (optional)
     '' // newKey (optional)
 );

@@ -28,8 +28,30 @@ class Request extends UtopiaRequest
         $parameters = parent::getParams();
 
         if ($this->hasFilters() && self::hasRoute()) {
-            $method = self::getRoute()->getLabel('sdk.method', 'unknown');
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
+            $methods = self::getRoute()->getLabel('sdk', null);
+
+            if (!\is_array($methods)) {
+                $methods = [$methods];
+            }
+
+            $params = [];
+
+            foreach ($methods as $method) {
+                /** @var \Appwrite\SDK\Method $method */
+                if (empty($method)) {
+                    $endpointIdentifier = 'unknown.unknown';
+                } else {
+                    $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
+                }
+
+                $params += $method->getParameters();
+            }
+
+            if (!empty($params)) {
+                $parameters = array_filter($parameters, function ($key) use ($params) {
+                    return array_key_exists($key, $params);
+                }, \ARRAY_FILTER_USE_KEY);
+            }
 
             foreach ($this->getFilters() as $filter) {
                 $parameters = $filter->parse($parameters, $endpointIdentifier);
@@ -122,7 +144,11 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = $this->generateHeaders();
+        try {
+            $headers = $this->generateHeaders();
+        } catch (\Throwable) {
+            $headers = [];
+        }
 
         if (empty($this->swoole->cookie)) {
             return $headers;
