@@ -1,0 +1,1 @@
+Get a project's dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.

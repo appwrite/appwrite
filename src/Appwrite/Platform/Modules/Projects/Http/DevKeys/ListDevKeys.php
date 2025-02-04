@@ -34,7 +34,7 @@ class ListDevKeys extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'listDevKeys',
-                description: '',
+                description: '/docs/references/projects/list-dev-keys.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

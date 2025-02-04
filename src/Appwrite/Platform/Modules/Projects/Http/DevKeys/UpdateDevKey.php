@@ -34,7 +34,7 @@ class UpdateDevKey extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'updateDevKey',
-                description: '',
+                description: '/docs/references/projects/update-dev-key.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

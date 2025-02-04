@@ -33,7 +33,7 @@ class GetDevKey extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'getDevKey',
-                description: '',
+                description: '/docs/references/projects/get-dev-key.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

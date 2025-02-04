@@ -38,7 +38,7 @@ class CreateDevKey extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'createDevKey',
-                description: '',
+                description: '/docs/references/projects/create-dev-key.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

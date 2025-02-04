@@ -1,0 +1,1 @@
+Update a project's dev key by its unique ID. Use this endpoint to update a project's dev key name or expiration time.

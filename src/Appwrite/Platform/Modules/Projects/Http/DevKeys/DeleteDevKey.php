@@ -33,7 +33,7 @@ class DeleteDevKey extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'deleteDevKey',
-                description: '',
+                description: '/docs/references/projects/delete-dev-key.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
