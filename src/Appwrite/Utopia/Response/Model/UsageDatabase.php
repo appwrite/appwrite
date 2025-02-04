@@ -70,14 +70,16 @@ class UsageDatabase extends Model
             ->addRule('databaseReads', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database reads.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
             ->addRule('databaseWrites', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database writes.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
         ;
     }

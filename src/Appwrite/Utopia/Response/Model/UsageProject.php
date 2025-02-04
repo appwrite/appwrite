@@ -186,14 +186,16 @@ class UsageProject extends Model
             ->addRule('databasesReads', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database reads.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
             ->addRule('databasesWrites', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database writes.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
         ;
     }
