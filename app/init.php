@@ -378,6 +378,7 @@ Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
+Config::load('framework-specifications', __DIR__ . '/config/frameworks/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 Config::load('site-templates', __DIR__ . '/config/site-templates.php');
 

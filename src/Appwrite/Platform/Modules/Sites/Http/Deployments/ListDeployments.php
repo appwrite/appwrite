@@ -54,11 +54,11 @@ class ListDeployments extends Action
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole)
+    public function action(string $siteId, array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -118,7 +118,7 @@ class ListDeployments extends Action
             $result->setAttribute('buildSize', $build->getAttribute('size', 0));
             $result->setAttribute('size', $result->getAttribute('size', 0));
 
-            $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+            $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getInternalId()]),
                 Query::equal("resourceType", ["deployment"]),
                 Query::equal("resourceInternalId", [$result->getInternalId()])
