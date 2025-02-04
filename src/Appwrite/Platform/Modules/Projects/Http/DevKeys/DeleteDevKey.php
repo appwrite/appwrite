@@ -1,8 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
+namespace Appwrite\Platform\Modules\Projects\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -10,12 +13,12 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class DeleteKey extends Action
+class DeleteDevKey extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'deleteKey';
+        return 'deleteDevKey';
     }
 
     public function __construct()
@@ -26,11 +29,19 @@ class DeleteKey extends Action
             ->desc('Delete dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'deleteDevKey')
-            ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-            ->label('sdk.response.model', Response::MODEL_NONE)
+            ->label('sdk', new Method(
+                namespace: 'projects',
+                name: 'deleteDevKey',
+                description: '',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_NONE
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')

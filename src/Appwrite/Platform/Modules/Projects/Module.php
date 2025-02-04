@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevKeys;
+namespace Appwrite\Platform\Modules\Projects;
 
-use Appwrite\Platform\Modules\DevKeys\Services\Http;
+use Appwrite\Platform\Modules\Projects\Services\Http;
 use Utopia\Platform\Module as Base;
 
 class Module extends Base

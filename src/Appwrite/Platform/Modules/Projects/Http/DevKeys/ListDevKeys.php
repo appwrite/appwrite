@@ -1,8 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
+namespace Appwrite\Platform\Modules\Projects\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,12 +14,12 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class ListKeys extends Action
+class ListDevKeys extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'listKeys';
+        return 'listDevKeys';
     }
 
     public function __construct()
@@ -27,12 +30,19 @@ class ListKeys extends Action
             ->desc('List dev keys')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'listDevKeys')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEV_KEY_LIST)
+            ->label('sdk', new Method(
+                namespace: 'projects',
+                name: 'listDevKeys',
+                description: '',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DEV_KEY_LIST
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')

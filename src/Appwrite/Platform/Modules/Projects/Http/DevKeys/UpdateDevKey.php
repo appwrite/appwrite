@@ -1,8 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
+namespace Appwrite\Platform\Modules\Projects\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -12,12 +15,12 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
-class UpdateKey extends Action
+class UpdateDevKey extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'updateKey';
+        return 'updateDevKey';
     }
 
     public function __construct()
@@ -27,12 +30,19 @@ class UpdateKey extends Action
             ->desc('Update dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'updateDevKey')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEV_KEY)
+            ->label('sdk', new Method(
+                namespace: 'projects',
+                name: 'updateDevKey',
+                description: '',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DEV_KEY
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')

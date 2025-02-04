@@ -1,8 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
+namespace Appwrite\Platform\Modules\Projects\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -15,12 +18,12 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
-class CreateKey extends Action
+class CreateDevKey extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'createKey';
+        return 'createDevKey';
     }
 
     public function __construct()
@@ -31,12 +34,19 @@ class CreateKey extends Action
             ->desc('Create dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'createDevKey')
-            ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEV_KEY)
+            ->label('sdk', new Method(
+                namespace: 'projects',
+                name: 'createDevKey',
+                description: '',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DEV_KEY
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', false)
