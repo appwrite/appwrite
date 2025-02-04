@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Specification\Format;
+namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\MethodType;
-use Appwrite\Specification\Format;
+use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
@@ -13,12 +13,13 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
-class Swagger2 extends Format
+class OpenAPI3 extends Format
 {
     public function getName(): string
     {
-        return 'Swagger 2';
+        return 'Open API 3';
     }
 
     protected function getNestedModels(Model $model, array &$usedModels): void
@@ -30,7 +31,7 @@ class Swagger2 extends Format
 
             if (\is_array($rule['type'])) {
                 foreach ($rule['type'] as $ruleType) {
-                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
                         $usedModels[] = $ruleType;
 
                         foreach ($this->models as $m) {
@@ -42,7 +43,7 @@ class Swagger2 extends Format
                     }
                 }
             } else {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
                     $usedModels[] = $rule['type'];
 
                     foreach ($this->models as $m) {
@@ -58,12 +59,12 @@ class Swagger2 extends Format
 
     public function parse(): array
     {
-        /*
-        * Specifications (v2.0):
-        * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/2.0.md
-        */
+        /**
+         * Specifications (v3.0.0):
+         * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
+         */
         $output = [
-            'swagger' => '2.0',
+            'openapi' => '3.0.0',
             'info' => [
                 'version' => $this->getParam('version'),
                 'title' => $this->getParam('name'),
@@ -79,49 +80,49 @@ class Swagger2 extends Format
                     'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                 ],
             ],
-            'host' => \parse_url($this->getParam('endpoint', ''), PHP_URL_HOST),
-            'basePath' => \parse_url($this->getParam('endpoint', ''), PHP_URL_PATH),
-            'schemes' => [\parse_url($this->getParam('endpoint', ''), PHP_URL_SCHEME)],
-            'consumes' => ['application/json', 'multipart/form-data'],
-            'produces' => ['application/json'],
-            'securityDefinitions' => $this->keys,
+            'servers' => [
+                [
+                    'url' => $this->getParam('endpoint', ''),
+                ],
+            ],
             'paths' => [],
             'tags' => $this->services,
-            'definitions' => [],
+            'components' => [
+                'schemas' => [],
+                'securitySchemes' => $this->keys,
+            ],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
                 'url' => $this->getParam('docs.url'),
             ],
         ];
 
-        if (isset($output['securityDefinitions']['Project'])) {
-            $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
+        if (isset($output['components']['securitySchemes']['Project'])) {
+            $output['components']['securitySchemes']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
         }
 
-        if (isset($output['securityDefinitions']['Key'])) {
-            $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
+        if (isset($output['components']['securitySchemes']['Key'])) {
+            $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
 
         if (isset($output['securityDefinitions']['JWT'])) {
             $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
         }
 
-        if (isset($output['securityDefinitions']['Locale'])) {
-            $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
+        if (isset($output['components']['securitySchemes']['Locale'])) {
+            $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
 
-        if (isset($output['securityDefinitions']['Mode'])) {
-            $output['securityDefinitions']['Mode']['x-appwrite'] = ['demo' => ''];
+        if (isset($output['components']['securitySchemes']['Mode'])) {
+            $output['components']['securitySchemes']['Mode']['x-appwrite'] = ['demo' => ''];
         }
 
         $usedModels = [];
 
         foreach ($this->routes as $route) {
-            /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
 
-            /** @var \Appwrite\SDK\Method $sdk */
             $sdk = $route->getLabel('sdk', false);
 
             if (empty($sdk)) {
@@ -136,6 +137,9 @@ class Swagger2 extends Format
                 $sdk = $mainSdk;
             }
 
+            /**
+             * @var \Appwrite\SDK\Method $sdk
+             */
             $consumes = [$sdk->getRequestType()];
 
             $method = $sdk->getMethodName() ?? \uniqid();
@@ -176,8 +180,6 @@ class Swagger2 extends Format
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($method),
-                'consumes' => [],
-                'produces' => [],
                 'tags' => [$namespace],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
@@ -188,7 +190,7 @@ class Swagger2 extends Format
                     'type' => $sdk->getType()->value ?? '',
                     'deprecated' => $sdk->isDeprecated(),
                     'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
+                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
@@ -198,9 +200,6 @@ class Swagger2 extends Format
                 ],
             ];
 
-            if ($produces) {
-                $temp['produces'][] = $produces;
-            }
 
             if (!empty($additionalMethods)) {
                 $temp['x-appwrite']['additional-methods'] = [];
@@ -210,8 +209,7 @@ class Swagger2 extends Format
                         'name' => $method->getMethodName(),
                         'parameters' => [],
                         'required' => [],
-                        'responses' => [],
-                        'description' => $method->getDescription(),
+                        'responses' => []
                     ];
 
                     foreach ($method->getParameters() as $name => $param) {
@@ -226,7 +224,7 @@ class Swagger2 extends Format
                         /** @var \Appwrite\SDK\Response $response */
                         $additionalMethod['responses'][] = [
                             'code' => $response->getCode(),
-                            'model' => '#/definitions/' . $response->getModel()
+                            'model' => '#/components/schemas/' . $response->getModel()
                         ];
                     }
 
@@ -234,8 +232,7 @@ class Swagger2 extends Format
                 }
             }
 
-            // Handle Responses
-
+            // Handle response models
             foreach ($sdk->getResponses() as $response) {
                 /** @var \Appwrite\SDK\Response $response */
                 $model = $response->getModel();
@@ -251,7 +248,7 @@ class Swagger2 extends Format
                     }
                 }
 
-                if (!(\is_array($model)) &&  $model->isNone()) {
+                if (!(\is_array($model)) && $model->isNone()) {
                     $temp['responses'][(string)$response->getCode() ?? '500'] = [
                         'description' => in_array($produces, [
                             'image/*',
@@ -263,23 +260,24 @@ class Swagger2 extends Format
                             'image/x-icon',
                             'image/bmp',
                         ]) ? 'Image' : 'File',
-                        'schema' => [
-                            'type' => 'file'
-                        ],
                     ];
                 } else {
                     if (\is_array($model)) {
                         $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+
                         // model has multiple possible responses, we will use oneOf
                         foreach ($model as $m) {
                             $usedModels[] = $m->getType();
                         }
+
                         $temp['responses'][(string)$response->getCode() ?? '500'] = [
                             'description' => $modelDescription,
-                            'schema' => [
-                                'x-oneOf' => \array_map(function ($m) {
-                                    return ['$ref' => '#/definitions/' . $m->getType()];
-                                }, $model)
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
+                                    ],
+                                ],
                             ],
                         ];
                     } else {
@@ -287,14 +285,18 @@ class Swagger2 extends Format
                         $usedModels[] = $model->getType();
                         $temp['responses'][(string)$response->getCode() ?? '500'] = [
                             'description' => $model->getName(),
-                            'schema' => [
-                                '$ref' => '#/definitions/' . $model->getType(),
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        '$ref' => '#/components/schemas/' . $model->getType(),
+                                    ],
+                                ],
                             ],
                         ];
                     }
                 }
 
-                if (in_array($response->getCode() ?? 500, [204, 301, 302, 308], true)) {
+                if (($response->getCode() ?? 500) === 204) {
                     $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
                     unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
                 }
@@ -315,23 +317,22 @@ class Swagger2 extends Format
             }
 
             $body = [
-                'name' => 'payload',
-                'in' => 'body',
-                'schema' => [
-                    'type' => 'object',
-                    'properties' => [],
+                'content' => [
+                    $consumes[0]  => [
+                        'schema'  => [
+                            'type' => 'object',
+                            'properties' => [],
+                        ],
+                    ],
                 ],
             ];
 
             $bodyRequired = [];
 
-            $parameters = \array_merge(
-                $route->getParams(),
-                $sdk->getAdditionalParameters() ?? [],
-            );
-
-            foreach ($parameters as $name => $param) { // Set params
-                /** @var Validator $validator */
+            foreach ($route->getParams() as $name => $param) { // Set params
+                /**
+                 * @var \Utopia\Validator $validator
+                 */
                 $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
 
                 $node = [
@@ -347,214 +348,214 @@ class Swagger2 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                $class = !empty($validator)
-                    ? \get_class($validator)
-                    : '';
-
-                $base = !empty($class)
-                    ? \get_parent_class($class)
-                    : '';
-
-                switch ($base) {
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
-                        $class = $base;
-                        break;
-                }
-
-                if ($class === 'Utopia\Validator\AnyOf') {
-                    $validator = $param['validator']->getValidators()[0];
-                    $class = \get_class($validator);
-                }
-
-                switch ($class) {
-                    case 'Utopia\Validator\Text':
+                switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Database\Validator\UID':
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                    case 'Utopia\Validator\Text':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = false;
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if ($sdk->getType() === MethodType::UPLOAD) {
-                            $node['x-upload-id'] = true;
+                            $node['schema']['x-upload-id'] = true;
                         }
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'datetime';
-                        $node['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'datetime';
+                        $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case 'Appwrite\Network\Validator\Email':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'email';
-                        $node['x-example'] = 'email@example.com';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'email';
+                        $node['schema']['x-example'] = 'email@example.com';
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'url';
-                        $node['x-example'] = 'https://example.com';
-                        break;
-                    case 'Utopia\Validator\ArrayList':
-                        /** @var ArrayList $validator */
-                        $node['type'] = 'array';
-                        $node['collectionFormat'] = 'multi';
-                        $node['items'] = [
-                            'type' => $validator->getValidator()->getType(),
-                        ];
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'url';
+                        $node['schema']['x-example'] = 'https://example.com';
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
-                        $node['type'] = 'object';
-                        $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
-                        $node['x-example'] = '{}';
+                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
+                        $node['schema']['type'] = 'object';
+                        $node['schema']['x-example'] = '{}';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
-                        $node['type'] = 'file';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'binary';
                         break;
-                    case 'Appwrite\Functions\Validator\Payload':
-                        $consumes = ['multipart/form-data'];
-                        $node['type'] = 'payload';
+                    case 'Utopia\Validator\ArrayList':
+                        /** @var ArrayList $validator */
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'type' => $validator->getValidator()->getType(),
+                        ];
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Files':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Identities':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Messages':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Migrations':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Providers':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Subscribers':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Targets':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Topics':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Users':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
                     case 'Utopia\Database\Validator\Queries':
                     case 'Utopia\Database\Validator\Queries\Document':
                     case 'Utopia\Database\Validator\Queries\Documents':
-                        $node['type'] = 'array';
-                        $node['collectionFormat'] = 'multi';
-                        $node['items'] = [
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
                             'type' => 'string',
                         ];
                         break;
                     case 'Utopia\Database\Validator\Permissions':
-                        $node['type'] = $validator->getType();
-                        $node['collectionFormat'] = 'multi';
-                        $node['items'] = [
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
-                        $node['type'] = $validator->getType();
-                        $node['collectionFormat'] = 'multi';
-                        $node['items'] = [
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['schema']['x-example'] = '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'password';
-                        $node['x-example'] = 'password';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
+                        $node['schema']['x-example'] = 'password';
                         break;
                     case 'Appwrite\Auth\Validator\Phone':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'phone';
-                        $node['x-example'] = '+12065550100';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'phone';
+                        $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
                     case 'Utopia\Validator\Range':
                         /** @var Range $validator */
-                        $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
-                        $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
-                        $node['x-example'] = $validator->getMin();
+                        $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
+                        $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
+                        $node['schema']['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\Integer':
-                        $node['type'] = $validator->getType();
-                        $node['format'] = 'int32';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'int32';
                         break;
                     case 'Utopia\Validator\FloatValidator':
-                        $node['type'] = 'number';
-                        $node['format'] = 'float';
+                        $node['schema']['type'] = 'number';
+                        $node['schema']['format'] = 'float';
                         break;
                     case 'Utopia\Validator\Length':
-                        $node['type'] = $validator->getType();
+                        $node['schema']['type'] = $validator->getType();
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var \Utopia\Validator\WhiteList $validator */
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = $validator->getList()[0];
+                        /** @var WhiteList $validator */
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = $validator->getList()[0];
 
-                        //Iterate the blackList. If it matches with the current one, then it is blackListed
+                        //Iterate from the blackList. If it matches with the current one, then it is a blackList
+                        // Do not add the enum
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $method && $blacklist['parameter'] == $name) {
+                            if (
+                                $blacklist['namespace'] == $sdk->getNamespace()
+                                && $blacklist['method'] == $method
+                                && $blacklist['parameter'] == $name
+                            ) {
                                 $allowed = false;
                                 break;
                             }
                         }
 
-                        if ($allowed && $validator->getType() === 'string') {
-                            $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getEnumName($namespace, $method, $name);
-                            $node['x-enum-keys'] = $this->getEnumKeys($namespace, $method, $name);
+                        if ($allowed) {
+                            $node['schema']['enum'] = $validator->getList();
+                            $node['schema']['x-enum-name'] = $this->getEnumName($sdk->getNamespace() ?? '', $method, $name);
+                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($sdk->getNamespace() ?? '', $method, $name);
                         }
-
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = '[ID1:ID2]';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '[ID1:ID2]';
                         break;
                     default:
-                        $node['type'] = 'string';
+                        $node['schema']['type'] = 'string';
                         break;
                 }
 
                 if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
-                    $node['default'] = $param['default'];
+                    $node['schema']['default'] = $param['default'];
                 }
 
-                if (\str_contains($url, ':' . $name)) { // Param is in URL path
+                if (false !== \strpos($url, ':' . $name)) { // Param is in URL path
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
                 } elseif ($route->getMethod() == 'GET') { // Param is in query
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
-                    if (\in_array('multipart/form-data', $consumes)) {
-                        $node['in'] = 'formData';
-                        $temp['parameters'][] = $node;
-
-                        continue;
-                    }
-
                     if (!$param['optional']) {
                         $bodyRequired[] = $name;
                     }
 
-                    $body['schema']['properties'][$name] = [
-                        'type' => $node['type'],
+                    $body['content'][$consumes[0]]['schema']['properties'][$name] = [
+                        'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
-                        'x-example' => $node['x-example'] ?? null,
+                        'x-example' => $node['schema']['x-example'] ?? null
                     ];
 
-                    if (isset($node['enum'])) {
+                    if (isset($node['schema']['enum'])) {
                         /// If the enum flag is Set, add the enum values to the body
-                        $body['schema']['properties'][$name]['enum'] = $node['enum'];
-                        $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
-                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'] ?? null;
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
+                    }
+
+                    if ($node['schema']['x-upload-id'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                    }
+
+                    if (isset($node['default'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
+                    }
+
+                    if (\array_key_exists('items', $node['schema'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
                     }
 
                     if ($node['x-global'] ?? false) {
-                        $body['schema']['properties'][$name]['x-global'] = true;
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
                     }
 
                     if ($isNullable) {
-                        $body['schema']['properties'][$name]['x-nullable'] = true;
-                    }
-
-                    if (\array_key_exists('items', $node)) {
-                        $body['schema']['properties'][$name]['items'] = $node['items'];
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
                     }
                 }
 
@@ -562,14 +563,12 @@ class Swagger2 extends Format
             }
 
             if (!empty($bodyRequired)) {
-                $body['schema']['required'] = $bodyRequired;
+                $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
             }
 
-            if (!empty($body['schema']['properties'])) {
-                $temp['parameters'][] = $body;
+            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                $temp['requestBody'] = $body;
             }
-
-            $temp['consumes'] = $consumes;
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
@@ -579,28 +578,28 @@ class Swagger2 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels)) {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
                 continue;
             }
 
             $required = $model->getRequired();
             $rules = $model->getRules();
 
-            $output['definitions'][$model->getType()] = [
+            $output['components']['schemas'][$model->getType()] = [
                 'description' => $model->getName(),
                 'type' => 'object',
             ];
 
             if (!empty($rules)) {
-                $output['definitions'][$model->getType()]['properties'] = [];
+                $output['components']['schemas'][$model->getType()]['properties'] = [];
             }
 
             if ($model->isAny()) {
-                $output['definitions'][$model->getType()]['additionalProperties'] = true;
+                $output['components']['schemas'][$model->getType()]['additionalProperties'] = true;
             }
 
             if (!empty($required)) {
-                $output['definitions'][$model->getType()]['required'] = $required;
+                $output['components']['schemas'][$model->getType()]['required'] = $required;
             }
 
             foreach ($model->getRules() as $name => $rule) {
@@ -611,11 +610,13 @@ class Swagger2 extends Format
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
+                    case 'payload':
                         $type = 'string';
                         break;
 
                     case 'json':
                         $type = 'object';
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'integer':
@@ -637,45 +638,34 @@ class Swagger2 extends Format
                         $type = 'boolean';
                         break;
 
-                    case 'payload':
-                        $type = 'payload';
-                        break;
-
                     default:
                         $type = 'object';
-                        $rule['type'] = ($rule['type']) ?: 'none';
+                        $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
                         if (\is_array($rule['type'])) {
                             if ($rule['array']) {
                                 $items = [
-                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type'])
+                                    'anyOf' => \array_map(function ($type) {
+                                        return ['$ref' => '#/components/schemas/' . $type];
+                                    }, $rule['type'])
                                 ];
                             } else {
                                 $items = [
-                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type'])
+                                    'oneOf' => \array_map(function ($type) {
+                                        return ['$ref' => '#/components/schemas/' . $type];
+                                    }, $rule['type'])
                                 ];
                             }
                         } else {
                             $items = [
-                                'type' => $type,
-                                '$ref' => '#/definitions/' . $rule['type'],
+                                '$ref' => '#/components/schemas/' . $rule['type'],
                             ];
                         }
                         break;
                 }
 
-                if ($rule['type'] == 'json') {
-                    $output['definitions'][$model->getType()]['properties'][$name] = [
-                        'type' => $type,
-                        'additionalProperties' => true,
-                        'description' => $rule['description'] ?? '',
-                        'x-example' => $rule['example'] ?? null,
-                    ];
-                    continue;
-                }
-
                 if ($rule['array']) {
-                    $output['definitions'][$model->getType()]['properties'][$name] = [
+                    $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
                         'description' => $rule['description'] ?? '',
                         'items' => [
@@ -685,24 +675,24 @@ class Swagger2 extends Format
                     ];
 
                     if ($format) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
                 } else {
-                    $output['definitions'][$model->getType()]['properties'][$name] = [
+                    $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
 
                     if ($format) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
                 }
                 if ($items) {
-                    $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
                 if (!in_array($name, $required)) {
-                    $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
         }

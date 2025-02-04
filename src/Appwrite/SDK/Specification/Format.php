@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Specification;
+namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
 use Utopia\App;
