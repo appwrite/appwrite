@@ -1,0 +1,1 @@
+Create a new webhook. Use this endpoint to configure a URL that will receive events from Appwrite when specific events occur. 

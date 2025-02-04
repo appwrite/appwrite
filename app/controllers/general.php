@@ -10,6 +10,10 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -116,8 +120,29 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
-        $utopia->getRoute()?->label('sdk.namespace', 'functions');
-        $utopia->getRoute()?->label('sdk.method', 'createExecution');
+        $method = $utopia->getRoute()?->getLabel('sdk', null);
+
+        if (empty($method)) {
+            $utopia->getRoute()?->label('sdk', new Method(
+                namespace: 'functions',
+                name: 'createExecution',
+                description: '/docs/references/functions/create-execution.md',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_EXECUTION,
+                    )
+                ],
+                contentType: ContentType::MULTIPART,
+                requestType: 'application/json',
+            ));
+        } else {
+            /** @var Method $method */
+            $method->setNamespace('functions');
+            $method->setMethodName('createExecution');
+            $utopia->getRoute()?->label('sdk', $method);
+        }
 
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
@@ -809,6 +834,10 @@ App::error()
                 break;
             case 'Utopia\Database\Exception\NotFound':
                 $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Dependency':
+                $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
+                break;
         }
 
         $code = $error->getCode();
@@ -907,7 +936,12 @@ App::error()
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
+            if (!empty($sdk)) {
+                /** @var Appwrite\SDK\Method $sdk */
+                $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            }
+
             $log->setAction($action);
             $log->addTag('service', $action);
 
@@ -1146,4 +1180,9 @@ App::wildcard()
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
+}
+
+// Check for any errors found while we were initialising the SDK Methods.
+if (!empty(Method::getErrors())) {
+    throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
 }

@@ -535,6 +535,8 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+
         /**
          * Related collections relating to current collection
          */
@@ -552,8 +554,6 @@ class Databases extends Action
                 $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
         );
-
-        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 
         $this->deleteByGroup('attributes', [
             Query::equal('databaseInternalId', [$databaseInternalId]),
