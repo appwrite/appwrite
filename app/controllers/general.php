@@ -990,8 +990,6 @@ App::error()
 
         $type = $error->getType();
 
-        // TODO filter out secrets and server details when not in development
-        // but devKey is provided
         $output = (App::isDevelopment()) ? [
             'message' => $message,
             'code' => $code,
