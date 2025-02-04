@@ -426,13 +426,13 @@ App::get('/v1/proxy/subdomains')
     ->param('resourceType', null, new WhiteList(['function', 'site']), 'Action definition for the rule. Possible values are "function" and "site"')
     ->param('subdomain', '', new Text(256), 'Subdomain name.')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $resourceType, string $subdomain, Response $response, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $resourceType, string $subdomain, Response $response, Database $dbForPlatform) {
         //TODO: Add tests for this endpoint
         $resourceDomain = $resourceType === 'site' ? System::getEnv('_APP_DOMAIN_SITES', '') : System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         $domain = $subdomain . '.' . $resourceDomain;
 
-        $document = $dbForConsole->findOne('rules', [
+        $document = $dbForPlatform->findOne('rules', [
             Query::equal('domain', [$domain]),
         ]);
 

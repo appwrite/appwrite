@@ -82,12 +82,12 @@ class UpdateSite extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, ?string $fallbackFile, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, ?string $fallbackFile, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
     {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -105,7 +105,7 @@ class UpdateSite extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -132,7 +132,7 @@ class UpdateSite extends Base
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
-            $repositories = $dbForConsole->find('repositories', [
+            $repositories = $dbForPlatform->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$site->getInternalId()]),
                 Query::equal('resourceType', ['site']),
@@ -140,7 +140,7 @@ class UpdateSite extends Base
             ]);
 
             foreach ($repositories as $repository) {
-                $dbForConsole->deleteDocument('repositories', $repository->getId());
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
             }
 
             $providerRepositoryId = '';
@@ -156,7 +156,7 @@ class UpdateSite extends Base
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('repositories', new Document([
+            $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),

@@ -90,12 +90,12 @@ class CreateSite extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $adapter, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $adapter, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
     {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -114,7 +114,7 @@ class CreateSite extends Base
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', \md5($domain)));
+            $subdomain = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', \md5($domain)));
 
             if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
@@ -143,7 +143,7 @@ class CreateSite extends Base
                 ->setAttribute('version', $templateVersion);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -184,7 +184,7 @@ class CreateSite extends Base
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('repositories', new Document([
+            $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),
@@ -212,7 +212,7 @@ class CreateSite extends Base
 
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForConsole, $queueForBuilds, $template, $github);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, $template, $github);
         } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
@@ -241,7 +241,7 @@ class CreateSite extends Base
             $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
 
             $rule = Authorization::skip(
-                fn () => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForPlatform->createDocument('rules', new Document([
                     '$id' => \md5($previewDomain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
@@ -263,7 +263,7 @@ class CreateSite extends Base
 
         if (!empty($sitesDomain)) {
             $rule = Authorization::skip(
-                fn () => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForPlatform->createDocument('rules', new Document([
                     '$id' => \md5($domain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),

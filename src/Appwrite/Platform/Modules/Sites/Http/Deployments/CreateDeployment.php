@@ -65,7 +65,7 @@ class CreateDeployment extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
@@ -75,7 +75,7 @@ class CreateDeployment extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
+    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
     {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -225,7 +225,7 @@ class CreateDeployment extends Action
                 $ruleId = md5($domain);
 
                 $rule = Authorization::skip(
-                    fn () => $dbForConsole->createDocument('rules', new Document([
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),
@@ -280,7 +280,7 @@ class CreateDeployment extends Action
                 $ruleId = md5($domain);
 
                 $rule = Authorization::skip(
-                    fn () => $dbForConsole->createDocument('rules', new Document([
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),
