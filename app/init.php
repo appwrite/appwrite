@@ -1648,6 +1648,12 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
                 $s3EndpointUrl = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+
+                if (empty($s3AccessKey) || empty($s3SecretKey) || empty($s3Bucket)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'S3 credentials are missing');
+                }
+                $s3EndpointUrl = preg_replace('#^https?://#', '', $s3EndpointUrl);
+
                 return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
