@@ -25,6 +25,8 @@ class UsageDump extends Action
         'inf' => '0000-00-00 00:00'
     ];
 
+    private static array $seenMetrics = [];
+
     public static function getName(): string
     {
         return 'usage-dump';
@@ -43,10 +45,10 @@ class UsageDump extends Action
 
     /**
      * @param Message $message
-     * @param callable $getProjectDB
+     * @param callable(Document): Database $getProjectDB
      * @return void
      * @throws Exception
-     * @throws \Utopia\Database\Exception
+     * @throws \Throwable
      */
     public function action(Message $message, callable $getProjectDB): void
     {
@@ -57,6 +59,8 @@ class UsageDump extends Action
 
         try {
             foreach ($payload['stats'] ?? [] as $stats) {
+                static::$seenMetrics = [];
+
                 $project = new Document($stats['project'] ?? []);
                 $numberOfKeys = !empty($stats['keys']) ? \count($stats['keys']) : 0;
                 $receivedAt = $stats['receivedAt'] ?? 'NONE';
@@ -67,7 +71,7 @@ class UsageDump extends Action
                 $dbForProject = $getProjectDB($project);
                 $projectDocuments = [];
 
-                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys . ' Started');
+                //Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys . ' Started');
                 $start = \microtime(true);
 
                 foreach ($stats['keys'] ?? [] as $key => $value) {
@@ -80,7 +84,7 @@ class UsageDump extends Action
                         $id = \md5("{$time}_{$period}_{$key}");
 
                         if (\str_contains($key, METRIC_DATABASES_STORAGE)) {
-                            $this->handleDatabaseStorage(
+                            static::handleDatabaseStorage(
                                 $id,
                                 $key,
                                 $time,
@@ -91,9 +95,11 @@ class UsageDump extends Action
                             continue;
                         }
 
-                        $this->addStatsDocument($projectDocuments, $id, $period, $time, $key, $value);
+                        static::addStatsDocument($projectDocuments, $id, $period, $time, $key, $value);
                     }
                 }
+
+                //\var_dump($projectDocuments);
 
                 $dbForProject->createOrUpdateDocumentsWithIncrease(
                     collection: 'stats',
@@ -102,14 +108,19 @@ class UsageDump extends Action
                 );
 
                 $end = \microtime(true);
-                Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys. ' Time: '.($end - $start).'s');
+                //Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys. ' Time: '.($end - $start).'s');
             }
         } catch (\Exception $e) {
             Console::error('[' . DateTime::now() . '] Error processing stats: ' . $e->getMessage());
         }
     }
 
-    private function handleDatabaseStorage(
+    private static function getUniqueKey(string $key, string $period, ?string $time): string
+    {
+        return "{$key}.{$period}.{$time}";
+    }
+
+    private static function handleDatabaseStorage(
         string $id,
         string $key,
         ?string $time,
@@ -119,14 +130,26 @@ class UsageDump extends Action
     ): void {
         $data = \explode('.', $key);
         $value = 0;
-        $previousValue = 0;
+        $unique = static::getUniqueKey($key, $period, $time);
+
+        if (isset(static::$seenMetrics[$unique])) {
+            Console::log("[DUPLICATE CALL] handleDatabaseStorage() called twice for: {$unique}");
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        }
+
+        static::$seenMetrics[$unique] = true;
 
         try {
-            $previousValue = $dbForProject
-                ->getDocument('stats', $id)
-                ->getAttribute('value', 0);
+            if (isset($projectDocuments[$unique])) {
+                $previousValue = $projectDocuments[$unique]['value'];
+                Console::log("[PREVIOUS VALUE] Found in projectDocuments: {$previousValue} for {$unique}");
+            } else {
+                $previousValue = $dbForProject->getDocument('stats', $id)->getAttribute('value', 0);
+                Console::log("[PREVIOUS VALUE] Fetched from DB: {$previousValue} for {$unique}");
+            }
         } catch (\Exception) {
-            // No previous value
+            $previousValue = 0;
+            Console::log("[PREVIOUS VALUE] Defaulted to 0 for {$unique}");
         }
 
         switch (\count($data)) {
@@ -134,10 +157,18 @@ class UsageDump extends Action
                 $databaseInternalId = $data[0];
                 $collectionInternalId = $data[1];
                 $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
-                $value = $dbForProject->getSizeOfCollection($collectionId);
+
+                try {
+                    $value = $dbForProject->getSizeOfCollection($collectionId);
+                } catch (\Exception $e) {
+                    if (!$e instanceof NotFound) {
+                        throw $e;
+                    }
+                }
+
                 $diff = $value - $previousValue;
 
-                Console::info('['.DateTime::now().'] Collection: '.$collectionId. ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
+                //Console::info('['.DateTime::now().'] Collection: '.$collectionId. ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
 
                 if ($diff <= 0) {
                     break;
@@ -149,18 +180,42 @@ class UsageDump extends Action
                     METRIC_DATABASES_STORAGE
                 ];
 
-                foreach ($keys as $metric) {
-                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
-                }
-                break;
+                \var_dump('[PROCESSING COLLECTION KEYS] ' . \json_encode($keys));
 
+                foreach ($keys as $metric) {
+                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                }
+
+                break;
             case METRIC_DATABASE_LEVEL_STORAGE:
                 $databaseInternalId = $data[0];
                 $databaseId = "database_{$databaseInternalId}";
 
-                foreach ($dbForProject->find($databaseId) as $collection) {
+                $collections = [];
+                try {
+                    $collections = $dbForProject->find($databaseId);
+                } catch (\Exception $e) {
+                    if (!$e instanceof NotFound) {
+                        Console::error('[Error] Type: ' . get_class($e));
+                        Console::error('[Error] Message: ' . $e->getMessage());
+                        Console::error('[Error] File: ' . $e->getFile());
+                        Console::error('[Error] Line: ' . $e->getLine());
+                        Console::error('[Error] Trace: ' . $e->getTraceAsString());
+
+                        throw $e;
+                    }
+                }
+
+                foreach ($collections as $collection) {
                     $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
-                    $value += $dbForProject->getSizeOfCollection($collectionId);
+
+                    try {
+                        $value = $dbForProject->getSizeOfCollection($collectionId);
+                    } catch (\Exception $e) {
+                        if (!$e instanceof NotFound) {
+                            throw $e;
+                        }
+                    }
                 }
 
                 $diff = $value - $previousValue;
@@ -171,23 +226,63 @@ class UsageDump extends Action
                     break;
                 }
 
+
                 $keys = [
                     \str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE),
                     METRIC_DATABASES_STORAGE
                 ];
 
-                foreach ($keys as $metric) {
-                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
-                }
-                break;
+                \var_dump('[PROCESSING DATABASE KEYS] ' . \json_encode($keys));
 
+                foreach ($keys as $metric) {
+                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                }
+
+                break;
             case METRIC_PROJECT_LEVEL_STORAGE:
-                foreach ($dbForProject->find('databases') as $database) {
+                $databases = [];
+                try {
+                    $databases = $dbForProject->find('database');
+                } catch (\Exception $e) {
+                    if (!$e instanceof NotFound) {
+                        Console::error('[Error] Type: ' . get_class($e));
+                        Console::error('[Error] Message: ' . $e->getMessage());
+                        Console::error('[Error] File: ' . $e->getFile());
+                        Console::error('[Error] Line: ' . $e->getLine());
+                        Console::error('[Error] Trace: ' . $e->getTraceAsString());
+
+                        throw $e;
+                    }
+                }
+
+                foreach ($databases as $database) {
                     $databaseId = "database_{$database->getInternalId()}";
 
-                    foreach ($dbForProject->find($databaseId) as $collection) {
+                    $collections = [];
+                    try {
+                        $collections = $dbForProject->find($databaseId);
+                    } catch (\Exception $e) {
+                        if (!$e instanceof NotFound) {
+                            Console::error('[Error] Type: ' . get_class($e));
+                            Console::error('[Error] Message: ' . $e->getMessage());
+                            Console::error('[Error] File: ' . $e->getFile());
+                            Console::error('[Error] Line: ' . $e->getLine());
+                            Console::error('[Error] Trace: ' . $e->getTraceAsString());
+
+                            throw $e;
+                        }
+                    }
+
+                    foreach ($collections as $collection) {
                         $collectionId = "{$databaseId}_collection_{$collection->getInternalId()}";
-                        $value += $dbForProject->getSizeOfCollection($collectionId);
+
+                        try {
+                            $value = $dbForProject->getSizeOfCollection($collectionId);
+                        } catch (\Exception $e) {
+                            if (!$e instanceof NotFound) {
+                                throw $e;
+                            }
+                        }
                     }
                 }
 
@@ -197,7 +292,7 @@ class UsageDump extends Action
                     ? $dbForProject->getTenant()
                     : $dbForProject->getNamespace();
 
-                Console::info('['.DateTime::now().'] Project: '. $project . ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
+                //Console::info('['.DateTime::now().'] Project: '. $project . ' Value: '.$value. ' PreviousValue: '.$previousValue. ' Diff: '.$diff);
 
                 if ($diff <= 0) {
                     break;
@@ -207,28 +302,36 @@ class UsageDump extends Action
                     METRIC_DATABASES_STORAGE
                 ];
 
+                \var_dump('[PROCESSING PROJECT KEYS] ' . \json_encode($keys));
+
                 foreach ($keys as $metric) {
-                    $this->addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
+                    static::addStatsDocument($projectDocuments, $id, $period, $time, $metric, $diff);
                 }
 
                 break;
         }
     }
 
-    private function addStatsDocument(
+    private static function addStatsDocument(
         array &$projectDocuments,
         string $id,
         string $period,
         ?string $time,
         string $key,
-        int $diff,
+        int $diff
     ): void {
-        $unique = "{$id}.{$period}.{$time}.{$key}";
+        $unique = static::getUniqueKey($key, $period, $time);
 
         if (isset($projectDocuments[$unique])) {
-            $projectDocuments[$key]['value'] += $diff;
+            Console::log("[DUPLICATE DETECTED] Metric: {$unique} (Incrementing by {$diff})");
+            Console::log("Previous Value: " . $projectDocuments[$unique]['value']);
+            \debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+
+            $projectDocuments[$unique]['value'] += $diff;
             return;
         }
+
+        Console::log("[ADDING] New metric: {$unique} (Value: {$diff})");
 
         $projectDocuments[$unique] = new Document([
             '$id' => $id,
