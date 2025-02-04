@@ -64,7 +64,7 @@ class Slack extends OAuth2
                     'code' => $code,
                     'redirect_uri' => $this->callback
                 ])
-            ), true)['authed_user'];
+            ), true)['authed_user'] ?? [];
         }
 
         return $this->tokens;
@@ -85,7 +85,7 @@ class Slack extends OAuth2
                 'refresh_token' => $refreshToken,
                 'grant_type' => 'refresh_token'
             ])
-        ), true)['authed_user'];
+        ), true)['authed_user'] ?? [];
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
