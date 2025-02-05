@@ -32,7 +32,7 @@ class StatsUsageDump extends Action
         METRIC_FUNCTIONS => true,
         METRIC_TEAMS => true,
         METRIC_MESSAGES => true,
-        METRIC_USERS_ACTIVE => true,
+        METRIC_MAU => true,
         METRIC_WEBHOOKS => true,
         METRIC_PLATFORMS => true,
         METRIC_PROVIDERS => true,

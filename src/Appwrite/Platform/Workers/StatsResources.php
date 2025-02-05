@@ -123,7 +123,7 @@ class StatsResources extends Action
                 METRIC_FUNCTIONS => $functions,
                 METRIC_TEAMS => $teams,
                 METRIC_MESSAGES => $messages,
-                METRIC_USERS_ACTIVE => $usersActive,
+                METRIC_MAU => $usersActive,
                 METRIC_WEBHOOKS => $webhooks,
                 METRIC_PLATFORMS => $platforms,
                 METRIC_PROVIDERS => $providers,
