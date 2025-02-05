@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Services;
+namespace Appwrite\Platform\Modules\Storage\Services;
 
 use Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files\Create as CreateFileToken;
 use Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files\XList as ListFileTokens;
