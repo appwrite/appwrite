@@ -107,8 +107,16 @@ class StatsResources extends Action
             $users = $dbForProject->count('users');
 
             $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
-            $usersActive = $dbForProject->count('users', [
+            $usersMAU = $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last30Days)
+            ]);
+            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
+            $usersDAU = $dbForProject->count('users', [
+                Query::greaterThanEqual('accessedAt', $last24Hours)
+            ]);
+            $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
+            $usersWAU = $dbForProject->count('users', [
+                Query::greaterThanEqual('accessedAt', $last7Days)
             ]);
             $teams = $dbForProject->count('teams');
             $functions = $dbForProject->count('functions');
@@ -123,7 +131,9 @@ class StatsResources extends Action
                 METRIC_FUNCTIONS => $functions,
                 METRIC_TEAMS => $teams,
                 METRIC_MESSAGES => $messages,
-                METRIC_MAU => $usersActive,
+                METRIC_MAU => $usersMAU,
+                METRIC_DAU => $usersDAU,
+                METRIC_WAU => $usersWAU,
                 METRIC_WEBHOOKS => $webhooks,
                 METRIC_PLATFORMS => $platforms,
                 METRIC_PROVIDERS => $providers,
