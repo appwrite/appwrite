@@ -752,7 +752,6 @@ trait StorageBase
         return $data;
     }
 
-
     /**
      * @depends testCreateBucketFileZstdCompression
      */
