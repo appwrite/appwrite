@@ -10,35 +10,34 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
 
-class UpdateDevKey extends Action
+class Get extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'updateDevKey';
+        return 'getDevKey';
     }
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
-            ->desc('Update dev key')
+            ->desc('Get dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.write')
+            ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
-                name: 'updateDevKey',
-                description: '/docs/references/projects/update-dev-key.md',
+                name: 'getDevKey',
+                description: '/docs/references/projects/get-dev-key.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
+                        code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_DEV_KEY
                     )
                 ],
@@ -46,13 +45,12 @@ class UpdateDevKey extends Action
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
-            ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-            ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForPlatform) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForPlatform));
+            ->callback(fn ($projectId, $keyId, $response, $dbForPlatform) => $this->action($projectId, $keyId, $response, $dbForPlatform));
     }
-    public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
+
+    public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)
     {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -69,14 +67,6 @@ class UpdateDevKey extends Action
         if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
-
-        $key
-            ->setAttribute('name', $name)
-            ->setAttribute('expire', $expire);
-
-        $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
-
-        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_DEV_KEY);
     }

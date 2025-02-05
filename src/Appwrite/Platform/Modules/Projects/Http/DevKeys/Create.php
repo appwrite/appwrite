@@ -19,7 +19,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
-class CreateDevKey extends Action
+class Create extends Action
 {
     use HTTP;
     public static function getName()

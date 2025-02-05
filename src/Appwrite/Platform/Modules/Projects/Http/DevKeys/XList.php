@@ -9,48 +9,48 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class GetDevKey extends Action
+class XList extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'getDevKey';
+        return 'listDevKeys';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
-            ->desc('Get dev key')
+            ->setHttpPath('/v1/projects/:projectId/dev-keys')
+            ->desc('List dev keys')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
-                name: 'getDevKey',
-                description: '/docs/references/projects/get-dev-key.md',
+                name: 'listDevKeys',
+                description: '/docs/references/projects/list-dev-keys.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_DEV_KEY
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DEV_KEY_LIST
                     )
                 ],
                 contentType: ContentType::JSON
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $keyId, $response, $dbForPlatform) => $this->action($projectId, $keyId, $response, $dbForPlatform));
+            ->callback(fn ($projectId, $response, $dbForPlatform) => $this->action($projectId, $response, $dbForPlatform));
     }
 
-    public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, Response $response, Database $dbForPlatform)
     {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -59,15 +59,14 @@ class GetDevKey extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForPlatform->findOne('devKeys', [
-            Query::equal('$id', [$keyId]),
+        $keys = $dbForPlatform->find('devKeys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
-            throw new Exception(Exception::KEY_NOT_FOUND);
-        }
-
-        $response->dynamic($key, Response::MODEL_DEV_KEY);
+        $response->dynamic(new Document([
+            'keys' => $keys,
+            'total' => count($keys),
+        ]), Response::MODEL_DEV_KEY_LIST);
     }
 }
