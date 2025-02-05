@@ -1687,7 +1687,7 @@
 - Added new environment variables to enable error logging:
   - The `_APP_LOGGING_PROVIDER` variable allows you to enable the logger set the value to one of `sentry`, `raygun`, `appsignal`.
   - The `_APP_LOGGING_CONFIG` variable configures authentication to 3rd party error logging providers. If using Sentry, this should be 'SENTRY_API_KEY;SENTRY_APP_ID'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.
-- Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
+- Added new environment variable `_APP_STATS_AGGREGATION_INTERVAL` to configure the usage worker interval
 - Added negative rotation values to file preview endpoint
 - Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`

@@ -1687,7 +1687,7 @@ class FunctionsCustomServerTest extends Scope
         });
 
         // Await Aggregation
-        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+        sleep(System::getEnv('_APP_STATS_AGGREGATION_INTERVAL', 30));
 
         $this->assertEventually(function () use ($functionId) {
             $response = $this->getFunctionUsage($functionId, [
