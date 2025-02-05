@@ -370,6 +370,8 @@ class Certificates extends Action
             /** Trigger Webhook */
             $ruleModel = new Rule();
             $queueForEvents
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].update')
                 ->setParam('ruleId', $rule->getId())
