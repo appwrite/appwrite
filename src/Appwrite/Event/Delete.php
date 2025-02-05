@@ -3,7 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Delete extends Event
 {
@@ -15,9 +15,9 @@ class Delete extends Event
     protected ?string $hourlyUsageRetentionDatetime = null;
 
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::DELETE_QUEUE_NAME)

@@ -77,7 +77,6 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -902,8 +901,14 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'queue' => [
-            'type' => 'queue',
+        'publisher' => [
+            'type' => 'publisher',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'consumer' => [
+            'type' => 'consumer',
             'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
@@ -1011,31 +1016,26 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
-                        break;
+                        return $adapter;
                     case 'pubsub':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new PubSub($resource()),
                             default => null
                         };
-                        break;
-                    case 'queue':
-                        $adapter = match ($dsn->getScheme()) {
-                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                    case 'publisher':
+                    case 'consumer':
+                        return match ($dsn->getScheme()) {
+                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
                             default => null
                         };
-                        break;
                     case 'cache':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
-                        break;
-
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-
-                return $adapter;
             });
 
             $group->add($pool);
@@ -1158,48 +1158,54 @@ App::setResource('localeCodes', function () {
 });
 
 // Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+App::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
-App::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
-App::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
-App::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-App::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
-App::setResource('queueForWebhooks', function (Connection $queue) {
-    return new Webhook($queue);
-}, ['queue']);
+App::setResource('consumer', function (Group $pools) {
+    return $pools->get('consumer')->pop()->getResource();
+}, ['pools']);
+App::setResource('queueForMessaging', function (Queue\Publisher $publisher) {
+    return new Messaging($publisher);
+}, ['publisher']);
+App::setResource('queueForMails', function (Queue\Publisher $publisher) {
+    return new Mail($publisher);
+}, ['publisher']);
+App::setResource('queueForBuilds', function (Queue\Publisher $publisher) {
+    return new Build($publisher);
+}, ['publisher']);
+App::setResource('queueForDatabase', function (Queue\Publisher $publisher) {
+    return new EventDatabase($publisher);
+}, ['publisher']);
+App::setResource('queueForDeletes', function (Queue\Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
+App::setResource('queueForEvents', function (Queue\Publisher $publisher) {
+    return new Event($publisher);
+}, ['publisher']);
+App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
-App::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
-App::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-App::setResource('queueForStatsUsage', function (Connection $queue) {
-    return new StatsUsage($queue);
-}, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-App::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
+App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
+App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
+    return new Audit($publisher);
+}, ['publisher']);
+App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
+    return new Usage($publisher);
+}, ['publisher']);
+App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
+App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
+    return new Migration($publisher);
+}, ['publisher']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),

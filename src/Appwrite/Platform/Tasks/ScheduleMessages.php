@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
+use Utopia\Queue\Publisher;
 
 class ScheduleMessages extends ScheduleBase
 {
@@ -26,7 +26,7 @@ class ScheduleMessages extends ScheduleBase
         return 'messages';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Publisher $publisher, Database $dbForPlatform, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -40,13 +40,9 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForPlatform) {
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
-                $queueForMessaging = new Messaging($connection);
-
+            \go(function () use ($schedule, $publisher, $dbForPlatform) {
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
-
+                $queueForMessaging = new Messaging($publisher);
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($schedule['resourceId'])
@@ -57,8 +53,6 @@ class ScheduleMessages extends ScheduleBase
                     'schedules',
                     $schedule['$id'],
                 );
-
-                $queue->reclaim();
 
                 unset($this->schedules[$schedule['$internalId']]);
             });

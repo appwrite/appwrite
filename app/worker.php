@@ -35,8 +35,8 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
+use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -261,68 +261,69 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
-/** remove */
-Server::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-    return new StatsUsage($queue);
-}, ['queue']);
-
-Server::setResource('queueForUsageDump', function (Connection $queue) {
-    return new UsageDump($queue);
-    return new StatsUsageDump($queue);
-}, ['queue']);
-/** /remove */
-Server::setResource('queueForStatsUsage', function (Connection $queue) {
-    return new StatsUsage($queue);
-}, ['queue']);
-
-Server::setResource('queueForStatsUsageDump', function (Connection $queue) {
-    return new StatsUsageDump($queue);
-}, ['queue']);
-
-Server::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+Server::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
 
-Server::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
+Server::setResource('consumer', function (Group $pools) {
+    return $pools->get('consumer')->pop()->getResource();
+}, ['pools']);
 
-Server::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
+Server::setResource('queueForUsage', function (Publisher $publisher) {
+    return new Usage($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
+Server::setResource('queueForUsageDump', function (Publisher $publisher) {
+    return new UsageDump($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
+Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
+Server::setResource('queueForStatsUsageDump', function (Publisher $publisher) {
+    return new StatsUsageDump($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
+Server::setResource('queueForDatabase', function (Publisher $publisher) {
+    return new EventDatabase($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
+Server::setResource('queueForMessaging', function (Publisher $publisher) {
+    return new Messaging($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
+Server::setResource('queueForMails', function (Publisher $publisher) {
+    return new Mail($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
+Server::setResource('queueForBuilds', function (Publisher $publisher) {
+    return new Build($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
+Server::setResource('queueForDeletes', function (Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForEvents', function (Publisher $publisher) {
+    return new Event($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForAudits', function (Publisher $publisher) {
+    return new Audit($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForFunctions', function (Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForCertificates', function (Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForMigrations', function (Publisher $publisher) {
+    return new Migration($publisher);
+}, ['publisher']);
 
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
@@ -434,7 +435,7 @@ try {
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => $pools->get('queue')->pop()->getResource(),
+        'connection' => $pools->get('consumer')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);

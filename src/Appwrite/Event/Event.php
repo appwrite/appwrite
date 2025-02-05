@@ -4,8 +4,8 @@ namespace Appwrite\Event;
 
 use InvalidArgumentException;
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 
 class Event
 {
@@ -69,10 +69,10 @@ class Event
     protected bool $paused = false;
 
     /**
-     * @param Connection $connection
+     * @param Publisher $publisher
      * @return void
      */
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
     }
 
@@ -356,12 +356,11 @@ class Event
         }
 
         /** The getter is required since events like Databases need to override the queue name depending on the project */
-        $client = new Client($this->getQueue(), $this->connection);
+        $queue = new Queue($this->getQueue());
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
-
-        return $client->enqueue($payload);
+        return $this->publisher->enqueue($queue, $payload);
     }
 
     /**
