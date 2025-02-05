@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -30,12 +33,18 @@ class GetSitesUsage extends Base
             ->desc('Get sites usage')
             ->groups(['api', 'sites', 'usage'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'getUsage')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_USAGE_SITES)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'getUsage',
+                description: '/docs/references/sites/get-sites-usage.md',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_USAGE_SITES,
+                    )
+                ]
+            ))
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')

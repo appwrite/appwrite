@@ -6,6 +6,9 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Sites\Validator\FrameworkSpecification;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -47,13 +50,18 @@ class UpdateSite extends Base
             ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'update')
-            ->label('sdk.description', '/docs/references/sites/update-site.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_SITE)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'update',
+                description: '/docs/references/sites/update-site.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_FUNCTION,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')

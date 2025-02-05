@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -27,13 +30,18 @@ class ListFrameworks extends Base
             ->desc('List frameworks')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'listFrameworks')
-            ->label('sdk.description', '/docs/references/sites/list-frameworks.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_FRAMEWORK_LIST)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'listFrameworks',
+                description: '/docs/references/sites/list-frameworks.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_FRAMEWORK_LIST,
+                    )
+                ]
+            ))
             ->inject('response')
             ->callback([$this, 'action']);
     }

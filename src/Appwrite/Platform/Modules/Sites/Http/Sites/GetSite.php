@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -28,13 +31,18 @@ class GetSite extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'get')
-            ->label('sdk.description', '/docs/references/sites/get-site.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_SITE)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'get',
+                description: '/docs/references/sites/get-site.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_SITE,
+                    )
+                ]
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->inject('response')
             ->inject('dbForProject')

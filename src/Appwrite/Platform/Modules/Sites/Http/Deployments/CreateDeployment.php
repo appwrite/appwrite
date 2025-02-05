@@ -5,6 +5,10 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -46,16 +50,21 @@ class CreateDeployment extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'createDeployment')
-            ->label('sdk.methodType', 'upload')
-            ->label('sdk.description', '/docs/references/sites/create-deployment.md') //TODO: Create new docs
-            ->label('sdk.packaging', true)
-            ->label('sdk.request.type', 'multipart/form-data')
-            ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'createDeployment',
+                description: '/docs/references/sites/create-deployment.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_ACCEPTED,
+                        model: Response::MODEL_DEPLOYMENT,
+                    )
+                ],
+                requestType: 'multipart/form-data',
+                type: MethodType::UPLOAD,
+                packaging: true,
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('installCommand', null, new Text(8192, 0), 'Install Commands.', true)
             ->param('buildCommand', null, new Text(8192, 0), 'Build Commands.', true)

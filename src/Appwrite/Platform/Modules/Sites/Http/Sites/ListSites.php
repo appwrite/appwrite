@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Sites;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -32,13 +35,18 @@ class ListSites extends Base
             ->desc('List sites')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'list')
-            ->label('sdk.description', '/docs/references/sites/list-sites.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_SITE_LIST)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'list',
+                description: '/docs/references/sites/list-sites.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_SITE_LIST,
+                    )
+                ]
+            ))
             ->param('queries', [], new Sites(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Sites::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')

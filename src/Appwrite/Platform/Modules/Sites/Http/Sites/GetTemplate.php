@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -28,13 +31,18 @@ class GetTemplate extends Base
             ->desc('Get site template')
             ->groups(['api'])
             ->label('scope', 'public')
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'getTemplate')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.description', '/docs/references/sites/get-template.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_TEMPLATE_SITE)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'getTemplate',
+                description: '/docs/references/sites/get-template.md',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_TEMPLATE_SITE,
+                    )
+                ]
+            ))
             ->param('templateId', '', new Text(128), 'Template ID.')
             ->inject('response')
             ->callback([$this, 'action']);

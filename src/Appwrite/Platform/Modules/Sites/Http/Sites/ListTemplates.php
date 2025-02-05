@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -29,13 +32,18 @@ class ListTemplates extends Base
             ->desc('List templates')
             ->groups(['api'])
             ->label('scope', 'public')
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'listTemplates')
-            ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-            ->label('sdk.description', '/docs/references/sites/list-templates.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_TEMPLATE_SITE_LIST)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'listTemplates',
+                description: '/docs/references/sites/list-templates.md',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_TEMPLATE_SITE_LIST,
+                    )
+                ]
+            ))
             ->param('frameworks', [], new ArrayList(new WhiteList(array_keys(Config::getParam('frameworks')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of frameworks allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' frameworks are allowed.', true)
             ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools', 'starter', 'databases', 'ai', 'messaging', 'utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
             ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)

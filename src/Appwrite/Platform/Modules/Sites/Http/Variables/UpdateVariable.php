@@ -35,9 +35,9 @@ class UpdateVariable extends Base
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'updateVariable',
-                description: '/docs/references/functions/update-variable.md',
+                description: '/docs/references/sites/update-variable.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

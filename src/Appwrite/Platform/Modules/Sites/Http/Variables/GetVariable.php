@@ -33,9 +33,9 @@ class GetVariable extends Base
             ->label(
                 'sdk',
                 new Method(
-                    namespace: 'functions',
+                    namespace: 'sites',
                     name: 'getVariable',
-                    description: '/docs/references/functions/get-variable.md',
+                    description: '/docs/references/sites/get-variable.md',
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

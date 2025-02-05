@@ -34,9 +34,9 @@ class DeleteVariable extends Base
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'deleteVariable',
-                description: '/docs/references/functions/delete-variable.md',
+                description: '/docs/references/sites/delete-variable.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

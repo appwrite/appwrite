@@ -6,6 +6,10 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -32,12 +36,19 @@ class DeleteSite extends Base
             ->label('event', 'sites.[siteId].delete')
             ->label('audits.event', 'site.delete')
             ->label('audits.resource', 'site/{request.siteId}')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'delete')
-            ->label('sdk.description', '/docs/references/sites/delete-site.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-            ->label('sdk.response.model', Response::MODEL_NONE)
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'delete',
+                description: '/docs/references/sites/delete-site.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->inject('response')
             ->inject('dbForProject')
