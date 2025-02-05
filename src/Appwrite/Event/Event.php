@@ -33,7 +33,7 @@ class Event
     /** /remove */
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
-    public const STATS_RESOURCES_CLASS_NAME = 'StatsResources';
+    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
 
     public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
     public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
