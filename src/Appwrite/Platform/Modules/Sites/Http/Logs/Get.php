@@ -33,7 +33,9 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getLog',
-                description: '/docs/references/sites/get-log.md',
+                description: <<<EOT
+                Get a site request log by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

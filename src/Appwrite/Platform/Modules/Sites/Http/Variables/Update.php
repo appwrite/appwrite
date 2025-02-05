@@ -37,7 +37,9 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'updateVariable',
-                description: '/docs/references/sites/update-variable.md',
+                description: <<<EOT
+                Update variable by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

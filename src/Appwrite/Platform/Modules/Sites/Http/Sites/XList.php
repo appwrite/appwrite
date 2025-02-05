@@ -38,7 +38,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'list',
-                description: '/docs/references/sites/list.md',
+                description: <<<EOT
+                Get a list of all the project's sites. You can use the query params to filter your results.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

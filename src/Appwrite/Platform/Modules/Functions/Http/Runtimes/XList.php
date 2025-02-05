@@ -34,7 +34,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'functions',
                 name: 'listRuntimes',
-                description: '/docs/references/functions/list-runtimes.md',
+                description: <<<EOT
+                Get a list of all runtimes that are currently active on your instance.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

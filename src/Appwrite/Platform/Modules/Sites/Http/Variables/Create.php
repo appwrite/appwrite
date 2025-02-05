@@ -42,7 +42,9 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'createVariable',
-                description: '/docs/references/sites/create-variable.md',
+                description: <<<EOT
+                Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -34,7 +34,9 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'get',
-                description: '/docs/references/sites/get.md',
+                description: <<<EOT
+                Get a site by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -39,7 +39,9 @@ class XList extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listDeployments',
-                description: '/docs/references/sites/list-deployments.md',
+                description: <<<EOT
+                Get a list of all the site's code deployments. You can use the query params to filter your results.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -38,7 +38,9 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getUsage',
-                description: '/docs/references/sites/get-usage.md',
+                description: <<<EOT
+                Get usage metrics and statistics for a for a specific site. View statistics including total deployments, builds, executions, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

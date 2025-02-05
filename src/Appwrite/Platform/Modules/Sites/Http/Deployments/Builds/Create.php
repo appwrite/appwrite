@@ -39,7 +39,9 @@ class Create extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'createDeploymentBuild',
-                description: '/docs/references/sites/create-deployment-build.md',
+                description: <<<EOT
+                Create a new build for an existing site deployment. This endpoint allows you to rebuild a deployment with the updated site configuration, including its commands and output directory if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

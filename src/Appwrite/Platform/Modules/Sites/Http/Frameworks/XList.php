@@ -33,7 +33,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listFrameworks',
-                description: '/docs/references/sites/list-frameworks.md',
+                description: <<<EOT
+                Get a list of all frameworks that are currently available on the server instance.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

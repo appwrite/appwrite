@@ -35,7 +35,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listTemplates',
-                description: '/docs/references/sites/list-templates.md',
+                description: <<<EOT
+                List available site templates. You can use template details in [createSite](/docs/references/cloud/server-nodejs/sites#create) method.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

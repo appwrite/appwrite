@@ -53,9 +53,11 @@ class Create extends Base
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'site',
+                namespace: 'sites',
                 name: 'create',
-                description: '/docs/references/sites/create.md',
+                description: <<<EOT
+                Create a new site.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

@@ -37,7 +37,9 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'updateDeployment',
-                description: '/docs/references/sites/update-deployment.md',
+                description: <<<EOT
+                Update the site active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your site.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

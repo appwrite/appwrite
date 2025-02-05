@@ -39,7 +39,9 @@ class Delete extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'delete',
-                description: '/docs/references/sites/delete.md',
+                description: <<<EOT
+                Delete a site by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

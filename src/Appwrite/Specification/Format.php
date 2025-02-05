@@ -201,7 +201,7 @@ abstract class Format
             case 'sites':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getSiteUsage':
+                    case 'listUsage':
                         switch ($param) {
                             case 'range':
                                 return 'SiteUsageRange';

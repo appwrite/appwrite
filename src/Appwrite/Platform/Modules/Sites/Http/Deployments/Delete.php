@@ -40,7 +40,9 @@ class Delete extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'deleteDeployment',
-                description: '/docs/references/sites/delete-deployment.md',
+                description: <<<EOT
+                Delete a site deployment by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -61,7 +63,7 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
