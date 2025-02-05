@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d3b3f37ca4d073dfacc2c23a473b942",
+    "content-hash": "1cbdaa30797ba4f524dbcb830f5e14fa",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3476,22 +3476,22 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.58.1",
+            "version": "0.58.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "bc5b12752206a202fca1680cd9ccb4e7e86e3484"
+                "reference": "ff3fd22e4fe757cc2a78f17169f6dcc45c96d0fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/bc5b12752206a202fca1680cd9ccb4e7e86e3484",
-                "reference": "bc5b12752206a202fca1680cd9ccb4e7e86e3484",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ff3fd22e4fe757cc2a78f17169f6dcc45c96d0fe",
+                "reference": "ff3fd22e4fe757cc2a78f17169f6dcc45c96d0fe",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
-                "php": ">=8.3",
+                "php": ">=8.1",
                 "utopia-php/cache": "0.11.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.3.*"
@@ -3526,9 +3526,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.58.1"
+                "source": "https://github.com/utopia-php/database/tree/0.58.4"
             },
-            "time": "2025-02-04T05:46:41+00:00"
+            "time": "2025-02-05T02:51:02+00:00"
         },
         {
             "name": "utopia-php/domains",
