@@ -62,9 +62,8 @@ class TokensCustomServerTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), []);
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $res['headers']['status-code']);
         $this->assertEquals('files', $res['body']['resourceType']);

@@ -32,8 +32,8 @@ class CreateFileToken extends Action
         ->desc('Create file token')
         ->groups(['api', 'token'])
         ->label('scope', 'tokens.write')
-        ->label('audits.event', 'token.create')
         ->label('event', 'tokens.[tokenId].create')
+        ->label('audits.event', 'token.create')
         ->label('audits.resource', 'token/{response.$id}')
         ->label('usage.metric', 'tokens.{scope}.requests.create')
         ->label('usage.params', ['resourceId:{request.resourceId}', 'resourceType:{request.resourceType}'])
@@ -84,7 +84,7 @@ class CreateFileToken extends Action
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
-            'resourceType' => 'file',
+            'resourceType' => 'files',
             'expire' => $expire,
             '$permissions' => $permissions
         ]));
