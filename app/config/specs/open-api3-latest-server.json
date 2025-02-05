@@ -16155,9 +16155,9 @@
             },
             "post": {
                 "summary": "Create site",
-                "operationId": "siteCreate",
+                "operationId": "sitesCreate",
                 "tags": [
-                    "site"
+                    "sites"
                 ],
                 "description": "",
                 "responses": {
@@ -16178,7 +16178,7 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "site\/create.md",
+                    "demo": "sites\/create.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new site.",
                     "rate-limit": 0,
                     "rate-time": 3600,
