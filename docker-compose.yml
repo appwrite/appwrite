@@ -845,6 +845,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_STATS_USAGE_DUAL_WRITING_DBS
   
   # remove
   appwrite-worker-usage:
