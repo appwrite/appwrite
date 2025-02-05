@@ -2,13 +2,13 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class StatsResources extends Event
 {
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::STATS_RESOURCES_QUEUE_NAME)
@@ -25,16 +25,5 @@ class StatsResources extends Event
         return [
             'project' => $this->project
         ];
-    }
-
-    /**
-     * Sends metrics to the usage worker.
-     *
-     * @return string|bool
-     */
-    public function trigger(): string|bool
-    {
-        parent::trigger();
-        return true;
     }
 }

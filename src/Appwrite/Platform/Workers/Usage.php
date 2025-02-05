@@ -41,7 +41,7 @@ class Usage extends Action
             $this->action($message, $project, $getProjectDB, $queueForUsageDump);
         });
 
-        $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
+        $this->aggregationInterval = (int) System::getEnv('_APP_STATS_AGGREGATION_INTERVAL', '20');
         $this->lastTriggeredTime = time();
     }
 

@@ -2,15 +2,15 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class StatsUsageDump extends Event
 {
     protected array $stats;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::STATS_USAGE_DUMP_QUEUE_NAME)
