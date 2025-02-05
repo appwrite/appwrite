@@ -1,10 +1,14 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,7 +20,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
 
-class CreateFileToken extends Action
+class Create extends Action
 {
     use HTTP;
 
@@ -40,13 +44,19 @@ class CreateFileToken extends Action
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
         ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-        ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-        ->label('sdk.namespace', 'tokens')
-        ->label('sdk.method', 'createFileToken')
-        ->label('sdk.description', '/docs/references/tokens/create_file_token.md')
-        ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-        ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-        ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+        ->label('sdk', new Method(
+            namespace: 'tokens',
+            name: 'createFileToken',
+            description: '',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_RESOURCE_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON
+        ))
         ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
         ->param('fileId', '', new UID(), 'File unique ID.')
         ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)

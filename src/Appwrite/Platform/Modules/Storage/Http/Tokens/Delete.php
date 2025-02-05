@@ -1,16 +1,20 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class DeleteToken extends Action
+class Delete extends Action
 {
     use HTTP;
 
@@ -34,12 +38,19 @@ class DeleteToken extends Action
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
         ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-        ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-        ->label('sdk.namespace', 'tokens')
-        ->label('sdk.method', 'delete')
-        ->label('sdk.description', '/docs/references/tokens/delete.md')
-        ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-        ->label('sdk.response.model', Response::MODEL_NONE)
+        ->label('sdk', new Method(
+            namespace: 'tokens',
+            name: 'delete',
+            description: '',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            contentType: ContentType::NONE
+        ))
         ->param('tokenId', '', new UID(), 'Token ID.')
         ->inject('response')
         ->inject('dbForProject')

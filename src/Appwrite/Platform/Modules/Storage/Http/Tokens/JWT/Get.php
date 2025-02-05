@@ -1,9 +1,13 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens\JWT;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -12,7 +16,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 
-class GetTokenJWT extends Action
+class Get extends Action
 {
     use HTTP;
 
@@ -30,13 +34,19 @@ class GetTokenJWT extends Action
         ->label('scope', 'tokens.read')
         ->label('usage.metric', 'tokens.{scope}.requests.read')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
-        ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-        ->label('sdk.namespace', 'tokens')
-        ->label('sdk.method', 'getJWT')
-        ->label('sdk.description', '/docs/references/storage/get-file-token-jwt.md')
-        ->label('sdk.response.code', Response::STATUS_CODE_OK)
-        ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-        ->label('sdk.response.model', Response::MODEL_JWT)
+        ->label('sdk', new Method(
+            namespace: 'tokens',
+            name: 'getJWT',
+            description: '',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_JWT,
+                )
+            ],
+            contentType: ContentType::JSON
+        ))
         ->param('tokenId', '', new UID(), 'File token ID.')
         ->inject('response')
         ->inject('dbForProject')

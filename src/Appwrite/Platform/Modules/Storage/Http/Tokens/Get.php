@@ -1,15 +1,19 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class GetToken extends Action
+class Get extends Action
 {
     use HTTP;
 
@@ -27,13 +31,19 @@ class GetToken extends Action
         ->label('scope', 'tokens.read')
         ->label('usage.metric', 'tokens.{scope}.requests.read')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
-        ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-        ->label('sdk.namespace', 'tokens')
-        ->label('sdk.method', 'get')
-        ->label('sdk.description', '/docs/references/tokens/get.md')
-        ->label('sdk.response.code', Response::STATUS_CODE_OK)
-        ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-        ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+        ->label('sdk', new Method(
+            namespace: 'tokens',
+            name: 'get',
+            description: '',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_RESOURCE_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON
+        ))
         ->param('tokenId', '', new UID(), 'Token ID.')
         ->inject('response')
         ->inject('dbForProject')

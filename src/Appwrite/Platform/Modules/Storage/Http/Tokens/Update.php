@@ -1,10 +1,14 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
@@ -17,7 +21,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
 
-class UpdateToken extends Action
+class Update extends Action
 {
     use HTTP;
 
@@ -41,13 +45,19 @@ class UpdateToken extends Action
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
         ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-        ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-        ->label('sdk.namespace', 'tokens')
-        ->label('sdk.method', 'update')
-        ->label('sdk.description', '/docs/references/tokens/update.md')
-        ->label('sdk.response.code', Response::STATUS_CODE_OK)
-        ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-        ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+        ->label('sdk', new Method(
+            namespace: 'tokens',
+            name: 'update',
+            description: '',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_RESOURCE_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON
+        ))
         ->param('tokenId', '', new UID(), 'Token unique ID.')
         ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
         ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)

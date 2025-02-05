@@ -1,8 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
+namespace Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files;
 
 use Appwrite\Extend\Exception as ExtendException;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 use Appwrite\Utopia\Response;
 use Exception;
@@ -12,7 +16,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
-class ListFileTokens extends Action
+class XList extends Action
 {
     use HTTP;
 
@@ -30,13 +34,19 @@ class ListFileTokens extends Action
             ->groups(['api', 'tokens'])
             ->label('scope', 'tokens.read')
             ->label('usage.metric', 'tokens.requests.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-            ->label('sdk.namespace', 'tokens')
-            ->label('sdk.method', 'list')
-            ->label('sdk.description', '/docs/references/storage/list.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN_LIST)
+            ->label('sdk', new Method(
+                namespace: 'tokens',
+                name: 'list',
+                description: '',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_RESOURCE_TOKEN_LIST,
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File unique ID.')
             ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
