@@ -35,7 +35,9 @@ class Get extends Base
                 new Method(
                     namespace: 'sites',
                     name: 'getVariable',
-                    description: '/docs/references/sites/get-variable.md',
+                    description: <<<EOT
+                    Get a variable by its unique ID.
+                    EOT,
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

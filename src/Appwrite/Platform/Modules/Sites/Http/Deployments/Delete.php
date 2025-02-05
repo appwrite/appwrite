@@ -40,7 +40,9 @@ class Delete extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'deleteDeployment',
-                description: '/docs/references/sites/delete-deployment.md',
+                description: <<<EOT
+                Delete a site deployment by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

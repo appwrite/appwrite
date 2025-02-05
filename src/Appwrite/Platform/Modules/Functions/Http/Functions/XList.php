@@ -39,7 +39,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'functions',
                 name: 'list',
-                description: '/docs/references/functions/list-functions.md',
+                description: <<<EOT
+                Get a list of all the project's functions. You can use the query params to filter your results.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

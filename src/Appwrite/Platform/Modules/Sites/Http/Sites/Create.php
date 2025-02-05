@@ -55,7 +55,9 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'site',
                 name: 'create',
-                description: '/docs/references/sites/create.md',
+                description: <<<EOT
+                Create a new site.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

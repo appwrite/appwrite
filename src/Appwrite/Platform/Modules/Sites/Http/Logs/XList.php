@@ -41,7 +41,9 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listLogs',
-                description: '/docs/references/sites/get-log.md',
+                description: <<<EOT
+                Get a list of all site logs. You can use the query params to filter your results.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

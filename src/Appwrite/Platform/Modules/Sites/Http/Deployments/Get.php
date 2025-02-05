@@ -35,7 +35,9 @@ class Get extends Action
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getDeployment',
-                description: '/docs/references/sites/get-deployment.md',
+                description: <<<EOT
+                Get a site deployment by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

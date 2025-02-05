@@ -62,7 +62,9 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'functions',
                 name: 'create',
-                description: '/docs/references/functions/create.md',
+                description: <<<EOT
+                Create a new function. You can pass a list of [permissions](https://appwrite.io/docs/permissions) to allow different project users or team with access to execute the function using the client API.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

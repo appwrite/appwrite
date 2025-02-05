@@ -1,1 +1,0 @@
-Create a new site environment variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.

@@ -36,7 +36,9 @@ class XList extends Base
                 new Method(
                     namespace: 'sites',
                     name: 'listVariables',
-                    description: '/docs/references/sites/list-variables.md',
+                    description: <<<EOT
+                    Get a list of all variables of a specific site.
+                    EOT,
                     auth: [AuthType::KEY],
                     responses: [
                         new SDKResponse(

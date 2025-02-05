@@ -53,7 +53,9 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'update',
-                description: '/docs/references/sites/update.md',
+                description: <<<EOT
+                Update site by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

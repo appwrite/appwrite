@@ -36,7 +36,9 @@ class Delete extends Base
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'deleteVariable',
-                description: '/docs/references/sites/delete-variable.md',
+                description: <<<EOT
+                Delete a variable by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

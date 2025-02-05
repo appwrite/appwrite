@@ -3,6 +3,11 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Download;
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -28,13 +33,22 @@ class Get extends Action
             ->desc('Download build')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
-            ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-            ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'getDeploymentBuildDownload')
-            ->label('sdk.description', '/docs/references/sites/get-deployment-build-download.md')
-            ->label('sdk.response.code', Response::STATUS_CODE_OK)
-            ->label('sdk.response.type', '*/*')
-            ->label('sdk.methodType', 'location')
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                name: 'getDeploymentBuildDownload',
+                description: <<<EOT
+                Get a site build content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
+                EOT,
+                auth: [AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_NONE
+                    )
+                ],
+                type: MethodType::LOCATION,
+                contentType: ContentType::ANY,
+            ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')

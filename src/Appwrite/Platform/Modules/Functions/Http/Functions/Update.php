@@ -61,7 +61,9 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'functions',
                 name: 'update',
-                description: '/docs/references/functions/update-function.md',
+                description: <<<EOT
+                Update function by its unique ID.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
