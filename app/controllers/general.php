@@ -85,6 +85,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
              '_APP_DOMAIN_FUNCTIONS_FALLBACK' => System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
              '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS' ,''),
              'appDomainFunctions' => $appDomainFunctions,
+             'host' => $host,
         ]);
 
         if ($host === $appDomainFunctions) {
