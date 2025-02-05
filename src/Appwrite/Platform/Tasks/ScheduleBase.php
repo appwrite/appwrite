@@ -11,7 +11,7 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
+use Utopia\Queue\Publisher;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -26,7 +26,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Publisher $publisher, Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -34,10 +34,10 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
+            ->inject('publisher')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
+            ->callback(fn (Publisher $publisher, Database $dbForPlatform, callable $getProjectDB) => $this->action($publisher, $dbForPlatform, $getProjectDB));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -56,7 +56,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    public function action(Publisher $publisher, Database $dbForPlatform, callable $getProjectDB): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -125,17 +125,15 @@ abstract class ScheduleBase extends Action
             $latestDocument = \end($results);
         }
 
-        $pools->reclaim();
-
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
+        run(function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $publisher, $getProjectDB) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
-            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools) {
+            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule) {
                 $time = DateTime::now();
                 $timerStart = \microtime(true);
 
@@ -184,17 +182,15 @@ abstract class ScheduleBase extends Action
                 $lastSyncUpdate = $time;
                 $timerEnd = \microtime(true);
 
-                $pools->reclaim();
-
                 Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
             });
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB)
+                fn () => $this->enqueueResources($publisher, $dbForPlatform, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForPlatform, $getProjectDB);
+            $this->enqueueResources($publisher, $dbForPlatform, $getProjectDB);
         });
     }
 }

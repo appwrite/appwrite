@@ -28,7 +28,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -429,7 +429,7 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -441,7 +441,7 @@ App::init()
     ->inject('timelimit')
     ->inject('mode')
     ->inject('devKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $timelimit, string $mode, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $timelimit, string $mode, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -546,9 +546,9 @@ App::init()
 
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
-        $queueForEventsClone = new Event($queue);
-        $queueForFunctions = new Func($queue);
-        $queueForWebhooks = new Webhook($queue);
+        $queueForEventsClone = new Event($publisher);
+        $queueForFunctions = new Func($publisher);
+        $queueForWebhooks = new Webhook($publisher);
         $queueForRealtime = new Realtime();
 
         $dbForProject

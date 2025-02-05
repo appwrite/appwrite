@@ -5,7 +5,7 @@ namespace Tests\Unit\Event;
 use Appwrite\Event\Event;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\Queue\Client;
+use Utopia\Queue\Publisher;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -13,13 +13,14 @@ class EventTest extends TestCase
 {
     protected ?Event $object = null;
     protected string $queue = '';
+    protected Publisher $publisher;
 
     public function setUp(): void
     {
-        global $register;
-        $connection = $register->get('pools')->get('queue')->pop()->getResource();
+        $this->publisher = new MockPublisher();
+
         $this->queue = 'v1-tests' . uniqid();
-        $this->object = new Event($connection);
+        $this->object = new Event($this->publisher);
         $this->object->setClass('TestsV1');
         $this->object->setQueue($this->queue);
     }
@@ -51,10 +52,7 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-        global $register;
-        $pools = $register->get('pools');
-        $client = new Client($this->object->getQueue(), $pools->get('queue')->pop()->getResource());
-        $this->assertEquals($client->getQueueSize(), 1);
+        $this->assertCount(1, $this->publisher->getEvents($this->object->getQueue()));
     }
 
     public function testReset(): void
