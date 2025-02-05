@@ -72,11 +72,26 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     if ($route->isEmpty()) {
-        if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+
+        $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+        $appDomainFunctions =  System::getEnv('_APP_DOMAIN_FUNCTIONS' ,'');
+
+        if (!empty($appDomainFunctionsFallback) && \str_ends_with($host, $appDomainFunctionsFallback)) {
+          $appDomainFunctions =  $appDomainFunctionsFallback;
+        }
+
+        var_dump([
+             'location' => 'router',
+             '_APP_DOMAIN_FUNCTIONS_FALLBACK' => System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+             '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS' ,''),
+             'appDomainFunctions' => $appDomainFunctions,
+        ]);
+
+        if ($host === $appDomainFunctions) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
 
-        if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+        if (\str_ends_with($host, $appDomainFunctions)) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
         }
 
