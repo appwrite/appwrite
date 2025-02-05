@@ -83,7 +83,7 @@ class TokensCustomServerTest extends Scope
         $tokenId = $data['tokenId'];
 
         $expiry = DateTime::now();
-        $res = $this->client->call(Client::METHOD_PUT, '/tokens/' . $tokenId, array_merge([
+        $res = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
