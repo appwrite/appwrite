@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;

@@ -87,7 +87,7 @@ class Method
             return;
         }
 
-        if(\str_ends_with($desc, '.md')) {
+        if (\str_ends_with($desc, '.md')) {
             $descPath = $this->getDescriptionFilePath();
 
             if (empty($descPath)) {

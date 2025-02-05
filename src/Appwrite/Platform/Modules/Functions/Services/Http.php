@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Modules\Functions\Services;
 
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
-use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
+use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
 use Appwrite\Platform\Modules\Functions\Http\Runtimes\XList as ListRuntimes;
 use Utopia\Platform\Service;
 
