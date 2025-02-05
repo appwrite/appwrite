@@ -469,12 +469,12 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
         $url = htmlentities($url);
         if (empty($url)) {
-            if (!$isAPIKey && !$isPrivilegedUser) {
+            if (!$isAppUser && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
             }
         }
@@ -482,8 +482,6 @@ App::post('/v1/teams/:teamId/memberships')
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
@@ -638,7 +636,7 @@ App::post('/v1/teams/:teamId/memberships')
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
