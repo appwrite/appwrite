@@ -80,14 +80,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
           $appDomainFunctions =  $appDomainFunctionsFallback;
         }
 
-        var_dump([
-             'location' => 'router',
-             '_APP_DOMAIN_FUNCTIONS_FALLBACK' => System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-             '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS' ,''),
-             'appDomainFunctions' => $appDomainFunctions,
-             'host' => $host,
-        ]);
-
         if ($host === $appDomainFunctions) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
