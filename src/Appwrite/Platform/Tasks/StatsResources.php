@@ -48,7 +48,7 @@ class StatsResources extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queueForStatsResources): void
+    public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void
     {
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
@@ -58,35 +58,24 @@ class StatsResources extends Action
         Console::success('Stats resources: started');
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
-        Console::loop(function () use ($queueForStatsResources) {
-            $this->enqueueProjects($queueForStatsResources);
+        Console::loop(function () use ($queue) {
+            Authorization::disable();
+            Authorization::setDefaultStatus(false);
+    
+            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
+            /**
+             * For each project that were accessed in last 24 hours
+             */
+            $this->foreachDocument($this->dbForPlatform, 'projects', [
+                Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours))
+            ], function ($project) use ($queue) {
+                $queue
+                    ->setProject($project)
+                    ->trigger();
+                Console::success('project: ' . $project->getId() . '(' . $project->getInternalId() . ')' . ' queued');
+            });
         }, $interval);
 
         Console::log("Stats resources: exited");
-    }
-
-    /**
-     * Enqueue projects for counting
-     * @param Database $dbForPlatform
-     * @param EventStatsResources $queue
-     * @return void
-     */
-    protected function enqueueProjects(EventStatsResources $queue): void
-    {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
-
-        $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
-        /**
-         * For each project that were accessed in last 24 hours
-         */
-        $this->foreachDocument($this->dbForPlatform, 'projects', [
-            Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours))
-        ], function ($project) use ($queue) {
-            $queue
-                ->setProject($project)
-                ->trigger();
-            Console::success('project: ' . $project->getId() . '(' . $project->getInternalId() . ')' . ' queued');
-        });
     }
 }
