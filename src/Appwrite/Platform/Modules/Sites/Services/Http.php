@@ -2,33 +2,33 @@
 
 namespace Appwrite\Platform\Modules\Sites\Services;
 
-use Appwrite\Platform\Modules\Sites\Http\Deployments\CancelDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\CreateBuild;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\CreateDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\DeleteDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\DownloadBuild;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\DownloadDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\GetDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\ListDeployments;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\UpdateDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Logs\DeleteLog;
-use Appwrite\Platform\Modules\Sites\Http\Logs\GetLog;
-use Appwrite\Platform\Modules\Sites\Http\Logs\ListLogs;
-use Appwrite\Platform\Modules\Sites\Http\Sites\CreateSite;
-use Appwrite\Platform\Modules\Sites\Http\Sites\DeleteSite;
-use Appwrite\Platform\Modules\Sites\Http\Sites\GetSite;
-use Appwrite\Platform\Modules\Sites\Http\Sites\GetSitesUsage;
-use Appwrite\Platform\Modules\Sites\Http\Sites\GetSiteUsage;
-use Appwrite\Platform\Modules\Sites\Http\Sites\GetTemplate;
-use Appwrite\Platform\Modules\Sites\Http\Sites\ListFrameworks;
-use Appwrite\Platform\Modules\Sites\Http\Sites\ListSites;
-use Appwrite\Platform\Modules\Sites\Http\Sites\ListTemplates;
-use Appwrite\Platform\Modules\Sites\Http\Sites\UpdateSite;
-use Appwrite\Platform\Modules\Sites\Http\Variables\CreateVariable;
-use Appwrite\Platform\Modules\Sites\Http\Variables\DeleteVariable;
-use Appwrite\Platform\Modules\Sites\Http\Variables\GetVariable;
-use Appwrite\Platform\Modules\Sites\Http\Variables\ListVariables;
-use Appwrite\Platform\Modules\Sites\Http\Variables\UpdateVariable;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Update as UpdateBuild;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Create as CreateBuild;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Create as CreateDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Delete as DeleteDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Download\Get as DownloadDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Download\Get as DownloadBuild;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Get as GetDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\XList as ListDeployments;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Update as UpdateDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Logs\Delete as DeleteLog;
+use Appwrite\Platform\Modules\Sites\Http\Logs\Get as GetLog;
+use Appwrite\Platform\Modules\Sites\Http\Logs\XList as ListLogs;
+use Appwrite\Platform\Modules\Sites\Http\Sites\Create as CreateSite;
+use Appwrite\Platform\Modules\Sites\Http\Sites\Delete as DeleteSite;
+use Appwrite\Platform\Modules\Sites\Http\Sites\Get as GetSite;
+use Appwrite\Platform\Modules\Sites\Http\Usage\Get as GetUsage;
+use Appwrite\Platform\Modules\Sites\Http\Usage\XList as ListUsage;
+use Appwrite\Platform\Modules\Sites\Http\Sites\XList as ListSites;
+use Appwrite\Platform\Modules\Sites\Http\Sites\Update as UpdateSite;
+use Appwrite\Platform\Modules\Sites\Http\Templates\Get as GetTemplate;
+use Appwrite\Platform\Modules\Sites\Http\Templates\XList as ListTemplates;
+use Appwrite\Platform\Modules\Sites\Http\Frameworks\XList as ListFrameworks;
+use Appwrite\Platform\Modules\Sites\Http\Variables\Create as CreateVariable;
+use Appwrite\Platform\Modules\Sites\Http\Variables\Delete as DeleteVariable;
+use Appwrite\Platform\Modules\Sites\Http\Variables\Get as GetVariable;
+use Appwrite\Platform\Modules\Sites\Http\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Sites\Http\Variables\Update as UpdateVariable;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -56,7 +56,7 @@ class Http extends Service
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(DownloadBuild::getName(), new DownloadBuild());
         $this->addAction(CreateBuild::getName(), new CreateBuild());
-        $this->addAction(CancelDeployment::getName(), new CancelDeployment());
+        $this->addAction(UpdateBuild::getName(), new UpdateBuild());
 
         // Logs
         $this->addAction(GetLog::getName(), new GetLog());
@@ -75,7 +75,7 @@ class Http extends Service
         $this->addAction(GetTemplate::getName(), new GetTemplate());
 
         // Usage
-        $this->addAction(GetSiteUsage::getName(), new GetSiteUsage());
-        $this->addAction(GetSitesUsage::getName(), new GetSitesUsage());
+        $this->addAction(ListUsage::getName(), new ListUsage());
+        $this->addAction(GetUsage::getName(), new GetUsage());
     }
 }
