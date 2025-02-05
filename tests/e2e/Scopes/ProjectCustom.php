@@ -50,6 +50,7 @@ trait ProjectCustom
         ]);
 
         if($project['headers']['status-code'] != 201){
+            var_dump($project['headers']['status-code']);
             var_dump($project);
         }
 
