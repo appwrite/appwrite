@@ -24793,7 +24793,7 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
+                        "x-enum-name": "SiteUsageRange",
                         "x-enum-keys": [],
                         "default": "30d",
                         "in": "query"
