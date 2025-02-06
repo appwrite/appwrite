@@ -692,7 +692,7 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/usage')
+App::get('/v1/health/queue/stats-usage')
     ->desc('Get usage queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -700,7 +700,7 @@ App::get('/v1/health/queue/usage')
         auth: [AuthType::KEY],
         namespace: 'health',
         name: 'getQueueUsage',
-        description: '/docs/references/health/get-queue-usage.md',
+        description: '/docs/references/health/get-queue-stats-usage.md',
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
