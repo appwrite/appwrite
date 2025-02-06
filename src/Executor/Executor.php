@@ -9,21 +9,19 @@ use Utopia\System\System;
 
 class Executor
 {
-    public const METHOD_GET = 'GET';
-    public const METHOD_POST = 'POST';
-    public const METHOD_PUT = 'PUT';
-    public const METHOD_PATCH = 'PATCH';
-    public const METHOD_DELETE = 'DELETE';
-    public const METHOD_HEAD = 'HEAD';
-    public const METHOD_OPTIONS = 'OPTIONS';
-    public const METHOD_CONNECT = 'CONNECT';
-    public const METHOD_TRACE = 'TRACE';
+    private const HTTP_METHODS = [
+        'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 
+        'HEAD', 'OPTIONS', 'CONNECT', 'TRACE'
+    ];
+    
+    private const DEFAULT_HEADERS = [
+        'content-type' => 'application/json',
+        'x-opr-addressing-method' => 'anycast-efficient'
+    ];
 
     private bool $selfSigned = false;
-
     private string $endpoint;
-
-    protected array $headers;
+    private array $headers;
 
     public function __construct(string $endpoint)
     {
@@ -32,28 +30,11 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->headers = [
-            'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
-            'x-opr-addressing-method' => 'anycast-efficient'
-        ];
+        $this->headers = array_merge(self::DEFAULT_HEADERS, [
+            'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
     }
 
-    /**
-     * Create runtime
-     *
-     * Launches a runtime container for a deployment ready for execution
-     *
-     * @param string $deploymentId
-     * @param string $projectId
-     * @param string $source
-     * @param string $image
-     * @param bool $remove
-     * @param string $entrypoint
-     * @param string $destination
-     * @param array $variables
-     * @param string $command
-     */
     public function createRuntime(
         string $deploymentId,
         string $projectId,
@@ -66,17 +47,11 @@ class Executor
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
-        string $command = null,
-    ) {
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes";
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
-        // Remove after migration
-        if ($version == 'v3') {
-            $version = 'v4';
-        }
-
+        ?string $command = null,
+    ): array {
+        $runtimeId = "{$projectId}-{$deploymentId}-build";
+        $version = $version === 'v3' ? 'v4' : $version; // Migration handling
+        
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -89,85 +64,50 @@ class Executor
             'cpus' => $cpus,
             'memory' => $memory,
             'version' => $version,
-            'timeout' => $timeout,
+            'timeout' => (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900),
         ];
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
-        }
-
-        return $response['body'];
+        return $this->handleApiCall(
+            'POST',
+            '/runtimes',
+            ['x-opr-runtime-id' => $runtimeId],
+            $params,
+            $params['timeout']
+        );
     }
 
-    /**
-     * Listen to realtime logs stream of a runtime
-     *
-     * @param string $deploymentId
-     * @param string $projectId
-     * @param callable $callback
-     */
     public function getLogs(
         string $deploymentId,
         string $projectId,
         callable $callback
-    ) {
+    ): void {
         $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes/{$runtimeId}/logs";
-        $params = [
-            'timeout' => $timeout
-        ];
-
-        $this->call(self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+        $runtimeId = "{$projectId}-{$deploymentId}-build";
+        
+        $this->call(
+            'GET',
+            "/runtimes/{$runtimeId}/logs",
+            ['x-opr-runtime-id' => $runtimeId],
+            ['timeout' => $timeout],
+            true,
+            $timeout,
+            $callback
+        );
     }
 
-    /**
-     * Delete Runtime
-     *
-     * Deletes a runtime and cleans up any containers remaining.
-     *
-     * @param string $projectId
-     * @param string $deploymentId
-     */
-    public function deleteRuntime(string $projectId, string $deploymentId)
+    public function deleteRuntime(string $projectId, string $deploymentId): array
     {
-        $runtimeId = "$projectId-$deploymentId";
-        $route = "/runtimes/$runtimeId";
-
-        $response = $this->call(self::METHOD_DELETE, $route, [
-            'x-opr-addressing-method' => 'broadcast'
-        ], [], true, 30);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
-        }
-
-        return $response['body'];
+        $runtimeId = "{$projectId}-{$deploymentId}";
+        
+        return $this->handleApiCall(
+            'DELETE',
+            "/runtimes/{$runtimeId}",
+            ['x-opr-addressing-method' => 'broadcast'],
+            [],
+            30
+        );
     }
 
-    /**
-     * Create an execution
-     *
-     * @param string $projectId
-     * @param string $deploymentId
-     * @param string $body
-     * @param array $variables
-     * @param int $timeout
-     * @param string $image
-     * @param string $source
-     * @param string $entrypoint
-     * @param string $runtimeEntrypoint
-     * @param bool $logging
-     *
-     * @return array
-     */
     public function createExecution(
         string $projectId,
         string $deploymentId,
@@ -183,22 +123,15 @@ class Executor
         array $headers,
         float $cpus,
         int $memory,
-        string $runtimeEntrypoint = null,
-        bool $logging,
-        int $requestTimeout = null
-    ) {
-        if (empty($headers['host'])) {
-            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
-        }
-
-        $runtimeId = "$projectId-$deploymentId";
-        $route = '/runtimes/' . $runtimeId . '/executions';
-
-        // Remove after migration
-        if ($version == 'v3') {
-            $version = 'v4';
-        }
-
+        ?string $runtimeEntrypoint = null,
+        bool $logging = false,
+        ?int $requestTimeout = null
+    ): array {
+        $runtimeId = "{$projectId}-{$deploymentId}";
+        $version = $version === 'v3' ? 'v4' : $version; // Migration handling
+        
+        $headers['host'] ??= System::getEnv('_APP_DOMAIN', '');
+        
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
@@ -214,212 +147,233 @@ class Executor
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
             'logging' => $logging,
-            'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
+            'restartPolicy' => 'always'
         ];
 
         if (!empty($body)) {
             $params['body'] = $body;
         }
 
-        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
-        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
-        if ($requestTimeout == null) {
-            $requestTimeout = $timeout + 15;
-        }
+        $response = $this->handleApiCall(
+            'POST',
+            "/runtimes/{$runtimeId}/executions",
+            [
+                'x-opr-runtime-id' => $runtimeId,
+                'content-type' => 'multipart/form-data',
+                'accept' => 'multipart/form-data'
+            ],
+            $params,
+            $requestTimeout ?? $timeout + 15
+        );
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
+        // Process response
+        $response['headers'] = \json_decode($response['headers'] ?? '{}', true);
+        $response['statusCode'] = (int) ($response['statusCode'] ?? 500);
+        $response['duration'] = (float) ($response['duration'] ?? 0);
+        $response['startTime'] = (float) ($response['startTime'] ?? \microtime(true));
 
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
+        return $response;
+    }
+
+    private function handleApiCall(
+        string $method,
+        string $route,
+        array $headers,
+        array $params,
+        int $timeout
+    ): array {
+        $response = $this->call($method, $route, $headers, $params, true, $timeout);
+        
+        if ($response['headers']['status-code'] >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new Exception($message, $response['headers']['status-code']);
         }
-
-        $response['body']['headers'] = \json_decode($response['body']['headers'] ?? '{}', true);
-        $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
-        $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
-        $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
 
         return $response['body'];
     }
 
-    /**
-     * Call
-     *
-     * Make an API call
-     *
-     * @param string $method
-     * @param string $path
-     * @param array $params
-     * @param array $headers
-     * @param bool $decode
-     * @return array|string
-     * @throws Exception
-     */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
-    {
-        $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
-        $responseHeaders    = [];
-        $responseStatus     = -1;
-        $responseType       = '';
-        $responseBody       = '';
-
-        switch ($headers['content-type']) {
-            case 'application/json':
-                $query = json_encode($params);
-                break;
-
-            case 'multipart/form-data':
-                $multipart = new BodyMultipart();
-                foreach ($params as $key => $value) {
-                    $multipart->setPart($key, $value);
-                }
-
-                $headers['content-type'] = $multipart->exportHeader();
-                $query = $multipart->exportBody();
-                break;
-
-            default:
-                $query = http_build_query($params);
-                break;
-        }
-
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
-            unset($headers[$i]);
-        }
-
-        if (isset($callback)) {
-            $headers[] = 'accept: text/event-stream';
-
-            $handleEvent = function ($ch, $data) use ($callback) {
-                $callback($data);
-                return \strlen($data);
-            };
-
-            curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
-        } else {
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        }
-
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-            $len = strlen($header);
-            $header = explode(':', $header, 2);
-
-            if (count($header) < 2) { // ignore invalid headers
-                return $len;
-            }
-
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-
-            return $len;
-        });
-
-        if ($method != self::METHOD_GET) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
-        }
-
-        // Allow self signed certificates
-        if ($this->selfSigned) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        }
-
-        $responseBody   = curl_exec($ch);
-
+    public function call(
+        string $method,
+        string $path = '',
+        array $headers = [],
+        array $params = [],
+        bool $decode = true,
+        int $timeout = 15,
+        ?callable $callback = null
+    ): array {
+        $headers = array_merge($this->headers, $headers);
+        $url = $this->buildUrl($method, $path, $params);
+        
+        $ch = $this->initializeCurl($url, $method, $headers, $params, $timeout, $callback);
+        
+        $responseHeaders = [];
+        $responseBody = $this->executeCurl($ch, $responseHeaders, $callback);
+        
         if (isset($callback)) {
             curl_close($ch);
             return [];
         }
 
-        $responseType   = $responseHeaders['content-type'] ?? '';
+        $responseType = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_errno($ch);
-        $curlErrorMessage = curl_error($ch);
-
+        
+        $this->handleCurlErrors($ch, $responseStatus);
+        
         if ($decode) {
-            $strpos = strpos($responseType, ';');
-            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
-            switch (substr($responseType, 0, $strpos)) {
-                case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
-                    $multipartResponse = new BodyMultipart($boundary);
-                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
-
-                    $responseBody = $multipartResponse->getParts();
-                    break;
-                case 'application/json':
-                    $json = json_decode($responseBody, true);
-
-                    if ($json === null) {
-                        throw new Exception('Failed to parse response: ' . $responseBody);
-                    }
-
-                    $responseBody = $json;
-                    $json = null;
-                    break;
-            }
-        }
-
-        if ($curlError) {
-            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
-            }
-            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
+            $responseBody = $this->decodeResponse($responseBody, $responseType, $responseHeaders);
         }
 
         curl_close($ch);
-
-        $responseHeaders['status-code'] = $responseStatus;
-
+        
         return [
-            'headers' => $responseHeaders,
+            'headers' => $responseHeaders + ['status-code' => $responseStatus],
             'body' => $responseBody
         ];
     }
 
-    /**
-     * Parse Cookie String
-     *
-     * @param string $cookie
-     * @return array
-     */
-    public function parseCookie(string $cookie): array
+    private function buildUrl(string $method, string $path, array $params): string
     {
-        $cookies = [];
-
-        parse_str(strtr($cookie, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
-
-        return $cookies;
+        $query = ($method === 'GET' && !empty($params)) ? '?' . http_build_query($params) : '';
+        return $this->endpoint . $path . $query;
     }
 
-    /**
-     * Flatten params array to PHP multiple format
-     *
-     * @param array $data
-     * @param string $prefix
-     * @return array
-     */
+    private function initializeCurl($url, $method, $headers, $params, $timeout, $callback): \CurlHandle
+    {
+        $ch = curl_init($url);
+        $formattedHeaders = $this->formatHeaders($headers);
+        
+        $curlOptions = [
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => $formattedHeaders,
+            CURLOPT_CONNECTTIMEOUT => 0,
+            CURLOPT_TIMEOUT => $timeout,
+        ];
+
+        if (isset($callback)) {
+            $curlOptions[CURLOPT_WRITEFUNCTION] = fn($ch, $data) => $this->handleStreamedResponse($callback, $data);
+        } else {
+            $curlOptions[CURLOPT_RETURNTRANSFER] = true;
+        }
+
+        if ($method !== 'GET') {
+            $curlOptions[CURLOPT_POSTFIELDS] = $this->formatRequestBody($headers['content-type'] ?? '', $params);
+        }
+
+        if ($this->selfSigned) {
+            $curlOptions[CURLOPT_SSL_VERIFYHOST] = false;
+            $curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+        }
+
+        curl_setopt_array($ch, $curlOptions);
+        
+        return $ch;
+    }
+
+    private function formatHeaders(array $headers): array
+    {
+        $formatted = [];
+        foreach ($headers as $key => $value) {
+            $formatted[] = "{$key}: {$value}";
+        }
+        return $formatted;
+    }
+
+    private function formatRequestBody(string $contentType, array $params): string|array
+    {
+        if (str_contains($contentType, 'application/json')) {
+            return json_encode($params);
+        }
+        
+        if (str_contains($contentType, 'multipart/form-data')) {
+            $multipart = new BodyMultipart();
+            foreach ($params as $key => $value) {
+                $multipart->setPart($key, $value);
+            }
+            return $multipart->exportBody();
+        }
+        
+        return http_build_query($params);
+    }
+
+    private function handleStreamedResponse(callable $callback, string $data): int
+    {
+        $callback($data);
+        return strlen($data);
+    }
+
+    private function executeCurl($ch, array &$responseHeaders, ?callable $callback): string|bool
+    {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
+            $len = strlen($header);
+            $header = explode(':', $header, 2);
+            
+            if (count($header) >= 2) {
+                $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
+            }
+            
+            return $len;
+        });
+
+        return curl_exec($ch);
+    }
+
+    private function handleCurlErrors($ch, int $responseStatus): void
+    {
+        $errno = curl_errno($ch);
+        if ($errno) {
+            if ($errno === CURLE_OPERATION_TIMEDOUT) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+            }
+            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+        }
+    }
+
+    private function decodeResponse(string|bool $body, string $contentType, array $headers): mixed
+    {
+        $contentType = explode(';', $contentType)[0];
+        
+        if ($contentType === 'multipart/form-data') {
+            $boundary = explode('boundary=', $headers['content-type'] ?? '')[1] ?? '';
+            $multipart = new BodyMultipart($boundary);
+            $multipart->load(is_bool($body) ? '' : $body);
+            return $multipart->getParts();
+        }
+        
+        if ($contentType === 'application/json') {
+            $decoded = json_decode($body, true);
+            if ($decoded === null) {
+                throw new Exception('Failed to parse response: ' . $body);
+            }
+            return $decoded;
+        }
+        
+        return $body;
+    }
+
+    public function parseCookie(string $cookie): array
+    {
+        return parse_str(strtr($cookie, [
+            '&' => '%26',
+            '+' => '%2B',
+            ';' => '&'
+        ]));
+    }
+
     protected function flatten(array $data, string $prefix = ''): array
     {
         $output = [];
-
+        
         foreach ($data as $key => $value) {
             $finalKey = $prefix ? "{$prefix}[{$key}]" : $key;
-
+            
             if (is_array($value)) {
-                $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
+                $output += $this->flatten($value, $finalKey);
             } else {
                 $output[$finalKey] = $value;
             }
         }
-
+        
         return $output;
     }
 }

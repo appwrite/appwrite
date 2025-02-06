@@ -8,263 +8,338 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
-App::get('/v1/locale')
-    ->desc('Get user locale')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/locale/get-locale.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE)
-    ->label('sdk.offline.model', '/localed')
-    ->label('sdk.offline.key', 'current')
-    ->inject('request')
-    ->inject('response')
-    ->inject('locale')
-    ->inject('geodb')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+class LocaleEndpoints {
+    private const CACHE_TIME = 3888000; // 45 days in seconds
+    private const DEFAULT_LABELS = [
+        'scope' => 'locale.read',
+        'sdk.auth' => [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT],
+        'sdk.namespace' => 'locale',
+        'sdk.response.type' => Response::CONTENT_TYPE_JSON,
+    ];
+
+    public static function register(): void 
+    {
+        self::registerGetLocale();
+        self::registerListEndpoints();
+    }
+
+    private static function registerGetLocale(): void 
+    {
+        App::get('/v1/locale')
+            ->desc('Get user locale')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'get',
+                'sdk.description' => '/docs/references/locale/get-locale.md',
+                'sdk.response.code' => Response::STATUS_CODE_OK,
+                'sdk.response.model' => Response::MODEL_LOCALE,
+                'sdk.offline.model' => '/localed',
+                'sdk.offline.key' => 'current',
+            ]))
+            ->inject('request')
+            ->inject('response')
+            ->inject('locale')
+            ->inject('geodb')
+            ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+                $output = self::getUserLocaleInfo($request->getIP(), $locale, $geodb);
+                
+                $response
+                    ->addHeader('Cache-Control', 'public, max-age=' . self::CACHE_TIME)
+                    ->addHeader('Expires', gmdate('D, d M Y H:i:s', time() + self::CACHE_TIME) . ' GMT')
+                    ->dynamic(new Document($output), Response::MODEL_LOCALE);
+            });
+    }
+
+    private static function getUserLocaleInfo(string $ip, Locale $locale, Reader $geodb): array 
+    {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
-        $output = [];
-        $ip = $request->getIP();
-        $time = (60 * 60 * 24 * 45); // 45 days cache
-
-        $output['ip'] = $ip;
-
-        $currency = null;
-
         $record = $geodb->get($ip);
 
-        if ($record) {
-            $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-            $output['continentCode'] = $record['continent']['code'];
-            $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
+        if (!$record) {
+            return [
+                'ip' => $ip,
+                'countryCode' => '--',
+                'country' => $locale->getText('locale.country.unknown'),
+                'continent' => $locale->getText('locale.country.unknown'),
+                'continentCode' => '--',
+                'eu' => false,
+                'currency' => null
+            ];
+        }
 
-            foreach ($currencies as $code => $element) {
-                if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
-                    $currency = $element['code'];
+        $countryCode = $record['country']['iso_code'];
+        $continentCode = $record['continent']['code'];
+        
+        return [
+            'ip' => $ip,
+            'countryCode' => $countryCode,
+            'country' => $locale->getText('countries.' . strtolower($countryCode), $locale->getText('locale.country.unknown')),
+            'continent' => $locale->getText('continents.' . strtolower($continentCode), $locale->getText('locale.country.unknown')),
+            'continentCode' => $continentCode,
+            'eu' => in_array($countryCode, $eu, true),
+            'currency' => self::getCountryCurrency($countryCode, $currencies)
+        ];
+    }
+
+    private static function getCountryCurrency(string $countryCode, array $currencies): ?string 
+    {
+        foreach ($currencies as $element) {
+            if (!empty($element['locations']) && !empty($element['code']) && 
+                in_array($countryCode, $element['locations'], true)) {
+                return $element['code'];
+            }
+        }
+        return null;
+    }
+
+    private static function registerListEndpoints(): void 
+    {
+        self::registerListCodes();
+        self::registerListCountries();
+        self::registerListEUCountries();
+        self::registerListPhones();
+        self::registerListContinents();
+        self::registerListCurrencies();
+        self::registerListLanguages();
+    }
+
+    private static function registerListCodes(): void 
+    {
+        App::get('/v1/locale/codes')
+            ->desc('List locale codes')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'listCodes',
+                'sdk.description' => '/docs/references/locale/list-locale-codes.md',
+                'sdk.response.model' => Response::MODEL_LOCALE_CODE_LIST,
+                'sdk.offline.model' => '/locale/localeCode',
+                'sdk.offline.key' => 'current',
+            ]))
+            ->inject('response')
+            ->action(function (Response $response) {
+                $codes = Config::getParam('locale-codes');
+                $response->dynamic(new Document([
+                    'localeCodes' => $codes,
+                    'total' => count($codes),
+                ]), Response::MODEL_LOCALE_CODE_LIST);
+            });
+    }
+
+    private static function registerListCountries(): void 
+    {
+        App::get('/v1/locale/countries')
+            ->desc('List countries')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'listCountries',
+                'sdk.description' => '/docs/references/locale/list-countries.md',
+                'sdk.response.model' => Response::MODEL_COUNTRY_LIST,
+                'sdk.offline.model' => '/locale/countries',
+                'sdk.offline.response.key' => 'code',
+            ]))
+            ->inject('response')
+            ->inject('locale')
+            ->action(function (Response $response, Locale $locale) {
+                $countries = self::getFormattedCountryList(
+                    Config::getParam('locale-countries'),
+                    $locale
+                );
+                
+                $response->dynamic(new Document([
+                    'countries' => $countries,
+                    'total' => count($countries)
+                ]), Response::MODEL_COUNTRY_LIST);
+            });
+    }
+
+    private static function getFormattedCountryList(array $codes, Locale $locale): array 
+    {
+        $output = array_map(function($code) use ($locale) {
+            return new Document([
+                'name' => $locale->getText('countries.' . strtolower($code)),
+                'code' => $code,
+            ]);
+        }, array_filter($codes, fn($code) => 
+            $locale->getText('countries.' . strtolower($code), false) !== false
+        ));
+
+        usort($output, fn($a, $b) => 
+            strcmp($a->getAttribute('name'), $b->getAttribute('name'))
+        );
+
+        return $output;
+    }
+
+    private static function registerListEUCountries(): void 
+    {
+        App::get('/v1/locale/countries/eu')
+            ->desc('List EU countries')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'listCountriesEU',
+                'sdk.description' => '/docs/references/locale/list-countries-eu.md',
+                'sdk.response.model' => Response::MODEL_COUNTRY_LIST,
+                'sdk.offline.model' => '/locale/countries/eu',
+                'sdk.offline.response.key' => 'code',
+            ]))
+            ->inject('response')
+            ->inject('locale')
+            ->action(function (Response $response, Locale $locale) {
+                $countries = self::getFormattedCountryList(
+                    Config::getParam('locale-eu'),
+                    $locale
+                );
+                
+                $response->dynamic(new Document([
+                    'countries' => $countries,
+                    'total' => count($countries)
+                ]), Response::MODEL_COUNTRY_LIST);
+            });
+    }
+
+    private static function registerListPhones(): void 
+    {
+        App::get('/v1/locale/countries/phones')
+            ->desc('List countries phone codes')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'listCountriesPhones',
+                'sdk.description' => '/docs/references/locale/list-countries-phones.md',
+                'sdk.response.model' => Response::MODEL_PHONE_LIST,
+                'sdk.offline.model' => '/locale/countries/phones',
+                'sdk.offline.response.key' => 'countryCode',
+            ]))
+            ->inject('response')
+            ->inject('locale')
+            ->action(function (Response $response, Locale $locale) {
+                $phones = self::getFormattedPhoneList(
+                    Config::getParam('locale-phones'),
+                    $locale
+                );
+                
+                $response->dynamic(new Document([
+                    'phones' => $phones,
+                    'total' => count($phones)
+                ]), Response::MODEL_PHONE_LIST);
+            });
+    }
+
+    private static function getFormattedPhoneList(array $phones, Locale $locale): array 
+    {
+        asort($phones);
+        
+        return array_values(array_filter(
+            array_map(function($code, $phone) use ($locale) {
+                $countryName = $locale->getText('countries.' . strtolower($code), false);
+                if ($countryName === false) {
+                    return null;
                 }
-            }
-
-            $output['currency'] = $currency;
-        } else {
-            $output['countryCode'] = '--';
-            $output['country'] = $locale->getText('locale.country.unknown');
-            $output['continent'] = $locale->getText('locale.country.unknown');
-            $output['continentCode'] = '--';
-            $output['eu'] = false;
-            $output['currency'] = $currency;
-        }
-
-        $response
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-        ;
-        $response->dynamic(new Document($output), Response::MODEL_LOCALE);
-    });
-
-App::get('/v1/locale/codes')
-    ->desc('List locale codes')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCodes')
-    ->label('sdk.description', '/docs/references/locale/list-locale-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE_CODE_LIST)
-    ->label('sdk.offline.model', '/locale/localeCode')
-    ->label('sdk.offline.key', 'current')
-    ->inject('response')
-    ->action(function (Response $response) {
-        $codes = Config::getParam('locale-codes');
-        $response->dynamic(new Document([
-            'localeCodes' => $codes,
-            'total' => count($codes),
-        ]), Response::MODEL_LOCALE_CODE_LIST);
-    });
-
-App::get('/v1/locale/countries')
-    ->desc('List countries')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountries')
-    ->label('sdk.description', '/docs/references/locale/list-countries.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
-    ->label('sdk.offline.model', '/locale/countries')
-    ->label('sdk.offline.response.key', 'code')
-    ->inject('response')
-    ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-countries'); /* @var $list array */
-        $output = [];
-
-        foreach ($list as $value) {
-            $output[] = new Document([
-                'name' => $locale->getText('countries.' . strtolower($value)),
-                'code' => $value,
-            ]);
-        }
-
-        usort($output, function ($a, $b) {
-            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
-        });
-
-        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
-    });
-
-App::get('/v1/locale/countries/eu')
-    ->desc('List EU countries')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountriesEU')
-    ->label('sdk.description', '/docs/references/locale/list-countries-eu.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
-    ->label('sdk.offline.model', '/locale/countries/eu')
-    ->label('sdk.offline.response.key', 'code')
-    ->inject('response')
-    ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
-        $eu = Config::getParam('locale-eu');
-        $output = [];
-
-        foreach ($eu as $code) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
-                $output[] = new Document([
-                    'name' => $locale->getText('countries.' . strtolower($code)),
-                    'code' => $code,
-                ]);
-            }
-        }
-
-        usort($output, function ($a, $b) {
-            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
-        });
-
-        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
-    });
-
-App::get('/v1/locale/countries/phones')
-    ->desc('List countries phone codes')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCountriesPhones')
-    ->label('sdk.description', '/docs/references/locale/list-countries-phones.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
-    ->label('sdk.offline.model', '/locale/countries/phones')
-    ->label('sdk.offline.response.key', 'countryCode')
-    ->inject('response')
-    ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-phones'); /* @var $list array */
-        $output = [];
-
-        \asort($list);
-
-        foreach ($list as $code => $name) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
-                $output[] = new Document([
-                    'code' => '+' . $list[$code],
+                
+                return new Document([
+                    'code' => '+' . $phone,
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.' . strtolower($code)),
+                    'countryName' => $countryName,
                 ]);
-            }
-        }
+            }, array_keys($phones), $phones)
+        ));
+    }
 
-        $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
-    });
+    private static function registerListContinents(): void 
+    {
+        App::get('/v1/locale/continents')
+            ->desc('List continents')
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => 'listContinents',
+                'sdk.description' => '/docs/references/locale/list-continents.md',
+                'sdk.response.model' => Response::MODEL_CONTINENT_LIST,
+                'sdk.offline.model' => '/locale/continents',
+                'sdk.offline.response.key' => 'code',
+            ]))
+            ->inject('response')
+            ->inject('locale')
+            ->action(function (Response $response, Locale $locale) {
+                $continents = array_map(function($code) use ($locale) {
+                    return new Document([
+                        'name' => $locale->getText('continents.' . strtolower($code)),
+                        'code' => $code,
+                    ]);
+                }, Config::getParam('locale-continents'));
 
-App::get('/v1/locale/continents')
-    ->desc('List continents')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listContinents')
-    ->label('sdk.description', '/docs/references/locale/list-continents.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
-    ->label('sdk.offline.model', '/locale/continents')
-    ->label('sdk.offline.response.key', 'code')
-    ->inject('response')
-    ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-continents');
+                usort($continents, fn($a, $b) => 
+                    strcmp($a->getAttribute('name'), $b->getAttribute('name'))
+                );
 
-        foreach ($list as $value) {
-            $output[] = new Document([
-                'name' => $locale->getText('continents.' . strtolower($value)),
-                'code' => $value,
-            ]);
-        }
+                $response->dynamic(new Document([
+                    'continents' => $continents,
+                    'total' => count($continents)
+                ]), Response::MODEL_CONTINENT_LIST);
+            });
+    }
 
-        usort($output, function ($a, $b) {
-            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
-        });
+    private static function registerSimpleListEndpoint(
+        string $path,
+        string $desc,
+        string $method,
+        string $docPath,
+        string $responseModel,
+        string $offlineModel,
+        string $configParam,
+        string $responseKey
+    ): void {
+        App::get($path)
+            ->desc($desc)
+            ->groups(['api', 'locale'])
+            ->labels(array_merge(self::DEFAULT_LABELS, [
+                'sdk.method' => $method,
+                'sdk.description' => $docPath,
+                'sdk.response.model' => $responseModel,
+                'sdk.offline.model' => $offlineModel,
+                'sdk.offline.response.key' => $responseKey,
+            ]))
+            ->inject('response')
+            ->action(function (Response $response) use ($configParam, $responseKey) {
+                $list = array_map(
+                    fn($node) => new Document($node), 
+                    Config::getParam($configParam)
+                );
+                
+                $response->dynamic(new Document([
+                    $responseKey => $list,
+                    'total' => count($list)
+                ]), $responseModel);
+            });
+    }
 
-        $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
-    });
+    private static function registerListCurrencies(): void 
+    {
+        self::registerSimpleListEndpoint(
+            '/v1/locale/currencies',
+            'List currencies',
+            'listCurrencies',
+            '/docs/references/locale/list-currencies.md',
+            Response::MODEL_CURRENCY_LIST,
+            '/locale/currencies',
+            'locale-currencies',
+            'currencies'
+        );
+    }
 
-App::get('/v1/locale/currencies')
-    ->desc('List currencies')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCurrencies')
-    ->label('sdk.description', '/docs/references/locale/list-currencies.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
-    ->label('sdk.offline.model', '/locale/currencies')
-    ->label('sdk.offline.response.key', 'code')
-    ->inject('response')
-    ->action(function (Response $response) {
-        $list = Config::getParam('locale-currencies');
+    private static function registerListLanguages(): void 
+    {
+        self::registerSimpleListEndpoint(
+            '/v1/locale/languages',
+            'List languages',
+            'listLanguages',
+            '/docs/references/locale/list-languages.md',
+            Response::MODEL_LANGUAGE_LIST,
+            '/locale/languages',
+            'locale-languages',
+            'languages'
+        );
+    }
+}
 
-        $list = array_map(fn ($node) => new Document($node), $list);
-
-        $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
-    });
-
-
-App::get('/v1/locale/languages')
-    ->desc('List languages')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listLanguages')
-    ->label('sdk.description', '/docs/references/locale/list-languages.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
-    ->label('sdk.offline.model', '/locale/languages')
-    ->label('sdk.offline.response.key', 'code')
-    ->inject('response')
-    ->action(function (Response $response) {
-        $list = Config::getParam('locale-languages');
-
-        $list = array_map(fn ($node) => new Document($node), $list);
-
-        $response->dynamic(new Document(['languages' => $list, 'total' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
-    });
+// Register all endpoints
+LocaleEndpoints::register();
