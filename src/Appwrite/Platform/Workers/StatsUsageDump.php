@@ -150,13 +150,14 @@ class StatsUsageDump extends Action
                             'value' => $value,
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
+                        $documentClone = new Document($document->getArrayCopy());
                         $dbForProject->createOrUpdateDocumentsWithIncrease(
                             'stats',
                             'value',
                             [$document]
                         );
 
-                        $this->writeToLogsDB($project, $document);
+                        $this->writeToLogsDB($project, $documentClone);
                     }
                 }
             } catch (\Exception $e) {
@@ -181,12 +182,13 @@ class StatsUsageDump extends Action
                 'value' => $value,
                 'region' => System::getEnv('_APP_REGION', 'default'),
             ]);
+            $documentClone = new Document($document->getArrayCopy());
             $dbForProject->createOrUpdateDocumentsWithIncrease(
                 'stats',
                 'value',
                 [$document]
             );
-            $this->writeToLogsDB($project, $document);
+            $this->writeToLogsDB($project, $documentClone);
         };
 
         foreach ($this->periods as $period => $format) {
@@ -337,5 +339,6 @@ class StatsUsageDump extends Action
             'value',
             [$document]
         );
+        Console::success('Usage logs pushed to Logs DB');
     }
 }
