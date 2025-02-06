@@ -52,7 +52,6 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\CLI\Console;
 
 App::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -945,24 +944,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('deviceForLocal')
     ->inject('queueForUsage')
     ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, Usage $queueForUsage) {
-        // Start timer
-        $startTime = microtime(true);
-        Console::log("Preview generation started for file {$fileId} in bucket {$bucketId}");
 
         if (!\extension_loaded('imagick')) {
-            Console::log("Imagick extension missing.");
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        // Retrieve bucket and log timing
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-        Console::log("Bucket retrieval completed in " . (microtime(true) - $startTime) . " seconds.");
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
-            Console::log("Bucket not found or disabled.");
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -970,7 +962,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            Console::log("Unauthorized access detected (fileSecurity off).");
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -979,10 +970,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
-        Console::log("File metadata retrieval completed in " . (microtime(true) - $startTime) . " seconds.");
 
         if ($file->isEmpty()) {
-            Console::log("File not found.");
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -995,8 +984,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-
-        // Validate file type and size
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -1004,7 +991,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 // it was an image but the file size exceeded the limit
                 $path = $fileLogos['default_image'];
             }
-            Console::log("File size or mime type exceeds preview limits. Fallback to logo image: {$path}");
 
             $algorithm = Compression::NONE;
             $cipher = null;
@@ -1014,24 +1000,24 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (!$deviceForFiles->exists($path)) {
-            Console::log("File not found on device: {$path}");
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         if (empty($output)) {
+            // when file extension is provided but it's not one of our
+            // supported outputs we fallback to `jpg`
             if (!empty($type) && !array_key_exists($type, $outputs)) {
                 $type = 'jpg';
             }
+
+            // when file extension is not provided and the mime type is not one of our supported outputs
+            // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
-            Console::log("Output format determined as: {$output}");
         }
 
-        // Read source file
         $source = $deviceForFiles->read($path);
-        Console::log("File read from disk in " . (microtime(true) - $startTime) . " seconds.");
 
-        // Decrypt file if needed
-        if (!empty($cipher)) {
+        if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -1040,102 +1026,70 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
-            Console::log("File decryption completed in " . (microtime(true) - $startTime) . " seconds.");
         }
 
-        // Decompress if needed
         switch ($algorithm) {
             case Compression::ZSTD:
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
-                Console::log("ZSTD decompression completed.");
                 break;
             case Compression::GZIP:
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
-                Console::log("GZIP decompression completed.");
                 break;
         }
 
-        // Create image object and perform transformations
         try {
             $image = new Image($source);
-            Console::log("Image object created successfully.");
         } catch (ImagickException $e) {
-            Console::log("Error creating image object: " . $e->getMessage());
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
 
-        // Crop image
         $image->crop((int) $width, (int) $height, $gravity);
-        Console::log("Image cropped to {$width}x{$height} using gravity {$gravity}.");
 
-        // Apply opacity if set
         if (!empty($opacity) || $opacity === 0) {
             $image->setOpacity($opacity);
-            Console::log("Opacity set to {$opacity}.");
         }
 
-        // Set background if provided
         if (!empty($background)) {
             $image->setBackground('#' . $background);
-            Console::log("Background color set to #{$background}.");
         }
 
-        // Apply border if needed
         if (!empty($borderWidth)) {
             $image->setBorder($borderWidth, '#' . $borderColor);
-            Console::log("Border set with width {$borderWidth} and color #{$borderColor}.");
         }
 
-        // Apply border radius if needed
         if (!empty($borderRadius)) {
             $image->setBorderRadius($borderRadius);
-            Console::log("Border radius set to {$borderRadius}.");
         }
 
-        // Rotate image if needed
         if (!empty($rotation)) {
             $image->setRotation(($rotation + 360) % 360);
-            Console::log("Image rotated by {$rotation} degrees.");
         }
 
-        // Output final image data
         $data = $image->output($output, $quality);
-        Console::log("Image output generated in format {$output} with quality {$quality}.");
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        // Record metrics
         $queueForUsage
             ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
             ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
         ;
-        Console::log("Usage metrics recorded.");
 
-        // Update transformedAt attribute if needed
         $transformedAt = $file->getAttribute('transformedAt', '');
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
             $file->setAttribute('transformedAt', DateTime::now());
             Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' .  $file->getAttribute('bucketInternalId'), $file->getId(), $file));
-            Console::log("File transformation timestamp updated.");
         }
 
-        // Final response
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType($contentType)
             ->file($data)
         ;
-        Console::log("Response sent with content type {$contentType}.");
-
-        // Log total processing time
-        $totalTime = microtime(true) - $startTime;
-        Console::log("Preview generation completed in {$totalTime} seconds.");
 
         unset($image);
     });
-
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->alias('/v1/storage/files/:fileId/download')
