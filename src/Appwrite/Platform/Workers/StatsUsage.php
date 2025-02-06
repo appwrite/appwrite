@@ -43,7 +43,7 @@ class StatsUsage extends Action
     /**
      * @param Message $message
      * @param callable $getProjectDB
-     * @param StatsUsageDump $queueForUsageDump
+     * @param StatsUsageDump $queueForStatsUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception

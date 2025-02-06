@@ -9,6 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 class StatsUsageDump extends Action
@@ -17,6 +18,8 @@ class StatsUsageDump extends Action
     public const METRIC_DATABASE_LEVEL_STORAGE = 3;
     public const METRIC_PROJECT_LEVEL_STORAGE = 2;
     protected array $stats = [];
+
+    protected Registry $register;
 
     /**
      * Metrics to skip writing to logsDB
@@ -87,6 +90,7 @@ class StatsUsageDump extends Action
             ->inject('message')
             ->inject('getProjectDB')
             ->inject('getLogsDB')
+            ->inject('register')
             ->callback([$this, 'action']);
     }
 
@@ -98,9 +102,10 @@ class StatsUsageDump extends Action
      * @throws Exception
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, callable $getProjectDB, callable $getLogsDB): void
+    public function action(Message $message, callable $getProjectDB, callable $getLogsDB, Registry $register): void
     {
         $this->getLogsDB = $getLogsDB;
+        $this->register = $register;
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -322,9 +327,6 @@ class StatsUsageDump extends Action
             return;
         }
 
-        /** @var \Utopia\Database\Database $dbForLogs*/
-        $dbForLogs = call_user_func($this->getLogsDB, $project);
-
         if (array_key_exists($document->getAttribute('metric'), $this->skipBaseMetrics)) {
             return;
         }
@@ -334,11 +336,20 @@ class StatsUsageDump extends Action
             }
         }
 
-        $dbForLogs->createOrUpdateDocumentsWithIncrease(
-            'stats',
-            'value',
-            [$document]
-        );
-        Console::success('Usage logs pushed to Logs DB');
+        /** @var \Utopia\Database\Database $dbForLogs*/
+        $dbForLogs = call_user_func($this->getLogsDB, $project);
+
+        try {
+            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+                'stats',
+                'value',
+                [$document]
+            );
+            Console::success('Usage logs pushed to Logs DB');
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+        }
+
+        $this->register->get('pools')->get('logs')->reclaim();
     }
 }
