@@ -1741,26 +1741,9 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([
-        Origin::CLIENT_TYPE_WEB,
-        Origin::CLIENT_TYPE_FLUTTER_WEB,
-        Origin::CLIENT_TYPE_FLUTTER_IOS,
-        Origin::CLIENT_TYPE_FLUTTER_ANDROID,
-        Origin::CLIENT_TYPE_FLUTTER_LINUX,
-        Origin::CLIENT_TYPE_FLUTTER_MACOS,
-        Origin::CLIENT_TYPE_FLUTTER_WINDOWS,
-        Origin::CLIENT_TYPE_APPLE_IOS,
-        Origin::CLIENT_TYPE_APPLE_MACOS,
-        Origin::CLIENT_TYPE_APPLE_WATCHOS,
-        Origin::CLIENT_TYPE_APPLE_TVOS,
-        Origin::CLIENT_TYPE_ANDROID,
-        Origin::CLIENT_TYPE_UNITY,
-        Origin::CLIENT_TYPE_REACT_NATIVE_IOS,
-        Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID,
-        Origin::CLIENT_TYPE_SCHEME,
-    ], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS, Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-    ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS or app scheme. Max length: 256 chars.', true)
+    ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
@@ -1785,7 +1768,7 @@ App::post('/v1/projects/:projectId/platforms')
             'name' => $name,
             'key' => $key,
             'store' => $store,
-            'hostname' => $hostname,
+            'hostname' => $hostname
         ]);
 
         $platform = $dbForPlatform->createDocument('platforms', $platform);

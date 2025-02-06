@@ -564,7 +564,7 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
