@@ -692,8 +692,40 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
+App::get('/v1/health/queue/stats-resources')
+    ->desc('Get stats  resources queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueStatsResources',
+        description: '/docs/references/health/get-queue-stats-resources.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('publisher')
+    ->inject('response')
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+        $threshold = \intval($threshold);
+
+        $size = $publisher->getQueueSize(new Queue(Event::STATS_USAGE_QUEUE_NAME));
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
 App::get('/v1/health/queue/stats-usage')
-    ->desc('Get usage queue')
+    ->desc('Get stats usage queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
