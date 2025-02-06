@@ -91,12 +91,6 @@
         "laravel/pint": "^1.14",
         "phpbench/phpbench": "^1.2"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/queue"
-        }
-    ],
     "provide": {
         "ext-phpiredis": "*"
     },
