@@ -29,7 +29,7 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queue = $pools->get('queue')->pop();
+        $queue = $pools->get('publisher')->pop();
         $connection = $queue->getResource();
         $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');

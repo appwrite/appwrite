@@ -73,7 +73,7 @@ class ScheduleFunctions extends ScheduleBase
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('queue')->pop();
+                $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
 
                 foreach ($scheduleKeys as $scheduleKey) {
