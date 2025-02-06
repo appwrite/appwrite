@@ -21,7 +21,7 @@ class StatsUsage extends Action
 
     public static function getName(): string
     {
-        return 'usage';
+        return 'stats-usage';
     }
 
     /**
@@ -31,13 +31,11 @@ class StatsUsage extends Action
     {
 
         $this
-        ->desc('Usage worker')
-        ->inject('message')
-        ->inject('getProjectDB')
-        ->inject('queueForStatsUsageDump')
-        ->callback(function (Message $message, callable $getProjectDB, StatsUsageDump $queueForStatsUsageDump) {
-            $this->action($message, $getProjectDB, $queueForStatsUsageDump);
-        });
+            ->desc('Stats usage worker')
+            ->inject('message')
+            ->inject('getProjectDB')
+            ->inject('queueForStatsUsageDump')
+            ->callback([$this, 'action']);
 
         $this->lastTriggeredTime = time();
     }
