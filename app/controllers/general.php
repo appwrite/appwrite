@@ -494,7 +494,7 @@ App::init()
     });
 
 App::init()
-    ->groups(['api'])
+    ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
