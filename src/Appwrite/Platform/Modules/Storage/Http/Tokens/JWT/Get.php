@@ -37,7 +37,9 @@ class Get extends Action
         ->label('sdk', new Method(
             namespace: 'tokens',
             name: 'getJWT',
-            description: '',
+            description: <<<EOT
+            Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.
+            EOT,
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(

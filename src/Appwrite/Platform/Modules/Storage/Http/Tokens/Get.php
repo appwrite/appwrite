@@ -34,7 +34,9 @@ class Get extends Action
         ->label('sdk', new Method(
             namespace: 'tokens',
             name: 'get',
-            description: '',
+            description: <<<EOT
+            Get a token by its unique ID.
+            EOT,
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(

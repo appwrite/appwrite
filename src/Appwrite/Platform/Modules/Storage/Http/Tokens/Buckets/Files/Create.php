@@ -47,7 +47,9 @@ class Create extends Action
         ->label('sdk', new Method(
             namespace: 'tokens',
             name: 'createFileToken',
-            description: '',
+            description: <<<EOT
+            Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.
+            EOT,
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(

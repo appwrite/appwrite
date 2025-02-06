@@ -37,7 +37,9 @@ class XList extends Action
             ->label('sdk', new Method(
                 namespace: 'tokens',
                 name: 'list',
-                description: '',
+                description: <<<EOT
+                List all the tokens created for a specific file or bucket. You can use the query params to filter your results.
+                EOT,
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

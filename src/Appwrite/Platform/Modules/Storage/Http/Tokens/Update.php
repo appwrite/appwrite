@@ -48,7 +48,9 @@ class Update extends Action
         ->label('sdk', new Method(
             namespace: 'tokens',
             name: 'update',
-            description: '',
+            description: <<<EOT
+            Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.
+            EOT,
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(

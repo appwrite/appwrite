@@ -41,7 +41,9 @@ class Delete extends Action
         ->label('sdk', new Method(
             namespace: 'tokens',
             name: 'delete',
-            description: '',
+            description: <<<EOT
+            Delete a token by its unique ID.
+            EOT,
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(
