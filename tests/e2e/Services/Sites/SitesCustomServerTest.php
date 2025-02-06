@@ -939,5 +939,70 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('adapters', $framework);
     }
 
+    public function testSPASite(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SPA site',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '404.html',
+        ]);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-spa'),
+            'activate' => 'true'
+        ]);
+
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$siteId])->toString(),
+                Query::equal('resourceType', ['site'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        \var_dump($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Index page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Contact page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Not found page", $response['body']);
+    }
+
     // TODO: Add tests for deletion of resources when site is deleted
 }
