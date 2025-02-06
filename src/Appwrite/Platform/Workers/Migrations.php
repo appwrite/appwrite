@@ -226,7 +226,9 @@ class Migrations extends Action
                 'collections.read',
                 'collections.write',
                 'documents.read',
-                'documents.write'
+                'documents.write',
+                'tokens.read',
+                'tokens.write',
             ]
         ]);
 
