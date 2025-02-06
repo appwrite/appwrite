@@ -7,7 +7,7 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Queue\Publisher;
+use Utopia\Pools\Group;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -31,7 +31,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'functions';
     }
 
-    protected function enqueueResources(Publisher $publisher, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -70,8 +70,11 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $publisher, $dbForPlatform) {
+            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
+
+                $queue = $pools->get('publisher')->pop();
+                $connection = $queue->getResource();
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -83,7 +86,8 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($publisher);
+                    $queueForFunctions = new Func($connection);
+
                     $queueForFunctions
                         ->setType('schedule')
                         ->setFunction($schedule['resource'])
@@ -92,6 +96,8 @@ class ScheduleFunctions extends ScheduleBase
                         ->setProject($schedule['project'])
                         ->trigger();
                 }
+
+                $queue->reclaim();
             });
         }
 
