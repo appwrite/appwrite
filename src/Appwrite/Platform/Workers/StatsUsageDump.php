@@ -11,12 +11,12 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
-const METRIC_COLLECTION_LEVEL_STORAGE = 4;
-const METRIC_DATABASE_LEVEL_STORAGE = 3;
-const METRIC_PROJECT_LEVEL_STORAGE = 2;
 
 class StatsUsageDump extends Action
 {
+    const METRIC_COLLECTION_LEVEL_STORAGE = 4;
+    const METRIC_DATABASE_LEVEL_STORAGE = 3;
+    const METRIC_PROJECT_LEVEL_STORAGE = 2;
     protected array $stats = [];
 
     /**
@@ -204,7 +204,7 @@ class StatsUsageDump extends Action
 
             switch (count($data)) {
                 // Collection Level
-                case METRIC_COLLECTION_LEVEL_STORAGE:
+                case self::METRIC_COLLECTION_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
@@ -237,7 +237,7 @@ class StatsUsageDump extends Action
                     $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
                     break;
                     // Database Level
-                case METRIC_DATABASE_LEVEL_STORAGE:
+                case self::METRIC_DATABASE_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
 
@@ -277,7 +277,7 @@ class StatsUsageDump extends Action
                     $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
                     break;
                     // Project Level
-                case METRIC_PROJECT_LEVEL_STORAGE:
+                case self::METRIC_PROJECT_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
                     // Get all project databases
                     $databases = $dbForProject->find('database');
