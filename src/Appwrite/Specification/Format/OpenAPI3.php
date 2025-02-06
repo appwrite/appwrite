@@ -178,7 +178,7 @@ class OpenAPI3 extends Format
             $namespace = $sdk->getNamespace() ?? 'default';
 
             $desc = $desc ?? '';
-            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : '';
+            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
 
             $temp = [
                 'summary' => $route->getDesc(),
