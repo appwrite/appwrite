@@ -61,7 +61,7 @@ class StatsResources extends Action
         Console::loop(function () use ($queue) {
             Authorization::disable();
             Authorization::setDefaultStatus(false);
-    
+
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**
              * For each project that were accessed in last 24 hours

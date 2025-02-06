@@ -11,12 +11,11 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
-
 class StatsUsageDump extends Action
 {
-    const METRIC_COLLECTION_LEVEL_STORAGE = 4;
-    const METRIC_DATABASE_LEVEL_STORAGE = 3;
-    const METRIC_PROJECT_LEVEL_STORAGE = 2;
+    public const METRIC_COLLECTION_LEVEL_STORAGE = 4;
+    public const METRIC_DATABASE_LEVEL_STORAGE = 3;
+    public const METRIC_PROJECT_LEVEL_STORAGE = 2;
     protected array $stats = [];
 
     /**

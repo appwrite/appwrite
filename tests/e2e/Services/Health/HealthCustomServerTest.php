@@ -499,7 +499,7 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -511,7 +511,7 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage?threshold=0', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/stats-usage?threshold=0', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
