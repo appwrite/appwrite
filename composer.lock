@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fbf719806f233b49b04da95764cd06d",
+    "content-hash": "232691925e05350c7a3831a4e43d79d1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4490,16 +4490,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.8.1",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "dc2654273f61d493f4548bdb7061a59e6935e883"
+                "reference": "a6ec26a787e8292ca2d7b8f5a0ad179b46b2c4d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/dc2654273f61d493f4548bdb7061a59e6935e883",
-                "reference": "dc2654273f61d493f4548bdb7061a59e6935e883",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/a6ec26a787e8292ca2d7b8f5a0ad179b46b2c4d0",
+                "reference": "a6ec26a787e8292ca2d7b8f5a0ad179b46b2c4d0",
                 "shasum": ""
             },
             "require": {
@@ -4528,25 +4528,7 @@
                     "Utopia\\Queue\\": "src/Queue"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/Queue/E2E"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "analyse": [
-                    "vendor/bin/phpstan analyse"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "lint": [
-                    "vendor/bin/pint --test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4558,18 +4540,18 @@
             ],
             "description": "A powerful task queue.",
             "keywords": [
+                "Tasks",
                 "framework",
                 "php",
                 "queue",
-                "tasks",
                 "upf",
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/queue/tree/0.8.1",
-                "issues": "https://github.com/utopia-php/queue/issues"
+                "issues": "https://github.com/utopia-php/queue/issues",
+                "source": "https://github.com/utopia-php/queue/tree/0.8.2"
             },
-            "time": "2025-02-06T09:28:06+00:00"
+            "time": "2025-02-06T11:01:15+00:00"
         },
         {
             "name": "utopia-php/registry",
