@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Detection extends Model
+class RuntimeDetection extends Model
 {
     public function __construct()
     {
@@ -15,6 +15,18 @@ class Detection extends Model
                 'description' => 'Runtime',
                 'default' => '',
                 'example' => 'node',
+            ])
+            ->addRule('entrypoint', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function Entrypoint',
+                'default' => '',
+                'example' => 'index.js',
+            ])
+            ->addRule('commands', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function install and build commands',
+                'default' => '',
+                'example' => 'npm install && npm run build',
             ]);
     }
 
@@ -25,7 +37,7 @@ class Detection extends Model
      */
     public function getName(): string
     {
-        return 'Detection';
+        return 'RuntimeDetection';
     }
 
     /**
@@ -35,6 +47,6 @@ class Detection extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_DETECTION;
+        return Response::MODEL_RUNTIME_DETECTION;
     }
 }

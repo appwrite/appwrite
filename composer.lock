@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2caa51e1b7d11e3e67ade41347530f92",
+    "content-hash": "895d12203ebc543ae26dced08f811b04",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1237,16 +1237,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.2.1",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "74b1a03263be8c5acb578f41da054b4bac3af4a0"
+                "reference": "8b925df3047628968bc5be722468db1b98b82d51"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/74b1a03263be8c5acb578f41da054b4bac3af4a0",
-                "reference": "74b1a03263be8c5acb578f41da054b4bac3af4a0",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/8b925df3047628968bc5be722468db1b98b82d51",
+                "reference": "8b925df3047628968bc5be722468db1b98b82d51",
                 "shasum": ""
             },
             "require": {
@@ -1303,7 +1303,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-01-20T23:35:16+00:00"
+            "time": "2025-02-03T21:49:11+00:00"
         },
         {
             "name": "open-telemetry/context",
@@ -1493,16 +1493,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.2.1",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "96aeaee5b7cb8c0bc4af7ff4717b429f2d9f67e1"
+                "reference": "37eec0fe47ddd627911f318f29b6cd48196be0c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/96aeaee5b7cb8c0bc4af7ff4717b429f2d9f67e1",
-                "reference": "96aeaee5b7cb8c0bc4af7ff4717b429f2d9f67e1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/37eec0fe47ddd627911f318f29b6cd48196be0c0",
+                "reference": "37eec0fe47ddd627911f318f29b6cd48196be0c0",
                 "shasum": ""
             },
             "require": {
@@ -1579,24 +1579,24 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-01-09T23:17:14+00:00"
+            "time": "2025-01-29T21:40:28+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.27.1",
+            "version": "1.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "1dba705fea74bc0718d04be26090e3697e56f4e6"
+                "reference": "4178c9f390da8e4dbca9b181a9d1efd50cf7ee0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/1dba705fea74bc0718d04be26090e3697e56f4e6",
-                "reference": "1dba705fea74bc0718d04be26090e3697e56f4e6",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/4178c9f390da8e4dbca9b181a9d1efd50cf7ee0a",
+                "reference": "4178c9f390da8e4dbca9b181a9d1efd50cf7ee0a",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.0"
             },
             "type": "library",
             "extra": {
@@ -1636,7 +1636,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2024-08-28T09:20:31+00:00"
+            "time": "2025-02-06T00:21:48+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3529,6 +3529,69 @@
                 "source": "https://github.com/utopia-php/database/tree/0.56.4"
             },
             "time": "2025-01-20T09:22:08+00:00"
+        },
+        {
+            "name": "utopia-php/detector",
+            "version": "dev-feat-pseudocode-draft2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/detector.git",
+                "reference": "09512d06b4b3a1a4acca2403ea9c22f03975d79e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/09512d06b4b3a1a4acca2403ea9c22f03975d79e",
+                "reference": "09512d06b4b3a1a4acca2403ea9c22f03975d79e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Detector\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Detector/"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test --config pint.json"
+                ],
+                "format": [
+                    "./vendor/bin/pint --config pint.json"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for fast and reliable environment identification.",
+            "keywords": [
+                "detector",
+                "framework",
+                "php",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/detector/tree/feat-pseudocode-draft2",
+                "issues": "https://github.com/utopia-php/detector/issues"
+            },
+            "time": "2025-02-06T13:36:29+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8503,6 +8566,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/detector",
+            "version": "dev-feat-pseudocode-draft2",
+            "alias": "0.1.99",
+            "alias_normalized": "0.1.99.0"
+        },
+        {
             "package": "utopia-php/framework",
             "version": "dev-fix-prevent-duplicate-compression",
             "alias": "0.33.99",
@@ -8511,6 +8580,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/detector": 20,
         "utopia-php/framework": 20
     },
     "prefer-stable": false,
@@ -8536,5 +8606,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

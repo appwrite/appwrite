@@ -38,7 +38,6 @@ use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -46,6 +45,7 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Framework;
 use Appwrite\Utopia\Response\Model\FrameworkAdapter;
+use Appwrite\Utopia\Response\Model\FrameworkDetection;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
@@ -85,6 +85,7 @@ use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\RuntimeDetection;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
@@ -249,7 +250,8 @@ class Response extends SwooleResponse
     public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
-    public const MODEL_DETECTION = 'detection';
+    public const MODEL_FRAMEWORK_DETECTION = 'frameworkDetection';
+    public const MODEL_RUNTIME_DETECTION = 'runtimeDetection';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
 
@@ -453,7 +455,8 @@ class Response extends SwooleResponse
             ->setModel(new TemplateVariable())
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
-            ->setModel(new Detection())
+            ->setModel(new FrameworkDetection())
+            ->setModel(new RuntimeDetection())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
