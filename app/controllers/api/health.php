@@ -715,7 +715,7 @@ App::get('/v1/health/queue/stats-resources')
     ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $size = $publisher->getQueueSize(new Queue(Event::STATS_USAGE_QUEUE_NAME));
+        $size = $publisher->getQueueSize(new Queue(Event::STATS_RESOURCES_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
