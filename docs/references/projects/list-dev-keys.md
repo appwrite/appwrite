@@ -1,1 +1,0 @@
-List all the project's dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.

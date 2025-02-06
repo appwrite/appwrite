@@ -34,7 +34,9 @@ class XList extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'listDevKeys',
-                description: '/docs/references/projects/list-dev-keys.md',
+                description: <<<EOT
+                List all the project\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

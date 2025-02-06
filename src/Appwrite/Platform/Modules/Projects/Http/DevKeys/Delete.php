@@ -33,7 +33,9 @@ class Delete extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'deleteDevKey',
-                description: '/docs/references/projects/delete-dev-key.md',
+                description: <<<EOT
+                Delete a project\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

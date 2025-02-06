@@ -33,7 +33,9 @@ class Get extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'getDevKey',
-                description: '/docs/references/projects/get-dev-key.md',
+                description: <<<EOT
+                Get a project\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

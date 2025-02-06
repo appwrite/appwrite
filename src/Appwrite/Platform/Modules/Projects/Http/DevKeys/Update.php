@@ -34,7 +34,9 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'updateDevKey',
-                description: '/docs/references/projects/update-dev-key.md',
+                description: <<<EOT
+                Update a project\'s dev key by its unique ID. Use this endpoint to update a project\'s dev key name or expiration time.'
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

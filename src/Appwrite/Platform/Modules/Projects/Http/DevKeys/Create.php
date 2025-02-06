@@ -38,7 +38,9 @@ class Create extends Action
             ->label('sdk', new Method(
                 namespace: 'projects',
                 name: 'createDevKey',
-                description: '/docs/references/projects/create-dev-key.md',
+                description: <<<EOT
+                Create a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
