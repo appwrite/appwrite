@@ -59,11 +59,10 @@ class Create extends Base
             ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform)
+    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 

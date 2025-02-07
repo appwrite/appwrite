@@ -65,6 +65,149 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testVariables(): void
+    {
+        // create site
+        $site = $this->createSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals('Test Site', $site['body']['name']);
+
+        // create variable
+        $variable = $this->createVariable($siteId, [
+            'key' => 'siteKey1',
+            'value' => 'siteValue1',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'key' => 'siteKey2',
+            'value' => 'siteValue2',
+        ]);
+
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertNotEmpty($variable2['body']['$id']);
+        $this->assertEquals('siteKey2', $variable2['body']['key']);
+        $this->assertEquals('siteValue2', $variable2['body']['value']);
+
+        // create secret variable
+        $secretVariable = $this->createVariable($siteId, [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // get variable
+        $variable = $this->getVariable($siteId, $variable['body']['$id']);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        // get secret variable
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // update variable
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'value' => 'siteValue1Updated',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('siteValue1Updated', $variable['body']['value']);
+
+        // update variable to secret
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('', $variable['body']['value']);
+        $this->assertEquals(true, $variable['body']['secret']);
+
+        // update value of secret variable
+        $secretVariable = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3Updated',
+            'secret' => true
+        ]);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // update secret variable to non-secret
+        $temp = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(400, $temp['headers']['status-code']);
+
+        // get secret variable
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // list variables
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(3, $variables['body']['variables']);
+
+        // delete variable
+        $this->deleteVariable($siteId, $variable['body']['$id']);
+        $this->deleteVariable($siteId, $variable2['body']['$id']);
+        $this->deleteVariable($siteId, $secretVariable['body']['$id']);
+
+        // list variables
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(0, $variables['body']['variables']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**
