@@ -41,7 +41,7 @@ class Platform extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.',
+                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, react-native-android, react-native-ios and unity.',
                 'default' => '',
                 'example' => 'web',
             ])

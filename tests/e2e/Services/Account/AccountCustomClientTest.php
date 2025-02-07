@@ -2307,6 +2307,60 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
+
+        // Forwarded User Agent with API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CM', actual: $response['body']['clientCode']);
+        $this->assertEquals('Chrome Mobile', $response['body']['clientName']);
+
+        // Forwarded User Agent without API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
 
         /**
          * Test for FAILURE
