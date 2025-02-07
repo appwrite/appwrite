@@ -14,6 +14,7 @@ use Utopia\Validator\Host;
 class Redirect extends Host
 {
     protected array $schemes = [];
+    protected array $hostnames = [];
 
     /**
      * @param array<string> $hostnames Allow list of allowed hostnames
