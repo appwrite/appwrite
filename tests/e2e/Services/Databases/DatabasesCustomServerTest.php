@@ -1362,7 +1362,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooWide['headers']['status-code']);
-        $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
+        $this->assertEquals('attribute_limit_exceeded', $tooWide['body']['type']);
     }
 
     public function testIndexLimitException()

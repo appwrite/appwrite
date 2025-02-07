@@ -15,6 +15,6 @@ AttributeString result = await databases.UpdateStringAttribute(
     key: "",
     required: false,
     default: "<DEFAULT>",
-    size: 0, // optional
+    size: 1, // optional
     newKey: "" // optional
 );

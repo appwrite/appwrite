@@ -11,8 +11,8 @@ Messaging messaging = new Messaging(client);
 
 messaging.createPush(
     "<MESSAGE_ID>", // messageId
-    "<TITLE>", // title
-    "<BODY>", // body
+    "<TITLE>", // title (optional)
+    "<BODY>", // body (optional)
     listOf(), // topics (optional)
     listOf(), // users (optional)
     listOf(), // targets (optional)
@@ -23,9 +23,12 @@ messaging.createPush(
     "<SOUND>", // sound (optional)
     "<COLOR>", // color (optional)
     "<TAG>", // tag (optional)
-    "<BADGE>", // badge (optional)
+    0, // badge (optional)
     false, // draft (optional)
     "", // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    MessagePriority.NORMAL, // priority (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

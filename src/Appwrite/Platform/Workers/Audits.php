@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
@@ -60,6 +61,7 @@ class Audits extends Action
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
+        $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
 
         $audit = new Audit($dbForProject);
         $audit->log(
@@ -74,6 +76,7 @@ class Audits extends Action
                 'userId' => $user->getId(),
                 'userName' => $userName,
                 'userEmail' => $userEmail,
+                'userType' => $userType,
                 'mode' => $mode,
                 'data' => $auditPayload,
             ]

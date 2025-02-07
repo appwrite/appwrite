@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectConsole;
@@ -19,6 +20,7 @@ class ProjectsConsoleClientTest extends Scope
     use ProjectsBase;
     use ProjectConsole;
     use SideClient;
+    use Async;
 
     /**
      * @group smtpAndTemplates
@@ -485,6 +487,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
         $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
+        $this->assertIsNumeric($response['body']['authPhoneTotal']);
+        $this->assertIsNumeric($response['body']['authPhoneEstimate']);
 
 
         /**
@@ -1409,18 +1413,20 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * List sessions
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-            'Cookie' => $sessionCookie,
-        ]);
+        $this->assertEventually(function () use ($id, $sessionCookie, $sessionId2) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'Cookie' => $sessionCookie,
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $sessions = $response['body']['sessions'];
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $sessions = $response['body']['sessions'];
 
-        $this->assertEquals(1, count($sessions));
-        $this->assertEquals($sessionId2, $sessions[0]['$id']);
+            $this->assertEquals(1, count($sessions));
+            $this->assertEquals($sessionId2, $sessions[0]['$id']);
+        });
 
         /**
          * Reset Limit
@@ -3727,11 +3733,11 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => ID::unique(),
-            'name' => 'Amating Team',
+            'name' => 'Amazing Team',
         ]);
 
         $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Amating Team', $team['body']['name']);
+        $this->assertEquals('Amazing Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
         $teamId = $team['body']['$id'];
@@ -3792,6 +3798,115 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $project['headers']['status-code']);
 
         return $data;
+    }
+
+    public function testDeleteSharedProject(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Amazing Team',
+        ]);
+
+        $teamId = $team['body']['$id'];
+
+        // Ensure deleting one project does not affect another project
+        $project1 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Amazing Project 1',
+            'teamId' => $teamId,
+            'region' => 'default'
+        ]);
+
+        $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Amazing Project 2',
+            'teamId' => $teamId,
+            'region' => 'default'
+        ]);
+
+        $project1Id = $project1['body']['$id'];
+        $project2Id = $project2['body']['$id'];
+
+        // Create user in each project
+        $key1 = $this->client->call(Client::METHOD_POST, '/projects/' . $project1Id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+
+        $user1 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project1Id,
+            'x-appwrite-key' => $key1['body']['secret'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'test1@appwrite.io',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user1['headers']['status-code']);
+
+        $key2 = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+
+        $user2 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key2['body']['secret'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'test2@appwrite.io',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user2['headers']['status-code']);
+
+        // Delete project 1
+        $project1 = $this->client->call(Client::METHOD_DELETE, '/projects/' . $project1Id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $project1['headers']['status-code']);
+
+        \sleep(3);
+
+        // Ensure project 2 user is still there
+        $user2 = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key2['body']['secret'],
+        ]);
+
+        $this->assertEquals(200, $user2['headers']['status-code']);
+
+        // Create another user in project 2 in case read hits stale cache
+        $user3 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key2['body']['secret'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'test3@appwrite.io'
+        ]);
+
+        $this->assertEquals(201, $user3['headers']['status-code']);
     }
 
     /**

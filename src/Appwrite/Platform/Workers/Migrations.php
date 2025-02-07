@@ -2,10 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -15,7 +14,6 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -27,12 +25,13 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Migrations extends Action
 {
     protected Database $dbForProject;
 
-    protected Database $dbForConsole;
+    protected Database $dbForPlatform;
 
     protected Document $project;
 
@@ -51,16 +50,17 @@ class Migrations extends Action
         $this
             ->desc('Migrations worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForProject')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('logError')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, callable $logError) => $this->action($message, $dbForProject, $dbForConsole, $logError));
+            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, callable $logError): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -69,7 +69,6 @@ class Migrations extends Action
         }
 
         $events    = $payload['events'] ?? [];
-        $project   = new Document($payload['project'] ?? []);
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
@@ -77,7 +76,7 @@ class Migrations extends Action
         }
 
         $this->dbForProject = $dbForProject;
-        $this->dbForConsole = $dbForConsole;
+        $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
         $this->logError = $logError;
 
@@ -197,7 +196,7 @@ class Migrations extends Action
      */
     protected function removeAPIKey(Document $apiKey): void
     {
-        $this->dbForConsole->deleteDocument('keys', $apiKey->getId());
+        $this->dbForPlatform->deleteDocument('keys', $apiKey->getId());
     }
 
     /**
@@ -206,48 +205,32 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function generateAPIKey(Document $project): Document
+    protected function generateAPIKey(Document $project): string
     {
-        $generatedSecret = bin2hex(\random_bytes(128));
-
-        $key = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'projectInternalId' => $project->getInternalId(),
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
-            'name' => 'Transfer API Key',
             'scopes' => [
                 'users.read',
                 'users.write',
                 'teams.read',
                 'teams.write',
-                'databases.read',
-                'databases.write',
-                'collections.read',
-                'collections.write',
-                'documents.read',
-                'documents.write',
                 'buckets.read',
                 'buckets.write',
                 'files.read',
                 'files.write',
                 'functions.read',
                 'functions.write',
-            ],
-            'expire' => null,
-            'sdks' => [],
-            'accessedAt' => null,
-            'secret' => $generatedSecret,
+                'databases.read',
+                'databases.write',
+                'collections.read',
+                'collections.write',
+                'documents.read',
+                'documents.write'
+            ]
         ]);
 
-        $this->dbForConsole->createDocument('keys', $key);
-        $this->dbForConsole->purgeCachedDocument('projects', $project->getId());
-
-        return $key;
+        return API_KEY_DYNAMIC . '_' . $apiKey;
     }
 
     /**
@@ -261,7 +244,7 @@ class Migrations extends Action
     protected function processMigration(Document $migration): void
     {
         $project = $this->project;
-        $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
+        $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         $transfer = $source = $destination = null;
@@ -275,7 +258,7 @@ class Migrations extends Action
 
                 $credentials['projectId'] = $credentials['projectId'] ?? $projectDocument->getId();
                 $credentials['endpoint'] = $credentials['endpoint'] ?? 'http://appwrite/v1';
-                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey['secret'];
+                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
 
                 $migration->setAttribute('credentials', $credentials);
             }
@@ -285,7 +268,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration, $tempAPIKey->getAttribute('secret'));
+            $destination = $this->processDestination($migration, $tempAPIKey);
 
             $source->report();
 
@@ -355,6 +338,12 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
 
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source') ?? '',
+                    'destination' => $migration->getAttribute('destination') ?? '',
+                ]);
+
                 return;
             }
 
@@ -375,40 +364,45 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errorMessages);
             }
         } finally {
-            if (! $tempAPIKey->isEmpty()) {
-                $this->removeAPIKey($tempAPIKey);
-            }
-
             $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') === 'failed') {
                 Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
 
-                $destination->error();
-                $source->error();
+                if ($destination) {
+                    $destination->error();
 
-                foreach ($source->getErrors() as $error) {
-                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
-                        'source' => $migration->getAttribute('source') ?? '',
-                        'resourceName' => $error->getResourceName(),
-                        'resourceGroup' => $error->getResourceGroup()
-                    ]);
+                    foreach ($destination->getErrors() as $error) {
+                        /** @var MigrationException $error */
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                            'migrationId' => $migration->getId(),
+                            'source' => $migration->getAttribute('source') ?? '',
+                            'destination' => $migration->getAttribute('destination') ?? '',
+                            'resourceName' => $error->getResourceName(),
+                            'resourceGroup' => $error->getResourceGroup()
+                        ]);
+                    }
                 }
 
-                foreach ($destination->getErrors() as $error) {
-                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
-                        'source' => $migration->getAttribute('source') ?? '',
-                        'resourceName' => $error->getResourceName(),
-                        'resourceGroup' => $error->getResourceGroup()
-                    ]);
+                if ($source) {
+                    $source->error();
+
+                    foreach ($source->getErrors() as $error) {
+                        /** @var MigrationException $error */
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                            'migrationId' => $migration->getId(),
+                            'source' => $migration->getAttribute('source') ?? '',
+                            'destination' => $migration->getAttribute('destination') ?? '',
+                            'resourceName' => $error->getResourceName(),
+                            'resourceGroup' => $error->getResourceGroup()
+                        ]);
+                    }
                 }
             }
 
             if ($migration->getAttribute('status', '') === 'completed') {
-                $destination->success();
-                $source->success();
+                $destination?->success();
+                $source?->success();
             }
         }
     }
