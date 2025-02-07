@@ -137,11 +137,19 @@ App::get('v1/console/resources/:resourceId')
     ->desc('Check resource ID availability')
     ->groups(['api', 'projects'])
     ->label('scope', 'rules.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'console')
-    ->label('sdk.method', 'getResourceAvailability')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'console',
+        name: 'resourceAvailability',
+        description: '/docs/references/console/resourceAvailability.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{userId}, url:{url}')
     ->label('abuse-time', 60)

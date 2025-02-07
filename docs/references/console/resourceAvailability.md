@@ -1,0 +1,1 @@
+Get availability of resources for the console.
