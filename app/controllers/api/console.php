@@ -7,13 +7,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 App::init()
     ->groups(['console'])
@@ -131,38 +127,4 @@ App::post('/v1/console/assistant')
         curl_close($ch);
 
         $response->chunk('', true);
-    });
-
-App::get('v1/console/resources/:resourceId')
-    ->desc('Check resource ID availability')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'rules.read')
-    ->label('sdk', new Method(
-        namespace: 'console',
-        name: 'getResourceAvailability',
-        description: '/docs/references/console/getResourceAvailability.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
-    ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{userId}, url:{url}')
-    ->label('abuse-time', 60)
-    ->param('resourceId', '', new UID(), 'ID of the resource.')
-    ->param('type', '', new WhiteList(['rules']), 'Resource type.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $resourceId, string $type, Response $response, Database $dbForPlatform) {
-        $document = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $resourceId));
-
-        if (!$document->isEmpty()) {
-            throw new Exception(Exception::RESOURCE_ALREADY_EXISTS);
-        }
-
-        $response->noContent();
     });

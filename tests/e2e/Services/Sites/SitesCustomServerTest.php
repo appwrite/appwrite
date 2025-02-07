@@ -960,9 +960,9 @@ class SitesCustomServerTest extends Scope
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = "test-site.{$sitesDomain}";
-        $ruleId = \md5($domain);
+        $ruleId1 = \md5($domain);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId, [
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId1, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -974,9 +974,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']); // subdomain unavailable
 
         $domain = "non-existent-subdomain.{$sitesDomain}";
-        $ruleId = \md5($domain);
+        $ruleId2 = \md5($domain);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId, [
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId2, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -988,6 +988,19 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']); // subdomain available
 
         $this->cleanupSite($siteId);
+
+        sleep(1);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId1, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // subdomain available as site is deleted
     }
 
     // TODO: Add tests for deletion of resources when site is deleted
