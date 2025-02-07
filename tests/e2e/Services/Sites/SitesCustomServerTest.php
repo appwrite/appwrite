@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -937,6 +938,56 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('buildRuntime', $framework);
         $this->assertArrayHasKey('runtimes', $framework);
         $this->assertArrayHasKey('adapters', $framework);
+    }
+
+    public function testConsoleAvailabilityEndpoint(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'subdomain' => 'test-site',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals('Test Site', $site['body']['name']);
+
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $domain = "test-site.{$sitesDomain}";
+        $ruleId = \md5($domain);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']); // subdomain unavailable
+
+        $domain = "non-existent-subdomain.{$sitesDomain}";
+        $ruleId = \md5($domain);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // subdomain available
+
+        $this->cleanupSite($siteId);
     }
 
     // TODO: Add tests for deletion of resources when site is deleted

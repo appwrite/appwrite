@@ -148,9 +148,9 @@ App::get('v1/console/resources/:resourceId')
     ->param('resourceId', '', new UID(), 'ID of the resource.')
     ->param('type', '', new WhiteList(['rules']), 'Resource type.')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $resourceId, string $type, Response $response, Database $dbForConsole) {
-        $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $resourceId));
+    ->inject('dbForPlatform')
+    ->action(function (string $resourceId, string $type, Response $response, Database $dbForPlatform) {
+        $document = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $resourceId));
 
         if (!$document->isEmpty()) {
             throw new Exception(Exception::RESOURCE_ALREADY_EXISTS);
