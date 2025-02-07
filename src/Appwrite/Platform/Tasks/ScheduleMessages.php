@@ -41,7 +41,7 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($schedule, $pools, $dbForPlatform) {
-                $queue = $pools->get('queue')->pop();
+                $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
 
