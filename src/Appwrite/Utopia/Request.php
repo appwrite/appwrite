@@ -2,8 +2,10 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
 
@@ -179,5 +181,28 @@ class Request extends UtopiaRequest
     {
         $headers = $this->getHeaders();
         return $headers[$key] ?? $default;
+    }
+
+    /**
+    * Get User Agent
+    *
+    * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
+    *
+    * @param  string  $default
+    * @return string
+    */
+    public function getUserAgent(string $default = ''): string
+    {
+        $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
+        if (!empty($forwardedUserAgent)) {
+            $roles = Authorization::getRoles();
+            $isAppUser = Auth::isAppUser($roles);
+
+            if ($isAppUser) {
+                return $forwardedUserAgent;
+            }
+        }
+
+        return UtopiaRequest::getUserAgent($default);
     }
 }
