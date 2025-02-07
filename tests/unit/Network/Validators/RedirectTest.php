@@ -18,6 +18,8 @@ class RedirectTest extends TestCase
             "scheme with special chars" => [[], ["my-app+custom.123"], "my-app+custom.123://", true],
             "url https" => [["example.com"], [], "https://example.com", true],
             "url http" => [["example.com"], [], "http://example.com", true],
+            "wildcard" => [["*"], [], "https://example.com", true],
+            "wildcard subdomain" => [["*.example.com"], [], "https://sub.example.com", true],
             "malformed scheme" => [[], [], "http:/example.com", false],
             "invalid url" => [[], [], "example.com", false],
             "invalid host" => [["notexample.com"], [], "https://example.com", false],

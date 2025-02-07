@@ -39,14 +39,14 @@ class Redirect extends Host
         $schemes = '';
         if (!empty($this->schemes)) {
             $schemes = "URL scheme must be one of the following: " . implode(", ", array_map(function ($scheme) {
-                return "`$scheme`://";
+                return "$scheme://";
             }, $this->schemes));
         }
 
         $hostnames = '';
         if (!empty($this->hostnames)) {
             $hostnames = "URL hostname must be one of the following: " . implode(", ", array_map(function ($hostname) {
-                return "http://`$hostname`";
+                return "http://$hostname";
             }, $this->hostnames));
         }
 
