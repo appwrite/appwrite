@@ -1191,46 +1191,58 @@ App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
 App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('platforms', function (Document $project, Document $console) {
-    return [
-        ...$project->getAttribute('platforms', []),
-        ...$console->getAttribute('platforms', []),
-    ];
-}, ['project', 'console']);
-App::setResource('hostnames', function (array $platforms) {
-    // Allow environment configured hostnames
-    $hostnames = [];
+App::setResource('clients', function ($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Always allow current host
+        '$collection' => ID::custom('platforms'),
+        'name' => 'Current Host',
+        'type' => Origin::CLIENT_TYPE_WEB,
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+
+    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
     $validator = new Hostname();
-    foreach (explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', '')) as $hostname) {
+    foreach ($hostnames as $hostname) {
         $hostname = trim($hostname);
-        if ($validator->isValid($hostname)) {
-            $hostnames[] = $hostname;
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
+
+    /**
+     * Get All verified client URLs for both console and current projects
+     * + Filter for duplicated entries
+     */
+    $clientsConsole = \array_map(
+        fn ($node) => $node['hostname'],
+        \array_filter(
+            $console->getAttribute('platforms', []),
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
+        )
+    );
+
+    $clients = $clientsConsole;
+    $platforms = $project->getAttribute('platforms', []);
+
+    foreach ($platforms as $node) {
+        if (
+            isset($node['type']) &&
+            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
+            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+            !empty($node['hostname'])
+        ) {
+            $clients[] = $node['hostname'];
         }
     }
 
-    // Add database configured hostnames
-    foreach ($platforms as $platform) {
-        if (!empty($platform['hostname']) && in_array($platform['type'], [
-            Origin::CLIENT_TYPE_WEB,
-            Origin::CLIENT_TYPE_FLUTTER_WEB,
-        ])) {
-            $hostnames[] = $platform['hostname'];
-        }
-    }
+    return \array_unique($clients);
+}, ['request', 'console', 'project']);
 
-    return \array_unique($hostnames);
-}, ['platforms']);
-App::setResource('schemes', function (array $platforms, Document $project) {
-    $schemes = [];
-
-    // Allow `appwrite-callback-${projectId}` scheme by default
-    if (!empty($project) && $project->getId() !== 'console') {
-        $schemes[] = 'exp';
-        $schemes[] = 'appwrite-callback-' .  $project->getId();
-    }
-
-    return \array_unique($schemes);
-}, ['platforms', 'project']);
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */

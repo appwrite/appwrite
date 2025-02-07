@@ -497,7 +497,7 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
-    ->inject('hostnames')
+    ->inject('clients')
     ->inject('geodb')
     ->inject('queueForUsage')
     ->inject('queueForEvents')
@@ -505,8 +505,7 @@ App::init()
     ->inject('queueForFunctions')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->inject('platforms')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $hostnames, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname, array $platforms) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname) {
         /*
         * Appwrite Router
         */
@@ -622,7 +621,7 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
-        $validator = new Hostname($hostnames);
+        $validator = new Hostname($clients);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
         }
@@ -713,7 +712,7 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin($platforms);
+        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
         if (
             !$originValidator->isValid($origin)
