@@ -139,8 +139,8 @@ App::get('v1/console/resources/:resourceId')
     ->label('scope', 'rules.read')
     ->label('sdk', new Method(
         namespace: 'console',
-        name: 'resourceAvailability',
-        description: '/docs/references/console/resourceAvailability.md',
+        name: 'getResourceAvailability',
+        description: '/docs/references/console/getResourceAvailability.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
