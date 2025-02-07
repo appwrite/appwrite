@@ -1221,11 +1221,9 @@ App::setResource('hostnames', function (array $platforms) {
     return \array_unique($hostnames);
 }, ['platforms']);
 App::setResource('schemes', function (array $platforms, Document $project) {
-    // Allow expo development scheme by default
-    $schemes = ['exp'];
-
     // Allow `appwrite-callback-${projectId}` scheme by default
     if (!empty($project) && $project->getId() !== 'console') {
+        $schemes[] = 'exp';
         $schemes[] = 'appwrite-callback-' .  $project->getId();
     }
 

@@ -22,6 +22,7 @@ class Redirect extends Host
     public function __construct(array $hostnames = [], array $schemes = [])
     {
         $this->schemes = $schemes;
+        $this->hostnames = $hostnames;
         parent::__construct($hostnames);
     }
 
