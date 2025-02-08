@@ -1066,7 +1066,7 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
-        
+
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
 
