@@ -30,6 +30,9 @@ RUN \
 
 RUN apk add libwebp
 
+# TODO: Move to appwrite/docker-base
+RUN apk add zip
+
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor

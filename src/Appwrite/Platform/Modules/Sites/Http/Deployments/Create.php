@@ -119,7 +119,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
-        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
+        $fileExt = new FileExt([FileExt::TYPE_GZIP, 'zip']); // TODO: Move 'zip' to Storage library
         $fileSizeValidator = new FileSize(System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
@@ -172,7 +172,9 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        \var_dump($metadata);
         if (!$deployment->isEmpty()) {
+            \var_dump("Setting");
             $chunks = $deployment->getAttribute('chunksTotal', 1);
             $metadata = $deployment->getAttribute('metadata', []);
             if ($chunk === -1) {
@@ -206,6 +208,7 @@ class Create extends Action
             $fileSize = $deviceForFunctions->getFileSize($path);
 
             if ($deployment->isEmpty()) {
+                \var_dump("Creating");
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$permissions' => [
@@ -249,6 +252,7 @@ class Create extends Action
                     ]))
                 );
             } else {
+                \var_dump("updating");
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
 
@@ -259,6 +263,7 @@ class Create extends Action
                 ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
+                \var_dump("Creating 2");
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$permissions' => [

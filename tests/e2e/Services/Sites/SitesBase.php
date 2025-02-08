@@ -12,9 +12,6 @@ trait SitesBase
 {
     use Async;
 
-    protected string $stdout = '';
-    protected string $stderr = '';
-
     protected function setupSite(mixed $params): string
     {
         $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
@@ -164,18 +161,42 @@ trait SitesBase
         return $logs;
     }
 
-    protected function packageSite(string $site): CURLFile
+    protected function packageSite(string $site, string $format = 'gzip'): CURLFile
     {
+        $extension = '';
+        $command = '';
+        $header = '';
+
+        switch ($format) {
+            case 'gzip':
+                $extension = 'tar.gz';
+                $command = 'tar --exclude code.tar.gz -czf code.tar.gz .';
+                $header = 'application/x-gzip';
+                break;
+            case 'zip':
+                $extension = 'zip';
+                $command = 'zip -x code.zip -r code.zip .';
+                $header = 'application/zip';
+                break;
+            default:
+                throw new \Exception('Invalid package format');
+        }
+
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        $filePath = "$folderPath/code." . $extension;
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $stdout = '';
+        $stderr = '';
+        $exitCode = Console::execute("cd $folderPath && " . $command, '', $stdout, $stderr);
 
-        if (filesize($tarPath) > 1024 * 1024 * 5) {
+        $this->assertEquals(0, $exitCode);
+        $this->assertEmpty($stderr);
+
+        if (filesize($filePath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        return new CURLFile($filePath, $header, \basename($filePath));
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed
