@@ -918,27 +918,16 @@ class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
         ]);
 
+        $this->assertNotEmpty($siteId);
+
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-spa'),
             'activate' => 'true'
         ]);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$siteId])->toString(),
-                Query::equal('resourceType', ['site'])->toString(),
-            ],
-        ]);
+        $this->assertNotEmpty($deploymentId);
 
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $this->getSiteDomain($siteId);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -986,27 +975,16 @@ class SitesCustomServerTest extends Scope
             'fallbackFile' => '404.html',
         ]);
 
+        $this->assertNotEmpty($siteId);
+
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-spa'),
             'activate' => 'true'
         ]);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$siteId])->toString(),
-                Query::equal('resourceType', ['site'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $this->assertNotEmpty($deploymentId);
+        
+        $domain = $this->getSiteDomain($siteId);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
