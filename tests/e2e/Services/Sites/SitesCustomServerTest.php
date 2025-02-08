@@ -1088,5 +1088,64 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($site['body']['$id']);
     }
 
+    public function testSitePreviewBranding(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'A site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $previewDomain = $this->getDeploymentDomain($deploymentId);
+
+        $this->assertNotEmpty($domain);
+        $this->assertNotEmpty($previewDomain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringNotContainsString("<script", $response['body']);
+
+        $contentLength = $response['headers']['content-length'];
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $previewDomain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringContainsString("<script", $response['body']);
+        $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
+
+        $this->cleanupSite($siteId);
+    }
+
     // TODO: Add tests for deletion of resources when site is deleted
 }

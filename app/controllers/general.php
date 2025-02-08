@@ -11,6 +11,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Platform\Modules\Sites\Transformers\Preview;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -130,7 +131,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
     }
 
-    if ($type === 'function' || $type === 'site') {
+    if ($type === 'function' || $type === 'site' || $type === 'deployment') {
         $method = $utopia->getRoute()?->getLabel('sdk', null);
 
         if (empty($method)) {
@@ -445,6 +446,21 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30
             );
+
+
+            // Branded banner for previews
+            if ($type === 'deployment' && Preview::isValid($executionResponse['headers'])) {
+                $transformer = new Preview($executionResponse['body']);
+                $transformer->transform();
+                $executionResponse['body'] = $transformer->getBody();
+
+                $execution->setAttribute('responseBody', $body);
+                foreach ($executionResponse['headers'] as $key => $value) {
+                    if (\strtolower($key) === 'content-length') {
+                        $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                    }
+                }
+            }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
