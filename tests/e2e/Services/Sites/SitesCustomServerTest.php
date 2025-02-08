@@ -939,5 +939,154 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('adapters', $framework);
     }
 
+    public function testSiteTemplate(): void
+    {
+        $template = $this->getTemplate('astro-starter');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Template site',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+            'templateRepository' => $template['providerRepositoryId'],
+            'templateOwner' => $template['providerOwner'],
+            'templateRootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'templateVersion' => $template['providerVersion'],
+        ]);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 50000, 500);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteDomainReclaiming(): void
+    {
+        $subdomain = 'startup' . \uniqid();
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup 2 site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertStringContainsString("Subdomain already exists.", $site['body']['message']);
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($domain) {
+            $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('domain', [$domain])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+        }, 50000, 500);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+        
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup 2 site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $this->cleanupSite($site['body']['$id']);
+    }
+
     // TODO: Add tests for deletion of resources when site is deleted
 }
