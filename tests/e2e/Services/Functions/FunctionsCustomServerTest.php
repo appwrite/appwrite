@@ -2843,4 +2843,129 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testExecutionIDConsistency(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'functionId' => ID::unique(),
+            'name' => 'Test Execution ID',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => ['users.*.create'],
+            'timeout' => 10,
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        // Deploy the function
+        $folder = 'php-fn';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+
+        // Test 1: Sync Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertArrayHasKey('APPWRITE_FUNCTION_EXECUTION_ID', $output);
+        $this->assertEquals($execution['body']['$id'], $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+
+        // Test 2: Async Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $executionId = $execution['body']['$id'];
+
+        sleep(5);
+
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertArrayHasKey('APPWRITE_FUNCTION_EXECUTION_ID', $output);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+
+        // Test 3: Scheduled Execution
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M'));
+        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => $futureTime->format(\DateTime::ATOM)
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertEquals('scheduled', $execution['body']['status']);
+        $executionId = $execution['body']['$id'];
+
+        // Wait and verify scheduled execution
+        sleep(150); // Wait for scheduled execution
+
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertArrayHasKey('APPWRITE_FUNCTION_EXECUTION_ID', $output);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+
+        // Test 4: Error Cases
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/invalid-id', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $execution['headers']['status-code']);
+
+        // Cleanup
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }
