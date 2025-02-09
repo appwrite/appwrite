@@ -8,6 +8,7 @@ def main(context):
         'APPWRITE_FUNCTION_ID' : os.environ.get('APPWRITE_FUNCTION_ID',''),
         'APPWRITE_FUNCTION_NAME' : os.environ.get('APPWRITE_FUNCTION_NAME',''),
         'APPWRITE_FUNCTION_DEPLOYMENT' : os.environ.get('APPWRITE_FUNCTION_DEPLOYMENT',''),
+        'APPWRITE_FUNCTION_EXECUTION_ID' : context.req.headers.get('x-appwrite-execution-id', ''),
         'APPWRITE_FUNCTION_TRIGGER' : context.req.headers.get('x-appwrite-trigger', ''),
         'APPWRITE_FUNCTION_RUNTIME_NAME' : os.environ.get('APPWRITE_FUNCTION_RUNTIME_NAME',''),
         'APPWRITE_FUNCTION_RUNTIME_VERSION' : os.environ.get('APPWRITE_FUNCTION_RUNTIME_VERSION',''),

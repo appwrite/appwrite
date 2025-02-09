@@ -7,6 +7,7 @@ Future<dynamic> main(final context) async {
         'APPWRITE_FUNCTION_ID' : Platform.environment['APPWRITE_FUNCTION_ID'] ?? '',
         'APPWRITE_FUNCTION_NAME' : Platform.environment['APPWRITE_FUNCTION_NAME'] ?? '',
         'APPWRITE_FUNCTION_DEPLOYMENT' : Platform.environment['APPWRITE_FUNCTION_DEPLOYMENT'] ?? '',
+        'APPWRITE_FUNCTION_EXECUTION_ID' : context.req.headers['x-appwrite-execution-id'] ?? '',
         'APPWRITE_FUNCTION_TRIGGER' : context.req.headers['x-appwrite-trigger'] ?? '',
         'APPWRITE_FUNCTION_RUNTIME_NAME' : Platform.environment['APPWRITE_FUNCTION_RUNTIME_NAME'] ?? '',
         'APPWRITE_FUNCTION_RUNTIME_VERSION' : Platform.environment['APPWRITE_FUNCTION_RUNTIME_VERSION'] ?? '',

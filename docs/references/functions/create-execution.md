@@ -1,1 +1,3 @@
-Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
+Trigger a function execution. The returned object will return you the current execution status and a unique execution ID. You can use this execution ID to track the execution's progress and access it in your function's code through the context object. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
+
+The execution ID is available in your function's context through the `x-appwrite-execution-id` header and can be used for logging, tracking, and correlation purposes.

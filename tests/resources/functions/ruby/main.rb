@@ -5,6 +5,7 @@ def main(context)
         'APPWRITE_FUNCTION_ID' => ENV['APPWRITE_FUNCTION_ID'] || '',
         'APPWRITE_FUNCTION_NAME' => ENV['APPWRITE_FUNCTION_NAME'] || '',
         'APPWRITE_FUNCTION_DEPLOYMENT' => ENV['APPWRITE_FUNCTION_DEPLOYMENT'] || '',
+        'APPWRITE_FUNCTION_EXECUTION_ID' => context.req.headers['x-appwrite-execution-id'] || '',
         'APPWRITE_FUNCTION_TRIGGER' => context.req.headers['x-appwrite-trigger'] || '',
         'APPWRITE_FUNCTION_RUNTIME_NAME' => ENV['APPWRITE_FUNCTION_RUNTIME_NAME'] || '',
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => ENV['APPWRITE_FUNCTION_RUNTIME_VERSION'] || '',

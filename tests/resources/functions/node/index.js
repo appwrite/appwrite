@@ -5,6 +5,8 @@ module.exports = async(context) => {
         'APPWRITE_FUNCTION_ID' : process.env.APPWRITE_FUNCTION_ID ?? '',
         'APPWRITE_FUNCTION_NAME' : process.env.APPWRITE_FUNCTION_NAME ?? '',
         'APPWRITE_FUNCTION_DEPLOYMENT' : process.env.APPWRITE_FUNCTION_DEPLOYMENT ?? '',
+        'APPWRITE_FUNCTION_EXECUTION_ID' : 
+            context.req.headers['x-appwrite-execution-id'] ?? '',
         'APPWRITE_FUNCTION_TRIGGER' : context.req.headers['x-appwrite-trigger'] ?? '',
         'APPWRITE_FUNCTION_RUNTIME_NAME' : process.env.APPWRITE_FUNCTION_RUNTIME_NAME,
         'APPWRITE_FUNCTION_RUNTIME_VERSION' : process.env.APPWRITE_FUNCTION_RUNTIME_VERSION,
