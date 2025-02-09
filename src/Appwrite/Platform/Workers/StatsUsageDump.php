@@ -115,9 +115,6 @@ class StatsUsageDump extends Action
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
 
-            /**
-             * End temp bug fallback
-             */
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
             $receivedAt = $stats['receivedAt'] ?? 'NONE';
             if ($numberOfKeys === 0) {
