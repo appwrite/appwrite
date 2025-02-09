@@ -183,6 +183,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-user-jwt'] = '';
+        $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
