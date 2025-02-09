@@ -85,11 +85,20 @@ class StatsResources extends Action
     {
         Console::info('Begining count for: ' . $project->getId());
 
+        $dbForLogs = null;
+        $dbForProject = null;
         try {
             /** @var \Utopia\Database\Database $dbForLogs */
             $dbForLogs = call_user_func($getLogsDB, $project);
             /** @var \Utopia\Database\Database $dbForProject */
             $dbForProject = call_user_func($getProjectDB, $project);
+        } catch (Throwable $th) {
+            Console::error('Unable to get database');
+            Console::error($th->getMessage());
+            return;
+        }
+
+        try {
 
             $region = $project->getAttribute('region');
 
@@ -162,11 +171,11 @@ class StatsResources extends Action
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
+
+            $this->writeDocuments($dbForLogs, $project);
         } catch (Throwable $th) {
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
-
-        $this->writeDocuments($dbForLogs, $project);
 
         Console::info('End of count for: ' . $project->getId());
     }
