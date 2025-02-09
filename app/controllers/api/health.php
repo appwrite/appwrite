@@ -952,6 +952,7 @@ App::get('/v1/health/queue/failed/:name')
         Event::AUDITS_QUEUE_NAME,
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
+        Event::STATS_RESOURCES_QUEUE_NAME,
         Event::STATS_USAGE_QUEUE_NAME,
         Event::STATS_USAGE_DUMP_QUEUE_NAME,
         Event::WEBHOOK_QUEUE_NAME,
