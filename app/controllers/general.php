@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
@@ -130,7 +131,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
     }
 
-    if ($type === 'function' || $type === 'site') {
+    if ($type === 'function' || $type === 'site' || $type === 'deployment') {
         $method = $utopia->getRoute()?->getLabel('sdk', null);
 
         if (empty($method)) {
@@ -171,6 +172,78 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
             $path .= '?' . $query;
+        }
+
+        $protocol = $request->getProtocol();
+
+        // Preview authorization (configure)
+        if (\str_starts_with($path, '/_appwrite/authorize')) {
+            $jwt = $request->getParam('jwt', '');
+            $path = $request->getParam('path', '');
+
+            $duration = 60 * 60 * 24; // 1 day in seconds
+            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+            $response
+                ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($protocol . '://' . $host . $path);
+            return true;
+        }
+
+        // Preview authorization (validate)
+        if ($type === 'deployment') {
+            $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
+            $ok = true;
+
+            if (empty($cookie)) {
+                $ok = false;
+            } else {
+                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+                $payload = [];
+                try {
+                    $payload = $jwt->decode($cookie);
+                } catch (JWTException $error) {
+                    $ok = false;
+                }
+
+                $jwtUserId = $payload['userId'] ?? '';
+                if (empty($jwtUserId)) {
+                    $ok = false;
+                } else {
+                    $user = $dbForPlatform->getDocument('users', $jwtUserId);
+                    if ($user->isEmpty()) {
+                        $ok = false;
+                    }
+                }
+
+                $jwtSessionId = $payload['sessionId'] ?? '';
+                if (empty($jwtSessionId)) {
+                    $ok = false;
+                } else {
+                    if (empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                        $ok = false;
+                    }
+                }
+
+                // TODO: Ensure user has access to projectId
+            }
+
+            if ($ok === false) {
+                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_DOMAIN');
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($url . '/console/auth/preview?'
+                        . \http_build_query([
+                            'projectId' => $projectId,
+                            'origin' => $protocol . '://' . $host,
+                            'path' => $path
+                        ]));
+                return true;
+            }
         }
 
         $body = $swooleRequest->getContent() ?? '';
