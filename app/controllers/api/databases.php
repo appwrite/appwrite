@@ -394,7 +394,7 @@ function updateAttribute(
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         } catch (LimitException) {
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
-        } catch (indexException $e) {
+        } catch (IndexException $e) {
             throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
         }
     }
