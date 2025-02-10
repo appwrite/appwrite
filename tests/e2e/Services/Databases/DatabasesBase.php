@@ -450,7 +450,7 @@ trait DatabasesBase
         sleep(1);
 
         /**
-         * Update attribute size to exceed Index maximux length
+         * Update attribute size to exceed Index maximum length
          */
         $attribute = $this->client->call(Client::METHOD_PATCH, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/attributes/string/'.$attribute['body']['key'], array_merge([
             'content-type' => 'application/json',
