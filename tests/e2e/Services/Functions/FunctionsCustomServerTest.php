@@ -1991,7 +1991,7 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'runtime' => 'node-18.0',
-            'name' => 'Logging Test',
+            'name' => 'Variable Test',
             'entrypoint' => 'index.js',
             'logging' => false,
             'execute' => ['any']
@@ -2128,6 +2128,54 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $variables['headers']['status-code']);
         $this->assertCount(0, $variables['body']['variables']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testVariablesE2E(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Variable E2E Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any']
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertFalse($function['body']['logging']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $functionId = $function['body']['$id'] ?? '';
+
+        // create variable
+        $variable = $this->createVariable($functionId, [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'test',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('CUSTOM_VARIABLE', $variable['body']['key']);
+        $this->assertEquals('', $variable['body']['value']);
+        $this->assertEquals(true, $variable['body']['secret']);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.js',
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $execution = $this->createExecution($functionId);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']['logs']);
+        $this->assertEmpty($execution['body']['errors']);
+        $this->assertStringContainsString('"CUSTOM_VARIABLE":"test"', $execution['body']['responseBody']);
 
         $this->cleanupFunction($functionId);
     }
