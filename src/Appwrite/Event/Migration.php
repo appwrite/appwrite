@@ -3,16 +3,16 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Migration extends Event
 {
     protected string $type = '';
     protected ?Document $migration = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::MIGRATIONS_QUEUE_NAME)
