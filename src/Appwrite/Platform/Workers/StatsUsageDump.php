@@ -317,10 +317,8 @@ class StatsUsageDump extends Action
 
     protected function writeToLogsDB(Document $project, Document $document)
     {
-        $databasesToDualWrite = explode(',', System::getEnv('_APP_STATS_USAGE_DUAL_WRITING_DBS', ''));
-
-        $db = $project->getAttribute('database');
-        if (!in_array($db, $databasesToDualWrite)) {
+        if (!System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', false)) {
+            Console::log('Dual Writing is disabled. Skipping...');
             return;
         }
 
