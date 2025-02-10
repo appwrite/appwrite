@@ -837,6 +837,9 @@ App::error()
             case 'Utopia\Database\Exception\Dependency':
                 $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
                 break;
+            case 'Utopia\Database\Exception\Index':
+                $error = new AppwriteException(AppwriteException::INDEX_INVALID, $error->getMessage(), previous: $error);
+                break;
         }
 
         $code = $error->getCode();
