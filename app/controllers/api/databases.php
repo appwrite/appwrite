@@ -378,19 +378,6 @@ function updateAttribute(
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
-
-        $validator = new IndexValidator(
-            $collection->getAttribute('attributes', []),
-            $dbForProject->getAdapter()->getMaxIndexLength(),
-            $dbForProject->getAdapter()->getInternalIndexesKeys(),
-        );
-
-        foreach ($collection->getAttribute('indexes', []) as $index) {
-            if (!$validator->isValid($index)) {
-                throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
-            }
-        }
-
         try {
             $dbForProject->updateAttribute(
                 collection: $collectionId,
