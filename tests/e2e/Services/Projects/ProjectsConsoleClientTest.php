@@ -3928,6 +3928,9 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals('APP_TEST', $variable['body']['key']);
+        $this->assertEquals('TESTINGVALUE', $variable['body']['value']);
+        $this->assertFalse($variable['body']['secret']);
         $variableId = $variable['body']['$id'];
 
         // test for secret variable
