@@ -1118,6 +1118,7 @@ App::error()
                 ->setParam('trace', $output['trace'] ?? []);
 
             $response->html($layout->render());
+            return;
         }
 
         $response->dynamic(
