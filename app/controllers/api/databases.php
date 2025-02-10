@@ -27,6 +27,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -384,7 +385,7 @@ function updateAttribute(
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
 
-        foreach ($collection->getAttribute('indexes', []) as $index){
+        foreach ($collection->getAttribute('indexes', []) as $index) {
             if (!$validator->isValid($index)) {
                 throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
             }
@@ -407,10 +408,7 @@ function updateAttribute(
         } catch (LimitException) {
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (indexException $e) {
-            /**
-             * We do not have index indexException thrown from Utopia...
-             */
-            throw new Exception(Exception::INDEX_INVALID, $e->getDescription());
+            throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
         }
     }
 
