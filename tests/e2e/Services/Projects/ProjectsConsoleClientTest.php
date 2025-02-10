@@ -3923,7 +3923,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
             'key' => 'APP_TEST',
-            'value' => 'TESTINGVALUE'
+            'value' => 'TESTINGVALUE',
+            'secret' => false
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
