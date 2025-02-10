@@ -56,7 +56,7 @@ class Create extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-            ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+            ->param('secret', true, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);

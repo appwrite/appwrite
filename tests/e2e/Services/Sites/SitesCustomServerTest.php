@@ -87,22 +87,26 @@ class SitesCustomServerTest extends Scope
         $variable = $this->createVariable($siteId, [
             'key' => 'siteKey1',
             'value' => 'siteValue1',
+            'secret' => false,
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertNotEmpty($variable['body']['$id']);
         $this->assertEquals('siteKey1', $variable['body']['key']);
         $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
 
         $variable2 = $this->createVariable($siteId, [
             'key' => 'siteKey2',
             'value' => 'siteValue2',
+            'secret' => false,
         ]);
 
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertNotEmpty($variable2['body']['$id']);
         $this->assertEquals('siteKey2', $variable2['body']['key']);
         $this->assertEquals('siteValue2', $variable2['body']['value']);
+        $this->assertEquals(false, $variable2['body']['secret']);
 
         // create secret variable
         $secretVariable = $this->createVariable($siteId, [
@@ -145,6 +149,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($variable['body']['$id']);
         $this->assertEquals('siteKey1Updated', $variable['body']['key']);
         $this->assertEquals('siteValue1Updated', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
 
         // update variable to secret
         $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
@@ -162,7 +167,6 @@ class SitesCustomServerTest extends Scope
         $secretVariable = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
             'key' => 'siteKey3',
             'value' => 'siteValue3Updated',
-            'secret' => true
         ]);
 
         $this->assertEquals(200, $secretVariable['headers']['status-code']);

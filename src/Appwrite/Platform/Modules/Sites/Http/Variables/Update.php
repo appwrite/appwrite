@@ -53,7 +53,7 @@ class Update extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-            ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+            ->param('secret', null, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);
