@@ -982,7 +982,7 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertNotEmpty($deploymentId);
-        
+
         $domain = $this->getSiteDomain($siteId);
 
         $proxyClient = new Client();
