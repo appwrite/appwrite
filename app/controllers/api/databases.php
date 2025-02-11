@@ -3508,8 +3508,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
-        \var_dump('Adding read metrics: ' . $operations);
-
         if (empty($apiKey) || $apiKey->isUsageEnabled()) {
             $queueForStatsUsage
                 ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)

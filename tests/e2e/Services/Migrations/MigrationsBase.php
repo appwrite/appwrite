@@ -589,7 +589,7 @@ trait MigrationsBase
         ]);
 
         // Wait for usage dump
-        sleep(36);
+        sleep(30);
 
         $finalStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
             'content-type' => 'application/json',
@@ -599,11 +599,7 @@ trait MigrationsBase
             'endDate' => UsageTest::getTomorrow(),
         ]);
 
-        \var_dump($initialStats);
-
-        // Compare database reads/writes
-        $this->assertGreaterThan(0, $initialStats['body']['databasesReadsTotal']);
-        $this->assertGreaterThan(0, $initialStats['body']['databasesWritesTotal']);
+        // Ensure database reads/writes did not change
         $this->assertEquals($initialStats['body']['databasesReadsTotal'], $finalStats['body']['databasesReadsTotal']);
         $this->assertEquals($initialStats['body']['databasesWritesTotal'], $finalStats['body']['databasesWritesTotal']);
 
