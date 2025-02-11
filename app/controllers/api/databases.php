@@ -3178,7 +3178,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($documents) && !empty($documentId)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, use $id inside the documents');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, set $id in each document');
         }
 
         if (!empty($data)) {
