@@ -1585,7 +1585,7 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-    ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+    ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -1729,10 +1729,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, ?bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1749,9 +1750,14 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        if ($variable->getAttribute('secret') === true && $secret === false) {
+            throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
+        }
+
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('secret', $secret ?? $variable->getAttribute('secret'))
             ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']));
 
         try {
