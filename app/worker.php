@@ -13,6 +13,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 /** remove */
@@ -316,6 +317,10 @@ Server::setResource('queueForAudits', function (Publisher $publisher) {
 Server::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+
+Server::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
 
 Server::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);

@@ -54,7 +54,7 @@ class Realtime extends Event
         );
 
         RealtimeAdapter::send(
-            projectId: $target['projectId'] ?? $this->getProject()->getId(),
+            projectId: $this->getProjectId() ?? $target['projectId'] ?? $this->getProject()->getId(),
             payload: $this->getRealtimePayload(),
             events: $allEvents,
             channels: $target['channels'],

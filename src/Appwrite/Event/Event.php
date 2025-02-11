@@ -66,6 +66,7 @@ class Event
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
+    protected ?string $projectId = null;
     protected bool $paused = false;
 
     /**
@@ -152,6 +153,18 @@ class Event
     }
 
     /**
+     * Set projectId for this event.
+     *
+     * @param string $projectId
+     * @return self
+     */
+    public function setProjectId(string $projectId): self
+    {
+        $this->projectId = $projectId;
+        return $this;
+    }
+
+    /**
      * Get project for this event.
      *
      * @return ?Document
@@ -159,6 +172,16 @@ class Event
     public function getProject(): ?Document
     {
         return $this->project;
+    }
+
+    /**
+     * Get projectId for this event.
+     *
+     * @return ?string
+     */
+    public function getProjectId(): ?string
+    {
+        return $this->projectId;
     }
 
     /**
