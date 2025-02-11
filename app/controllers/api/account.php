@@ -3265,12 +3265,6 @@ App::post('/v1/account/recovery')
             ->setUser($profile)
             ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-        // manually hiding secret for non-privileged users
-        $response->setShowSensitive(true);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $recovery->setAttribute('secret', '');
-        }
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
@@ -3526,12 +3520,6 @@ App::post('/v1/account/verification')
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // manually hiding secret for non-privileged users
-        $response->setShowSensitive(true);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $verification->setAttribute('secret', '');
-        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

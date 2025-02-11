@@ -124,7 +124,6 @@ use Utopia\Swoole\Response as SwooleResponse;
 class Response extends SwooleResponse
 {
     // General
-    protected bool $showSensitive = false;
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
     public const MODEL_LOG = 'log';
@@ -671,7 +670,7 @@ class Response extends SwooleResponse
                 }
             }
 
-            if ($rule['sensitive'] && !$this->showSensitive) {
+            if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
                 $isPrivilegedUser = Auth::isPrivilegedUser($roles);
                 $isAppUser = Auth::isAppUser($roles);
@@ -835,10 +834,5 @@ class Response extends SwooleResponse
     public function setHeader(string $key, string $value): void
     {
         $this->sendHeader($key, $value);
-    }
-
-    public function setShowSensitive(bool $showSensitive): void
-    {
-        $this->showSensitive = $showSensitive;
     }
 }
