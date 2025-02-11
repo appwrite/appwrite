@@ -4,6 +4,7 @@ require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
@@ -770,8 +771,9 @@ App::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
+    ->inject('apiKey')
     ->inject('queueForStatsUsage')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, ?Key $apiKey, StatsUsage $queueForStatsUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -882,17 +884,18 @@ App::error()
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
-                $queueForStatsUsage
-                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                if (empty($apiKey) || $apiKey->isUsageEnabled()) {
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                        ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                        ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                }
             }
 
             $queueForStatsUsage
                 ->setProject($project)
                 ->trigger();
         }
-
 
         if ($logger && $publish) {
             try {

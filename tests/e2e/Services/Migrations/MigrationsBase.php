@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Migrations;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
@@ -20,13 +21,13 @@ trait MigrationsBase
     /**
      * @var array
      */
-    protected static $destinationProject = [];
+    protected static array $destinationProject = [];
 
     /**
      * @param bool $fresh
      * @return array
      */
-    public function getDesintationProject(bool $fresh = false): array
+    public function getDestinationProject(bool $fresh = false): array
     {
         if (!empty(self::$destinationProject) && !$fresh) {
             return self::$destinationProject;
@@ -40,13 +41,11 @@ trait MigrationsBase
         return self::$destinationProject;
     }
 
-    public function performMigrationSync(
-        array $body,
-    ): array {
+    public function performMigrationSync(array $body): array {
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], $body);
 
         $this->assertEquals(202, $migration['headers']['status-code']);
@@ -57,8 +56,8 @@ trait MigrationsBase
         while ($attempts < 5) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], [
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getDesintationProject()['$id'],
-                'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -82,12 +81,14 @@ trait MigrationsBase
             $attempts++;
             sleep(5);
         }
+
+        return [];
     }
 
     /**
      * Appwrite E2E Migration Tests
      */
-    public function testCreateAppwriteMigration()
+    public function testCreateAppwriteMigration(): void
     {
         $response = $this->performMigrationSync([
             'resources' => Appwrite::getSupportedResources(),
@@ -105,7 +106,7 @@ trait MigrationsBase
     /**
      * Auth
      */
-    public function testAppwriteMigrationAuthUserPassword()
+    public function testAppwriteMigrationAuthUserPassword(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -144,8 +145,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -157,8 +158,8 @@ trait MigrationsBase
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'], [
@@ -168,7 +169,7 @@ trait MigrationsBase
         ]);
     }
 
-    public function testAppwriteMigrationAuthUserPhone()
+    public function testAppwriteMigrationAuthUserPhone(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -206,8 +207,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -224,12 +225,12 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
     }
 
-    public function testAppwriteMigrationAuthTeam()
+    public function testAppwriteMigrationAuthTeam(): void
     {
         $user = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -309,8 +310,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -320,8 +321,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'] . '/memberships', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -342,8 +343,8 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['body']['$id'], [
@@ -354,8 +355,8 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], [
@@ -366,15 +367,15 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
     }
 
     /**
      * Databases
      */
-    public function testAppwriteMigrationDatabase()
+    public function testAppwriteMigrationDatabase(): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -400,7 +401,6 @@ trait MigrationsBase
             'apiKey' => $this->getProject()['apiKey'],
         ]);
 
-
         $this->assertEquals('completed', $result['status']);
         $this->assertEquals([Resource::TYPE_DATABASE], $result['resources']);
         $this->assertArrayHasKey(Resource::TYPE_DATABASE, $result['statusCounters']);
@@ -412,8 +412,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -426,8 +426,8 @@ trait MigrationsBase
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         return [
@@ -438,7 +438,7 @@ trait MigrationsBase
     /**
      * @depends testAppwriteMigrationDatabase
      */
-    public function testAppwriteMigrationDatabasesCollection(array $data)
+    public function testAppwriteMigrationDatabasesCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
 
@@ -506,8 +506,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -518,8 +518,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -532,8 +532,8 @@ trait MigrationsBase
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         return [
@@ -545,7 +545,7 @@ trait MigrationsBase
     /**
      * @depends testAppwriteMigrationDatabasesCollection
      */
-    public function testAppwriteMigrationDatabasesDocument(array $data)
+    public function testAppwriteMigrationDatabasesDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
@@ -567,6 +567,15 @@ trait MigrationsBase
 
         $documentId = $document['body']['$id'];
 
+        // Get project stats
+        $initialStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'startDate' => UsageTest::getYesterday(),
+            'endDate' => UsageTest::getTomorrow(),
+        ]);
+
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_DATABASE,
@@ -578,6 +587,25 @@ trait MigrationsBase
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
+
+        // Wait for usage dump
+        sleep(36);
+
+        $finalStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'startDate' => UsageTest::getYesterday(),
+            'endDate' => UsageTest::getTomorrow(),
+        ]);
+
+        \var_dump($initialStats);
+
+        // Compare database reads/writes
+        $this->assertGreaterThan(0, $initialStats['body']['databasesReadsTotal']);
+        $this->assertGreaterThan(0, $initialStats['body']['databasesWritesTotal']);
+        $this->assertEquals($initialStats['body']['databasesReadsTotal'], $finalStats['body']['databasesReadsTotal']);
+        $this->assertEquals($initialStats['body']['databasesWritesTotal'], $finalStats['body']['databasesWritesTotal']);
 
         $this->assertEquals('completed', $result['status']);
         $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_DOCUMENT], $result['resources']);
@@ -594,8 +622,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -607,15 +635,15 @@ trait MigrationsBase
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
     }
 
     /**
      * Storage
      */
-    public function testAppwriteMigrationStorageBucket()
+    public function testAppwriteMigrationStorageBucket(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -663,8 +691,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -683,8 +711,8 @@ trait MigrationsBase
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
@@ -694,7 +722,7 @@ trait MigrationsBase
         ]);
     }
 
-    public function testAppwriteMigrationStorageFiles()
+    public function testAppwriteMigrationStorageFiles(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -767,8 +795,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -786,15 +814,15 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
     }
 
     /**
      * Functions
      */
-    public function testAppwriteMigrationFunction()
+    public function testAppwriteMigrationFunction(): void
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
@@ -839,8 +867,8 @@ trait MigrationsBase
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -856,8 +884,8 @@ trait MigrationsBase
         $this->assertEventually(function () use ($functionId) {
             $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/', array_merge([
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getDesintationProject()['$id'],
-                'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
             ]));
 
             $this->assertEquals(200, $deployments['headers']['status-code']);
@@ -870,8 +898,8 @@ trait MigrationsBase
         // Attempt execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], [
             'body' => 'test'
         ]);
@@ -888,8 +916,8 @@ trait MigrationsBase
 
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDesintationProject()['$id'],
-            'x-appwrite-key' => $this->getDesintationProject()['apiKey'],
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
     }
 }

@@ -98,28 +98,22 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
 
     switch (true) {
         case $document->getCollection() === 'teams':
-            $queueForStatsUsage
-                ->addMetric(METRIC_TEAMS, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_TEAMS, $value); // per project
             break;
         case $document->getCollection() === 'users':
-            $queueForStatsUsage
-                ->addMetric(METRIC_USERS, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_USERS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case $document->getCollection() === 'sessions': // sessions
-            $queueForStatsUsage
-                ->addMetric(METRIC_SESSIONS, $value); //per project
+            $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
@@ -131,8 +125,7 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
@@ -195,7 +188,8 @@ App::init()
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->inject('apiKey')
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -210,17 +204,13 @@ App::init()
 
         $scopes = $roles[$role]['scopes'];
 
-        $apiKey = $request->getHeader('x-appwrite-key');
-
         if (!empty($apiKey) && !$user->isEmpty()) {
             throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
         }
 
         // API Key authentication
         if (!empty($apiKey)) {
-            $key = Key::decode($project, $apiKey);
-
-            $scopes = $key->getScopes();
+            $scopes = $apiKey->getScopes();
 
             $user = new Document([
                 '$id' => '',
@@ -228,17 +218,17 @@ App::init()
                 'type' => Auth::ACTIVITY_TYPE_APP,
                 'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
-                'name' => $key->getName(),
+                'name' => $apiKey->getName(),
             ]);
 
             // Disable authorization checks for API keys
-            Authorization::setRole($key->getRole());
+            Authorization::setRole($apiKey->getRole());
             Authorization::setDefaultStatus(false);
 
-            if ($key->getType() === API_KEY_STANDARD) {
+            if ($apiKey->getType() === API_KEY_STANDARD) {
                 $dbKey = $project->find(
                     key: 'secret',
-                    find: $apiKey,
+                    find: $request->getHeader('x-appwrite-key', ''),
                     subject: 'keys'
                 );
 
@@ -433,13 +423,6 @@ App::init()
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        if ($isAppUser) {
-            $apiKey = Key::decode(
-                $project,
-                $request->getHeader('x-appwrite-key')
-            );
-        }
-
         foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (!empty($value)) {
@@ -508,21 +491,18 @@ App::init()
         $queueForWebhooks = new Webhook($publisher);
         $queueForRealtime = new Realtime();
 
-        if (!isset($apiKey) || $apiKey->isUsageEnabled()) {
-            $dbForProject
-                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage));
-        }
-
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
-            $project,
-            $document,
-            $response,
-            $queueForEventsClone->from($queueForEvents),
-            $queueForFunctions->from($queueForEvents),
-            $queueForWebhooks->from($queueForEvents),
-            $queueForRealtime->from($queueForEvents)
-        ));
+        $dbForProject
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
@@ -542,10 +522,7 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
@@ -654,6 +631,7 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('apiKey')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
     ->inject('queueForStatsUsage')
@@ -665,7 +643,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, ?Key $apiKey, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -749,6 +727,7 @@ App::shutdown()
             foreach ($queueForEvents->getParams() as $key => $value) {
                 $queueForAudits->setParam($key, $value);
             }
+
             $queueForAudits->trigger();
         }
 
@@ -768,9 +747,7 @@ App::shutdown()
             $queueForMessaging->trigger();
         }
 
-        /**
-         * Cache label
-         */
+        // Cache label
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $resource = $resourceType = null;
@@ -822,10 +799,12 @@ App::shutdown()
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
-                $queueForStatsUsage
-                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                if (empty($apiKey) || $apiKey->isUsageEnabled()) {
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                        ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                        ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                }
             }
 
             $queueForStatsUsage
