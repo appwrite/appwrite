@@ -28,6 +28,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -394,6 +395,8 @@ function updateAttribute(
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         } catch (LimitException) {
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+        } catch (IndexException $e) {
+            throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
         }
     }
 
