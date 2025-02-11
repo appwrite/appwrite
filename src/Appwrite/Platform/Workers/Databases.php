@@ -36,9 +36,9 @@ class Databases extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
-            ->inject('log')
             ->inject('queueForRealtime')
-            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log, Realtime $queueForRealtime) => $this->action($message, $project, $dbForPlatform, $dbForProject, $log, $queueForRealtime));
+            ->inject('log')
+            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $queueForRealtime, $log));
     }
 
     /**
@@ -46,12 +46,12 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
-     * @param Log $log
      * @param Realtime $queueForRealtime
+     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log, Realtime $queueForRealtime): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -108,6 +108,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
+        $event = "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update";
         /**
          * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing informations.
@@ -196,7 +197,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $attribute, $project, $queueForRealtime);
+            $this->trigger($database, $collection, $attribute, $project, $event, $queueForRealtime);
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
@@ -230,6 +231,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
+        $event = 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete';
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -302,7 +304,7 @@ class Databases extends Action
 
                 throw $e;
             } finally {
-                $this->trigger($database, $collection, $attribute, $project, $queueForRealtime);
+                $this->trigger($database, $collection, $attribute, $project, $event, $queueForRealtime);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -389,6 +391,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
+        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update';
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
@@ -415,7 +418,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $index, $project, $queueForRealtime);
+            $this->trigger($database, $collection, $index, $project, $event, $queueForRealtime);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
     }
@@ -445,6 +448,7 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
+        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -470,7 +474,7 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $index, $project, $queueForRealtime);
+            $this->trigger($database, $collection, $index, $project, $event, $queueForRealtime);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
         }
     }
@@ -605,12 +609,13 @@ class Databases extends Action
         Document $collection,
         Document $attribute,
         Document $project,
+        string $event,
         Realtime $queueForRealtime
     ): void {
         $queueForRealtime
             ->setProject($project)
             ->setProjectId('console')
-            ->setEvent('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+            ->setEvent($event)
             ->setParam('databaseId', $database->getId())
             ->setParam('collectionId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
