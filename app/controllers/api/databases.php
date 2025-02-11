@@ -4,7 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
@@ -477,8 +477,8 @@ App::post('/v1/databases')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -528,7 +528,7 @@ App::post('/v1/databases')
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());
-        $queueForUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
+        $queueForStatsUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -798,8 +798,8 @@ App::delete('/v1/databases/:databaseId')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -822,7 +822,7 @@ App::delete('/v1/databases/:databaseId')
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_STORAGE, 1); // Global, deletion forces full recalculation
 
         $response->noContent();
@@ -2619,8 +2619,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2717,7 +2717,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model));
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$db->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
@@ -3160,10 +3160,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->inject('project')
-    ->inject('mode')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Document $project, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
         $isBulk = true;
 
@@ -3409,7 +3407,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
@@ -3433,7 +3431,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ->dynamic($documents[0], Response::MODEL_DOCUMENT);
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
@@ -3462,8 +3460,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3574,7 +3572,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
@@ -3640,8 +3638,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3717,7 +3715,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $processDocument($collection, $document);
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations)
         ;
@@ -3874,8 +3872,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -4015,7 +4013,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
         ;
@@ -4267,9 +4265,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, string $mode) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4338,7 +4336,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
@@ -4510,7 +4508,9 @@ App::get('/v1/databases/usage')
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -4562,10 +4562,14 @@ App::get('/v1/databases/usage')
             'collectionsTotal' => $usage[$metrics[1]]['total'],
             'documentsTotal'   => $usage[$metrics[2]]['total'],
             'storageTotal'   => $usage[$metrics[3]]['total'],
+            'databasesReadsTotal' => $usage[$metrics[4]]['total'],
+            'databasesWritesTotal' => $usage[$metrics[5]]['total'],
             'databases'   => $usage[$metrics[0]]['data'],
             'collections' => $usage[$metrics[1]]['data'],
             'documents'   => $usage[$metrics[2]]['data'],
             'storage'   => $usage[$metrics[3]]['data'],
+            'databasesReads' => $usage[$metrics[4]]['data'],
+            'databasesWrites' => $usage[$metrics[5]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -4605,7 +4609,9 @@ App::get('/v1/databases/:databaseId/usage')
         $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
-            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE)
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -4657,9 +4663,13 @@ App::get('/v1/databases/:databaseId/usage')
             'collectionsTotal'   => $usage[$metrics[0]]['total'],
             'documentsTotal'   => $usage[$metrics[1]]['total'],
             'storageTotal'   => $usage[$metrics[2]]['total'],
+            'databaseReadsTotal' => $usage[$metrics[3]]['total'],
+            'databaseWritesTotal' => $usage[$metrics[4]]['total'],
             'collections'   => $usage[$metrics[0]]['data'],
             'documents'   => $usage[$metrics[1]]['data'],
             'storage'   => $usage[$metrics[2]]['data'],
+            'databaseReads'   => $usage[$metrics[3]]['data'],
+            'databaseWrites'   => $usage[$metrics[4]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 

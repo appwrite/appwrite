@@ -13878,7 +13878,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an email message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14226,7 +14226,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update a push notification by its unique ID.\n",
+                "description": "Update a push notification by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14536,7 +14536,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an SMS message by its unique ID.\n",
+                "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -25872,6 +25872,7 @@
                             "gif",
                             "png",
                             "webp",
+                            "heic",
                             "avif"
                         ],
                         "x-enum-name": "ImageFormat",
@@ -36482,6 +36483,18 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "databasesReadsTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases reads.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesWritesTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases writes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "databases": {
                     "type": "array",
                     "description": "Aggregated number of databases per period.",
@@ -36517,6 +36530,24 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "databasesReads": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database reads.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "databasesWrites": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database writes.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -36525,10 +36556,14 @@
                 "collectionsTotal",
                 "documentsTotal",
                 "storageTotal",
+                "databasesReadsTotal",
+                "databasesWritesTotal",
                 "databases",
                 "collections",
                 "documents",
-                "storage"
+                "storage",
+                "databasesReads",
+                "databasesWrites"
             ]
         },
         "usageDatabase": {
@@ -36558,6 +36593,18 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "databaseReadsTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases reads.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databaseWritesTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases writes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "collections": {
                     "type": "array",
                     "description": "Aggregated  number of collections per period.",
@@ -36584,6 +36631,24 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "databaseReads": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database reads.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "databaseWrites": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database writes.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -36591,9 +36656,13 @@
                 "collectionsTotal",
                 "documentsTotal",
                 "storageTotal",
+                "databaseReadsTotal",
+                "databaseWritesTotal",
                 "collections",
                 "documents",
-                "storage"
+                "storage",
+                "databaseReads",
+                "databaseWrites"
             ]
         },
         "usageCollection": {
@@ -37215,6 +37284,18 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "databasesReadsTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases reads.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesWritesTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases writes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "requests": {
                     "type": "array",
                     "description": "Aggregated  number of requests per period.",
@@ -37325,6 +37406,24 @@
                         "$ref": "#\/definitions\/metricBreakdown"
                     },
                     "x-example": []
+                },
+                "databasesReads": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database reads.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "databasesWrites": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database writes.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -37340,6 +37439,8 @@
                 "bucketsTotal",
                 "executionsMbSecondsTotal",
                 "buildsMbSecondsTotal",
+                "databasesReadsTotal",
+                "databasesWritesTotal",
                 "requests",
                 "network",
                 "users",
@@ -37352,7 +37453,9 @@
                 "functionsStorageBreakdown",
                 "authPhoneTotal",
                 "authPhoneEstimate",
-                "authPhoneCountryBreakdown"
+                "authPhoneCountryBreakdown",
+                "databasesReads",
+                "databasesWrites"
             ]
         },
         "headers": {

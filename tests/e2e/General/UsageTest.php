@@ -143,7 +143,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(25, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -324,7 +324,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(25, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -545,7 +545,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(25, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
@@ -650,6 +650,200 @@ class UsageTest extends Scope
             'collectionId' => $collectionId,
         ];
     }
+
+    // /** @depends testDatabaseStoragePrepare */
+    // #[Retry(count: 1)]
+    // public function testDatabaseStorageStatsCreateDocument(array $data): array
+    // {
+    //     $databaseId = $data['databaseId'];
+    //     $collectionId = $data['collectionId'];
+
+    //     $originalProjectMetrics = $this->client->call(
+    //         Client::METHOD_GET,
+    //         '/project/usage',
+    //         $this->getConsoleHeaders(),
+    //         [
+    //             'period' => '1d',
+    //             'startDate' => self::getToday(),
+    //             'endDate' => self::getTomorrow(),
+    //         ]
+    //     );
+
+    //     $this->assertEquals(200, $originalProjectMetrics['headers']['status-code']);
+    //     $this->assertArrayHasKey('databasesStorageTotal', $originalProjectMetrics['body']);
+
+    //     $originalProjectMetrics = $originalProjectMetrics['body'];
+
+    //     $originalDatabaseMetrics = $this->client->call(
+    //         Client::METHOD_GET,
+    //         '/databases/' . $databaseId . '/usage?range=30d',
+    //         $this->getConsoleHeaders()
+    //     );
+
+    //     $this->assertEquals(200, $originalDatabaseMetrics['headers']['status-code']);
+    //     $this->assertArrayHasKey('storageTotal', $originalDatabaseMetrics['body']);
+    //     $originalDatabaseMetrics = $originalDatabaseMetrics['body'];
+
+    //     // Create documents
+    //     for ($i = 0; $i < 100; $i++) {
+    //         $response = $this->client->call(
+    //             Client::METHOD_POST,
+    //             '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+    //             array_merge([
+    //                 'content-type' => 'application/json',
+    //                 'x-appwrite-project' => $this->getProject()['$id']
+    //             ], $this->getHeaders()),
+    //             [
+    //                 'documentId' => 'unique()',
+    //                 'data' => ['data' => str_repeat('a', 10000)],
+    //             ]
+    //         );
+
+    //         $this->assertEquals(201, $response['headers']['status-code']);
+    //     }
+
+    //     sleep(self::WAIT);
+
+    //     for ($i = 0; $i < 3; $i++) {
+    //         try {
+    //             $newProjectMetrics = $this->client->call(
+    //                 Client::METHOD_GET,
+    //                 '/project/usage',
+    //                 $this->getConsoleHeaders(),
+    //                 [
+    //                     'period' => '1d',
+    //                     'startDate' => self::getToday(),
+    //                     'endDate' => self::getTomorrow(),
+    //                 ]
+    //             );
+
+    //             $this->assertEquals(200, $newProjectMetrics['headers']['status-code']);
+    //             $this->assertArrayHasKey('databasesStorageTotal', $newProjectMetrics['body']);
+    //             $this->assertGreaterThan($originalProjectMetrics['databasesStorageTotal'], $newProjectMetrics['body']['databasesStorageTotal']);
+
+    //             $newProjectMetrics = $newProjectMetrics['body'];
+
+    //             $newDatabaseMetrics = $this->client->call(
+    //                 Client::METHOD_GET,
+    //                 '/databases/' . $databaseId . '/usage?range=30d',
+    //                 $this->getConsoleHeaders()
+    //             );
+
+    //             $this->assertEquals(200, $newDatabaseMetrics['headers']['status-code']);
+    //             $this->assertArrayHasKey('storageTotal', $newDatabaseMetrics['body']);
+    //             $this->assertGreaterThan($originalDatabaseMetrics['storageTotal'], $newDatabaseMetrics['body']['storageTotal']);
+
+    //             $newDatabaseMetrics = $newDatabaseMetrics['body'];
+
+    //             return [
+    //                 'databaseId' => $databaseId,
+    //                 'collectionId' => $collectionId,
+    //                 'currentProjectMetrics' => $newProjectMetrics,
+    //                 'currentDatabaseMetrics' => $newDatabaseMetrics,
+    //             ];
+    //         } catch (ExpectationFailedException $e) {
+    //             if ($i === 2) {
+    //                 throw $e;
+    //             }
+    //             sleep(self::WAIT);
+    //             continue;
+    //         }
+    //     }
+    // }
+
+    // /** @depends testDatabaseStorageStatsCreateDocument */
+    // #[Retry(count: 1)]
+    // public function testDatabaseStorageStatsDeleteDocument(array $data): array
+    // {
+    //     $databaseId = $data['databaseId'];
+    //     $collectionId = $data['collectionId'];
+    //     $currentProjectMetrics = $data['currentProjectMetrics'];
+    //     $currentDatabaseMetrics = $data['currentDatabaseMetrics'];
+
+    //     $documents = $this->client->call(
+    //         Client::METHOD_GET,
+    //         '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+    //         array_merge([
+    //             'x-appwrite-project' => $this->getProject()['$id']
+    //         ], $this->getHeaders()),
+    //         [
+    //             'queries' => [
+    //                 Query::limit(50)->toString()
+    //             ]
+    //         ]
+    //     );
+
+    //     foreach ($documents['body']['documents'] as $document) {
+    //         $response = $this->client->call(
+    //             Client::METHOD_DELETE,
+    //             '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document['$id'],
+    //             array_merge([
+    //                 'x-appwrite-project' => $this->getProject()['$id']
+    //             ], $this->getHeaders())
+    //         );
+
+    //         $this->assertEquals(204, $response['headers']['status-code']);
+    //     }
+
+    //     sleep(self::WAIT);
+
+    //     for ($i = 0; $i < 3; $i++) {
+    //         try {
+    //             $newProjectMetrics = $this->client->call(
+    //                 Client::METHOD_GET,
+    //                 '/project/usage',
+    //                 $this->getConsoleHeaders(),
+    //                 [
+    //                     'period' => '1d',
+    //                     'startDate' => self::getToday(),
+    //                     'endDate' => self::getTomorrow(),
+    //                 ]
+    //             );
+
+    //             $this->assertEquals(200, $newProjectMetrics['headers']['status-code']);
+    //             $this->assertArrayHasKey('databasesStorageTotal', $newProjectMetrics['body']);
+    //             $this->assertLessThan($currentProjectMetrics['databasesStorageTotal'], $newProjectMetrics['body']['databasesStorageTotal']);
+
+    //             $newProjectMetrics = $newProjectMetrics['body'];
+
+    //             $newDatabaseMetrics = $this->client->call(
+    //                 Client::METHOD_GET,
+    //                 '/databases/' . $databaseId . '/usage?range=30d',
+    //                 $this->getConsoleHeaders()
+    //             );
+
+    //             $this->assertEquals(200, $newDatabaseMetrics['headers']['status-code']);
+    //             $this->assertArrayHasKey('storageTotal', $newDatabaseMetrics['body']);
+    //             $this->assertLessThan($currentDatabaseMetrics['storageTotal'], $newDatabaseMetrics['body']['storageTotal']);
+
+    //             $newDatabaseMetrics = $newDatabaseMetrics['body'];
+
+    //             return [
+    //                 'databaseId' => $databaseId,
+    //                 'collectionId' => $collectionId,
+    //                 'currentProjectMetrics' => $newProjectMetrics,
+    //                 'currentDatabaseMetrics' => $newDatabaseMetrics,
+    //             ];
+    //         } catch (ExpectationFailedException $e) {
+    //             if ($i === 2) {
+    //                 throw $e;
+    //             }
+    //             sleep(self::WAIT);
+    //             continue;
+    //         }
+    //     }
+
+    //     $newProjectMetrics = $this->client->call(
+    //         Client::METHOD_GET,
+    //         '/project/usage',
+    //         $this->getConsoleHeaders(),
+    //         [
+    //             'period' => '1d',
+    //             'startDate' => self::getToday(),
+    //             'endDate' => self::getTomorrow(),
+    //         ]
+    //     );
+    // }
 
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array

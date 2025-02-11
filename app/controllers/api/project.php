@@ -60,7 +60,9 @@ App::get('/v1/project/usage')
                 METRIC_FILES_STORAGE,
                 METRIC_DATABASES_STORAGE,
                 METRIC_DEPLOYMENTS_STORAGE,
-                METRIC_BUILDS_STORAGE
+                METRIC_BUILDS_STORAGE,
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -70,7 +72,9 @@ App::get('/v1/project/usage')
                 METRIC_EXECUTIONS,
                 METRIC_DATABASES_STORAGE,
                 METRIC_EXECUTIONS_MB_SECONDS,
-                METRIC_BUILDS_MB_SECONDS
+                METRIC_BUILDS_MB_SECONDS,
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
             ]
         ];
 
@@ -346,10 +350,12 @@ App::get('/v1/project/usage')
             'functionsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE] + $total[METRIC_BUILDS_STORAGE],
             'buildsStorageTotal' => $total[METRIC_BUILDS_STORAGE],
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
+            'databasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS],
+            'databasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES],
             'executionsBreakdown' => $executionsBreakdown,
-            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
-            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
+            'databasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS],
+            'databasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES],
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
