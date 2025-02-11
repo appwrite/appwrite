@@ -1,1 +1,1 @@
-Update all documents that match your queries, If none are submitted then all documents are updated. Using the patch method you can pass only specific fields that will get updated.
+Update all documents that match your queries, if no queries are submitted then all documents are updated. You can pass only specific fields to be updated.
