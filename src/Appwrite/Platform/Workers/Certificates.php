@@ -147,7 +147,8 @@ class Certificates extends Action
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $log)) {
-                    throw new Exception('Renew isn\'t required.');
+                    Console::info("Skipping, renew isn't required");
+                    return;
                 }
             }
 
@@ -369,6 +370,8 @@ class Certificates extends Action
             /** Trigger Webhook */
             $ruleModel = new Rule();
             $queueForEvents
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].update')
                 ->setParam('ruleId', $rule->getId())

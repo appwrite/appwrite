@@ -375,7 +375,7 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 500000, 1000);
+        }, 50000, 1000);
 
         $function = $this->getFunction($functionId);
 

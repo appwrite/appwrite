@@ -349,11 +349,6 @@ return [
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::TEAM_INVITE_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'User has already been invited or is already a member of this team',
-        'code' => 409,
-    ],
     Exception::TEAM_INVITE_NOT_FOUND => [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
         'description' => 'The requested team invitation could not be found.',
@@ -730,6 +725,11 @@ return [
         'name' => Exception::INDEX_INVALID,
         'description' => 'Index invalid.',
         'code' => 400,
+    ],
+    Exception::INDEX_DEPENDENCY => [
+        'name' => Exception::INDEX_DEPENDENCY,
+        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
     ],
 
     /** Project Errors */

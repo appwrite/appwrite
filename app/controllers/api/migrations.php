@@ -3,6 +3,10 @@
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -31,13 +35,18 @@ App::post('/v1/migrations/appwrite')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'createAppwriteMigration')
-    ->label('sdk.description', '/docs/references/migrations/migration-appwrite.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createAppwriteMigration',
+        description: '/docs/references/migrations/migration-appwrite.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
     ->param('projectId', '', new UID(), "Source's Project ID")
@@ -80,19 +89,25 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'createFirebaseMigration')
-    ->label('sdk.description', '/docs/references/migrations/migration-firebase.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createFirebaseMigration',
+        description: '/docs/references/migrations/migration-firebase.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
     ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
     ->inject('response')
@@ -147,13 +162,18 @@ App::post('/v1/migrations/supabase')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'createSupabaseMigration')
-    ->label('sdk.description', '/docs/references/migrations/migration-supabase.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createSupabaseMigration',
+        description: '/docs/references/migrations/migration-supabase.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint')
     ->param('apiKey', '', new Text(512), 'Source\'s API Key')
@@ -208,13 +228,18 @@ App::post('/v1/migrations/nhost')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'createNHostMigration')
-    ->label('sdk.description', '/docs/references/migrations/migration-nhost.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createNHostMigration',
+        description: '/docs/references/migrations/migration-nhost.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
     ->param('subdomain', '', new Text(512), 'Source\'s Subdomain')
     ->param('region', '', new Text(512), 'Source\'s Region')
@@ -269,13 +294,18 @@ App::get('/v1/migrations')
     ->groups(['api', 'migrations'])
     ->desc('List migrations')
     ->label('scope', 'migrations.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/migrations/list-migrations.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'list',
+        description: '/docs/references/migrations/list-migrations.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Migrations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Migrations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -328,13 +358,18 @@ App::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Get migration')
     ->label('scope', 'migrations.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/migrations/get-migration.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'get',
+        description: '/docs/references/migrations/get-migration.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('migrationId', '', new UID(), 'Migration unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -352,13 +387,18 @@ App::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Appwrite data')
     ->label('scope', 'migrations.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'getAppwriteReport')
-    ->label('sdk.description', '/docs/references/migrations/migration-appwrite-report.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'getAppwriteReport',
+        description: '/docs/references/migrations/migration-appwrite-report.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_REPORT,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
     ->param('projectID', '', new Text(512), "Source's Project ID")
@@ -394,13 +434,18 @@ App::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Firebase data')
     ->label('scope', 'migrations.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'getFirebaseReport')
-    ->label('sdk.description', '/docs/references/migrations/migration-firebase-report.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'getFirebaseReport',
+        description: '/docs/references/migrations/migration-firebase-report.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_REPORT,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
     ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
     ->inject('response')
@@ -441,13 +486,18 @@ App::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Supabase Data')
     ->label('scope', 'migrations.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'getSupabaseReport')
-    ->label('sdk.description', '/docs/references/migrations/migration-supabase-report.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'getSupabaseReport',
+        description: '/docs/references/migrations/migration-supabase-report.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_REPORT,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint.')
     ->param('apiKey', '', new Text(512), 'Source\'s API Key.')
@@ -484,13 +534,18 @@ App::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on NHost Data')
     ->label('scope', 'migrations.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'getNHostReport')
-    ->label('sdk.description', '/docs/references/migrations/migration-nhost-report.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'getNHostReport',
+        description: '/docs/references/migrations/migration-nhost-report.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_REPORT,
+            )
+        ]
+    ))
     ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.')
     ->param('subdomain', '', new Text(512), 'Source\'s Subdomain.')
     ->param('region', '', new Text(512), 'Source\'s Region.')
@@ -530,13 +585,18 @@ App::patch('/v1/migrations/:migrationId')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')
     ->label('audits.resource', 'migrations/{request.migrationId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'retry')
-    ->label('sdk.description', '/docs/references/migrations/retry-migration.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'retry',
+        description: '/docs/references/migrations/retry-migration.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
     ->param('migrationId', '', new UID(), 'Migration unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -575,12 +635,19 @@ App::delete('/v1/migrations/:migrationId')
     ->label('event', 'migrations.[migrationId].delete')
     ->label('audits.event', 'migrationId.delete')
     ->label('audits.resource', 'migrations/{request.migrationId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/migrations/delete-migration.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'delete',
+        description: '/docs/references/migrations/delete-migration.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')
     ->inject('dbForProject')

@@ -1,0 +1,1 @@
+Enable or disable session email alerts. When enabled, users will receive email notifications when new sessions are created.

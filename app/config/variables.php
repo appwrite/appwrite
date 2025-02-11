@@ -268,6 +268,24 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_COMPRESSION_ENABLED',
+                'description' => 'This option allows you to enable or disable the response compression for the Appwrite API. It\'s enabled by default with value "enabled", and to disable it, pass value "disabled".',
+                'introduction' => '1.6.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPRESSION_MIN_SIZE_BYTES',
+                'description' => 'This option allows you to set the minimum size in bytes for the response compression to be applied. The default value is 1024 bytes.',
+                'introduction' => '1.6.0',
+                'default' => 1024,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
     [

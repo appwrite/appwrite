@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Template\Template;
 use Exception;
 use Utopia\Database\Database;
@@ -32,22 +32,24 @@ class Webhooks extends Action
         $this
             ->desc('Webhooks worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForMails')
-            ->inject('queueForUsage')
+            ->inject('queueForStatsUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log) => $this->action($message, $dbForPlatform, $queueForMails, $queueForUsage, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log): void
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
@@ -60,13 +62,11 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $project = new Document($payload['project']);
-        $project = $dbForPlatform->getDocument('projects', $project->getId());
         $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForUsage);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage);
             }
         }
 
@@ -85,7 +85,7 @@ class Webhooks extends Action
      * @param Mail $queueForMails
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, Usage $queueForUsage): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -168,7 +168,7 @@ class Webhooks extends Action
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
                 ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_FAILED), 1)
             ;
@@ -178,13 +178,13 @@ class Webhooks extends Action
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_WEBHOOKS_SENT, 1)
                 ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_SENT), 1)
             ;
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->setProject($project)
             ->trigger();
     }

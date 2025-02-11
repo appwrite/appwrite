@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.health import Health
 from appwrite.enums import 
 
 client = Client()

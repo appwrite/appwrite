@@ -34,21 +34,23 @@ class Databases extends Action
         $this
             ->desc('Databases worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForPlatform, Database $dbForProject, Log $log) => $this->action($message, $dbForPlatform, $dbForProject, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Database $dbForProject, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -57,7 +59,6 @@ class Databases extends Action
         }
 
         $type = $payload['type'];
-        $project = new Document($payload['project']);
         $collection = new Document($payload['collection'] ?? []);
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
@@ -136,6 +137,9 @@ class Databases extends Action
         $options = $attribute->getAttribute('options', []);
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
+        $relatedAttribute = new Document();
+        $relatedCollection = new Document();
+
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
@@ -175,7 +179,7 @@ class Databases extends Action
 
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
-                if (isset($relatedAttribute)) {
+                if (! $relatedAttribute->isEmpty()) {
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
@@ -186,7 +190,7 @@ class Databases extends Action
                 $attribute->setAttribute('status', 'failed')
             );
 
-            if (isset($relatedAttribute)) {
+            if (! $relatedAttribute->isEmpty()) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
@@ -198,7 +202,7 @@ class Databases extends Action
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
 
-            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+            if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
             }
 
@@ -364,7 +368,7 @@ class Databases extends Action
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
 
-            if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
+            if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
             }
         }
@@ -531,6 +535,8 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+
         /**
          * Related collections relating to current collection
          */
@@ -548,8 +554,6 @@ class Databases extends Action
                 $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
         );
-
-        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 
         $this->deleteByGroup('attributes', [
             Query::equal('databaseInternalId', [$databaseInternalId]),

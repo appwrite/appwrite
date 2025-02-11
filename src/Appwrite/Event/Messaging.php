@@ -3,8 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Messaging extends Event
 {
@@ -15,9 +14,9 @@ class Messaging extends Event
     protected ?string $scheduledAt = null;
     protected ?string $providerType = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::MESSAGING_QUEUE_NAME)
@@ -176,19 +175,13 @@ class Messaging extends Event
     }
 
     /**
-     * Executes the event and sends it to the messaging worker.
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * Prepare the payload for the event
+     *
+     * @return array
      */
-    public function trigger(): string | bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'type' => $this->type,
             'project' => $this->project,
             'user' => $this->user,
@@ -196,6 +189,6 @@ class Messaging extends Event
             'message' => $this->message,
             'recipients' => $this->recipients,
             'providerType' => $this->providerType,
-        ]);
+        ];
     }
 }

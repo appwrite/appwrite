@@ -1,0 +1,1 @@
+Update the maximum number of users allowed in this project. Set to 0 for unlimited users. 
