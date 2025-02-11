@@ -193,6 +193,7 @@ class Migrations extends Action
     protected function generateAPIKey(Document $project): string
     {
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
             'usage' => false,
