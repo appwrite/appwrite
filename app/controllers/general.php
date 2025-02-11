@@ -11,11 +11,12 @@ use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Platform\Modules\Sites\Transformers\Preview;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Transformation\Adapter\Preview;
+use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -449,12 +450,14 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
 
             // Branded banner for previews
-            if ($type === 'deployment' && Preview::isValid($executionResponse['headers'])) {
-                $transformer = new Preview($executionResponse['body']);
-                $transformer->transform();
-                $executionResponse['body'] = $transformer->getBody();
+            $transformation = new Transformation(new Preview($executionResponse['body']));
+            if ($type === 'deployment' && $transformation->isValid($executionResponse['headers'])) {
+                $transformation->transform();
+                $executionResponse['body'] = $transformation->getOutput();
 
-                $execution->setAttribute('responseBody', $body);
+
+                \var_dump($executionResponse['body']);
+
                 foreach ($executionResponse['headers'] as $key => $value) {
                     if (\strtolower($key) === 'content-length') {
                         $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
