@@ -16,8 +16,6 @@ use Appwrite\Event\Migration;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 /** remove */
-use Appwrite\Event\Usage;
-use Appwrite\Event\UsageDump;
 /** /remove */
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
