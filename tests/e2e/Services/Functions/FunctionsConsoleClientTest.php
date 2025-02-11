@@ -352,6 +352,7 @@ class FunctionsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE',
             'secret' => false
         ]);
 
@@ -493,7 +494,7 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEmpty($execution['body']['logs']);
         $this->assertEmpty($execution['body']['errors']);
         $body = json_decode($execution['body']['responseBody']);
-        $this->assertEquals('a_secret_value', $body['CUSTOM_VARIABLE']);
+        $this->assertEquals('a_secret_value', $body->CUSTOM_VARIABLE);
 
         $this->cleanupFunction($functionId);
     }
