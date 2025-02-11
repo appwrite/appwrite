@@ -119,7 +119,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
-        $fileExt = new FileExt([FileExt::TYPE_GZIP, 'zip']); // TODO: Move 'zip' to Storage library
+        $fileExt = new FileExt([FileExt::TYPE_GZIP, FileExt::TYPE_ZIP]);
         $fileSizeValidator = new FileSize(System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 

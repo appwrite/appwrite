@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.9.5 AS final
+FROM appwrite/base:0.9.7 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -29,9 +29,6 @@ RUN \
   fi
 
 RUN apk add libwebp
-
-# TODO: Move to appwrite/docker-base
-RUN apk add zip
 
 WORKDIR /usr/src/code
 
