@@ -57,11 +57,10 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') //TODO: remove it later
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -75,14 +74,14 @@ class Create extends Action
         }
 
         $path = $deployment->getAttribute('path');
-        if (empty($path) || !$deviceForFunctions->exists($path)) {
+        if (empty($path) || !$deviceForSites->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $deploymentId = ID::unique();
 
-        $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-        $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+        $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+        $deviceForSites->transfer($path, $destination, $deviceForSites);
 
         $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
