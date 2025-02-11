@@ -3339,7 +3339,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $document['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
             } else {
                 if (empty($document['$id'])) {
-                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is required inside documents when creating bulk documents');
+                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id must be set in each document when creating bulk documents');
                 }
 
                 $document['$id'] = $document['$id'] == 'unique()' ? ID::unique() : $document['$id'];
