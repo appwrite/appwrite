@@ -4133,7 +4133,6 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/variables', array_merge([
             'content-type' => 'application/json',

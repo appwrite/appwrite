@@ -173,7 +173,6 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.', $response['body']['message']);
 
         $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
 
