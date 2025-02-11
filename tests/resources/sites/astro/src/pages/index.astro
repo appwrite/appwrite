@@ -1,5 +1,5 @@
 ---
-const message = import.meta.env.name || 'Default message';
+const value = import.meta.env.name || 'Variable not found';
 ---
 
 <!DOCTYPE html>
@@ -10,6 +10,6 @@ const message = import.meta.env.name || 'Default message';
   <title>Astro SSR</title>
 </head>
 <body>
-  <p>Message from ENV: {message}</p>
+  <p>Env variable is {value}</p>
 </body>
 </html>

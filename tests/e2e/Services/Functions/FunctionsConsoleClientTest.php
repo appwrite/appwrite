@@ -356,7 +356,7 @@ class FunctionsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
+        $this->assertEquals('Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.', $response['body']['message']);
 
         /**
          * Test for FAILURE
@@ -464,12 +464,12 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertFalse($function['body']['logging']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $functionId = $functionId = $function['body']['$id'] ?? '';
+        $functionId = $function['body']['$id'] ?? '';
 
         // create variable
         $variable = $this->createVariable($functionId, [
             'key' => 'CUSTOM_VARIABLE',
-            'value' => 'test',
+            'value' => 'a_secret_value',
             'secret' => true,
         ]);
 
@@ -492,7 +492,8 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEmpty($execution['body']['logs']);
         $this->assertEmpty($execution['body']['errors']);
-        $this->assertStringContainsString('"CUSTOM_VARIABLE":"test"', $execution['body']['responseBody']);
+        $body = json_decode($execution['body']['responseBody']);
+        $this->assertEquals('a_secret_value', $body['CUSTOM_VARIABLE']);
 
         $this->cleanupFunction($functionId);
     }

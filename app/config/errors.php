@@ -870,7 +870,7 @@ return [
     ],
     Exception::VARIABLE_CANNOT_UNSET_SECRET => [
         'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
-        'description' => 'Variable is a secret and cannot be unset to non-secret.',
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
         'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [

@@ -4051,6 +4051,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals("APP_TEST_1", $response['body']['key']);
         $this->assertEmpty($response['body']['value']);
+        $this->assertTrue($response['body']['secret']);
 
         /**
          * Test for FAILURE
@@ -4121,6 +4122,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $variable['headers']['status-code']);
         $this->assertEquals("APP_TEST_UPDATE_1", $variable['body']['key']);
         $this->assertEmpty($variable['body']['value']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['secretVariableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE_1',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/variables', array_merge([
             'content-type' => 'application/json',
