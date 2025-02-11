@@ -47,7 +47,7 @@ class Key
         return $this->name;
     }
 
-    public function getUsage(): bool
+    public function isUsageEnabled(): bool
     {
         return $this->usage;
     }

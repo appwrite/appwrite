@@ -434,7 +434,7 @@ App::init()
         $isAppUser = Auth::isAppUser($roles);
 
         if ($isAppUser) {
-            $key = Key::decode(
+            $apiKey = Key::decode(
                 $project,
                 $request->getHeader('x-appwrite-key')
             );
@@ -508,7 +508,7 @@ App::init()
         $queueForWebhooks = new Webhook($publisher);
         $queueForRealtime = new Realtime();
 
-        if (isset($key) && $key->getUsage()) {
+        if (!isset($apiKey) || $apiKey->isUsageEnabled()) {
             $dbForProject
                 ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
                 ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage));
