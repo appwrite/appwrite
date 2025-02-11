@@ -159,7 +159,7 @@ class StatsResources extends Action
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
-            
+
             try {
                 $this->countImageTransformations($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
