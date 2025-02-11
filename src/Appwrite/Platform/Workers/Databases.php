@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Exception;
 use Utopia\CLI\Console;
@@ -57,7 +56,7 @@ class Databases extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new \Exception('Missing payload');
+            throw new Exception('Missing payload');
         }
 
         $type = $payload['type'];
@@ -81,7 +80,7 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
-            default => throw new \Exception('No database operation for type: ' . \strval($type)),
+            default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
     }
 
@@ -166,7 +165,7 @@ class Databases extends Action
                     break;
                 default:
                     if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                        throw new \Exception('Failed to create Attribute');
+                        throw new Exception('Failed to create Attribute');
                     }
             }
 
@@ -231,15 +230,8 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-
-        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'attributeId' => $attribute->getId()
-        ]);
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
-        $status = $attribute->getAttribute('status', '');
         $type = $attribute->getAttribute('type', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
         $options = $attribute->getAttribute('options', []);
@@ -397,12 +389,6 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-
-        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'indexId' => $index->getId()
-        ]);
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
@@ -459,12 +445,6 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-
-        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'indexId' => $index->getId()
-        ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -568,14 +548,14 @@ class Databases extends Action
 
 
     /**
-     * @param string $collection collectionID
+     * @param string $collectionId
      * @param array $queries
      * @param Database $database
      * @param callable|null $callback
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collectionId, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -587,7 +567,7 @@ class Databases extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            $results = $database->find($collectionId, \array_merge([Query::limit($limit)], $queries));
 
             $sum = count($results);
 
@@ -612,6 +592,14 @@ class Databases extends Action
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
+    /**
+     * @param Document $database
+     * @param Document $collection
+     * @param Document $attribute
+     * @param Document $project
+     * @param Realtime $queueForRealtime
+     * @return void
+     */
     protected function trigger(
         Document $database,
         Document $collection,
