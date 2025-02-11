@@ -1,7 +1,5 @@
 <?php
 
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -15,7 +13,6 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
-use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\SDK\Method;
@@ -513,11 +510,11 @@ App::init()
 
         if (isset($key) && $key->getUsage()) {
             $dbForProject
-                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage));
+                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage));
         }
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn($event, $document) => $eventDatabaseListener(
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
             $project,
             $document,
             $response,

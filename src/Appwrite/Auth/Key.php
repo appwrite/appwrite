@@ -19,8 +19,7 @@ class Key
         protected array $scopes,
         protected string $name,
         protected bool $usage = false,
-    )
-    {
+    ) {
     }
 
     public function getProjectId(): string
@@ -56,8 +55,7 @@ class Key
     public static function decode(
         Document $project,
         string $key
-    ): Key
-    {
+    ): Key {
         if (\str_contains($key, '_')) {
             [$type, $secret] = \explode('_', $key, 2);
         } else {
