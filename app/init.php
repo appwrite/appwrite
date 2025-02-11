@@ -1944,7 +1944,7 @@ App::setResource('previewHostname', function (Request $request) {
     return '';
 }, ['request']);
 
-App::setResource('apiKey', function(Request $request, Document $project): ?Key {
+App::setResource('apiKey', function (Request $request, Document $project): ?Key {
     $key = $request->getHeader('x-appwrite-key');
 
     if (empty($key)) {

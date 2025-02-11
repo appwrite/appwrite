@@ -37,8 +37,7 @@ class KeyTest extends TestCase
         string $projectId,
         bool $usage,
         array $scopes,
-    ): string
-    {
+    ): string {
         $jwt = new JWT(
             key: System::getEnv('_APP_OPENSSL_KEY_V1'),
             algo: 'HS256',

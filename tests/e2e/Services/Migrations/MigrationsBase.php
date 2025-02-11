@@ -41,7 +41,8 @@ trait MigrationsBase
         return self::$destinationProject;
     }
 
-    public function performMigrationSync(array $body): array {
+    public function performMigrationSync(array $body): array
+    {
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
