@@ -82,6 +82,46 @@ trait FunctionsBase
         return $variable;
     }
 
+    protected function getVariable(string $functionId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
+    protected function updateVariable(string $functionId, string $variableId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variable;
+    }
+
+    protected function listVariables(string $functionId, mixed $params = []): mixed
+    {
+        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variables;
+    }
+
+    protected function deleteVariable(string $functionId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
     protected function getFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([

@@ -258,6 +258,7 @@ class Exception extends \Exception
     /** Variables */
     public const VARIABLE_NOT_FOUND                = 'variable_not_found';
     public const VARIABLE_ALREADY_EXISTS           = 'variable_already_exists';
+    public const VARIABLE_CANNOT_UNSET_SECRET      = 'variable_cannot_unset_secret';
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';

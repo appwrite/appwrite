@@ -4490,16 +4490,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.8.5",
+            "version": "0.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "b8cd9553a01ec8a8089ce285f9a56e895d5b8ec8"
+                "reference": "b713b997285c29d120bbcbe3d6e93762d850f87c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/b8cd9553a01ec8a8089ce285f9a56e895d5b8ec8",
-                "reference": "b8cd9553a01ec8a8089ce285f9a56e895d5b8ec8",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/b713b997285c29d120bbcbe3d6e93762d850f87c",
+                "reference": "b713b997285c29d120bbcbe3d6e93762d850f87c",
                 "shasum": ""
             },
             "require": {
@@ -4549,9 +4549,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.8.5"
+                "source": "https://github.com/utopia-php/queue/tree/0.8.6"
             },
-            "time": "2025-02-07T10:55:04+00:00"
+            "time": "2025-02-10T03:35:00+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -4607,16 +4607,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.8",
+            "version": "0.18.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "84737afa634e6a833fc4f8b0c967553234d3f215"
+                "reference": "1cf455404e8700b3093fd73d74a38d41cdced90c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/84737afa634e6a833fc4f8b0c967553234d3f215",
-                "reference": "84737afa634e6a833fc4f8b0c967553234d3f215",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/1cf455404e8700b3093fd73d74a38d41cdced90c",
+                "reference": "1cf455404e8700b3093fd73d74a38d41cdced90c",
                 "shasum": ""
             },
             "require": {
@@ -4656,9 +4656,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.8"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.9"
             },
-            "time": "2024-12-04T08:30:35+00:00"
+            "time": "2025-02-11T13:10:40+00:00"
         },
         {
             "name": "utopia-php/swoole",
