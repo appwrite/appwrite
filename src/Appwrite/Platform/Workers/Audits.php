@@ -22,7 +22,9 @@ class Audits extends Action
     private const BATCH_SIZE_PRODUCTION = 5_000;
     private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
-    private static array $logs = [];
+    private int $lastTriggeredTime = 0;
+
+    private array $logs = [];
 
     private function getBatchSize(): int
     {
@@ -46,6 +48,8 @@ class Audits extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
+
+        $this->lastTriggeredTime = time();
     }
 
 
@@ -99,29 +103,28 @@ class Audits extends Action
             'timestamp' => DateTime::formatTz(DateTime::now())
         ];
 
-        self::$logs[] = $eventData;
+        $this->logs[] = $eventData;
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
         $batchSize = $this->getBatchSize();
-        $shouldProcessBatch = count(self::$logs) >= $batchSize;
-        if (!$shouldProcessBatch && count(self::$logs) > 0) {
-            $oldestEventTime = self::$logs[0]['timestamp'];
-            $shouldProcessBatch = (time() - $oldestEventTime) >= self::BATCH_AGGREGATION_INTERVAL;
+        $shouldProcessBatch = count($this->logs) >= $batchSize;
+        if (!$shouldProcessBatch && count($this->logs) > 0) {
+            $shouldProcessBatch = (time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
         if ($shouldProcessBatch) {
-            Console::log('Processing batch with ' . count(self::$logs) . ' events');
-
+            Console::log('Processing batch with ' . count($this->logs) . ' events');
             $audit = new Audit($dbForProject);
 
             try {
-                $audit->logBatch(self::$logs);
+                $audit->logBatch($this->logs);
                 Console::success('Audit logs processed successfully');
             } catch (Throwable $e) {
                 Console::error('Error processing audit logs: ' . $e->getMessage());
             } finally {
                 // Clear the pending events after successful batch processing
-                self::$logs = [];
+                $this->logs = [];
+                $this->lastTriggeredTime = time();
             }
         }
     }
