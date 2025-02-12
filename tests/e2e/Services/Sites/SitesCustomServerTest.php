@@ -66,6 +66,77 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testConsoleAvailabilityEndpoint(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './',
+            'subdomain' => 'test-site',
+            'fallbackFile' => null,
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $rule = $this->getSiteDomain($siteId);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $rule,
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
+
+        $nonExistingDomain = "non-existent-subdomain.sites.localhost";
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $nonExistingDomain,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($siteId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('resourceId', [$siteId])
+                ]
+            ]);
+
+            $this->assertEquals(200, $rule['headers']['status-code']);
+            $this->assertEquals(0, $rule['body']['total']);
+        }, 5000, 500);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $rule,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
+    }
+
     public function testVariables(): void
     {
         $site = $this->createSite([
