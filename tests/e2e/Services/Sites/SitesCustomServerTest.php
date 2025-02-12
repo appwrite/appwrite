@@ -74,11 +74,12 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'buildRuntime' => 'ssr-22',
             'outputDirectory' => './',
-            'subdomain' => 'test-site',
             'fallbackFile' => null,
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $this->createSiteDomain($siteId, 'test-site');
 
         $rule = $this->getSiteDomain($siteId);
 
