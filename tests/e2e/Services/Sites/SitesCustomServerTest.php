@@ -65,6 +65,193 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testVariables(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals('Test Site', $site['body']['name']);
+
+        $variable = $this->createVariable($siteId, [
+            'key' => 'siteKey1',
+            'value' => 'siteValue1',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'key' => 'siteKey2',
+            'value' => 'siteValue2',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertNotEmpty($variable2['body']['$id']);
+        $this->assertEquals('siteKey2', $variable2['body']['key']);
+        $this->assertEquals('siteValue2', $variable2['body']['value']);
+        $this->assertEquals(false, $variable2['body']['secret']);
+
+        $secretVariable = $this->createVariable($siteId, [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variable = $this->getVariable($siteId, $variable['body']['$id']);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'value' => 'siteValue1Updated',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('siteValue1Updated', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('', $variable['body']['value']);
+        $this->assertEquals(true, $variable['body']['secret']);
+
+        $secretVariable = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3Updated',
+        ]);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $response = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(3, $variables['body']['variables']);
+
+        $response = $this->deleteVariable($siteId, $variable['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->deleteVariable($siteId, $variable2['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->deleteVariable($siteId, $secretVariable['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(0, $variables['body']['variables']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testVariablesE2E(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $secretVariable = $this->createVariable($siteId, [
+            'key' => 'name',
+            'value' => 'Appwrite',
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('name', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Env variable is Appwrite", $response['body']);
+        $this->assertStringNotContainsString("Variable not found", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**

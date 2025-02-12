@@ -868,6 +868,11 @@ return [
         'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::VARIABLE_CANNOT_UNSET_SECRET => [
+        'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
+    ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
         'description' => 'Param "query" is not optional.',

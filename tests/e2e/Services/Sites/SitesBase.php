@@ -104,6 +104,46 @@ trait SitesBase
         return $variable;
     }
 
+    protected function getVariable(string $siteId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
+    protected function listVariables(string $siteId, mixed $params = []): mixed
+    {
+        $variables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variables;
+    }
+
+    protected function updateVariable(string $siteId, string $variableId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variable;
+    }
+
+    protected function deleteVariable(string $siteId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
     protected function getSite(string $siteId): mixed
     {
         $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
