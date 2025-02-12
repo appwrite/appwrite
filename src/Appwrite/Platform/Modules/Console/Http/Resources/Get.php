@@ -61,7 +61,7 @@ class Get extends Action
 
     public function action(string $value, string $type, Response $response, Database $dbForPlatform)
     {
-        if ($type == 'rules') {
+        if ($type === 'rules') {
             $validator = new Domain($value);
 
             if (!$validator->isValid($value)) {
@@ -79,6 +79,7 @@ class Get extends Action
             $response->noContent();
         }
 
+        // Only occurs if type is added into whitelist, but not supported in action
         throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid type');
     }
 }

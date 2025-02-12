@@ -1277,35 +1277,19 @@ class SitesCustomServerTest extends Scope
 
     public function testConsoleAvailabilityEndpoint(): void
     {
-        $site = $this->createSite([
-            'buildRuntime' => 'ssr-22',
-            'fallbackFile' => null,
-            'framework' => 'other',
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
             'name' => 'Test Site',
-            'subdomain' => 'test-site',
+            'framework' => 'other',
+            'buildRuntime' => 'ssr-22',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'subdomain' => 'test-site',
+            'fallbackFile' => null,
         ]);
 
-        $siteId = $site['body']['$id'] ?? '';
+        $this->assertNotEmpty($siteId);
 
-        $this->assertEquals(201, $site['headers']['status-code']);
-        $this->assertNotEmpty($site['body']['$id']);
-        $this->assertEquals('Test Site', $site['body']['name']);
-
-        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$siteId])
-            ]
-        ]);
-
-        $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertNotEmpty($rule['body']['rules'][0]['domain']);
-
-        $domain = $rule['body']['rules'][0]['domain'];
+        $rule = $this->getSiteDomain($siteId);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -1314,7 +1298,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $domain,
+            'value' => $rule,
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
@@ -1346,7 +1330,7 @@ class SitesCustomServerTest extends Scope
             ]);
 
             $this->assertEquals(200, $rule['headers']['status-code']);
-            $this->assertEmpty($rule['body']['rules']);
+            $this->assertEquals(0, $rule['body']['total']);
         }, 1000, 500);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
@@ -1356,7 +1340,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $domain,
+            'value' => $rule,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
