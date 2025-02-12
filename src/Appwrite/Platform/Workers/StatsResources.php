@@ -252,6 +252,8 @@ class StatsResources extends Action
         });
 
         $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations, 'inf');
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalDailyImageTransformations, '1d');
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalHourlyImageTransformations, '1h');
 
     }
 
