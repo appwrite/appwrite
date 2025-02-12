@@ -220,7 +220,7 @@ services:
       - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
-    entrypoint: realtime
+    entrypoint: task-realtime
     <<: *x-logging
     container_name: appwrite-realtime
     image: appwrite-dev
@@ -685,7 +685,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-maintenance:
-    entrypoint: maintenance
+    entrypoint: task-maintenance
     <<: *x-logging
     container_name: appwrite-task-maintenance
     image: appwrite-dev
@@ -724,7 +724,7 @@ services:
 
   appwrite-task-stats-resources:
     container_name: appwrite-task-stats-resources
-    entrypoint: stats-resources
+    entrypoint: task-stats-resources
     <<: *x-logging
     image: appwrite-dev
     networks:
@@ -848,7 +848,7 @@ services:
       - _APP_STATS_USAGE_DUAL_WRITING_DBS
   
   appwrite-task-scheduler-functions:
-    entrypoint: schedule-functions
+    entrypoint: task-schedule-functions
     <<: *x-logging
     container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
@@ -876,7 +876,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-executions:
-    entrypoint: schedule-executions
+    entrypoint: task-schedule-executions
     <<: *x-logging
     container_name: appwrite-task-scheduler-executions
     image: appwrite-dev
@@ -903,7 +903,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-task-scheduler-messages:
-    entrypoint: schedule-messages
+    entrypoint: task-schedule-messages
     <<: *x-logging
     container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
