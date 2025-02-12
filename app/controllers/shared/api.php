@@ -203,12 +203,15 @@ App::init()
 
         $scopes = $roles[$role]['scopes'];
 
-        if (!empty($apiKey) && !$user->isEmpty()) {
-            throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
-        }
-
         // API Key authentication
         if (!empty($apiKey)) {
+            if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
+        }
+            if ($apiKey->isExpired()) {
+                throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+            }
+
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 

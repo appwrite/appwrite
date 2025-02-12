@@ -18,6 +18,7 @@ class Key
         protected string $role,
         protected array $scopes,
         protected string $name,
+        protected bool $expired = false,
         protected bool $usage = true,
     ) {
     }
@@ -45,6 +46,11 @@ class Key
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expired;
     }
 
     public function isUsageEnabled(): bool
@@ -75,6 +81,7 @@ class Key
         $role = Auth::USER_ROLE_APPS;
         $roles = Config::getParam('roles', []);
         $scopes = $roles[Auth::USER_ROLE_APPS]['scopes'] ?? [];
+        $expired = false;
 
         $guestKey = new Key(
             $project->getId(),
@@ -96,7 +103,7 @@ class Key
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
-                    throw new Exception(Exception::API_KEY_EXPIRED);
+                    $expired = true;
                 }
 
                 $name = $payload['name'] ?? 'Dynamic Key';
@@ -114,6 +121,7 @@ class Key
                     $role,
                     $scopes,
                     $name,
+                    $expired,
                     $usage
                 );
             case API_KEY_STANDARD:
@@ -129,7 +137,7 @@ class Key
 
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                    $expired = true;
                 }
 
                 $name = $key->getAttribute('name', 'UNKNOWN');
@@ -140,7 +148,8 @@ class Key
                     $type,
                     $role,
                     $scopes,
-                    $name
+                    $name,
+                    $expired
                 );
             default:
                 return $guestKey;
