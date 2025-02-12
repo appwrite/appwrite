@@ -18,7 +18,7 @@ class Key
         protected string $role,
         protected array $scopes,
         protected string $name,
-        protected bool $usage = false,
+        protected bool $usage = true,
     ) {
     }
 
