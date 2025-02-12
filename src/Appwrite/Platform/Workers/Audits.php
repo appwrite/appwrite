@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -18,7 +19,7 @@ class Audits extends Action
     private const BATCH_SIZE = 5_000;
     private const BATCH_TIME_WINDOW = 60;
 
-    private static array $pendingEvents = [];
+    private static array $logs = [];
 
     public static function getName(): string
     {
@@ -55,6 +56,8 @@ class Audits extends Action
             throw new Exception('Missing payload');
         }
 
+        Console::info('Aggregating audit logs');
+
         $event = $payload['event'] ?? '';
         $auditPayload = $payload['payload'] ?? '';
         $mode = $payload['mode'] ?? '';
@@ -86,18 +89,20 @@ class Audits extends Action
             'timestamp' => time()
         ];
 
-        self::$pendingEvents[] = $eventData;
+        self::$logs[] = $eventData;
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
-        $shouldProcessBatch = count(self::$pendingEvents) >= self::BATCH_SIZE;
-        if (!$shouldProcessBatch && count(self::$pendingEvents) > 0) {
-            $oldestEventTime = self::$pendingEvents[0]['timestamp'];
+        $shouldProcessBatch = count(self::$logs) >= self::BATCH_SIZE;
+        if (!$shouldProcessBatch && count(self::$logs) > 0) {
+            $oldestEventTime = self::$logs[0]['timestamp'];
             $shouldProcessBatch = (time() - $oldestEventTime) >= self::BATCH_TIME_WINDOW;
         }
 
         if ($shouldProcessBatch) {
+            Console::log('Processing batch with ' . count(self::$logs) . ' events');
+
             $audit = new Audit($dbForProject);
-            $batchEvents = array_map(function($event) {
+            $batchEvents = array_map(function ($event) {
                 return [
                     'userId' => $event['userId'],
                     'event' => $event['event'],
@@ -108,12 +113,14 @@ class Audits extends Action
                     'data' => $event['data'],
                     'timestamp' => $event['timestamp']
                 ];
-            }, self::$pendingEvents);
+            }, self::$logs);
 
             $audit->logBatch($batchEvents);
-            
+
             // Clear the pending events after successful batch processing
-            self::$pendingEvents = [];
+            self::$logs = [];
+
+            Console::success('Audit logs processed successfully');
         }
     }
 }
