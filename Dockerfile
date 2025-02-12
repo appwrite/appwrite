@@ -62,11 +62,11 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/task-migrate && \
     chmod +x /usr/local/bin/task-realtime && \
     chmod +x /usr/local/bin/task-sdks && \
     chmod +x /usr/local/bin/task-specs && \
-    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/task-maintenance &&  \
     chmod +x /usr/local/bin/task-schedule-functions && \
     chmod +x /usr/local/bin/task-schedule-executions && \
