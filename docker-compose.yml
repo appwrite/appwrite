@@ -197,9 +197,9 @@ services:
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
 
-  appwrite-console:
+  appwrite-server-console:
     <<: *x-logging
-    container_name: appwrite-console
+    container_name: appwrite-server-console
     image: appwrite/console:5.2.27
     restart: unless-stopped
     networks:
@@ -219,10 +219,10 @@ services:
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
 
-  appwrite-realtime:
-    entrypoint: task-realtime
+  appwrite-server-realtime:
+    entrypoint: server-realtime
     <<: *x-logging
-    container_name: appwrite-realtime
+    container_name: appwrite-server-realtime
     image: appwrite-dev
     restart: unless-stopped
     ports:
