@@ -161,6 +161,12 @@ class StatsResources extends Action
             }
 
             try {
+                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+            }
+
+            try {
                 $this->countForDatabase($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
