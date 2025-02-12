@@ -30,7 +30,7 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('v1/console/resources')
+            ->setHttpPath('/v1/console/resources')
             ->desc('Check resource ID availability')
             ->groups(['api', 'projects'])
             ->label('scope', 'rules.read')
