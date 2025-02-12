@@ -11,7 +11,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -1294,49 +1293,73 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site', $site['body']['name']);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $domain = "test-site.{$sitesDomain}";
-        $ruleId1 = \md5($domain);
+        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$siteId])
+            ]
+        ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId1, [
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['rules'][0]['domain']);
+
+        $domain = $rule['body']['rules'][0]['domain'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
+            'value' => $domain,
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']); // subdomain unavailable
+        $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
 
-        $domain = "non-existent-subdomain.{$sitesDomain}";
-        $ruleId2 = \md5($domain);
+        $nonExistingDomain = "non-existent-subdomain.sites.localhost";
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId2, [
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
+            'value' => $nonExistingDomain,
         ]);
 
-        $this->assertEquals(204, $response['headers']['status-code']); // subdomain available
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available
 
         $this->cleanupSite($siteId);
 
-        sleep(1);
+        $this->assertEventually(function () use ($siteId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('resourceId', [$siteId])
+                ]
+            ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/resources/' . $ruleId1, [
+            $this->assertEquals(200, $rule['headers']['status-code']);
+            $this->assertEmpty($rule['body']['rules']);
+        }, 1000, 500);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
+            'value' => $domain,
         ]);
 
-        $this->assertEquals(204, $response['headers']['status-code']); // subdomain available as site is deleted
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
     }
 
     // TODO: Add tests for deletion of resources when site is deleted
