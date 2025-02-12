@@ -188,7 +188,7 @@ $image = $this->getParam('image', '');
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: realtime
+    entrypoint: task-realtime
     container_name: appwrite-realtime
     <<: *x-logging
     restart: unless-stopped
@@ -617,7 +617,7 @@ $image = $this->getParam('image', '');
 
   appwrite-task-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: maintenance
+    entrypoint: task-maintenance
     <<: *x-logging
     container_name: appwrite-task-maintenance
     restart: unless-stopped
@@ -652,7 +652,7 @@ $image = $this->getParam('image', '');
   appwrite-task-stats-resources:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     container_name: appwrite-task-stats-resources
-    entrypoint: stats-resources
+    entrypoint: task-stats-resources
     <<: *x-logging
     networks:
       - appwrite
@@ -766,7 +766,7 @@ $image = $this->getParam('image', '');
 
   appwrite-task-scheduler-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: schedule-functions
+    entrypoint: task-schedule-functions
     container_name: appwrite-task-scheduler-functions
     <<: *x-logging
     restart: unless-stopped
@@ -791,7 +791,7 @@ $image = $this->getParam('image', '');
 
   appwrite-task-scheduler-executions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: schedule-executions
+    entrypoint: task-schedule-executions
     container_name: appwrite-task-scheduler-executions
     <<: *x-logging
     restart: unless-stopped
@@ -816,7 +816,7 @@ $image = $this->getParam('image', '');
 
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: schedule-messages
+    entrypoint: task-schedule-messages
     container_name: appwrite-task-scheduler-messages
     <<: *x-logging
     restart: unless-stopped
