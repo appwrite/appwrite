@@ -20,7 +20,7 @@ class Audits extends Action
 {
     private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
     private const BATCH_SIZE_PRODUCTION = 5_000;
-    private const BATCH_AGGREGATION_INTERVAL = 60;
+    private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
     private static array $logs = [];
 
