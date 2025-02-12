@@ -113,25 +113,16 @@ class Audits extends Action
             Console::log('Processing batch with ' . count(self::$logs) . ' events');
 
             $audit = new Audit($dbForProject);
-            $batchEvents = array_map(function ($event) {
-                return [
-                    'userId' => $event['userId'],
-                    'event' => $event['event'],
-                    'resource' => $event['resource'],
-                    'userAgent' => $event['userAgent'],
-                    'ip' => $event['ip'],
-                    'location' => $event['location'],
-                    'data' => $event['data'],
-                    'timestamp' => $event['timestamp']
-                ];
-            }, self::$logs);
 
-            $audit->logBatch($batchEvents);
-
-            // Clear the pending events after successful batch processing
-            self::$logs = [];
-
-            Console::success('Audit logs processed successfully');
+            try {
+                $audit->logBatch(self::$logs);
+                Console::success('Audit logs processed successfully');
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs: ' . $e->getMessage());
+            } finally {
+                // Clear the pending events after successful batch processing
+                self::$logs = [];
+            }
         }
     }
 }
