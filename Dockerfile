@@ -66,7 +66,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/task-realtime && \
     chmod +x /usr/local/bin/task-sdks && \
     chmod +x /usr/local/bin/task-specs && \
-    chmod +x /usr/local/bin/task-vars && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/task-maintenance &&  \
     chmod +x /usr/local/bin/task-schedule-functions && \
     chmod +x /usr/local/bin/task-schedule-executions && \

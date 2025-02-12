@@ -94,7 +94,7 @@ jobs:
         run: docker compose exec -T appwrite doctor
 
       - name: Environment Variables
-        run: docker compose exec -T appwrite task-vars
+        run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
         run: docker compose exec appwrite test /usr/src/code/tests/unit
