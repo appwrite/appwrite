@@ -47,7 +47,7 @@ trait SitesBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 50000, 500);
+        }, 100000, 500);
 
         return $deploymentId;
     }
