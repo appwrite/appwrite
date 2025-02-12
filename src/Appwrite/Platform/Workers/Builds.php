@@ -54,8 +54,10 @@ class Builds extends Action
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('isResourceBlocked')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log));
     }
 
     /**
@@ -72,7 +74,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -93,7 +95,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -118,7 +120,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -127,7 +129,11 @@ class Builds extends Action
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new \Exception('Function not found', 404);
+            throw new \Exception('Function not found');
+        }
+
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
+            throw new \Exception('Function blocked');
         }
 
         $deploymentId = $deployment->getId();
@@ -135,11 +141,11 @@ class Builds extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found', 404);
+            throw new \Exception('Deployment not found');
         }
 
         if (empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
+            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $function->getAttribute('version', 'v2');
@@ -571,7 +577,7 @@ class Builds extends Action
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
-                                        throw new \Exception('Build not found', 404);
+                                        throw new \Exception('Build not found');
                                     }
 
                                     if ($build->getAttribute('status') === 'canceled') {
