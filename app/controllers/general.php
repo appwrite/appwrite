@@ -455,9 +455,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $transformation->transform();
                 $executionResponse['body'] = $transformation->getOutput();
 
-
-                \var_dump($executionResponse['body']);
-
                 foreach ($executionResponse['headers'] as $key => $value) {
                     if (\strtolower($key) === 'content-length') {
                         $executionResponse['headers'][$key] = \strlen($executionResponse['body']);

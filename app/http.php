@@ -35,8 +35,6 @@ $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
 $domains->create();
 
-Files::load(__DIR__ . '/../public');
-
 $http = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),

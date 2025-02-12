@@ -22,6 +22,6 @@ class TransformationTest extends TestCase
         $this->assertTrue($transformer->transform());
 
         $this->assertStringContainsString("Hello world", $transformer->getOutput());
-        $this->assertStringContainsString("<script defer", $transformer->getOutput());
+        $this->assertStringContainsString("Preview by", $transformer->getOutput());
     }
 }

@@ -1127,7 +1127,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
-        $this->assertStringNotContainsString("<script", $response['body']);
+        $this->assertStringNotContainsString("Preview by", $response['body']);
 
         $contentLength = $response['headers']['content-length'];
 
@@ -1141,7 +1141,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
-        $this->assertStringContainsString("<script", $response['body']);
+        $this->assertStringContainsString("Preview by", $response['body']);
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $this->cleanupSite($siteId);
