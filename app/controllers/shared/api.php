@@ -121,8 +121,7 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $databaseInternalId = $parts[1] ?? 0;
             $queueForStatsUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
-            ;
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
@@ -209,9 +208,14 @@ App::init()
         }
 
         // API Key authentication
-        if (!empty($apiKey) && $apiKey->getRole() === Auth::USER_ROLE_APPS) {
+        if (!empty($apiKey)) {
+            $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
+            // Disable authorization checks for API keys
+            Authorization::setDefaultStatus(false);
+
+            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
             $user = new Document([
                 '$id' => '',
                 'status' => true,
@@ -221,9 +225,8 @@ App::init()
                 'name' => $apiKey->getName(),
             ]);
 
-            // Disable authorization checks for API keys
-            Authorization::setRole($apiKey->getRole());
-            Authorization::setDefaultStatus(false);
+                $queueForAudits->setUser($user);
+            }
 
             if ($apiKey->getType() === API_KEY_STANDARD) {
                 $dbKey = $project->find(
@@ -232,6 +235,7 @@ App::init()
                     subject: 'keys'
                 );
 
+                if ($dbKey) {
                 $accessedAt = $dbKey->getAttribute('accessedAt', '');
 
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
@@ -256,11 +260,11 @@ App::init()
                         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
                 }
-            }
 
             $queueForAudits->setUser($user);
         }
-        // Admin User Authentication
+            }
+        } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
@@ -564,8 +568,7 @@ App::init()
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
                     ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss')
-                ;
+                    ->addHeader('X-Appwrite-Cache', 'miss');
             }
         }
     });
