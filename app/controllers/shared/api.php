@@ -209,7 +209,7 @@ App::init()
         }
 
         // API Key authentication
-        if (!empty($apiKey)) {
+        if (!empty($apiKey) && $apiKey->getRole() === Auth::USER_ROLE_APPS) {
             $scopes = $apiKey->getScopes();
 
             $user = new Document([
