@@ -1,0 +1,7 @@
+docs/*
+public/*
+vendor/*
+dev/*
+.vscode/*
+app/assets/*
+app/sdks/*
