@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9b7ba7990ac224daffbe50b377bacb0a",
+    "content-hash": "884381b7cc6c225f83c397eb472ddf11",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3474,16 +3474,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-add-batch-logging-method",
+            "version": "0.50.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "41d87370f1559656c8695d8376d6ac8406c5bd8e"
+                "reference": "c0da7dcdd35fc7d3f9640ba21cc82607cf7da729"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/41d87370f1559656c8695d8376d6ac8406c5bd8e",
-                "reference": "41d87370f1559656c8695d8376d6ac8406c5bd8e",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/c0da7dcdd35fc7d3f9640ba21cc82607cf7da729",
+                "reference": "c0da7dcdd35fc7d3f9640ba21cc82607cf7da729",
                 "shasum": ""
             },
             "require": {
@@ -3515,9 +3515,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/add-batch-logging-method"
+                "source": "https://github.com/utopia-php/audit/tree/0.50.0"
             },
-            "time": "2025-02-12T05:16:50+00:00"
+            "time": "2025-02-12T05:30:25+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -8747,9 +8747,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/audit": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -110,7 +110,7 @@ class Audits extends Action
                 ];
             }, self::$pendingEvents);
 
-            $audit->logByBatch($batchEvents);
+            $audit->logBatch($batchEvents);
             
             // Clear the pending events after successful batch processing
             self::$pendingEvents = [];
