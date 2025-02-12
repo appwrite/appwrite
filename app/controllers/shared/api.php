@@ -389,7 +389,8 @@ App::init()
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('apiKey')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode, ?Key $apiKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -484,6 +485,12 @@ App::init()
             // $user doesn't support `type` and can cause unintended effects.
             $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
+        }
+
+        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
+            foreach ($apiKey->getDisabledMetrics() as $key) {
+                $queueForStatsUsage->disableMetric($key);
+            }
         }
 
         $queueForDeletes->setProject($project);
@@ -805,12 +812,10 @@ App::shutdown()
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
-                if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-                    $queueForStatsUsage
-                        ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                        ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                        ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
-                }
+                $queueForStatsUsage
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
             }
 
             $queueForStatsUsage

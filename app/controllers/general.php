@@ -884,12 +884,10 @@ App::error()
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
-                if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-                    $queueForStatsUsage
-                        ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                        ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                        ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
-                }
+                $queueForStatsUsage
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
             }
 
             $queueForStatsUsage

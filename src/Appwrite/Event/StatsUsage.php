@@ -9,6 +9,7 @@ class StatsUsage extends Event
 {
     protected array $metrics = [];
     protected array $reduce  = [];
+    protected array $disabled = [];
 
     public function __construct(protected Publisher $publisher)
     {
@@ -41,10 +42,27 @@ class StatsUsage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
+        if ($this->disabled[$key]) {
+            return $this;
+        }
+
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
         ];
+
+        return $this;
+    }
+
+    /**
+     * Set disabled metrics.
+     *
+     * @param string $key
+     * @return self
+     */
+    public function disableMetric(string $key): self
+    {
+        $this->disabled[$key] = true;
 
         return $this;
     }

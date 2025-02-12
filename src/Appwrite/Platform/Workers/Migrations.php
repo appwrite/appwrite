@@ -196,7 +196,13 @@ class Migrations extends Action
 
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
-            'usage' => false,
+            'disabledMetrics' => [
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+            ],
             'scopes' => [
                 'users.read',
                 'users.write',

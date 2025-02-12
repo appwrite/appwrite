@@ -19,7 +19,7 @@ class Key
         protected array $scopes,
         protected string $name,
         protected bool $expired = false,
-        protected bool $usage = true,
+        protected array $disabledMetrics = [],
     ) {
     }
 
@@ -53,9 +53,9 @@ class Key
         return $this->expired;
     }
 
-    public function isUsageEnabled(): bool
+    public function getDisabledMetrics(): array
     {
-        return $this->usage;
+        return $this->disabledMetrics;
     }
 
     /**
@@ -108,7 +108,7 @@ class Key
 
                 $name = $payload['name'] ?? 'Dynamic Key';
                 $projectId = $payload['projectId'] ?? '';
-                $usage = $payload['usage'] ?? true;
+                $disabledMetrics = $payload['disabledMetrics'] ?? [];
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if ($projectId !== $project->getId()) {
@@ -122,7 +122,7 @@ class Key
                     $scopes,
                     $name,
                     $expired,
-                    $usage
+                    $disabledMetrics
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

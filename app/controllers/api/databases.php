@@ -3343,12 +3343,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
-        if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-                ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-        }
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -3511,11 +3509,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
-        if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-                ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
-        }
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -3655,11 +3651,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $processDocument($collection, $document);
 
-        if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-                ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
-        }
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -3954,11 +3948,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
-        if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-                ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
-        }
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -4138,12 +4130,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
-        if (empty($apiKey) || $apiKey->isUsageEnabled()) {
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-                ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-        }
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', 1);
 
