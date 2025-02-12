@@ -8,18 +8,28 @@ use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Audits extends Action
 {
-    private const BATCH_SIZE = 5_000;
-    private const BATCH_TIME_WINDOW = 60;
+    private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
+    private const BATCH_SIZE_PRODUCTION = 5_000; 
+    private const BATCH_AGGREGATION_INTERVAL = 60;
 
     private static array $logs = [];
+
+    private function getBatchSize(): int
+    {
+        return System::getEnv('_APP_ENV', 'development') === 'development' 
+            ? self::BATCH_SIZE_DEVELOPMENT 
+            : self::BATCH_SIZE_PRODUCTION;
+    }
 
     public static function getName(): string
     {
@@ -86,16 +96,17 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => time()
+            'timestamp' => DateTime::formatTz(DateTime::now())
         ];
 
         self::$logs[] = $eventData;
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
-        $shouldProcessBatch = count(self::$logs) >= self::BATCH_SIZE;
+        $batchSize = $this->getBatchSize();
+        $shouldProcessBatch = count(self::$logs) >= $batchSize;
         if (!$shouldProcessBatch && count(self::$logs) > 0) {
             $oldestEventTime = self::$logs[0]['timestamp'];
-            $shouldProcessBatch = (time() - $oldestEventTime) >= self::BATCH_TIME_WINDOW;
+            $shouldProcessBatch = (time() - $oldestEventTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
         if ($shouldProcessBatch) {
