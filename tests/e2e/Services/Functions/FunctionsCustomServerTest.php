@@ -1639,6 +1639,24 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
+        $rule = $this->client->call(
+            Client::METHOD_POST,
+            '/proxy/rules',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'resourceType' => 'function',
+                'resourceId' => $functionId,
+            ],
+        );
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1715,6 +1733,24 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
+        $rule = $this->client->call(
+            Client::METHOD_POST,
+            '/proxy/rules',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'resourceType' => 'function',
+                'resourceId' => $functionId,
+            ],
+        );
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1764,6 +1800,24 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'execute' => ['any']
         ]);
+
+        $rule = $this->client->call(
+            Client::METHOD_POST,
+            '/proxy/rules',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'resourceType' => 'function',
+                'resourceId' => $functionId,
+            ],
+        );
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
 
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
             'content-type' => 'application/json',

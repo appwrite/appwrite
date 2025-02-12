@@ -7,7 +7,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Validator\RuntimeSpecification;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -15,7 +14,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Rule;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -282,72 +280,6 @@ class Create extends Base
                 ->setResource($function)
                 ->setDeployment($deployment)
                 ->setTemplate($template);
-        }
-
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if (!empty($functionsDomain)) {
-            $routeSubdomain = ID::unique();
-            $domain = "{$routeSubdomain}.{$functionsDomain}";
-            $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
-
-            $rule = Authorization::skip(
-                fn () => $dbForPlatform->createDocument('rules', new Document([
-                    '$id' => $ruleId,
-                    'projectId' => $project->getId(),
-                    'projectInternalId' => $project->getInternalId(),
-                    'domain' => $domain,
-                    'resourceType' => 'function',
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getInternalId(),
-                    'status' => 'verified',
-                    'certificateId' => '',
-                ]))
-            );
-
-            /** Trigger Webhook */
-            $ruleModel = new Rule();
-            $ruleCreate =
-                $queueForEvents
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME);
-
-            $ruleCreate
-                ->setProject($project)
-                ->setEvent('rules.[ruleId].create')
-                ->setParam('ruleId', $rule->getId())
-                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
-                ->trigger();
-
-            /** Trigger Functions */
-            $ruleCreate
-                ->setClass(Event::FUNCTIONS_CLASS_NAME)
-                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-                ->trigger();
-
-            /** Trigger realtime event */
-            $allEvents = Event::generateEvents('rules.[ruleId].create', [
-                'ruleId' => $rule->getId(),
-            ]);
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $rule,
-                project: $project
-            );
-            Realtime::send(
-                projectId: 'console',
-                payload: $rule->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
-            Realtime::send(
-                projectId: $project->getId(),
-                payload: $rule->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
         }
 
         $queueForEvents->setParam('functionId', $function->getId());

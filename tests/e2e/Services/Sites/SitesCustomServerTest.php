@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -217,6 +218,8 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $domain = $this->createSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
             'key' => 'name',
@@ -1154,6 +1157,8 @@ class SitesCustomServerTest extends Scope
             $this->assertNotEmpty($site['body']['deploymentId']);
         }, 50000, 500);
 
+        $domain = $this->createSiteDomain($siteId);
+
         $domain = $this->getSiteDomain($siteId);
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -1181,8 +1186,6 @@ class SitesCustomServerTest extends Scope
 
     public function testSiteDomainReclaiming(): void
     {
-        $subdomain = 'startup' . \uniqid();
-
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
             'name' => 'Startup site',
@@ -1193,10 +1196,12 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $subdomain = 'startup' . \uniqid();
+        $domain = $this->createSiteDomain($siteId, $subdomain);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1227,11 +1232,19 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
-        $this->assertEquals(400, $site['headers']['status-code']);
-        $this->assertStringContainsString("Subdomain already exists.", $site['body']['message']);
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'resourceType' => 'site',
+            'resourceId' => $siteId,
+        ]);
+
+        $this->assertEquals(409, $rule['headers']['status-code']);
+        $this->assertStringContainsString("Domain already assigned to another resource.", $rule['body']['message']);
 
         $this->cleanupSite($siteId);
 
@@ -1267,10 +1280,16 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+
+        $siteId = $site['body']['$id'];
+
+        $domain = $this->createSiteDomain($siteId, $subdomain);
+
+        $this->assertNotEmpty($domain);
 
         $this->cleanupSite($site['body']['$id']);
     }
