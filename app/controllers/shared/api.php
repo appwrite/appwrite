@@ -206,8 +206,8 @@ App::init()
         // API Key authentication
         if (!empty($apiKey)) {
             if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
-        }
+                throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
+            }
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
@@ -219,14 +219,14 @@ App::init()
             Authorization::setDefaultStatus(false);
 
             if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
-            $user = new Document([
-                '$id' => '',
-                'status' => true,
-                'type' => Auth::ACTIVITY_TYPE_APP,
-                'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                'password' => '',
-                'name' => $apiKey->getName(),
-            ]);
+                $user = new Document([
+                    '$id' => '',
+                    'status' => true,
+                    'type' => Auth::ACTIVITY_TYPE_APP,
+                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                    'password' => '',
+                    'name' => $apiKey->getName(),
+                ]);
 
                 $queueForAudits->setUser($user);
             }
@@ -239,33 +239,33 @@ App::init()
                 );
 
                 if ($dbKey) {
-                $accessedAt = $dbKey->getAttribute('accessedAt', '');
+                    $accessedAt = $dbKey->getAttribute('accessedAt', '');
 
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                    $dbKey->setAttribute('accessedAt', DateTime::now());
-                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-                }
-
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $dbKey->getAttribute('sdks', []);
-
-                    if (!in_array($sdk, $sdks)) {
-                        $sdks[] = $sdk;
-                        $dbKey->setAttribute('sdks', $sdks);
-
-                        /** Update access time as well */
-                        $dbKey->setAttribute('accessedAt', Datetime::now());
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+                        $dbKey->setAttribute('accessedAt', DateTime::now());
                         $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
                         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
-                }
 
-            $queueForAudits->setUser($user);
-        }
+                    $sdkValidator = new WhiteList($servers, true);
+                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
+                    if ($sdkValidator->isValid($sdk)) {
+                        $sdks = $dbKey->getAttribute('sdks', []);
+
+                        if (!in_array($sdk, $sdks)) {
+                            $sdks[] = $sdk;
+                            $dbKey->setAttribute('sdks', $sdks);
+
+                            /** Update access time as well */
+                            $dbKey->setAttribute('accessedAt', Datetime::now());
+                            $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
+                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                        }
+                    }
+
+                    $queueForAudits->setUser($user);
+                }
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
