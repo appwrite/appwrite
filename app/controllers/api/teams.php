@@ -617,7 +617,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $dbForProject->createDocument('memberships', $membership);
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        } elseif ($membership->getAttribute('joined') === null) {
+        } elseif ($membership->getAttribute('confirm') === false) {
             $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
@@ -630,9 +630,8 @@ App::post('/v1/teams/:teamId/memberships')
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
         } else {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_ALREADY_EXISTS);
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
-
 
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());

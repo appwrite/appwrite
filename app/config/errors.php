@@ -359,11 +359,6 @@ return [
         'description' => 'The team invitation secret is invalid. Please request a new invitation and try again.',
         'code' => 401,
     ],
-    Exception::TEAM_MEMBERSHIP_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_MEMBERSHIP_ALREADY_EXISTS,
-        'description' => 'Team membership already exists. Please check your existing memberships and try again.',
-        'code' => 409,
-    ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
         'name' => Exception::TEAM_MEMBERSHIP_MISMATCH,
         'description' => 'The membership ID does not belong to the team ID.',

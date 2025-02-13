@@ -114,7 +114,6 @@ class Exception extends \Exception
     public const TEAM_NOT_FOUND                    = 'team_not_found';
     public const TEAM_INVITE_NOT_FOUND             = 'team_invite_not_found';
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
-    public const TEAM_MEMBERSHIP_ALREADY_EXISTS    = 'team_membership_already_exists';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
     public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
