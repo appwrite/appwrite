@@ -161,6 +161,12 @@ class StatsResources extends Action
             }
 
             try {
+                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+            }
+
+            try {
                 $this->countForDatabase($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
@@ -246,6 +252,8 @@ class StatsResources extends Action
         });
 
         $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations, 'inf');
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalDailyImageTransformations, '1d');
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalHourlyImageTransformations, '1h');
 
     }
 
