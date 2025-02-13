@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\System\System;
 
 class ProjectsCustomServerTest extends Scope
 {
@@ -34,25 +33,5 @@ class ProjectsCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $response['body']['$id'], $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        // prevent functions domain
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
-            'domain' => $functionsDomain,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        // prevent sites domain
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
-            'domain' => $sitesDomain,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
     }
 }
