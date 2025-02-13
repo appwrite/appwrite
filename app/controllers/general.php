@@ -775,7 +775,7 @@ App::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('devKey')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
