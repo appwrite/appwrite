@@ -7,7 +7,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
@@ -52,7 +52,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -436,7 +436,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_NETWORK_REQUESTS, 1)
             ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
             ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
@@ -501,7 +501,7 @@ App::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('geodb')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->inject('queueForFunctions')
@@ -516,7 +516,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 return;
             }
         }
@@ -736,7 +736,7 @@ App::options()
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
     ->inject('isResourceBlocked')
@@ -750,7 +750,7 @@ App::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 return;
             }
         }
@@ -888,13 +888,13 @@ App::error()
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
-                $queueForUsage
+                $queueForStatsUsage
                     ->addMetric(METRIC_NETWORK_REQUESTS, 1)
                     ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
                     ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
             }
 
-            $queueForUsage
+            $queueForStatsUsage
                 ->setProject($project)
                 ->trigger();
         }
@@ -1046,12 +1046,12 @@ App::get('/robots.txt')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1059,7 +1059,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
         }
     });
 
@@ -1074,12 +1074,12 @@ App::get('/humans.txt')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1087,7 +1087,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
         }
     });
 
