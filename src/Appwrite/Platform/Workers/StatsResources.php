@@ -133,9 +133,7 @@ class StatsResources extends Action
             $messages = $dbForProject->count('messages');
             $providers = $dbForProject->count('providers');
             $topics = $dbForProject->count('topics');
-
             $targets = $dbForProject->count('targets');
-
             $emailTargets = $dbForProject->count('targets', [
                 Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
             ]);
