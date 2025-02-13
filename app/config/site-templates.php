@@ -145,33 +145,25 @@ return [
         'variables' => [
             [
                 'name' => 'PUBLIC_APPWRITE_ENDPOINT',
-                'description' => 'Endpoint of Appwrite server.',
-                'value' => 'https://cloud.appwrite.io/v1',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
                 'placeholder' => 'https://cloud.appwrite.io/v1',
                 'required' => true,
                 'type' => 'text'
             ],
             [
                 'name' => 'PUBLIC_APPWRITE_PROJECT_ID',
-                'description' => 'Your Appwrite project ID.',
-                'value' => '',
-                'placeholder' => '67ab5b6d000db4f5f59d',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
                 'required' => true,
                 'type' => 'text'
             ],
             [
                 'name' => 'PUBLIC_APPWRITE_PROJECT_NAME',
-                'description' => 'Your Appwrite project name.',
-                'value' => '',
-                'placeholder' => 'My project',
-                'required' => true,
-                'type' => 'text'
-            ],
-            [
-                'name' => 'PUBLIC_APPWRITE_VERSION',
-                'description' => 'Version of Appwrite server.',
-                'value' => '1.7.0',
-                'placeholder' => '1.7.0',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
                 'required' => true,
                 'type' => 'text'
             ],
