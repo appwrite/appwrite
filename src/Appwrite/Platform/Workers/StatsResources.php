@@ -160,9 +160,9 @@ class StatsResources extends Action
                 METRIC_TOPICS => $topics,
                 METRIC_KEYS => $keys,
                 METRIC_TARGETS => $targets,
-                [str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS)] => $emailTargets,
-                [str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS)] => $pushTargets,
-                [str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS)] => $smsTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $smsTargets,
             ];
 
             foreach ($metrics as $metric => $value) {
