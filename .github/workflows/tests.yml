@@ -176,7 +176,7 @@ jobs:
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \
-            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude=devKeys
 
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
@@ -252,9 +252,44 @@ jobs:
     needs: setup
     strategy:
       fail-fast: false
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Run Projects tests with dev keys in ${{ matrix.tables-mode }} table mode
+        run: |
+          echo "Using project tables"
+          export _APP_DATABASE_SHARED_TABLES=
+          export _APP_DATABASE_SHARED_TABLES_V1=
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
+
+  e2e_dev_keys_shared_mode:
+    name: E2E Shared Mode Test (Dev Keys)
+    runs-on: ubuntu-latest
+    needs: [ setup, check_database_changes ]
+    if: needs.check_database_changes.outputs.database_changed == 'true'
+    strategy:
+      fail-fast: false
       matrix:
         tables-mode: [
-          'Project',
           'Shared V1',
           'Shared V2',
         ]
@@ -285,10 +320,6 @@ jobs:
           elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
             echo "Using shared tables V2"
             export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=
-          else
-            echo "Using project tables"
-            export _APP_DATABASE_SHARED_TABLES=
             export _APP_DATABASE_SHARED_TABLES_V1=
           fi
 
