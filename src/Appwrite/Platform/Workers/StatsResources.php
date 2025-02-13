@@ -354,10 +354,11 @@ class StatsResources extends Action
                     'period' => $period,
                     'region' => $region,
                     'value' => $value,
+                    'time' => $time,
                 ]);
             }
         } else {
-            $time = 'inf' === $period ? null : \date($this->periods[$period], \time());
+            $time = $period === 'inf' ? null : \date($this->periods[$period], \time());
             $id = \md5("{$time}_{$period}_{$metric}");
             $this->documents[] = new Document([
                 '$id' => $id,
@@ -365,6 +366,7 @@ class StatsResources extends Action
                 'period' => $period,
                 'region' => $region,
                 'value' => $value,
+                'time' => $time,
             ]);
         }
     }
