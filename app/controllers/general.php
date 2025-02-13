@@ -130,7 +130,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
     }
 
-    if ($type === 'function' || $type === 'site') {
+    if ($type === 'function' || $type === 'site'  || $type === 'deployment') {
         $method = $utopia->getRoute()?->getLabel('sdk', null);
 
         if (empty($method)) {

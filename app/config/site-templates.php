@@ -128,6 +128,56 @@ return [
         'variables' => [],
     ],
     [
+        'key' => 'sveltekit-with-appwrite',
+        'name' => 'SvelteKit with Appwrite',
+        'useCases' => ['starter'],
+        'demoUrl' => '',
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-svelte',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server.',
+                'value' => 'https://cloud.appwrite.io/v1',
+                'placeholder' => 'https://cloud.appwrite.io/v1',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID.',
+                'value' => '',
+                'placeholder' => '67ab5b6d000db4f5f59d',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name.',
+                'value' => '',
+                'placeholder' => 'My project',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_VERSION',
+                'description' => 'Version of Appwrite server.',
+                'value' => '1.7.0',
+                'placeholder' => '1.7.0',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ],
+    ],
+    [
         'key' => 'astro-starter',
         'name' => 'Astro starter website',
         'useCases' => ['starter'],

@@ -38,7 +38,7 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 10,
         ]);
 
-        $functionId = $functionId = $function['body']['$id'] ?? '';
+        $functionId = $function['body']['$id'] ?? '';
 
         $dateValidator = new DatetimeValidator();
         $this->assertEquals(201, $function['headers']['status-code']);
@@ -356,7 +356,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $functionId = $functionId = $function['body']['$id'] ?? '';
+        $functionId = $function['body']['$id'] ?? '';
 
         $deployments = $this->listDeployments($functionId);
 
@@ -1898,7 +1898,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertFalse($function['body']['logging']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $functionId = $functionId = $function['body']['$id'] ?? '';
+        $functionId = $function['body']['$id'] ?? '';
 
         $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('node'),
