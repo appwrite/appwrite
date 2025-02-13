@@ -91,13 +91,13 @@ class Deletes extends Action
                         $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -485,6 +485,7 @@ class Deletes extends Action
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param Device $deviceForFiles
+     * @param Device $deviceForSites
      * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Device $deviceForCache
@@ -740,14 +741,13 @@ class Deletes extends Action
     /**
      * @param callable $getProjectDB
      * @param Device $deviceForSites
-     * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Document $document function document
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -781,9 +781,9 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($deviceForSites, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
-            $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteDeploymentFiles($deviceForSites, $document);
         });
 
         /**
@@ -990,6 +990,7 @@ class Deletes extends Action
 
     /**
      * @param callable $getProjectDB
+     * @param Device $deviceForSites
      * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Document $document
@@ -997,17 +998,25 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
-        $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
         $deploymentInternalId = $document->getInternalId();
 
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $resourceType = $deployment->getAttribute('resourceType');
+
+        $device = match($resourceType) {
+            'functions' => $deviceForFunctions,
+            'sites' => $deviceForSites,
+            default => throw new \Exception('Invalid resource type')
+        };
+
         /**
          * Delete deployment files
          */
-        $this->deleteDeploymentFiles($deviceForFunctions, $document); //TODO: For sites, this should be deviceForSites
+        $this->deleteDeploymentFiles($device, $document);
 
         /**
          * Delete builds

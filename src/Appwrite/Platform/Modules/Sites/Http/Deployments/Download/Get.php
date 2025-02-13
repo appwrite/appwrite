@@ -55,11 +55,10 @@ class Get extends Action
             ->inject('request')
             ->inject('dbForProject')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') //TODO: Remove this later
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForSites)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -76,7 +75,7 @@ class Get extends Action
         }
 
         $path = $deployment->getAttribute('path', '');
-        if (!$deviceForFunctions->exists($path)) {
+        if (!$deviceForSites->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -86,7 +85,7 @@ class Get extends Action
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
-        $size = $deviceForFunctions->getFileSize($path);
+        $size = $deviceForSites->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -108,13 +107,13 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceForFunctions->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceForSites->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFunctions->read(
+                    $deviceForSites->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -123,7 +122,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForFunctions->read($path));
+            $response->send($deviceForSites->read($path));
         }
     }
 }
