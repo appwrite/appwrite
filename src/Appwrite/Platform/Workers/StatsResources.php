@@ -129,9 +129,22 @@ class StatsResources extends Action
             ]);
             $teams = $dbForProject->count('teams');
             $functions = $dbForProject->count('functions');
+
             $messages = $dbForProject->count('messages');
             $providers = $dbForProject->count('providers');
             $topics = $dbForProject->count('topics');
+
+            $targets = $dbForProject->count('targets');
+
+            $emailTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
+            ]);
+            $pushTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH])
+            ]);
+            $smsTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS])
+            ]);
 
             $metrics = [
                 METRIC_DATABASES => $databases,
@@ -148,6 +161,10 @@ class StatsResources extends Action
                 METRIC_PROVIDERS => $providers,
                 METRIC_TOPICS => $topics,
                 METRIC_KEYS => $keys,
+                METRIC_TARGETS => $targets,
+                [str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS)] => $emailTargets,
+                [str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS)] => $pushTargets,
+                [str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS)] => $smsTargets,
             ];
 
             foreach ($metrics as $metric => $value) {
