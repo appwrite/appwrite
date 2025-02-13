@@ -12,10 +12,12 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class UsageTest extends Scope
 {
@@ -1089,6 +1091,24 @@ class UsageTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        $rule = $this->client->call(
+            Client::METHOD_POST,
+            '/proxy/rules',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'resourceType' => 'function',
+                'resourceId' => $functionId,
+            ],
+        );
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
 
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
             'content-type' => 'application/json',
