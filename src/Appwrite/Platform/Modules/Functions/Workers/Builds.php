@@ -261,8 +261,16 @@ class Builds extends Action
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
 
                     $directorySize = $deviceForFunctions->getFileSize($source);
-                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
+
+                    $build = $build->setAttribute('source', $source);
+
+                    $deployment = $deployment
+                        ->setAttribute('path', $source)
+                        ->setAttribute('size', $directorySize)
+                        ->setAttribute('metadata', ['content_type' => 'application/gzip']);
+
+                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             } elseif ($isNewBuild && $isVcsEnabled) {
                 // VCS and VCS+Temaplte
@@ -417,10 +425,16 @@ class Builds extends Action
 
                 Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
-                $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
-
                 $directorySize = $deviceForFunctions->getFileSize($source);
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
+
+                $build = $build->setAttribute('source', $source);
+                $deployment = $build
+                    ->setAttribute('path', $source)
+                    ->setAttribute('size', $directorySize)
+                    ->setAttribute('metadata', ['content_type' => 'application/gzip']);
+
+                $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
@@ -565,7 +579,22 @@ class Builds extends Action
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
+                        $contentType = $deployment->getAttribute('metadata', [])['content_type'] ?? '';
+
+                        $extractCommand = '';
+                        switch ($contentType) {
+                            case 'application/zip':
+                                $extractCommand = 'unzip /tmp/code.tar.gz -d /mnt/code';
+                                break;
+                            case 'application/gzip':
+                                $extractCommand = 'tar -zxf /tmp/code.tar.gz -C /mnt/code';
+                                break;
+                            default:
+                                throw new \Exception('Unsupported deployment content type: ' . $contentType);
+                                break;
+                        }
+
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : ($extractCommand . ' && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"');
 
                         // TODO: Detect adapter if adapter is empty
                         $response = $executor->createRuntime(
