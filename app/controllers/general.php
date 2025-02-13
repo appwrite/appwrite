@@ -214,10 +214,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             default => null
         };
 
-        if ($resource->getAttribute('adapter', '') === 'static') {
-            $runtime = $runtimes['static-1'] ?? null;
-        }
-
         if (\is_null($runtime)) {
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
@@ -385,6 +381,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
 
+        // SPA fallbackFile override
+        if ($resource->getAttribute('adapter', '') === 'static' && $resource->getAttribute('fallbackFile', '') !== '') {
+            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $resource->getAttribute('fallbackFile', '');
+        }
+
         /** Execute function */
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
@@ -445,6 +446,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30
             );
+
+            // Branded 404 override
+            if ($executionResponse['statusCode'] === 404 && $resource->getAttribute('adapter', '') === 'static') {
+                $layout = new View(__DIR__ . '/../views/general/404.phtml');
+                $executionResponse['body'] = $layout->render();
+                $executionResponse['headers']['content-length'] = \strlen($executionResponse['body']);
+            }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
