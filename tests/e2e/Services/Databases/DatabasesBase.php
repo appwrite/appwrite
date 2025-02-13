@@ -466,13 +466,11 @@ trait DatabasesBase
 
         $this->assertTrue(
             in_array(
-                $attribute['body']['message'],
-                [
+                $attribute['body']['message'], [
                     'Index length is longer than the maximum: 767',
                     'Index length is longer than the maximum: 768'
                 ]
-            )
-        );
+            ));
     }
 
     public function testUpdateAttributeEnum(): void
