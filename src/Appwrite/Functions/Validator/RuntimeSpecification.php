@@ -34,7 +34,7 @@ class RuntimeSpecification extends Validator
         $allowedSpecifications = [];
 
         foreach ($this->specifications as $size => $values) {
-            if ($values['cpus'] <= $this->maxCpus && $values['memory'] <= $this->maxMemory) {
+            if (($values['cpus'] <= $this->maxCpus || $this->maxCpus === 0) && ($values['memory'] <= $this->maxMemory || $this->maxMemory === 0)) {
                 if (!empty($this->plan) && array_key_exists('runtimeSpecifications', $this->plan)) {
                     if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
                         continue;
