@@ -32,7 +32,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
@@ -237,8 +237,6 @@ const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
 const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
-
-
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
@@ -269,6 +267,8 @@ const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
 const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
+const METRIC_FILES_IMAGES_TRANSFORMED = 'files.imagesTransformed';
+const METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED = '{bucketInternalId}.files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
@@ -301,6 +301,18 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_MAU = 'users.mau';
+const METRIC_DAU = 'users.dau';
+const METRIC_WAU = 'users.wau';
+const METRIC_WEBHOOKS = 'webhooks';
+const METRIC_PLATFORMS = 'platforms';
+const METRIC_PROVIDERS = 'providers';
+const METRIC_TOPICS = 'topics';
+const METRIC_KEYS = 'keys';
+const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
+const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 
 // Resource types
 
@@ -1176,6 +1188,9 @@ App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
+App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
 App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
     return new Audit($publisher);
 }, ['publisher']);
@@ -1191,46 +1206,58 @@ App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
 App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('platforms', function (Document $project, Document $console) {
-    return [
-        ...$project->getAttribute('platforms', []),
-        ...$console->getAttribute('platforms', []),
-    ];
-}, ['project', 'console']);
-App::setResource('hostnames', function (array $platforms) {
-    // Allow environment configured hostnames
-    $hostnames = [];
+App::setResource('clients', function ($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Always allow current host
+        '$collection' => ID::custom('platforms'),
+        'name' => 'Current Host',
+        'type' => Origin::CLIENT_TYPE_WEB,
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+
+    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
     $validator = new Hostname();
-    foreach (explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', '')) as $hostname) {
+    foreach ($hostnames as $hostname) {
         $hostname = trim($hostname);
-        if ($validator->isValid($hostname)) {
-            $hostnames[] = $hostname;
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
+
+    /**
+     * Get All verified client URLs for both console and current projects
+     * + Filter for duplicated entries
+     */
+    $clientsConsole = \array_map(
+        fn ($node) => $node['hostname'],
+        \array_filter(
+            $console->getAttribute('platforms', []),
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
+        )
+    );
+
+    $clients = $clientsConsole;
+    $platforms = $project->getAttribute('platforms', []);
+
+    foreach ($platforms as $node) {
+        if (
+            isset($node['type']) &&
+            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
+            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+            !empty($node['hostname'])
+        ) {
+            $clients[] = $node['hostname'];
         }
     }
 
-    // Add database configured hostnames
-    foreach ($platforms as $platform) {
-        if (!empty($platform['hostname']) && in_array($platform['type'], [
-            Origin::CLIENT_TYPE_WEB,
-            Origin::CLIENT_TYPE_FLUTTER_WEB,
-        ])) {
-            $hostnames[] = $platform['hostname'];
-        }
-    }
+    return \array_unique($clients);
+}, ['request', 'console', 'project']);
 
-    return \array_unique($hostnames);
-}, ['platforms']);
-App::setResource('schemes', function (array $platforms, Document $project) {
-    // Allow expo development scheme by default
-    $schemes = ['exp'];
-
-    // Allow `appwrite-callback-${projectId}` scheme by default
-    if (!empty($project) && $project->getId() !== 'console') {
-        $schemes[] = 'appwrite-callback-' .  $project->getId();
-    }
-
-    return \array_unique($schemes);
-}, ['platforms', 'project']);
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -1533,6 +1560,39 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         return $database;
     };
 }, ['pools', 'dbForPlatform', 'cache']);
+
+App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);

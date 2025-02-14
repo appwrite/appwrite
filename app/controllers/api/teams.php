@@ -8,10 +8,9 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -50,6 +49,7 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -455,7 +455,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->param('url', '', fn ($hostnames, $schemes) => new Redirect($hostnames, $schemes), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['hostnames', 'schemes']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -466,9 +466,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -757,11 +757,11 @@ App::post('/v1/teams/:teamId/memberships')
                         $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
-                            $queueForUsage
+                            $queueForStatsUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
                     }
-                    $queueForUsage
+                    $queueForStatsUsage
                         ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();

@@ -367,7 +367,7 @@ In file `app/controllers/shared/api.php` On the database listener, add to an exi
 
 ```php
       case $document->getCollection() === 'teams':
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_TEAMS, $value); // per project
             break;
 ```
@@ -379,10 +379,10 @@ In that case you need also to handle children removal using addReduce() method c
 ```php
 
  case $document->getCollection() === 'buckets': //buckets
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_BUCKETS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addReduce($document);
             }
             break;
@@ -428,16 +428,16 @@ public function __construct()
       ->inject('dbForProject')
       ->inject('queueForFunctions')
       ->inject('queueForEvents')
-      ->inject('queueForUsage')
+      ->inject('queueForStatsUsage')
       ->inject('log')
-      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log));
 }
 ```
 
 and then trigger the queue with the new metric like so: 
 
 ```php
-$queueForUsage
+$queueForStatsUsage
   ->addMetric(METRIC_BUILDS, 1)
   ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
   ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
