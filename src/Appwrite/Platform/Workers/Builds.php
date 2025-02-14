@@ -149,7 +149,7 @@ class Builds extends Action
         }
 
         $version = $function->getAttribute('version', 'v2');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
