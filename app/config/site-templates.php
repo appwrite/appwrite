@@ -278,4 +278,100 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => []
     ],
+    [
+        'key' => 'nextjs-starter',
+        'name' => 'Next.js starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nuxt-starter',
+        'name' => 'Nuxt starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'sveltekit-starter',
+        'name' => 'SvelteKit starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './sveltekit/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'astro-starter',
+        'name' => 'Astro starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'remix-starter',
+        'name' => 'Remix starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('REMIX', [
+                'providerRootDirectory' => './remix/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'flutter-starter',
+        'name' => 'Flutter starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('FLUTTER', [
+                'providerRootDirectory' => './flutter/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
 ];
