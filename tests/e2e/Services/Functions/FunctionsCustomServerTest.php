@@ -358,6 +358,21 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
+        $deployment = $this->createTemplateDeployment(
+            $functionId,
+            [
+                'functionId' => ID::unique(),
+                'activate' => true,
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'rootDirectory' => $phpRuntime['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
         $deployments = $this->listDeployments($functionId);
 
         $this->assertEquals(200, $deployments['headers']['status-code']);

@@ -19,7 +19,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github)
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -91,9 +91,11 @@ class Base extends Action
             ->setResource($function)
             ->setDeployment($deployment)
             ->setTemplate($template);
+
+        return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github)
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -187,5 +189,7 @@ class Base extends Action
             ->setResource($site)
             ->setDeployment($deployment)
             ->setTemplate($template);
+
+        return $deployment;
     }
 }
