@@ -131,9 +131,9 @@ class Site extends Model
                 'default' => '',
                 'example' => 'node-22',
             ])
-            ->addRule('adapter', [
+            ->addRule('rendering', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Site framework adapter.',
+                'description' => 'Site framework rendering strategy (adapter).',
                 'default' => null,
                 'example' => 'static',
             ])

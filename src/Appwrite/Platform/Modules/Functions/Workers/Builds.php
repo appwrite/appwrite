@@ -876,12 +876,12 @@ class Builds extends Action
             $bundleCommand = '';
 
             if (!is_null($framework)) {
-                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
-                if (!is_null($adapter) && isset($adapter['envCommand'])) {
-                    $envCommand = $adapter['envCommand'];
+                $rendering = ($framework['renderingStrategies'] ?? [])[$resource->getAttribute('rendering', '')] ?? null;
+                if (!is_null($rendering) && isset($rendering['envCommand'])) {
+                    $envCommand = $rendering['envCommand'];
                 }
-                if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
-                    $bundleCommand = $adapter['bundleCommand'];
+                if (!is_null($rendering) && isset($rendering['bundleCommand'])) {
+                    $bundleCommand = $rendering['bundleCommand'];
                 }
             }
 

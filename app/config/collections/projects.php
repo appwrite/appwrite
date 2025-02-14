@@ -1070,7 +1070,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('adapter'), // ssr or static
+                '$id' => ID::custom('rendering'), // ssr or static
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,

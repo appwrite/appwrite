@@ -216,7 +216,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             default => null
         };
 
-        if ($resource->getAttribute('adapter', '') === 'static') {
+        if ($resource->getAttribute('rendering', '') === 'static') {
             $runtime = $runtimes['static-1'] ?? null;
         }
 
@@ -413,9 +413,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $startCommand = $runtime['startCommand'];
 
                 if (!is_null($framework)) {
-                    $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
-                    if (!is_null($adapter) && isset($adapter['startCommand'])) {
-                        $startCommand = $adapter['startCommand'];
+                    $rendering = ($framework['renderingStrategies'] ?? [])[$resource->getAttribute('rendering', '')] ?? null;
+                    if (!is_null($rendering) && isset($rendering['startCommand'])) {
+                        $startCommand = $rendering['startCommand'];
                     }
                 }
 

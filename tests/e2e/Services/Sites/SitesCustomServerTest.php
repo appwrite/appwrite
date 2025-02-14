@@ -279,7 +279,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Astro site',
             'framework' => 'astro',
-            'adapter' => 'ssr',
+            'rendering' => 'ssr',
             'buildRuntime' => 'ssr-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
@@ -559,7 +559,7 @@ class SitesCustomServerTest extends Scope
                 'siteId' => ID::unique(),
                 'name' => $starterTemplate['body']['name'],
                 'framework' => $nextjsFramework['key'],
-                'adapter' => $nextjsFramework['adapter'],
+                'rendering' => $nextjsFramework['rendering'],
                 'buildCommand' => $nextjsFramework['buildCommand'],
                 'buildRuntime' => $nextjsFramework['buildRuntime'],
                 'fallbackFile' => $nextjsFramework['fallbackFile'],
@@ -1194,7 +1194,7 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('key', $framework);
         $this->assertArrayHasKey('buildRuntime', $framework);
         $this->assertArrayHasKey('runtimes', $framework);
-        $this->assertArrayHasKey('adapters', $framework);
+        $this->assertArrayHasKey('renderingStrategies', $framework);
     }
 
     public function testSiteTemplate(): void
@@ -1208,7 +1208,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Template site',
             'framework' => $template['frameworks'][0]['key'],
-            'adapter' => $template['frameworks'][0]['adapter'],
+            'rendering' => $template['frameworks'][0]['rendering'],
             'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
             'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
             'buildCommand' => $template['frameworks'][0]['buildCommand'],
@@ -1258,7 +1258,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
-            'adapter' => 'static',
+            'rendering' => 'static',
             'buildRuntime' => 'static-1',
             'outputDirectory' => './',
             'buildCommand' => '',
@@ -1292,7 +1292,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
-            'adapter' => 'static',
+            'rendering' => 'static',
             'buildRuntime' => 'static-1',
             'outputDirectory' => './',
             'buildCommand' => '',
@@ -1332,7 +1332,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
-            'adapter' => 'static',
+            'rendering' => 'static',
             'buildRuntime' => 'static-1',
             'outputDirectory' => './',
             'buildCommand' => '',
@@ -1352,7 +1352,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'A site',
             'framework' => 'other',
-            'adapter' => 'static',
+            'rendering' => 'static',
             'buildRuntime' => 'static-1',
             'outputDirectory' => './',
             'buildCommand' => '',
@@ -1414,7 +1414,7 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
-            'adapter' => 'static',
+            'rendering' => 'static',
             'buildRuntime' => 'static-1',
             'outputDirectory' => './',
             'buildCommand' => '',

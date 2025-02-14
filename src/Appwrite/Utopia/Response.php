@@ -45,7 +45,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Framework;
-use Appwrite\Utopia\Response\Model\FrameworkAdapter;
+use Appwrite\Utopia\Response\Model\FrameworkRendering;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
@@ -258,7 +258,7 @@ class Response extends SwooleResponse
     public const MODEL_SITE_LIST = 'siteList';
     public const MODEL_FRAMEWORK = 'framework';
     public const MODEL_FRAMEWORK_LIST = 'frameworkList';
-    public const MODEL_FRAMEWORK_ADAPTER = 'frameworkAdapter';
+    public const MODEL_FRAMEWORK_RENDERING = 'frameworkRendering';
     public const MODEL_TEMPLATE_SITE = 'templateSite';
     public const MODEL_TEMPLATE_SITE_LIST = 'templateSiteList';
     public const MODEL_TEMPLATE_FRAMEWORK = 'templateFramework';
@@ -458,7 +458,7 @@ class Response extends SwooleResponse
             ->setModel(new Branch())
             ->setModel(new Runtime())
             ->setModel(new Framework())
-            ->setModel(new FrameworkAdapter())
+            ->setModel(new FrameworkRendering())
             ->setModel(new Deployment())
             ->setModel(new Execution())
             ->setModel(new Build())

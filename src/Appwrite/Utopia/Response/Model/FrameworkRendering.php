@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class FrameworkAdapter extends Model
+class FrameworkRendering extends Model
 {
     public function __construct()
     {
@@ -44,7 +44,7 @@ class FrameworkAdapter extends Model
      */
     public function getName(): string
     {
-        return 'Framework Adapter';
+        return 'Framework Rendering';
     }
 
     /**
@@ -54,6 +54,6 @@ class FrameworkAdapter extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_FRAMEWORK_ADAPTER;
+        return Response::MODEL_FRAMEWORK_RENDERING;
     }
 }

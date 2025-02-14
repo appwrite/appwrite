@@ -23,7 +23,7 @@ return [
         'name' => 'Next.js',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
@@ -49,7 +49,7 @@ return [
         'name' => 'Nuxt',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
@@ -75,7 +75,7 @@ return [
         'name' => 'SvelteKit',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
@@ -101,7 +101,7 @@ return [
         'name' => 'Astro',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
@@ -127,7 +127,7 @@ return [
         'name' => 'Remix',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
@@ -153,7 +153,7 @@ return [
         'name' => 'Flutter',
         'buildRuntime' => 'flutter-3.24',
         'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
-        'adapters' => [
+        'renderingStrategies' => [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'flutter build web',
@@ -170,7 +170,7 @@ return [
         'name' => 'Other',
         'buildRuntime' => 'ssr-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'adapters' => [
+        'renderingStrategies' => [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => '',

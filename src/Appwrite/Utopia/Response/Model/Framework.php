@@ -35,9 +35,9 @@ class Framework extends Model
                 'example' => ['static-1', 'node-22'],
                 'array' => true,
             ])
-            ->addRule('adapters', [
-                'type' => Response::MODEL_FRAMEWORK_ADAPTER,
-                'description' => 'List of supported adapters.',
+            ->addRule('renderingStrategies', [
+                'type' => Response::MODEL_FRAMEWORK_RENDERING,
+                'description' => 'List of supported rendering strategies.',
                 'default' => '',
                 'example' => [[ 'key' => 'static', 'buildRuntime' => 'node-22', 'buildCommand' => 'npm run build', 'installCommand' => 'npm install', 'outputDirectory' => './dist' ]],
                 'array' => true,

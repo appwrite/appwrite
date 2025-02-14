@@ -52,9 +52,9 @@ class TemplateFramework extends Model
                 'default' => '',
                 'example' => 'node-22',
             ])
-            ->addRule('adapter', [
+            ->addRule('rendering', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Site framework runtime',
+                'description' => 'Site framework rendering strategy',
                 'default' => '',
                 'example' => 'ssr',
             ])

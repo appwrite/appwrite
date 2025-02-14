@@ -76,7 +76,7 @@ class Create extends Base
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
-            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Allows: static, ssr', true)
+            ->param('rendering', '', new Text(8192, 0), 'Framework rendering strategy. Allows: static, ssr', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
@@ -105,14 +105,14 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $adapter, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $rendering, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
     {
-        if (!empty($adapter)) {
+        if (!empty($rendering)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
-            $adapters = \array_keys($configFramework['adapters'] ?? []);
-            $validator = new WhiteList($adapters, true);
-            if (!$validator->isValid($adapter)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+            $renderingStraregies = \array_keys($configFramework['renderingStrategies'] ?? []);
+            $validator = new WhiteList($renderingStraregies, true);
+            if (!$validator->isValid($rendering)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Rendering strategy not supported for the selected framework.');
             }
         }
 
@@ -187,7 +187,7 @@ class Create extends Base
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
             'buildRuntime' => $buildRuntime,
-            'adapter' => $adapter,
+            'rendering' => $rendering,
         ]));
 
         // Git connect logic

@@ -26,7 +26,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
         'buildRuntime' => 'ssr-22',
-        'adapter' => 'ssr',
+        'rendering' => 'ssr',
         'fallbackFile' => null,
     ],
     'NEXTJS' => [
@@ -36,7 +36,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './.next',
         'buildRuntime' => 'ssr-22',
-        'adapter' => 'ssr',
+        'rendering' => 'ssr',
         'fallbackFile' => null,
     ],
     'NUXT' => [
@@ -46,7 +46,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './.output',
         'buildRuntime' => 'ssr-22',
-        'adapter' => 'ssr',
+        'rendering' => 'ssr',
         'fallbackFile' => null,
     ],
     'REMIX' => [
@@ -56,7 +56,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
         'buildRuntime' => 'ssr-22',
-        'adapter' => 'ssr',
+        'rendering' => 'ssr',
         'fallbackFile' => null,
     ],
     'ASTRO' => [
@@ -66,7 +66,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './dist',
         'buildRuntime' => 'ssr-22',
-        'adapter' => 'ssr',
+        'rendering' => 'ssr',
         'fallbackFile' => null,
     ],
     'FLUTTER' => [
@@ -76,7 +76,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
         'buildRuntime' => 'flutter-3.24',
-        'adapter' => 'static',
+        'rendering' => 'static',
         'fallbackFile' => null,
     ],
 ];
