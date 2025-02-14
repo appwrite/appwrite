@@ -17,6 +17,9 @@ class Transformation
     protected mixed $input;
     protected mixed $output;
 
+    /**
+     * @param array<Adapter> $adapters
+     */
     public function __construct(array $adapters = [])
     {
         $this->adapters = $adapters;
@@ -43,9 +46,6 @@ class Transformation
         return $this;
     }
 
-    /**
-     * @param array<mixed> $traits
-     */
     public function transform(): bool
     {
         foreach ($this->adapters as $adapter) {
