@@ -27,7 +27,7 @@ class Preview extends Adapter
         return false;
     }
 
-    public function transform(): bool
+    public function transform(): void
     {
         $this->output = $this->input;
 
@@ -197,7 +197,5 @@ class Preview extends Adapter
         EOT;
 
         $this->output .= $banner;
-
-        return true;
     }
 }

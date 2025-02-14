@@ -4,11 +4,23 @@ namespace Appwrite\Transformation;
 
 abstract class Adapter
 {
+    protected mixed $input;
     protected mixed $output;
 
-    public function __construct(protected mixed $input)
+    public function __construct()
     {
 
+    }
+
+    public function setInput(mixed $input): self
+    {
+        $this->input = $input;
+        return $this;
+    }
+
+    public function getOutput(): mixed
+    {
+        return $this->output;
     }
 
     /**
@@ -16,10 +28,5 @@ abstract class Adapter
      */
     abstract public function isValid(array $traits): bool;
 
-    abstract public function transform(): bool;
-
-    public function getOutput(): mixed
-    {
-        return $this->output;
-    }
+    abstract public function transform(): void;
 }

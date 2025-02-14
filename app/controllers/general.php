@@ -450,9 +450,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
 
             // Branded banner for previews
-            $transformation = new Transformation(new Preview($executionResponse['body']));
-            if ($type === 'deployment' && $transformation->isValid($executionResponse['headers'])) {
-                $transformation->transform();
+            $transformation = new Transformation();
+            $transformation->addAdapter(new Preview());
+            $transformation->setInput($executionResponse['body']);
+            $transformation->setTraits($executionResponse['headers']);
+            if ($type === 'deployment' && $transformation->transform()) {
                 $executionResponse['body'] = $transformation->getOutput();
 
                 foreach ($executionResponse['headers'] as $key => $value) {
