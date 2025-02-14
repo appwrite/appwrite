@@ -1405,5 +1405,61 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSiteCors(): void
+    {
+        // Create rule together with site
+        $subdomain = 'startup' . \uniqid();
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->getSiteDomain($siteId);
+
+        $this->assertNotEmpty($domain);
+
+        $url = 'http://' . $domain;
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'unknown',
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => 'http://unknown.com',
+            'origin' => 'http://unknown.com'
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    }
+
     // TODO: Add tests for deletion of resources when site is deleted
 }
