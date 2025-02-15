@@ -739,7 +739,7 @@ App::init()
             $refDomainOrigin = $origin;
         } else {
             // Auto-allow domains with linked rule
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin)));
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
             if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getInternalId()) {
                 $refDomainOrigin = $origin;
             }
