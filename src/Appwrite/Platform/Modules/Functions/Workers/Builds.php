@@ -717,16 +717,22 @@ class Builds extends Action
                         Query::equal("resourceInternalId", [$deployment->getInternalId()])
                     ]));
 
-                    if(!$rule->isEmpty()) {
+                    if($rule->isEmpty()) {
                         throw new \Exception("Rule for build not found");
                     }
 
 
                     $client = new FetchClient();
                     $client->addHeader('Authorization', 'Bearer ' . App::getEnv('_APP_OPENSSL_KEY_V1', ''));
-                    $response = $client->fetch('http://appwrite-browser/screenshot', query: [
-                        'url' => 'http://' . $rule->getAttribute('domain') . '/'
+                    $response = $client->fetch('http://appwrite-browser:3000/screenshot', query: [
+                        'hostname' => $rule->getAttribute('domain'),
+                        'path' => '/',
                     ]);
+
+                    if($response->getStatusCode() >= 400) {
+                        throw new \Exception("Screenshot failed to generate: " . $response->getBody());
+                    }
+
                     $screenshot = $response->getBody();
 
                     $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
@@ -736,7 +742,7 @@ class Builds extends Action
                     $fileName = $fileId . '.png';
                     $path = $deviceForFiles->getPath($fileName);
                     $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                     $success = $deviceForFiles->write($path, $screenshot, "image/png");
+                    $success = $deviceForFiles->write($path, $screenshot, "image/png");
 
                     if(!$success) {
                         throw new \Exception("Screenshot failed to save");
@@ -769,9 +775,9 @@ class Builds extends Action
                         'openSSLTag' => null,
                         'openSSLIV' => null,
                         'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($fileName)],
+                        'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
                     ]);
-                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $file);
+                    $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
 
                     $deployment->setAttribute('screenshot', $fileId);
                     $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);

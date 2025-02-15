@@ -269,6 +269,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 'fileSecurity' => true,
                 '$permissions' => [
                     Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
                 'search' => 'buckets Screenshots',
             ]));

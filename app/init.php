@@ -1911,8 +1911,9 @@ App::setResource(
 );
 
 App::setResource('previewHostname', function (Request $request) {
+    // TODO: @Meldiron Allow in production too for internal communication (authorized with secret)
     if (App::isDevelopment()) {
-        $host = $request->getQuery('appwrite-hostname') ?? '';
+        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;
         }

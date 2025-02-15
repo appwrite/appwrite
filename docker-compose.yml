@@ -433,6 +433,7 @@ services:
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:

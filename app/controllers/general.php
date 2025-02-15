@@ -585,7 +585,7 @@ App::init()
 */
 
 App::init()
-    ->groups(['database', 'functions', 'storage', 'messaging'])
+    ->groups(['database', 'functions', 'messaging'])
     ->inject('project')
     ->inject('request')
     ->action(function (Document $project, Request $request) {
