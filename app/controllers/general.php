@@ -84,10 +84,10 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     if ($route->isEmpty()) {
 
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-        $appDomainFunctions =  System::getEnv('_APP_DOMAIN_FUNCTIONS' ,'');
+        $appDomainFunctions =  System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
         if (!empty($appDomainFunctionsFallback) && \str_ends_with($host, $appDomainFunctionsFallback)) {
-          $appDomainFunctions =  $appDomainFunctionsFallback;
+            $appDomainFunctions =  $appDomainFunctionsFallback;
         }
 
         if ($host === $appDomainFunctions) {

@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
