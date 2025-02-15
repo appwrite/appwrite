@@ -80,6 +80,7 @@ class Deployment extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Screenshot file ID.',
                 'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
