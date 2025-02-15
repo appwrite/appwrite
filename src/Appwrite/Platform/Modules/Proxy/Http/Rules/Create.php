@@ -45,7 +45,9 @@ class Create extends Action
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 name: 'createRule',
-                description: '/docs/references/proxy/create-rule.md',
+                description: <<<EOT
+                Create a new proxy rule.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
