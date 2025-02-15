@@ -13,6 +13,7 @@ use Swoole\Table;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -217,7 +218,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $dbForPlatform->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() && !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() ) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForPlatform->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
@@ -242,6 +243,39 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
+            $files = $collections['buckets']['files'] ?? [];
+            if (empty($files)) {
+                throw new Exception('Files collection is not configured.');
+            }
+
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), $files['attributes']);
+            $indexes = \array_map(fn (array $index) => new Document($index), $files['indexes']);
+
+            $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+        }
+
+        if ($dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty()) {
+            Console::success('[Setup] - Creating screenshots bucket...');
+            $dbForPlatform->createDocument('buckets', new Document([
+                '$id' => ID::custom('screenshots'),
+                '$collection' => ID::custom('buckets'),
+                'name' => 'Screenshots',
+                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'allowedFileExtensions' => [ 'png' ],
+                'enabled' => true,
+                'compression' => Compression::GZIP,
+                'encryption' => false,
+                'antivirus' => false,
+                'fileSecurity' => true,
+                '$permissions' => [
+                    Permission::create(Role::any()),
+                ],
+                'search' => 'buckets Screenshots',
+            ]));
+
+            $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+            Console::success('[Setup] - Creating files collection for screenshots bucket...');
             $files = $collections['buckets']['files'] ?? [];
             if (empty($files)) {
                 throw new Exception('Files collection is not configured.');

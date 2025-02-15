@@ -7,11 +7,15 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
+use Tests\E2E\Client;
+use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -24,9 +28,11 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -55,8 +61,9 @@ class Builds extends Action
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForFiles, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForFiles, $log));
     }
 
     /**
@@ -69,11 +76,12 @@ class Builds extends Action
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -94,7 +102,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
                 break;
 
             default:
@@ -104,6 +112,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param Usage $queueForUsage
@@ -120,7 +129,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -699,6 +708,79 @@ class Builds extends Action
             }
 
             Console::success("Build id: $buildId created");
+
+            if ($resource->getCollection() === 'sites' && $build->getAttribute('status') === 'ready') {
+                try {
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("resourceType", ["deployment"]),
+                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    ]));
+
+                    if(!$rule->isEmpty()) {
+                        throw new \Exception("Rule for build not found");
+                    }
+
+
+                    $client = new FetchClient();
+                    $client->addHeader('Authorization', 'Bearer ' . App::getEnv('_APP_OPENSSL_KEY_V1', ''));
+                    $response = $client->fetch('http://appwrite-browser/screenshot', query: [
+                        'url' => 'http://' . $rule->getAttribute('domain') . '/'
+                    ]);
+                    $screenshot = $response->getBody();
+
+                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+                    // TODO: @Khushboo replace with deviceForSites
+                    $fileId = ID::unique();
+                    $fileName = $fileId . '.png';
+                    $path = $deviceForFiles->getPath($fileName);
+                    $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                     $success = $deviceForFiles->write($path, $screenshot, "image/png");
+
+                    if(!$success) {
+                        throw new \Exception("Screenshot failed to save");
+                    }
+
+                    $teamId = $project->getAttribute('teamId', '');
+                    $file = new Document([
+                        '$id' => $fileId,
+                        '$permissions' => [
+                            Permission::read(Role::team(ID::custom($teamId))),
+                            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                        ],
+                        'bucketId' => $bucket->getId(),
+                        'bucketInternalId' => $bucket->getInternalId(),
+                        'name' => $fileName,
+                        'path' => $path,
+                        'signature' => $deviceForFiles->getFileHash($path),
+                        'mimeType' => $deviceForFiles->getFileMimeType($path),
+                        'sizeOriginal' => \strlen($screenshot),
+                        'sizeActual' => $deviceForFiles->getFileSize($path),
+                        'algorithm' => Compression::GZIP,
+                        'comment' => '',
+                        'chunksTotal' => 1,
+                        'chunksUploaded' => 1,
+                        'openSSLVersion' => null,
+                        'openSSLCipher' => null,
+                        'openSSLTag' => null,
+                        'openSSLIV' => null,
+                        'search' => implode(' ', [$fileId, $fileName]),
+                        'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($fileName)],
+                    ]);
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $file);
+
+                    $deployment->setAttribute('screenshot', $fileId);
+                    $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                } catch(\Throwable $th) {
+                    Console::warning("Screenshot failed to generate:");
+                    Console::warning($th->getMessage());
+                    Console::warning($th->getTraceAsString());
+                }
+            }
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
