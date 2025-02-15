@@ -13,8 +13,12 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\StatsUsageDump;
+/** remove */
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
+/** /remove */
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -173,6 +177,39 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
 });
@@ -238,6 +275,14 @@ Server::setResource('queueForUsage', function (Publisher $publisher) {
 
 Server::setResource('queueForUsageDump', function (Publisher $publisher) {
     return new UsageDump($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForStatsUsageDump', function (Publisher $publisher) {
+    return new StatsUsageDump($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForDatabase', function (Publisher $publisher) {
