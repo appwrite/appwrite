@@ -76,6 +76,11 @@ class Deployment extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('screenshot', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot file ID.',
+                'default' => '',
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The deployment status. Possible values are "processing", "building", "waiting", "ready", and "failed".',
