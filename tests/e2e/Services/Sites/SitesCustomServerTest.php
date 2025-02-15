@@ -566,11 +566,6 @@ class SitesCustomServerTest extends Scope
                 'installCommand' => $nextjsFramework['installCommand'],
                 'outputDirectory' => $nextjsFramework['outputDirectory'],
                 'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateOwner' => $starterTemplate['body']['providerOwner'],
-                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
-                'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateVersion' => $starterTemplate['body']['providerVersion'],
-                'providerBranch' => 'main',
             ]
         );
 
@@ -578,6 +573,20 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($site['body']['$id']);
 
         $siteId = $site['body']['$id'] ?? '';
+
+        $deployment = $this->createTemplateDeployment(
+            $siteId,
+            [
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'rootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+                'activate' => true,
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $deployments = $this->listDeployments($siteId);
 
@@ -1214,11 +1223,20 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => $template['frameworks'][0]['buildCommand'],
             'installCommand' => $template['frameworks'][0]['installCommand'],
             'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
-            'templateRepository' => $template['providerRepositoryId'],
-            'templateOwner' => $template['providerOwner'],
-            'templateRootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
-            'templateVersion' => $template['providerVersion'],
         ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'version' => $template['providerVersion'],
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
