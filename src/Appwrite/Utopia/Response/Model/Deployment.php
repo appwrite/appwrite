@@ -82,6 +82,12 @@ class Deployment extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('screenshotDark', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot with dark theme prefference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The deployment status. Possible values are "processing", "building", "waiting", "ready", and "failed".',

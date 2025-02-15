@@ -886,8 +886,6 @@ services:
     image: appwrite/browser:0.1.0
     networks:
       - appwrite
-    environment:
-      - APPWRITE_BROWSER_SECRET=$_APP_OPENSSL_KEY_V1
 
   openruntimes-executor:
     container_name: openruntimes-executor

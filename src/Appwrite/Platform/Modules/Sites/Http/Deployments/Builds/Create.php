@@ -10,11 +10,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Create extends Action
 {
@@ -53,7 +56,9 @@ class Create extends Action
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
@@ -61,7 +66,7 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites, Device $deviceForFunctions)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -96,6 +101,27 @@ class Create extends Action
             'outputDirectory' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
         ]));
+
+        // Preview deployments for sites
+        $projectId = $project->getId();
+
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+        $ruleId = md5($domain);
+
+        $rule = Authorization::skip(
+            fn () => $dbForPlatform->createDocument('rules', new Document([
+                '$id' => $ruleId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'domain' => $domain,
+                'resourceType' => 'deployment',
+                'resourceId' => $deploymentId,
+                'resourceInternalId' => $deployment->getInternalId(),
+                'status' => 'verified',
+                'certificateId' => '',
+            ]))
+        );
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

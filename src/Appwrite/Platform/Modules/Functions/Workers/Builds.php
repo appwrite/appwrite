@@ -14,7 +14,6 @@ use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
-use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -717,71 +716,85 @@ class Builds extends Action
                         Query::equal("resourceInternalId", [$deployment->getInternalId()])
                     ]));
 
-                    if($rule->isEmpty()) {
+                    if ($rule->isEmpty()) {
                         throw new \Exception("Rule for build not found");
                     }
 
-
                     $client = new FetchClient();
-                    $client->addHeader('Authorization', 'Bearer ' . App::getEnv('_APP_OPENSSL_KEY_V1', ''));
-                    $response = $client->fetch('http://appwrite-browser:3000/screenshot', query: [
-                        'hostname' => $rule->getAttribute('domain'),
-                        'path' => '/',
-                    ]);
-
-                    if($response->getStatusCode() >= 400) {
-                        throw new \Exception("Screenshot failed to generate: " . $response->getBody());
-                    }
-
-                    $screenshot = $response->getBody();
+                    $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
                     $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
-                    // TODO: @Khushboo replace with deviceForSites
-                    $fileId = ID::unique();
-                    $fileName = $fileId . '.png';
-                    $path = $deviceForFiles->getPath($fileName);
-                    $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                    $success = $deviceForFiles->write($path, $screenshot, "image/png");
+                    $configs = [
+                        'screenshot' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://traefik/',
+                            'color' => 'light'
+                        ],
+                        'screenshotDark' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://traefik/',
+                            'color' => 'dark'
+                        ],
+                    ];
 
-                    if(!$success) {
-                        throw new \Exception("Screenshot failed to save");
+                    // TODO: @Meldiron if becomes too slow, do concurrently
+                    foreach ($configs as $key => $config) {
+                        $response = $client->fetch(
+                            url: 'http://appwrite-browser:3000/v1/screenshots',
+                            method: 'POST',
+                            body: $config
+                        );
+
+                        if ($response->getStatusCode() >= 400) {
+                            throw new \Exception("Screenshot failed to generate: " . $response->getBody());
+                        }
+
+                        $screenshot = $response->getBody();
+
+                        // TODO: @Khushboo replace with deviceForSites
+                        $fileId = ID::unique();
+                        $fileName = $fileId . '.png';
+                        $path = $deviceForFiles->getPath($fileName);
+                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+
+                        if (!$success) {
+                            throw new \Exception("Screenshot failed to save");
+                        }
+
+                        $teamId = $project->getAttribute('teamId', '');
+                        $file = new Document([
+                            '$id' => $fileId,
+                            '$permissions' => [
+                                Permission::read(Role::team(ID::custom($teamId))),
+                            ],
+                            'bucketId' => $bucket->getId(),
+                            'bucketInternalId' => $bucket->getInternalId(),
+                            'name' => $fileName,
+                            'path' => $path,
+                            'signature' => $deviceForFiles->getFileHash($path),
+                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'sizeOriginal' => \strlen($screenshot),
+                            'sizeActual' => $deviceForFiles->getFileSize($path),
+                            'algorithm' => Compression::GZIP,
+                            'comment' => '',
+                            'chunksTotal' => 1,
+                            'chunksUploaded' => 1,
+                            'openSSLVersion' => null,
+                            'openSSLCipher' => null,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                            'search' => implode(' ', [$fileId, $fileName]),
+                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                        ]);
+                        $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+
+                        $deployment->setAttribute($key, $fileId);
                     }
 
-                    $teamId = $project->getAttribute('teamId', '');
-                    $file = new Document([
-                        '$id' => $fileId,
-                        '$permissions' => [
-                            Permission::read(Role::team(ID::custom($teamId))),
-                            Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                            Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                        ],
-                        'bucketId' => $bucket->getId(),
-                        'bucketInternalId' => $bucket->getInternalId(),
-                        'name' => $fileName,
-                        'path' => $path,
-                        'signature' => $deviceForFiles->getFileHash($path),
-                        'mimeType' => $deviceForFiles->getFileMimeType($path),
-                        'sizeOriginal' => \strlen($screenshot),
-                        'sizeActual' => $deviceForFiles->getFileSize($path),
-                        'algorithm' => Compression::GZIP,
-                        'comment' => '',
-                        'chunksTotal' => 1,
-                        'chunksUploaded' => 1,
-                        'openSSLVersion' => null,
-                        'openSSLCipher' => null,
-                        'openSSLTag' => null,
-                        'openSSLIV' => null,
-                        'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
-                    ]);
-                    $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
-
-                    $deployment->setAttribute('screenshot', $fileId);
                     $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                } catch(\Throwable $th) {
+                } catch (\Throwable $th) {
                     Console::warning("Screenshot failed to generate:");
                     Console::warning($th->getMessage());
                     Console::warning($th->getTraceAsString());

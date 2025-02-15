@@ -218,7 +218,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $dbForPlatform->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() ) {
+        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForPlatform->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
