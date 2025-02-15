@@ -23,6 +23,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -785,6 +786,21 @@ class Builds extends Action
                     Console::warning("Screenshot failed to generate:");
                     Console::warning($th->getMessage());
                     Console::warning($th->getTraceAsString());
+                }
+            }
+
+            // Git branch preview
+            $providerBranch = $deployment->getAttribute('providerBranch', '');
+            if(!empty($providerBranch)) {
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "git-{$providerBranch}-{$resource->getId()}.{$sitesDomain}";
+                $ruleId = md5($domain);
+                $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
+                if(!$rule->isEmpty()) {
+                    $rule = $rule
+                        ->setAttribute('resourceId', $deployment->getId())
+                        ->setAttribute('resourceInternalId', $deployment->getInternalId());
+                    Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
                 }
             }
 
