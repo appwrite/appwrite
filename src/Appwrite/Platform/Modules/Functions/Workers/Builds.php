@@ -709,7 +709,7 @@ class Builds extends Action
 
             Console::success("Build id: $buildId created");
 
-            if ($resource->getCollection() === 'sites' && $build->getAttribute('status') === 'ready') {
+            if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
