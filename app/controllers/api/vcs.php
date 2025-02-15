@@ -19,7 +19,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -234,8 +233,10 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             // Preview deployments for sites
             if ($resource->getCollection() === 'sites') {
+                $projectId = $project->getId();
+
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$resourceId}.{$sitesDomain}";
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
                 $ruleId = md5($domain);
 
                 $rule = Authorization::skip(
@@ -251,29 +252,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         'certificateId' => '',
                     ]))
                 );
-
-                // Branch preview
-                if (!empty($providerBranch)) {
-                    $domain = "git-{$providerBranch}-{$resource->getId()}.{$sitesDomain}";
-                    $ruleId = md5($domain);
-                    try {
-                        Authorization::skip(
-                            fn () => $dbForPlatform->createDocument('rules', new Document([
-                                '$id' => $ruleId,
-                                'projectId' => $project->getId(),
-                                'projectInternalId' => $project->getInternalId(),
-                                'domain' => $domain,
-                                'resourceType' => 'deployment',
-                                'resourceId' => $deployment->getId(),
-                                'resourceInternalId' => $deployment->getInternalId(),
-                                'status' => 'verified',
-                                'certificateId' => '',
-                            ]))
-                        );
-                    } catch (Duplicate $err) {
-                        // Ignore, rule already exists; will be updated by builds worker
-                    }
-                }
             }
 
             if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {

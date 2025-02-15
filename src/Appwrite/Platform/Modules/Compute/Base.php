@@ -165,7 +165,7 @@ class Base extends Action
         $projectId = $project->getId();
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $domain = "{$deploymentId}-{$site->getId()}-{$projectId}.{$sitesDomain}";
+        $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
         $ruleId = md5($domain);
 
         $rule = Authorization::skip(
