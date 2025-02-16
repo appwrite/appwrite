@@ -214,47 +214,17 @@ class StatsResources extends Action
     protected function countImageTransformations(Database $dbForProject, Database $dbForLogs, string $region)
     {
         $totalImageTransformations = 0;
-        $totalDailyImageTransformations = 0;
-        $totalHourlyImageTransformations = 0;
-        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalDailyImageTransformations, &$totalHourlyImageTransformations, &$totalImageTransformations) {
+        $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
+        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
             $imageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
-                Query::isNotNull('transformedAt')
+                Query::greaterThanEqual('transformedAt', $last30Days),
             ]);
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
-            $this->createStatsDocuments($region, $metric, $imageTransformations, 'inf');
+            $this->createStatsDocuments($region, $metric, $imageTransformations);
             $totalImageTransformations += $imageTransformations;
-
-            // hourly
-            $time = \date($this->periods['1h'], \time());
-            $start = $time;
-            $end = (new \DateTime($start))->format('Y-m-d H:59:59');
-            $hourlyImageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
-                Query::greaterThanEqual('transformedAt', $start),
-                Query::lessThanEqual('transformedAt', $end),
-            ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
-            $this->createStatsDocuments($region, $metric, $hourlyImageTransformations, '1h');
-            $totalHourlyImageTransformations += $hourlyImageTransformations;
-
-            // daily
-            $time = \date($this->periods['1d'], \time());
-            $start = $time;
-            $end = (new \DateTime($start))->format('Y-m-d 11:59:59');
-
-            $dailyImageTransformations = $dbForProject->count('bucket_' . $bucket->getInternalId(), [
-                Query::greaterThanEqual('transformedAt', $start),
-                Query::lessThanEqual('transformedAt', $end),
-            ]);
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
-            $this->createStatsDocuments($region, $metric, $dailyImageTransformations, '1d');
-            $totalDailyImageTransformations += $dailyImageTransformations;
-
         });
 
-        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations, 'inf');
-        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalDailyImageTransformations, '1d');
-        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalHourlyImageTransformations, '1h');
-
+        $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations);
     }
 
     protected function countForDatabase(Database $dbForProject, Database $dbForLogs, string $region)
@@ -341,25 +311,12 @@ class StatsResources extends Action
         });
     }
 
-    protected function createStatsDocuments(string $region, string $metric, int $value, ?string $period = null)
+    protected function createStatsDocuments(string $region, string $metric, int $value)
     {
-        if ($period === null) {
-            foreach ($this->periods as $period => $format) {
-                $time = 'inf' === $period ? null : \date($format, \time());
-                $id = \md5("{$time}_{$period}_{$metric}");
-
-                $this->documents[] = new Document([
-                    '$id' => $id,
-                    'metric' => $metric,
-                    'period' => $period,
-                    'region' => $region,
-                    'value' => $value,
-                    'time' => $time,
-                ]);
-            }
-        } else {
-            $time = $period === 'inf' ? null : \date($this->periods[$period], \time());
+        foreach ($this->periods as $period => $format) {
+            $time = 'inf' === $period ? null : \date($format, \time());
             $id = \md5("{$time}_{$period}_{$metric}");
+
             $this->documents[] = new Document([
                 '$id' => $id,
                 'metric' => $metric,
