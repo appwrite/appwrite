@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5473f6b65d54314228e69b6bed489d78",
+    "content-hash": "44bd3c613083a66e4f446a27a94d6977",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3777,12 +3777,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "09512d06b4b3a1a4acca2403ea9c22f03975d79e"
+                "reference": "0f1d84c2a1f5c26e1a8decee24dabdb8e1d6ce1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/09512d06b4b3a1a4acca2403ea9c22f03975d79e",
-                "reference": "09512d06b4b3a1a4acca2403ea9c22f03975d79e",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/0f1d84c2a1f5c26e1a8decee24dabdb8e1d6ce1a",
+                "reference": "0f1d84c2a1f5c26e1a8decee24dabdb8e1d6ce1a",
                 "shasum": ""
             },
             "require": {
@@ -3832,7 +3832,7 @@
                 "source": "https://github.com/utopia-php/detector/tree/feat-pseudocode-draft2",
                 "issues": "https://github.com/utopia-php/detector/issues"
             },
-            "time": "2025-02-06T13:36:29+00:00"
+            "time": "2025-02-17T08:26:03+00:00"
         },
         {
             "name": "utopia-php/domains",
