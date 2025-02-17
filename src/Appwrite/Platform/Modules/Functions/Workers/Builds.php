@@ -14,7 +14,6 @@ use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;

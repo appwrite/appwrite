@@ -1912,7 +1912,7 @@ App::setResource(
 
 /**
  * JWT key from x-appwrite-key header.
- * 
+ *
  * @return array<string, mixed> Decoded key-value pair from JWT
  */
 App::setResource('dynamicKey', function (Request $request) {
@@ -1924,7 +1924,7 @@ App::setResource('dynamicKey', function (Request $request) {
 
     [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
 
-    if($keyType !== API_KEY_DYNAMIC) {
+    if ($keyType !== API_KEY_DYNAMIC) {
         return [];
     }
 
