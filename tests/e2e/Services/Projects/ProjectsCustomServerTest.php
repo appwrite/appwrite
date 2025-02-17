@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\System\System;
 
 class ProjectsCustomServerTest extends Scope
 {
@@ -33,5 +34,40 @@ class ProjectsCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $response['body']['$id'], $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+            'resourceType' => 'api',
+            'domain' => $functionsDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+            'resourceType' => 'api',
+            'domain' => $sitesDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // prevent functions domain
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+            'resourceType' => 'function',
+            'domain' => $functionsDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // prevent sites domain
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+            'resourceType' => 'site',
+            'domain' => $sitesDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 }

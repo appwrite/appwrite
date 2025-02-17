@@ -81,8 +81,9 @@ class Create extends Action
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        // Not xactly sitesDomain
-        // Not exactly functionsDomain
+        if ($domain === $functionsDomain || $domain === $sitesDomain) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions or sites domain to a specific resource. Please use a different domain.');
+        }
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
@@ -119,7 +120,11 @@ class Create extends Action
         switch ($resourceType) {
             case 'function':
                 if (empty($resourceId)) {
-                    throw new Exception(Exception::FUNCTION_NOT_FOUND);
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "function".');
+                }
+
+                if (!\str_ends_with($domain, $functionsDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must end with ' . $functionsDomain . ' for resourceType "function".');
                 }
 
                 $function = $dbForProject->getDocument('functions', $resourceId);
@@ -132,7 +137,11 @@ class Create extends Action
                 break;
             case 'site':
                 if (empty($resourceId)) {
-                    throw new Exception(Exception::SITE_NOT_FOUND);
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "site".');
+                }
+
+                if (!\str_ends_with($domain, $sitesDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must end with ' . $sitesDomain . ' for resourceType "site".');
                 }
 
                 $site = $dbForProject->getDocument('sites', $resourceId);
@@ -142,6 +151,11 @@ class Create extends Action
                 }
 
                 $resourceInternalId = $site->getInternalId();
+                break;
+            case 'api':
+                if (\str_ends_with($domain, $functionsDomain) || \str_ends_with($domain, $sitesDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must not end with ' . $functionsDomain . ' or ' . $sitesDomain . ' for resourceType "api".');
+                }
                 break;
         }
 
@@ -190,8 +204,6 @@ class Create extends Action
         $rule = $dbForPlatform->createDocument('rules', $rule);
 
         $queueForEvents->setParam('ruleId', $rule->getId());
-
-        $rule->setAttribute('logs', '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
