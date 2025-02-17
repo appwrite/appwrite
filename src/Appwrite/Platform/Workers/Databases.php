@@ -535,6 +535,8 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+
         /**
          * Related collections relating to current collection
          */
@@ -552,8 +554,6 @@ class Databases extends Action
                 $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
         );
-
-        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 
         $this->deleteByGroup('attributes', [
             Query::equal('databaseInternalId', [$databaseInternalId]),
@@ -577,39 +577,25 @@ class Databases extends Action
      */
     protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
+        $start = \microtime(true);
 
-        $executionStart = \microtime(true);
+        try {
+            $documents = $database->deleteDocuments($collection, $queries);
+        } catch (\Throwable $th) {
+            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            return;
+        }
 
-        while ($sum === $limit) {
-            $chunk++;
-
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
-
-            foreach ($results as $document) {
-                if ($database->deleteDocument($document->getCollection(), $document->getId())) {
-                    Console::success('Deleted document "' . $document->getId() . '" successfully');
-
-                    if (\is_callable($callback)) {
-                        $callback($document);
-                    }
-                } else {
-                    Console::warning('Failed to delete document: ' . $document->getId());
-                }
-                $count++;
+        if (\is_callable($callback)) {
+            foreach ($documents as $document) {
+                $callback($document);
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
+        $count = \count($documents);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     protected function trigger(

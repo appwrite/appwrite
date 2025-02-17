@@ -1,0 +1,1 @@
+Get a platform by its unique ID. This endpoint returns the platform's details, including its name, type, and key configurations. 
