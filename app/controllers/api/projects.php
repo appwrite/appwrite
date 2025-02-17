@@ -213,17 +213,17 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
+        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
-            $dbForProject = new Database($adapter, $cache);
-
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)

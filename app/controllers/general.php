@@ -71,16 +71,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         )[0] ?? new Document();
     }
 
-    var_dump([
-        'location' => 'router function',
-        '_APP_RULES_FORMAT' => System::getEnv('_APP_RULES_FORMAT'),
-        'host' => $host,
-        'md5' => md5($host),
-        'route' => $route,
-
-    ]);
-
-
     if ($route->isEmpty()) {
 
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
