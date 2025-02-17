@@ -942,8 +942,7 @@ class Deletes extends Action
         array $queries,
         Database $database,
         ?callable $callback = null
-    ): void
-    {
+    ): void {
         $start = \microtime(true);
 
         try {
