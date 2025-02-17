@@ -266,7 +266,7 @@ trait FunctionsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
             'resourceType' => 'function',
             'resourceId' => $functionId,
         ]);
