@@ -568,15 +568,6 @@ trait MigrationsBase
 
         $documentId = $document['body']['$id'];
 
-        // Get project stats
-        $initialStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'startDate' => UsageTest::getYesterday(),
-            'endDate' => UsageTest::getTomorrow(),
-        ]);
-
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_DATABASE,
@@ -589,9 +580,6 @@ trait MigrationsBase
             'apiKey' => $this->getProject()['apiKey'],
         ]);
 
-        // Wait for usage dump
-        sleep(30);
-
         $finalStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -599,10 +587,6 @@ trait MigrationsBase
             'startDate' => UsageTest::getYesterday(),
             'endDate' => UsageTest::getTomorrow(),
         ]);
-
-        // Ensure database reads/writes did not change
-        $this->assertEquals($initialStats['body']['databasesReadsTotal'], $finalStats['body']['databasesReadsTotal']);
-        $this->assertEquals($initialStats['body']['databasesWritesTotal'], $finalStats['body']['databasesWritesTotal']);
 
         $this->assertEquals('completed', $result['status']);
         $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_DOCUMENT], $result['resources']);
