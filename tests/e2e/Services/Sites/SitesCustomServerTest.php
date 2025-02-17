@@ -65,6 +65,264 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testConsoleAvailabilityEndpoint(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './',
+            'subdomain' => 'test-site',
+            'fallbackFile' => null,
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $rule = $this->getSiteDomain($siteId);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $rule,
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
+
+        $nonExistingDomain = "non-existent-subdomain.sites.localhost";
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $nonExistingDomain,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($siteId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('resourceId', [$siteId])
+                ]
+            ]);
+
+            $this->assertEquals(200, $rule['headers']['status-code']);
+            $this->assertEquals(0, $rule['body']['total']);
+        }, 5000, 500);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'type' => 'rules',
+            'value' => $rule,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
+    }
+
+    public function testVariables(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals('Test Site', $site['body']['name']);
+
+        $variable = $this->createVariable($siteId, [
+            'key' => 'siteKey1',
+            'value' => 'siteValue1',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'key' => 'siteKey2',
+            'value' => 'siteValue2',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertNotEmpty($variable2['body']['$id']);
+        $this->assertEquals('siteKey2', $variable2['body']['key']);
+        $this->assertEquals('siteValue2', $variable2['body']['value']);
+        $this->assertEquals(false, $variable2['body']['secret']);
+
+        $secretVariable = $this->createVariable($siteId, [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variable = $this->getVariable($siteId, $variable['body']['$id']);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1', $variable['body']['key']);
+        $this->assertEquals('siteValue1', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'value' => 'siteValue1Updated',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('siteValue1Updated', $variable['body']['value']);
+        $this->assertEquals(false, $variable['body']['secret']);
+
+        $variable = $this->updateVariable($siteId, $variable['body']['$id'], [
+            'key' => 'siteKey1Updated',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('siteKey1Updated', $variable['body']['key']);
+        $this->assertEquals('', $variable['body']['value']);
+        $this->assertEquals(true, $variable['body']['secret']);
+
+        $secretVariable = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'value' => 'siteValue3Updated',
+        ]);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $response = $this->updateVariable($siteId, $secretVariable['body']['$id'], [
+            'key' => 'siteKey3',
+            'secret' => false,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $secretVariable = $this->getVariable($siteId, $secretVariable['body']['$id']);
+
+        $this->assertEquals(200, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('siteKey3', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(3, $variables['body']['variables']);
+
+        $response = $this->deleteVariable($siteId, $variable['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->deleteVariable($siteId, $variable2['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->deleteVariable($siteId, $secretVariable['body']['$id']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $variables = $this->listVariables($siteId);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertCount(0, $variables['body']['variables']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testVariablesE2E(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $secretVariable = $this->createVariable($siteId, [
+            'key' => 'name',
+            'value' => 'Appwrite',
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $this->assertNotEmpty($secretVariable['body']['$id']);
+        $this->assertEquals('name', $secretVariable['body']['key']);
+        $this->assertEquals('', $secretVariable['body']['value']);
+        $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Env variable is Appwrite", $response['body']);
+        $this->assertStringNotContainsString("Variable not found", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**
@@ -308,11 +566,6 @@ class SitesCustomServerTest extends Scope
                 'installCommand' => $nextjsFramework['installCommand'],
                 'outputDirectory' => $nextjsFramework['outputDirectory'],
                 'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateOwner' => $starterTemplate['body']['providerOwner'],
-                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
-                'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateVersion' => $starterTemplate['body']['providerVersion'],
-                'providerBranch' => 'main',
             ]
         );
 
@@ -320,6 +573,20 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($site['body']['$id']);
 
         $siteId = $site['body']['$id'] ?? '';
+
+        $deployment = $this->createTemplateDeployment(
+            $siteId,
+            [
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'rootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+                'activate' => true,
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $deployments = $this->listDeployments($siteId);
 
@@ -937,6 +1204,279 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('buildRuntime', $framework);
         $this->assertArrayHasKey('runtimes', $framework);
         $this->assertArrayHasKey('adapters', $framework);
+    }
+
+    public function testSiteTemplate(): void
+    {
+        $template = $this->getTemplate('astro-starter');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Template site',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'version' => $template['providerVersion'],
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 50000, 500);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteDomainReclaiming(): void
+    {
+        $subdomain = 'startup' . \uniqid();
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup 2 site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertStringContainsString("Subdomain already exists.", $site['body']['message']);
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($domain) {
+            $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('domain', [$domain])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+        }, 50000, 500);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup 2 site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $this->cleanupSite($site['body']['$id']);
+    }
+
+    public function testSitePreviewBranding(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'A site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $previewDomain = $this->getDeploymentDomain($deploymentId);
+
+        $this->assertNotEmpty($domain);
+        $this->assertNotEmpty($previewDomain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringNotContainsString("Preview by", $response['body']);
+
+        $contentLength = $response['headers']['content-length'];
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $previewDomain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringContainsString("Preview by", $response['body']);
+        $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteCors(): void
+    {
+        // Create rule together with site
+        $subdomain = 'startup' . \uniqid();
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->getSiteDomain($siteId);
+
+        $this->assertNotEmpty($domain);
+
+        $url = 'http://' . $domain;
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'unknown',
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => 'http://unknown.com',
+            'origin' => 'http://unknown.com'
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
     }
 
     // TODO: Add tests for deletion of resources when site is deleted

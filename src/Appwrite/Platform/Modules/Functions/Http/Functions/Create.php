@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
@@ -29,14 +28,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -90,30 +87,22 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true)
-            ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
-            ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
-            ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
             ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
                 $plan,
                 Config::getParam('runtime-specifications', []),
                 App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
                 App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
-            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
             ->inject('project')
-            ->inject('user')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
             ->inject('dbForPlatform')
-            ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
+    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Response $response, Database $dbForProject, callable $timelimit, Document $project, Event $queueForEvents, Database $dbForPlatform)
     {
 
         // Temporary abuse check
@@ -151,20 +140,6 @@ class Create extends Base
 
         if (!empty($allowList) && !\in_array($runtime, $allowList)) {
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
-        }
-
-        // build from template
-        $template = new Document([]);
-        if (
-            !empty($templateRepository)
-            && !empty($templateOwner)
-            && !empty($templateRootDirectory)
-            && !empty($templateVersion)
-        ) {
-            $template->setAttribute('repositoryName', $templateRepository)
-                ->setAttribute('ownerName', $templateOwner)
-                ->setAttribute('rootDirectory', $templateRootDirectory)
-                ->setAttribute('version', $templateVersion);
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -253,36 +228,6 @@ class Create extends Base
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-
-        if (!empty($providerRepositoryId)) {
-            // Deploy VCS
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
-        } elseif (!$template->isEmpty()) {
-            // Deploy non-VCS from template
-            $deploymentId = ID::unique();
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
-                'resourceType' => 'functions',
-                'entrypoint' => $function->getAttribute('entrypoint', ''),
-                'commands' => $function->getAttribute('commands', ''),
-                'type' => 'manual',
-                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
-                'activate' => true,
-            ]));
-
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment)
-                ->setTemplate($template);
-        }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
