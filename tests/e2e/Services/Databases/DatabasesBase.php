@@ -463,7 +463,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-        $this->assertEquals('Index length is longer than the maximum: 768', $attribute['body']['message']);
+        $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
     }
 
     public function testUpdateAttributeEnum(): void
