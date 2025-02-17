@@ -3137,10 +3137,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('apiKey')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, ?AuthKey $apiKey, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3395,9 +3394,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('apiKey')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, ?AuthKey $apiKey, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3573,9 +3571,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('apiKey')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, ?AuthKey $apiKey, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3805,10 +3802,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('apiKey')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, ?AuthKey $apiKey, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -4058,10 +4054,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('apiKey')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, ?AuthKey $apikey, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
