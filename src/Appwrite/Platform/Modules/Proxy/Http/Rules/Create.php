@@ -119,38 +119,24 @@ class Create extends Action
 
         switch ($resourceType) {
             case 'function':
-                if (empty($resourceId)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "function".');
-                }
-
-                if (!\str_ends_with($domain, $functionsDomain)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must end with ' . $functionsDomain . ' for resourceType "function".');
-                }
-
-                $function = $dbForProject->getDocument('functions', $resourceId);
-
-                if ($function->isEmpty()) {
-                    throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
-                }
-
-                $resourceInternalId = $function->getInternalId();
-                break;
             case 'site':
                 if (empty($resourceId)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "site".');
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "' . $resourceType . '".');
                 }
 
-                if (!\str_ends_with($domain, $sitesDomain)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must end with ' . $sitesDomain . ' for resourceType "site".');
+                $expectedDomain = ($resourceType === 'function') ? $functionsDomain : $sitesDomain;
+                if (!\str_ends_with($domain, $expectedDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain must end with ' . $expectedDomain . ' for resourceType "' . $resourceType . '".');
                 }
 
-                $site = $dbForProject->getDocument('sites', $resourceId);
+                $collection = ($resourceType === 'function') ? 'functions' : 'sites';
+                $document = $dbForProject->getDocument($collection, $resourceId);
 
-                if ($site->isEmpty()) {
+                if ($document->isEmpty()) {
                     throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
                 }
 
-                $resourceInternalId = $site->getInternalId();
+                $resourceInternalId = $document->getInternalId();
                 break;
             case 'api':
                 if (\str_ends_with($domain, $functionsDomain) || \str_ends_with($domain, $sitesDomain)) {
