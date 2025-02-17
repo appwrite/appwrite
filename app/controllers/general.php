@@ -4,7 +4,6 @@ require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Key;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
@@ -771,9 +770,8 @@ App::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->inject('apiKey')
     ->inject('queueForStatsUsage')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, ?Key $apiKey, StatsUsage $queueForStatsUsage) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
