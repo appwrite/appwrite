@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Key as AuthKey;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
