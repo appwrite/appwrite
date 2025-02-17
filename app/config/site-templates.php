@@ -1,8 +1,20 @@
 <?php
 
+use Utopia\System\System;
+
 /**
  * List of Appwrite Sites templates
  */
+
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+$hostname = System::getEnv('_APP_DOMAIN');
+
+// TODO: Development override
+if (System::getEnv('_APP_ENV') === 'development') {
+    $hostname = 'localhost';
+}
+
+$url = $protocol . '://' . $hostname;
 
 // TODO: @Meldiron Angular
 
@@ -77,62 +89,10 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
-        'key' => 'nextjs-starter',
-        'name' => 'Next.js starter website',
+        'key' => 'starter-for-svelte',
+        'name' => 'Svelte starter',
         'useCases' => ['starter'],
-        'demoUrl' => 'https://nextjs-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/nextjs-starter.png',
-        'frameworks' => [
-            getFramework('NEXTJS', [
-                'providerRootDirectory' => './nextjs/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nuxt-starter',
-        'name' => 'Nuxt starter website',
-        'useCases' => ['starter'],
-        'demoUrl' => 'https://nuxt-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/nuxt-starter.png',
-        'frameworks' => [
-            getFramework('NUXT', [
-                'providerRootDirectory' => './nuxt/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'sveltekit-starter',
-        'name' => 'SvelteKit starter website',
-        'useCases' => ['starter'],
-        'demoUrl' => 'https://sveltekit-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/sveltekit-starter.png',
-        'frameworks' => [
-            getFramework('SVELTEKIT', [
-                'providerRootDirectory' => './sveltekit/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'sveltekit-with-appwrite',
-        'name' => 'SvelteKit with Appwrite',
-        'useCases' => ['starter'],
-        'demoUrl' => '',
-        'demoImage' => '',
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-svelte.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './',
@@ -147,7 +107,7 @@ return [
                 'name' => 'PUBLIC_APPWRITE_ENDPOINT',
                 'description' => 'Endpoint of Appwrite server',
                 'value' => '{apiEndpoint}',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
+                'placeholder' => '{apiEndpoint}',
                 'required' => true,
                 'type' => 'text'
             ],
@@ -167,14 +127,210 @@ return [
                 'required' => true,
                 'type' => 'text'
             ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-nextjs',
+        'name' => 'Next.js starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-nextjs.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './',
+            ]),
         ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-nextjs',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'NEXT_PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'NEXT_PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'NEXT_PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'template-for-event',
+        'name' => 'Event template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-event.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './',
+                'installCommand' => 'pnpm install',
+                'buildCommand' => 'npm run build',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-event',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'template-for-portfolio',
+        'name' => 'Portfolio template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-portfolio.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-portfolio',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'template-for-store',
+        'name' => 'Store template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-store.png',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-store',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'STRIPE_SECRET_KEY',
+                'description' => 'Your Stripe secret key',
+                'value' => 'disabled',
+                'placeholder' => 'sk_.....',
+                'required' => false,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'template-for-blog',
+        'name' => 'Blog template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-blog.png',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-blog',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'nextjs-starter',
+        'name' => 'Next.js starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nuxt-starter',
+        'name' => 'Nuxt starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'sveltekit-starter',
+        'name' => 'SvelteKit starter',
+        'useCases' => ['starter'],
+        'demoImage' => '',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './sveltekit/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
     ],
     [
         'key' => 'astro-starter',
-        'name' => 'Astro starter website',
+        'name' => 'Astro starter',
         'useCases' => ['starter'],
-        'demoUrl' => 'https://astro-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/astro-starter.png',
+        'demoImage' => '',
         'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
@@ -188,10 +344,9 @@ return [
     ],
     [
         'key' => 'remix-starter',
-        'name' => 'Remix starter website',
+        'name' => 'Remix starter',
         'useCases' => ['starter'],
-        'demoUrl' => 'https://remix-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/remix-starter.png',
+        'demoImage' => '',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
@@ -205,10 +360,9 @@ return [
     ],
     [
         'key' => 'flutter-starter',
-        'name' => 'Flutter starter website',
+        'name' => 'Flutter starter',
         'useCases' => ['starter'],
-        'demoUrl' => 'https://flutter-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/flutter-starter.png',
+        'demoImage' => '',
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './flutter/starter',

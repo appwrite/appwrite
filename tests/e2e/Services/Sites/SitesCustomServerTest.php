@@ -570,11 +570,6 @@ class SitesCustomServerTest extends Scope
                 'installCommand' => $nextjsFramework['installCommand'],
                 'outputDirectory' => $nextjsFramework['outputDirectory'],
                 'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateOwner' => $starterTemplate['body']['providerOwner'],
-                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
-                'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateVersion' => $starterTemplate['body']['providerVersion'],
-                'providerBranch' => 'main',
             ]
         );
 
@@ -582,6 +577,20 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($site['body']['$id']);
 
         $siteId = $site['body']['$id'] ?? '';
+
+        $deployment = $this->createTemplateDeployment(
+            $siteId,
+            [
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'rootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+                'activate' => true,
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $deployments = $this->listDeployments($siteId);
 
@@ -1218,11 +1227,20 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => $template['frameworks'][0]['buildCommand'],
             'installCommand' => $template['frameworks'][0]['installCommand'],
             'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
-            'templateRepository' => $template['providerRepositoryId'],
-            'templateOwner' => $template['providerOwner'],
-            'templateRootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
-            'templateVersion' => $template['providerVersion'],
         ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'version' => $template['providerVersion'],
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
@@ -1364,6 +1382,121 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($domain);
 
         $this->cleanupSite($site['body']['$id']);
+    }
+
+    public function testSitePreviewBranding(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'A site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $previewDomain = $this->getDeploymentDomain($deploymentId);
+
+        $this->assertNotEmpty($domain);
+        $this->assertNotEmpty($previewDomain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringNotContainsString("Preview by", $response['body']);
+
+        $contentLength = $response['headers']['content-length'];
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $previewDomain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Hello Appwrite", $response['body']);
+        $this->assertStringContainsString("Preview by", $response['body']);
+        $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteCors(): void
+    {
+        // Create rule together with site
+        $subdomain = 'startup' . \uniqid();
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Startup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'subdomain' => $subdomain
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->getSiteDomain($siteId);
+
+        $this->assertNotEmpty($domain);
+
+        $url = 'http://' . $domain;
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'unknown',
+            'referer' => $url,
+            'origin' => $url
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'referer' => 'http://unknown.com',
+            'origin' => 'http://unknown.com'
+        ]));
+
+        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
     }
 
     // TODO: Add tests for deletion of resources when site is deleted

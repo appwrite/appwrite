@@ -230,6 +230,16 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function createTemplateDeployment(string $siteId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
     protected function getSiteUsage(string $siteId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
@@ -289,6 +299,29 @@ trait SitesBase
             'queries' => [
                 Query::equal('resourceId', [$siteId])->toString(),
                 Query::equal('resourceType', ['site'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $rules['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($rules['body']['rules']));
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        return $domain;
+    }
+
+
+    protected function getDeploymentDomain(string $deploymentId): string
+    {
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$deploymentId])->toString(),
+                Query::equal('resourceType', ['deployment'])->toString(),
             ],
         ]);
 
