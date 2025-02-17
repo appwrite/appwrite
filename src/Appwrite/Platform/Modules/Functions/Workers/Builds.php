@@ -738,8 +738,17 @@ class Builds extends Action
                         ],
                     ];
 
+                    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+                    $apiKey = $jwtObj->encode([
+                        'overrideHostname' => true
+                    ]);
+
                     // TODO: @Meldiron if becomes too slow, do concurrently
                     foreach ($configs as $key => $config) {
+                        $config['headers'] = \array_merge($config['headers'] ?? [], [
+                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                        ]);
+
                         $response = $client->fetch(
                             url: 'http://appwrite-browser:3000/v1/screenshots',
                             method: 'POST',

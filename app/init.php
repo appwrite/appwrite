@@ -1910,9 +1910,38 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHostname', function (Request $request) {
-    // TODO: @Meldiron Allow in production too for internal communication (authorized with secret)
-    if (App::isDevelopment()) {
+/**
+ * JWT key from x-appwrite-key header.
+ * 
+ * @return array<string, mixed> Decoded key-value pair from JWT
+ */
+App::setResource('dynamicKey', function (Request $request) {
+    $apiKey = $request->getHeader('x-appwrite-key', '');
+
+    if (empty($apiKey) || !\str_contains($apiKey, '_')) {
+        return [];
+    }
+
+    [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+
+    if($keyType !== API_KEY_DYNAMIC) {
+        return [];
+    }
+
+    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+
+    try {
+        $payload = $jwtObj->decode($authKey);
+    } catch (JWTException $error) {
+        return [];
+    }
+
+    return $payload;
+
+}, ['request']);
+
+App::setResource('previewHostname', function (Request $request, array $dynamicKey) {
+    if (App::isDevelopment() || $dynamicKey['overrideHostname'] ?? false) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;
@@ -1920,4 +1949,4 @@ App::setResource('previewHostname', function (Request $request) {
     }
 
     return '';
-}, ['request']);
+}, ['request', 'dynamicKey']);
