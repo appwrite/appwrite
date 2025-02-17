@@ -1717,9 +1717,7 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
-        $this->createFunctionDomain($functionId);
-
-        $domain = $this->getFunctionDomain($functionId);
+        $domain = $this->createFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -1754,9 +1752,7 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
-        $this->createFunctionDomain($functionId);
-
-        $domain = $this->getFunctionDomain($functionId);
+        $domain = $this->createFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -1876,7 +1872,7 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
-        $this->createFunctionDomain($functionId);
+        $domain = $this->createFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('node'),

@@ -79,9 +79,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $this->createSiteDomain($siteId, 'test-site');
-
-        $rule = $this->getSiteDomain($siteId);
+        $rule = $this->createSiteDomain($siteId, 'test-site');
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -1248,8 +1246,6 @@ class SitesCustomServerTest extends Scope
         }, 50000, 500);
 
         $domain = $this->createSiteDomain($siteId);
-
-        $domain = $this->getSiteDomain($siteId);
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
@@ -1400,6 +1396,8 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
+        $domain = $this->createSiteDomain($siteId);
+
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
             'activate' => 'true'
@@ -1463,7 +1461,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = $this->getSiteDomain($siteId);
+        $domain = $this->createSiteDomain($siteId, $subdomain);
 
         $this->assertNotEmpty($domain);
 
