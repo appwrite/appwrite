@@ -947,8 +947,8 @@ class Deletes extends Action
 
         try {
             $documents = $database->deleteDocuments($collection, $queries);
-        } catch (Exception $e) {
-            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $e->getMessage());
+        } catch (\Throwable $th) {
+            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
             return;
         }
 
