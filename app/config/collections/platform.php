@@ -1066,7 +1066,18 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('region'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1109,6 +1120,13 @@ return [
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
                 'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_domain_region'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['domain', 'region'],
+                'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],

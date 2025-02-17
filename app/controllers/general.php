@@ -590,7 +590,8 @@ App::init()
                             'resourceType' => 'api',
                             'status' => 'verifying',
                             'projectId' => 'console',
-                            'projectInternalId' => 'console'
+                            'projectInternalId' => 'console',
+                            'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
