@@ -74,7 +74,7 @@ class StatsUsage extends Event
             'project' => $this->getProject(),
             'reduce' => $this->reduce,
             'metrics' => \array_filter($this->metrics, function ($metric) {
-                foreach (array_keys($this->disabled) as $disabledMetric) {
+                foreach ($this->disabled as $disabledMetric) {
                     if (\str_ends_with($metric['key'], $disabledMetric)) {
                         return false;
                     }
