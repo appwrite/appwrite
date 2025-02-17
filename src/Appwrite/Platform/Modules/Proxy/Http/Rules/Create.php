@@ -81,6 +81,9 @@ class Create extends Action
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
+        // Not xactly sitesDomain
+        // Not exactly functionsDomain
+
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
