@@ -94,6 +94,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
 const APP_VERSION_STABLE = '1.6.1';
@@ -209,8 +210,6 @@ const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
 const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
-
-
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
@@ -241,6 +240,8 @@ const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
 const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
+const METRIC_FILES_IMAGES_TRANSFORMED = 'files.imagesTransformed';
+const METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED = '{bucketInternalId}.files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
@@ -273,6 +274,18 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_MAU = 'users.mau';
+const METRIC_DAU = 'users.dau';
+const METRIC_WAU = 'users.wau';
+const METRIC_WEBHOOKS = 'webhooks';
+const METRIC_PLATFORMS = 'platforms';
+const METRIC_PROVIDERS = 'providers';
+const METRIC_TOPICS = 'topics';
+const METRIC_KEYS = 'keys';
+const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
+const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 
 // Resource types
 
@@ -869,8 +882,14 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'queue' => [
-            'type' => 'queue',
+        'publisher' => [
+            'type' => 'publisher',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'consumer' => [
+            'type' => 'consumer',
             'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
@@ -978,31 +997,26 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
-                        break;
+                        return $adapter;
                     case 'pubsub':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new PubSub($resource()),
                             default => null
                         };
-                        break;
-                    case 'queue':
-                        $adapter = match ($dsn->getScheme()) {
-                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                    case 'publisher':
+                    case 'consumer':
+                        return match ($dsn->getScheme()) {
+                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
                             default => null
                         };
-                        break;
                     case 'cache':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
-                        break;
-
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-
-                return $adapter;
             });
 
             $group->add($pool);

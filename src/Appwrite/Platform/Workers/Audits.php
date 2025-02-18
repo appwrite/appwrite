@@ -6,15 +6,33 @@ use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Audits extends Action
 {
+    private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
+    private const BATCH_SIZE_PRODUCTION = 5_000;
+    private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+
+    private int $lastTriggeredTime = 0;
+
+    private array $logs = [];
+
+    private function getBatchSize(): int
+    {
+        return System::getEnv('_APP_ENV', 'development') === 'development'
+            ? self::BATCH_SIZE_DEVELOPMENT
+            : self::BATCH_SIZE_PRODUCTION;
+    }
+
     public static function getName(): string
     {
         return 'audits';
@@ -30,6 +48,8 @@ class Audits extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
+
+        $this->lastTriggeredTime = time();
     }
 
 
@@ -44,12 +64,13 @@ class Audits extends Action
      */
     public function action(Message $message, Database $dbForProject): void
     {
-
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+
+        Console::info('Aggregating audit logs');
 
         $event = $payload['event'] ?? '';
         $auditPayload = $payload['payload'] ?? '';
@@ -63,23 +84,48 @@ class Audits extends Action
         $userEmail = $user->getAttribute('email', '');
         $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
 
-        $audit = new Audit($dbForProject);
-        $audit->log(
-            userId: $user->getInternalId(),
-            // Pass first, most verbose event pattern
-            event: $event,
-            resource: $resource,
-            userAgent: $userAgent,
-            ip: $ip,
-            location: '',
-            data: [
+        // Create event data
+        $eventData = [
+            'userId' => $user->getInternalId(),
+            'event' => $event,
+            'resource' => $resource,
+            'userAgent' => $userAgent,
+            'ip' => $ip,
+            'location' => '',
+            'data' => [
                 'userId' => $user->getId(),
                 'userName' => $userName,
                 'userEmail' => $userEmail,
                 'userType' => $userType,
                 'mode' => $mode,
                 'data' => $auditPayload,
-            ]
-        );
+            ],
+            'timestamp' => DateTime::formatTz(DateTime::now())
+        ];
+
+        $this->logs[] = $eventData;
+
+        // Check if we should process the batch by checking both for the batch size and the elapsed time
+        $batchSize = $this->getBatchSize();
+        $shouldProcessBatch = count($this->logs) >= $batchSize;
+        if (!$shouldProcessBatch && count($this->logs) > 0) {
+            $shouldProcessBatch = (time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
+        }
+
+        if ($shouldProcessBatch) {
+            Console::log('Processing batch with ' . count($this->logs) . ' events');
+            $audit = new Audit($dbForProject);
+
+            try {
+                $audit->logBatch($this->logs);
+                Console::success('Audit logs processed successfully');
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs: ' . $e->getMessage());
+            } finally {
+                // Clear the pending events after successful batch processing
+                $this->logs = [];
+                $this->lastTriggeredTime = time();
+            }
+        }
     }
 }

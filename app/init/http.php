@@ -55,7 +55,6 @@ if (!App::isProduction()) {
     PublicDomain::allow(['request-catcher']);
 }
 
-
 // Runtime Execution
 App::setResource('log', fn () => new Log());
 App::setResource('logger', function ($register) {
@@ -74,48 +73,54 @@ App::setResource('localeCodes', function () {
 });
 
 // Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+App::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
-App::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
-App::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
-App::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-App::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
-App::setResource('queueForWebhooks', function (Connection $queue) {
-    return new Webhook($queue);
-}, ['queue']);
+App::setResource('consumer', function (Group $pools) {
+    return $pools->get('consumer')->pop()->getResource();
+}, ['pools']);
+App::setResource('queueForMessaging', function (Queue\Publisher $publisher) {
+    return new Messaging($publisher);
+}, ['publisher']);
+App::setResource('queueForMails', function (Queue\Publisher $publisher) {
+    return new Mail($publisher);
+}, ['publisher']);
+App::setResource('queueForBuilds', function (Queue\Publisher $publisher) {
+    return new Build($publisher);
+}, ['publisher']);
+App::setResource('queueForDatabase', function (Queue\Publisher $publisher) {
+    return new EventDatabase($publisher);
+}, ['publisher']);
+App::setResource('queueForDeletes', function (Queue\Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
+App::setResource('queueForEvents', function (Queue\Publisher $publisher) {
+    return new Event($publisher);
+}, ['publisher']);
+App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
-App::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
-App::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-App::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
+App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
+App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
+    return new Audit($publisher);
+}, ['publisher']);
+App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
+    return new Usage($publisher);
+}, ['publisher']);
+App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
+App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
+    return new Migration($publisher);
+}, ['publisher']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -471,6 +476,39 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -522,7 +560,6 @@ App::setResource('deviceForFunctions', function ($project) {
 App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
-
 
 App::setResource('mode', function ($request) {
     /** @var Appwrite\Utopia\Request $request */
