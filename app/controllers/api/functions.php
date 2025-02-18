@@ -1259,9 +1259,9 @@ App::post('/v1/functions/:functionId/deployments')
                 model: Response::MODEL_DEPLOYMENT,
             )
         ],
-        requestType: 'multipart/form-data',
         type: MethodType::UPLOAD,
         packaging: true,
+        requestType: 'multipart/form-data',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
