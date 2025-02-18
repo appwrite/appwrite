@@ -13,7 +13,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
@@ -74,45 +73,19 @@ class Create extends Action
     public function action(string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
     {
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        if ($domain === $mainDomain) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
-        }
-
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        if ($domain === $functionsDomain || $domain === $sitesDomain) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions or sites domain to a specific resource. Please use a different domain.');
-        }
+        $deniedDomains = [
+            $mainDomain,
+            $sitesDomain,
+            $functionsDomain,
+            'localhost',
+            APP_HOSTNAME_INTERNAL,
+        ];
 
-        if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
+        if (in_array($domain, $deniedDomains, true)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
-        }
-
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $document = $dbForPlatform->getDocument('rules', md5($domain));
-        } else {
-            $document = $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain]),
-            ]);
-        }
-
-        if (!$document->isEmpty()) {
-            if ($document->getAttribute('projectId') === $project->getId()) {
-                $resourceType = $document->getAttribute('resourceType');
-                $resourceId = $document->getAttribute('resourceId');
-                $message = "Domain already assigned to another resource.";
-                if (!empty($resourceId)) {
-                    $message .= " with ID '{$resourceId}'";
-                }
-
-                $message .= '.';
-            } else {
-                $message = 'Domain already assigned to different project.';
-            }
-
-            throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);
         }
 
         $resourceInternalId = '';
@@ -121,7 +94,7 @@ class Create extends Action
             case 'function':
             case 'site':
                 if (empty($resourceId)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, '$resourceId cannot be empty for resourceType "' . $resourceType . '".');
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'resourceId cannot be empty for resourceType "' . $resourceType . '".');
                 }
 
                 $expectedDomain = ($resourceType === 'function') ? $functionsDomain : $sitesDomain;
@@ -154,16 +127,24 @@ class Create extends Action
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
 
-        $rule = new Document([
-            '$id' => $ruleId,
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getInternalId(),
-            'domain' => $domain->get(),
-            'resourceType' => $resourceType,
-            'resourceId' => $resourceId,
-            'resourceInternalId' => $resourceInternalId,
-            'certificateId' => '',
-        ]);
+        try {
+            $rule = new Document([
+                '$id' => $ruleId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'domain' => $domain->get(),
+                'resourceType' => $resourceType,
+                'resourceId' => $resourceId,
+                'resourceInternalId' => $resourceInternalId,
+                'certificateId' => '',
+            ]);
+        } catch (\Throwable $e) {
+            if ($e->getCode() === Exception::DOCUMENT_ALREADY_EXISTS) {
+                throw new Exception(Exception::RULE_ALREADY_EXISTS);
+            }
+
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'An unexpected error occurred: ' . $e->getMessage());
+        }
 
         $status = 'created';
 

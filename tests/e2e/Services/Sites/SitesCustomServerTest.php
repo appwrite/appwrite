@@ -79,7 +79,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $rule = $this->createSiteDomain($siteId, 'test-site');
+        $rule = $this->setupSiteDomain($siteId);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -289,7 +289,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = $this->createSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
             'key' => 'name',
@@ -1245,7 +1245,7 @@ class SitesCustomServerTest extends Scope
             $this->assertNotEmpty($site['body']['deploymentId']);
         }, 50000, 500);
 
-        $domain = $this->createSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
@@ -1287,7 +1287,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $subdomain = 'startup' . \uniqid();
-        $domain = $this->createSiteDomain($siteId, $subdomain);
+        $domain = $this->setupSiteDomain($siteId, $subdomain);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1373,7 +1373,7 @@ class SitesCustomServerTest extends Scope
 
         $siteId = $site['body']['$id'];
 
-        $domain = $this->createSiteDomain($siteId, $subdomain);
+        $domain = $this->setupSiteDomain($siteId, $subdomain);
 
         $this->assertNotEmpty($domain);
 
@@ -1396,7 +1396,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = $this->createSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1461,7 +1461,8 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = $this->createSiteDomain($siteId, $subdomain);
+        $this->setupSiteDomain($siteId, $subdomain);
+        $domain = $this->getSiteDomain($siteId);
 
         $this->assertNotEmpty($domain);
 

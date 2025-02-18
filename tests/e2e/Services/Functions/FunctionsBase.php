@@ -259,7 +259,7 @@ trait FunctionsBase
         return $function;
     }
 
-    protected function createFunctionDomain(string $functionId, string $subdomain = ''): string
+    protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([

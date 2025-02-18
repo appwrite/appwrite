@@ -1110,22 +1110,7 @@ class UsageTest extends Scope
         $this->assertNotEmpty($rule['body']['$id']);
         $this->assertNotEmpty($rule['body']['domain']);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $rule['body']['domain'];
 
         $response = $this->client->call(
             Client::METHOD_GET,

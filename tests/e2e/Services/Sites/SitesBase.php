@@ -269,7 +269,7 @@ trait SitesBase
         return $site;
     }
 
-    protected function createSiteDomain(string $siteId, string $subdomain = ''): string
+    protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
