@@ -21,6 +21,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -1942,3 +1943,13 @@ App::setResource('previewHostname', function (Request $request) {
 
     return '';
 }, ['request']);
+
+App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+    $key = $request->getHeader('x-appwrite-key');
+
+    if (empty($key)) {
+        return null;
+    }
+
+    return Key::decode($project, $key);
+}, ['request', 'project']);
