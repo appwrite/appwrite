@@ -62,7 +62,6 @@ class Event
     protected array $params = [];
     protected array $sensitive = [];
     protected array $payload = [];
-    protected array $targets = [];
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
@@ -231,28 +230,6 @@ class Event
     public function getPayload(): array
     {
         return $this->payload;
-    }
-
-    /**
-     * Set targets for this event.
-     *
-     * @param array $targets
-     * @return array
-     */
-    public function setTargets(array $targets): self
-    {
-        $this->targets = $targets;
-        return $this;
-    }
-
-    /**
-     * Get targets for this event.
-     *
-     * @return array
-     */
-    public function getTargets(): array
-    {
-        return $this->targets;
     }
 
     /**
