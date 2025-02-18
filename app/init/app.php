@@ -1,5 +1,7 @@
 <?php
 
+use Utopia\Domains\Validator\PublicDomain;
+
 
 /**
  * App init
