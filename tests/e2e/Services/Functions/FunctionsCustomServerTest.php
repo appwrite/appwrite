@@ -1654,22 +1654,7 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -1730,22 +1715,7 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -1780,22 +1750,7 @@ class FunctionsCustomServerTest extends Scope
             'execute' => ['any']
         ]);
 
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertEquals(1, $rules['body']['total']);
-        $this->assertCount(1, $rules['body']['rules']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $this->setupFunctionDomain($functionId);
 
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -1915,6 +1870,8 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
+        $domain = $this->setupFunctionDomain($functionId);
+
         $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('node'),
             'activate' => true
@@ -1949,20 +1906,7 @@ class FunctionsCustomServerTest extends Scope
         }, 10000, 500);
 
         // Domain Executions test
-        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $rules['headers']['status-code']);
-        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
-
-        $domain = $rules['body']['rules'][0]['domain'];
+        $domain = $this->getFunctionDomain($functionId);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);

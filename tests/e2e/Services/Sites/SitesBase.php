@@ -6,7 +6,9 @@ use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait SitesBase
 {
@@ -265,6 +267,27 @@ trait SitesBase
         ], $this->getHeaders()));
 
         return $site;
+    }
+
+    protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
+    {
+        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'resourceType' => 'site',
+            'resourceId' => $siteId,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
+        $domain = $rule['body']['domain'];
+
+        return $domain;
     }
 
     protected function getSiteDomain(string $siteId): string

@@ -5033,7 +5033,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 326,
+                    "weight": 324,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5084,7 +5084,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 325,
+                    "weight": 323,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5543,7 +5543,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 371,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5625,7 +5625,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 375,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
