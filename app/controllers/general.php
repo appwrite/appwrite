@@ -737,9 +737,19 @@ App::init()
         $validator = new Hostname($clients);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
-        } else {
+        } elseif (!empty($origin)) {
             // Auto-allow domains with linked rule
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin)));
+            if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+                $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin)));
+            } else {
+                $rule = Authorization::skip(
+                    fn () => $dbForPlatform->find('rules', [
+                        Query::equal('domain', [$origin]),
+                        Query::limit(1)
+                    ])
+                )[0] ?? new Document();
+            }
+
             if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getInternalId()) {
                 $refDomainOrigin = $origin;
             }
