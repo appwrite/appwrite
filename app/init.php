@@ -75,6 +75,7 @@ use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Connection as PoolConnection;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -986,7 +987,7 @@ $register->set('pools', function () {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
                             PDO::ATTR_TIMEOUT => 3, // Seconds
-                            PDO::ATTR_PERSISTENT => true,
+                            PDO::ATTR_PERSISTENT => false, // We manage our own pool
                             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                             PDO::ATTR_EMULATE_PREPARES => true,
                             PDO::ATTR_STRINGIFY_FETCHES => true
@@ -1446,7 +1447,26 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('connectionForProject', function (Group $pools, Document $project) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $pools
+            ->get('console')
+            ->pop();
+    }
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    return $pools
+        ->get($dsn->getHost())
+        ->pop();
+}, ['pools', 'project']);
+
+App::setResource('dbForProject', function (Group $pools, PoolConnection $connectionForProject, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -1458,12 +1478,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $dbAdapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
+    $database = new Database($connectionForProject->getResource(), $cache);
 
     $database
         ->setMetadata('host', \gethostname())
@@ -1486,7 +1501,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     }
 
     return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project']);
+}, ['pools', 'connectionForProject', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
@@ -1506,10 +1521,10 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, PoolConnection $connectionForProject, $cache) {
+    $databases = [];
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $connectionForProject, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -1549,10 +1564,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
+        $dbAdapter = $connectionForProject->getResource();
 
         $database = new Database($dbAdapter, $cache);
         $databases[$dsn->getHost()] = $database;
@@ -1560,7 +1572,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'connectionForProject', 'cache']);
 
 App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;

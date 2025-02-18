@@ -25,6 +25,7 @@ use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Swoole\Database\DetectsLostConnections;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -32,6 +33,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -42,6 +44,7 @@ use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Connection;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
@@ -772,6 +775,11 @@ App::error()
     ->inject('log')
     ->inject('queueForStatsUsage')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
+        if (
+            ($error instanceof PDOException || $error instanceof DatabaseException)
+            && DetectsLostConnections::causedByLostConnection($error)
+        ) {
+        }
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
