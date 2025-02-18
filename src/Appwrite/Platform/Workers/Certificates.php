@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -46,13 +47,14 @@ class Certificates extends Action
             ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
             ->callback(
-                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates) =>
-                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $queueForRealtime, $log, $certificates)
+                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates) =>
+                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates)
             );
     }
 
@@ -61,6 +63,7 @@ class Certificates extends Action
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param Log $log
@@ -69,7 +72,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates): void
+    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -83,7 +86,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck);
+        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck);
     }
 
     /**
@@ -99,7 +102,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -189,7 +192,7 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForFunctions, $queueForRealtime);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
 
@@ -209,7 +212,7 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime): void
+    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
     {
         // Check if update or insert required
         $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
@@ -223,7 +226,7 @@ class Certificates extends Action
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForFunctions, $queueForRealtime);
+        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
     }
 
     /**
@@ -342,7 +345,7 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime): void
+    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
     {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
@@ -379,9 +382,8 @@ class Certificates extends Action
                 ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
 
             /** Trigger Webhook */
-            $queueForEvents
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
+            $queueForWebhooks
+                ->from($queueForEvents)
                 ->trigger();
 
             /** Trigger Functions */
@@ -392,12 +394,7 @@ class Certificates extends Action
             /** Trigger Realtime Events */
             $queueForRealtime
                 ->from($queueForEvents)
-                ->setProjectId('console')
-                ->trigger();
-
-            $queueForRealtime
-                ->from($queueForEvents)
-                ->setProjectId($project->getId())
+                ->setTargets(['console', $projectId])
                 ->trigger();
         }
     }

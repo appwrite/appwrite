@@ -160,15 +160,7 @@ class Migrations extends Action
         /** Trigger Realtime Events */
         $queueForRealtime
             ->setProject($project)
-            ->setProjectId('console')
-            ->setEvent('migrations.[migrationId].update')
-            ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy())
-            ->trigger();
-
-        $queueForRealtime
-            ->setProject($project)
-            ->setProjectId($project->getId())
+            ->setTargets(['console', $project->getId()])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
             ->setPayload($migration->getArrayCopy())

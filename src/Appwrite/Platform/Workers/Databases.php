@@ -604,7 +604,7 @@ class Databases extends Action
     ): void {
         $queueForRealtime
             ->setProject($project)
-            ->setProjectId('console')
+            ->setTargets(['console'])
             ->setEvent($event)
             ->setParam('databaseId', $database->getId())
             ->setParam('collectionId', $collection->getId());

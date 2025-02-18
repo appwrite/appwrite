@@ -53,17 +53,33 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
-        RealtimeAdapter::send(
-            projectId: $this->getProjectId() ?? $target['projectId'] ?? $this->getProject()->getId(),
-            payload: $this->getRealtimePayload(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-            options: [
-                'permissionsChanged' => $target['permissionsChanged'],
-                'userId' => $this->getParam('userId')
-            ]
-        );
+        if (!empty($this->getTargets())) {
+            foreach ($this->getTargets() as $targetProjectId) {
+                RealtimeAdapter::send(
+                    projectId: $targetProjectId,
+                    payload: $this->getRealtimePayload(),
+                    events: $allEvents,
+                    channels: $target['channels'],
+                    roles: $target['roles'],
+                    options: [
+                        'permissionsChanged' => $target['permissionsChanged'],
+                        'userId' => $this->getParam('userId')
+                    ]
+                );
+            }
+        } else {
+            RealtimeAdapter::send(
+                projectId: $target['projectId'] ?? $this->getProject()->getId(),
+                payload: $this->getRealtimePayload(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles'],
+                options: [
+                    'permissionsChanged' => $target['permissionsChanged'],
+                    'userId' => $this->getParam('userId')
+                ]
+            );
+        }
 
         return true;
     }

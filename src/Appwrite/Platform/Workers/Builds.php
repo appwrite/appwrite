@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -49,6 +50,7 @@ class Builds extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
             ->inject('queueForStatsUsage')
@@ -57,8 +59,8 @@ class Builds extends Action
             ->inject('deviceForFunctions')
             ->inject('isResourceBlocked')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $queueForRealtime, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log));
     }
 
     /**
@@ -66,6 +68,7 @@ class Builds extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param StatsUsage $queueForStatsUsage
@@ -76,7 +79,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -97,7 +100,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -107,6 +110,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
@@ -123,7 +127,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Webhooks $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -379,7 +383,7 @@ class Builds extends Action
                      */
                     $queueForRealtime
                         ->setProject($project)
-                        ->setProjectId('console')
+                        ->setTargets(['console'])
                         ->setEvent($event)
                         ->setParam('functionId', $function->getId())
                         ->setParam('deploymentId', $deployment->getId())
@@ -431,19 +435,19 @@ class Builds extends Action
                 $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
-            /** Trigger Webhook */
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                    ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
                     ->setEvent('functions.[functionId].deployments.[deploymentId].update')
                     ->setParam('functionId', $function->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
-            $deploymentUpdate->trigger();
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($deploymentUpdate)
+                ->trigger();
 
             /** Trigger Functions */
             $queueForFunctions
@@ -453,7 +457,7 @@ class Builds extends Action
             /** Trigger Realtime Event */
             $queueForRealtime
                 ->setProject($project)
-                ->setProjectId('console')
+                ->setTargets(['console'])
                 ->setEvent($event)
                 ->setParam('functionId', $function->getId())
                 ->setParam('deploymentId', $deployment->getId())
@@ -585,7 +589,7 @@ class Builds extends Action
                                      */
                                     $queueForRealtime
                                         ->setProject($project)
-                                        ->setProjectId('console')
+                                        ->setTargets(['console'])
                                         ->setEvent($event)
                                         ->setParam('functionId', $function->getId())
                                         ->setParam('deploymentId', $deployment->getId())
@@ -682,7 +686,7 @@ class Builds extends Action
              */
             $queueForRealtime
                 ->setProject($project)
-                ->setProjectId('console')
+                ->setTargets(['console'])
                 ->setEvent($event)
                 ->setParam('functionId', $function->getId())
                 ->setParam('deploymentId', $deployment->getId())

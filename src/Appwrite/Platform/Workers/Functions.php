@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
@@ -44,16 +45,17 @@ class Functions extends Action
             ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
+    public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -137,6 +139,7 @@ class Functions extends Action
                     $this->execute(
                         log: $log,
                         dbForProject: $dbForProject,
+                        queueForWebhooks: $queueForWebhooks,
                         queueForFunctions: $queueForFunctions,
                         queueForRealtime: $queueForRealtime,
                         queueForStatsUsage: $queueForStatsUsage,
@@ -178,6 +181,7 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
@@ -201,6 +205,7 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
@@ -312,6 +317,7 @@ class Functions extends Action
     private function execute(
         Log $log,
         Database $dbForProject,
+        Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         StatsUsage $queueForStatsUsage,
@@ -582,9 +588,8 @@ class Functions extends Action
             ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         /** Trigger Webhook */
-        $queueForEvents
-            ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-            ->setClass(Event::WEBHOOK_CLASS_NAME)
+        $queueForWebhooks
+            ->from($queueForEvents)
             ->trigger();
 
         /** Trigger Functions */
@@ -595,12 +600,7 @@ class Functions extends Action
         /** Trigger Realtime Events */
         $queueForRealtime
             ->from($queueForEvents)
-            ->setProjectId('console')
-            ->trigger();
-
-        $queueForRealtime
-            ->from($queueForEvents)
-            ->setProjectId($project->getId())
+            ->setTargets(['console', $project->getId()])
             ->trigger();
 
         if (!empty($error)) {

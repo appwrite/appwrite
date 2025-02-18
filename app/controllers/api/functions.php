@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Validator\FunctionEvent;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -194,10 +195,12 @@ App::post('/v1/functions')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
+    ->inject('queueForWebhooks')
+    ->inject('queueForFunctions')
     ->inject('queueForRealtime')
     ->inject('dbForPlatform')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Realtime $queueForRealtime, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, callable $timelimit, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // Temporary abuse check
@@ -396,26 +399,19 @@ App::post('/v1/functions')
                     ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
 
             /** Trigger Webhook */
-            $ruleCreate
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+            $queueForWebhooks
+                ->from($ruleCreate)
                 ->trigger();
 
             /** Trigger Functions */
-            $ruleCreate
-                ->setClass(Event::FUNCTIONS_CLASS_NAME)
-                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            $queueForFunctions
+                ->from($ruleCreate)
                 ->trigger();
 
             /** Trigger Realtime Events */
             $queueForRealtime
                 ->from($ruleCreate)
-                ->setProjectId('console')
-                ->trigger();
-
-            $queueForRealtime
-                ->from($ruleCreate)
-                ->setProjectId($project->getId())
+                ->setTargets(['console', $project->getId()])
                 ->trigger();
         }
 

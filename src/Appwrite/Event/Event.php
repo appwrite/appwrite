@@ -62,11 +62,11 @@ class Event
     protected array $params = [];
     protected array $sensitive = [];
     protected array $payload = [];
+    protected array $targets = [];
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
-    protected ?string $projectId = null;
     protected bool $paused = false;
 
     /**
@@ -153,18 +153,6 @@ class Event
     }
 
     /**
-     * Set projectId for this event.
-     *
-     * @param string $projectId
-     * @return self
-     */
-    public function setProjectId(string $projectId): self
-    {
-        $this->projectId = $projectId;
-        return $this;
-    }
-
-    /**
      * Get project for this event.
      *
      * @return ?Document
@@ -172,16 +160,6 @@ class Event
     public function getProject(): ?Document
     {
         return $this->project;
-    }
-
-    /**
-     * Get projectId for this event.
-     *
-     * @return ?string
-     */
-    public function getProjectId(): ?string
-    {
-        return $this->projectId;
     }
 
     /**
@@ -253,6 +231,27 @@ class Event
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    /**
+     * Get targets for this event.
+     *
+     * @return array
+     */
+    public function setTargets(array $targets): self
+    {
+        $this->targets = $targets;
+        return $this;
+    }
+
+    /**
+     * Get targets for this event.
+     *
+     * @return array
+     */
+    public function getTargets(): array
+    {
+        return $this->targets;
     }
 
     /**
