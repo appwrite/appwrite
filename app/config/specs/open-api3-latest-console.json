@@ -4293,7 +4293,7 @@
                 },
                 "x-appwrite": {
                     "method": "chat",
-                    "weight": 328,
+                    "weight": 326,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4337,6 +4337,73 @@
                 }
             }
         },
+        "\/console\/resources": {
+            "get": {
+                "summary": "Check resource ID availability",
+                "operationId": "consoleGetResource",
+                "tags": [
+                    "console"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getResource",
+                    "weight": 419,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "console\/get-resource.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCheck if a resource ID is available.",
+                    "rate-limit": 10,
+                    "rate-time": 60,
+                    "rate-key": "userId:{userId}, url:{url}",
+                    "scope": "rules.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "value",
+                        "description": "Resource value.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<VALUE>"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "type",
+                        "description": "Resource type.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "rules",
+                            "enum": [
+                                "rules"
+                            ],
+                            "x-enum-name": null,
+                            "x-enum-keys": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
         "\/console\/variables": {
             "get": {
                 "summary": "Get variables",
@@ -4359,7 +4426,7 @@
                 },
                 "x-appwrite": {
                     "method": "variables",
-                    "weight": 327,
+                    "weight": 325,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8986,7 +9053,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 389,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9058,7 +9125,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 387,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9248,26 +9315,6 @@
                                         "description": "Path to function code in the linked repo.",
                                         "x-example": "<PROVIDER_ROOT_DIRECTORY>"
                                     },
-                                    "templateRepository": {
-                                        "type": "string",
-                                        "description": "Repository name of the template.",
-                                        "x-example": "<TEMPLATE_REPOSITORY>"
-                                    },
-                                    "templateOwner": {
-                                        "type": "string",
-                                        "description": "The name of the owner of the template.",
-                                        "x-example": "<TEMPLATE_OWNER>"
-                                    },
-                                    "templateRootDirectory": {
-                                        "type": "string",
-                                        "description": "Path to function code in the template repo.",
-                                        "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                    },
-                                    "templateVersion": {
-                                        "type": "string",
-                                        "description": "Version (tag) for the repo linked to the function template.",
-                                        "x-example": "<TEMPLATE_VERSION>"
-                                    },
                                     "specification": {
                                         "type": "string",
                                         "description": "Runtime specification for the function and builds.",
@@ -9307,7 +9354,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 390,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9691,7 +9738,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 388,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10059,7 +10106,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 391,
+                    "weight": 389,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -10125,6 +10172,108 @@
                                 "required": [
                                     "code",
                                     "activate"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/functions\/{functionId}\/deployments\/template": {
+            "post": {
+                "summary": "Create template deployment",
+                "operationId": "functionsCreateTemplateDeployment",
+                "tags": [
+                    "functions"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/deployment"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createTemplateDeployment",
+                    "weight": 390,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/create-template-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/functions#listTemplates) to find the template details.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<FUNCTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "repository": {
+                                        "type": "string",
+                                        "description": "Repository name of the template.",
+                                        "x-example": "<REPOSITORY>"
+                                    },
+                                    "owner": {
+                                        "type": "string",
+                                        "description": "The name of the owner of the template.",
+                                        "x-example": "<OWNER>"
+                                    },
+                                    "rootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to function code in the template repo.",
+                                        "x-example": "<ROOT_DIRECTORY>"
+                                    },
+                                    "version": {
+                                        "type": "string",
+                                        "description": "Version (tag) for the repo linked to the function template.",
+                                        "x-example": "<VERSION>"
+                                    },
+                                    "activate": {
+                                        "type": "boolean",
+                                        "description": "Automatically activate the deployment when it is finished building.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "repository",
+                                    "owner",
+                                    "rootDirectory",
+                                    "version"
                                 ]
                             }
                         }
@@ -10955,7 +11104,7 @@
                                     },
                                     "secret": {
                                         "type": "boolean",
-                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "description": "Secret variables can be updated or deleted, but only functions can read them during build and runtime.",
                                         "x-example": false
                                     }
                                 },
@@ -10991,7 +11140,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 326,
+                    "weight": 324,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -11042,7 +11191,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 325,
+                    "weight": 323,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -12774,7 +12923,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 379,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12849,7 +12998,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 376,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12992,7 +13141,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 383,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13137,7 +13286,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 378,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13310,7 +13459,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 385,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13487,7 +13636,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 377,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13595,7 +13744,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 384,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13706,7 +13855,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 382,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13758,7 +13907,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 386,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13819,7 +13968,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 380,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13893,7 +14042,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 381,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13967,7 +14116,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 351,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14042,7 +14191,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 350,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14146,7 +14295,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 363,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14253,7 +14402,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 349,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14337,7 +14486,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 362,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14424,7 +14573,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 341,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14538,7 +14687,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 354,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14655,7 +14804,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 344,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14749,7 +14898,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 357,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14846,7 +14995,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 342,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14950,7 +15099,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 355,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15057,7 +15206,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 343,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15199,7 +15348,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 356,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15343,7 +15492,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 345,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15437,7 +15586,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 358,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15534,7 +15683,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 346,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15628,7 +15777,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 359,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15725,7 +15874,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 347,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15819,7 +15968,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 360,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15916,7 +16065,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 348,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16010,7 +16159,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 361,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16107,7 +16256,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 353,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16159,7 +16308,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 364,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16220,7 +16369,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 352,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16294,7 +16443,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 373,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16368,7 +16517,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 366,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16441,7 +16590,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 365,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16523,7 +16672,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 368,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16582,7 +16731,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 369,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16658,7 +16807,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 370,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16719,7 +16868,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 367,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16793,7 +16942,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 372,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16876,7 +17025,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 371,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16965,7 +17114,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 374,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17027,7 +17176,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 375,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17101,7 +17250,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 333,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17174,7 +17323,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAppwriteMigration",
-                    "weight": 329,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17261,7 +17410,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
-                    "weight": 335,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17353,7 +17502,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
-                    "weight": 330,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17428,7 +17577,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
-                    "weight": 336,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17499,7 +17648,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
-                    "weight": 332,
+                    "weight": 330,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17609,7 +17758,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
-                    "weight": 338,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17741,7 +17890,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
-                    "weight": 331,
+                    "weight": 329,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17845,7 +17994,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
-                    "weight": 337,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17968,7 +18117,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 334,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18025,7 +18174,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
-                    "weight": 339,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18075,7 +18224,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 340,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18307,7 +18456,7 @@
                                     },
                                     "secret": {
                                         "type": "boolean",
-                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "description": "Secret variables can be updated or deleted, but only projects can read them during build and runtime.",
                                         "x-example": false
                                     }
                                 },
@@ -18450,6 +18599,11 @@
                                         "type": "string",
                                         "description": "Variable value. Max length: 8192 chars.",
                                         "x-example": "<VALUE>"
+                                    },
+                                    "secret": {
+                                        "type": "boolean",
+                                        "description": "Secret variables can be updated or deleted, but only projects can read them during build and runtime.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
@@ -23344,7 +23498,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRules",
-                    "weight": 311,
+                    "weight": 310,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23400,7 +23554,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "Create a new proxy rule.",
+                "description": "",
                 "responses": {
                     "201": {
                         "description": "Rule",
@@ -23415,15 +23569,15 @@
                 },
                 "x-appwrite": {
                     "method": "createRule",
-                    "weight": 310,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "proxy\/create-rule.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/proxy\/create-rule.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule.",
+                    "rate-limit": 10,
+                    "rate-time": 60,
+                    "rate-key": "userId:{userId}, url:{url}",
                     "scope": "rules.write",
                     "platforms": [
                         "console"
@@ -23499,7 +23653,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRule",
-                    "weight": 312,
+                    "weight": 311,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23549,7 +23703,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteRule",
-                    "weight": 313,
+                    "weight": 312,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23608,7 +23762,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRuleVerification",
-                    "weight": 314,
+                    "weight": 313,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23667,7 +23821,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 394,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23736,7 +23890,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 392,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23816,11 +23970,6 @@
                                         "type": "string",
                                         "description": "Output Directory for site.",
                                         "x-example": "<OUTPUT_DIRECTORY>"
-                                    },
-                                    "subdomain": {
-                                        "type": "string",
-                                        "description": "Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                        "x-example": "<SUBDOMAIN>"
                                     },
                                     "buildRuntime": {
                                         "type": "string",
@@ -23928,26 +24077,6 @@
                                         "description": "Path to site code in the linked repo.",
                                         "x-example": "<PROVIDER_ROOT_DIRECTORY>"
                                     },
-                                    "templateRepository": {
-                                        "type": "string",
-                                        "description": "Repository name of the template.",
-                                        "x-example": "<TEMPLATE_REPOSITORY>"
-                                    },
-                                    "templateOwner": {
-                                        "type": "string",
-                                        "description": "The name of the owner of the template.",
-                                        "x-example": "<TEMPLATE_OWNER>"
-                                    },
-                                    "templateRootDirectory": {
-                                        "type": "string",
-                                        "description": "Path to site code in the template repo.",
-                                        "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                    },
-                                    "templateVersion": {
-                                        "type": "string",
-                                        "description": "Version (tag) for the repo linked to the site template.",
-                                        "x-example": "<TEMPLATE_VERSION>"
-                                    },
                                     "specification": {
                                         "type": "string",
                                         "description": "Framework specification for the site and builds.",
@@ -23988,7 +24117,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFrameworks",
-                    "weight": 397,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24261,7 +24390,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 393,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24319,7 +24448,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 395,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24542,7 +24671,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 396,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24684,7 +24813,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 398,
+                    "weight": 397,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -24755,6 +24884,108 @@
                                 "required": [
                                     "code",
                                     "activate"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/template": {
+            "post": {
+                "summary": "Create deployment",
+                "operationId": "sitesCreateTemplateDeployment",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/deployment"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createTemplateDeployment",
+                    "weight": 398,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create-template-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/sites#listTemplates) to find the template details.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "repository": {
+                                        "type": "string",
+                                        "description": "Repository name of the template.",
+                                        "x-example": "<REPOSITORY>"
+                                    },
+                                    "owner": {
+                                        "type": "string",
+                                        "description": "The name of the owner of the template.",
+                                        "x-example": "<OWNER>"
+                                    },
+                                    "rootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to site code in the template repo.",
+                                        "x-example": "<ROOT_DIRECTORY>"
+                                    },
+                                    "version": {
+                                        "type": "string",
+                                        "description": "Version (tag) for the repo linked to the site template.",
+                                        "x-example": "<VERSION>"
+                                    },
+                                    "activate": {
+                                        "type": "boolean",
+                                        "description": "Automatically activate the deployment when it is finished building.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "repository",
+                                    "owner",
+                                    "rootDirectory",
+                                    "version"
                                 ]
                             }
                         }
@@ -25649,7 +25880,7 @@
                                     },
                                     "secret": {
                                         "type": "boolean",
-                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "description": "Secret variables can be updated or deleted, but only sites can read them during build and runtime.",
                                         "x-example": false
                                     }
                                 },
@@ -25814,6 +26045,11 @@
                                         "type": "string",
                                         "description": "Variable value. Max length: 8192 chars.",
                                         "x-example": "<VALUE>"
+                                    },
+                                    "secret": {
+                                        "type": "boolean",
+                                        "description": "Secret variables can be updated or deleted, but only sites can read them during build and runtime.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
