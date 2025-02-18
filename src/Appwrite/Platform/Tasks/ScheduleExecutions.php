@@ -29,7 +29,7 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queue = $pools->get('queue')->pop();
+        $queue = $pools->get('publisher')->pop();
         $connection = $queue->getResource();
         $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
@@ -56,6 +56,8 @@ class ScheduleExecutions extends ScheduleBase
             )->getAttribute('data', []);
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+
+            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);

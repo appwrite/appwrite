@@ -70,10 +70,10 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools) {
+            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('queue')->pop();
+                $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
 
                 foreach ($scheduleKeys as $scheduleKey) {
@@ -83,6 +83,8 @@ class ScheduleFunctions extends ScheduleBase
                     }
 
                     $schedule = $this->schedules[$scheduleKey];
+
+                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                     $queueForFunctions = new Func($connection);
 

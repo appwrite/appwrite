@@ -1,4 +1,5 @@
 using Appwrite;
+using Appwrite.Enums;
 using Appwrite.Models;
 using Appwrite.Services;
 
@@ -11,8 +12,8 @@ Messaging messaging = new Messaging(client);
 
 Message result = await messaging.CreatePush(
     messageId: "<MESSAGE_ID>",
-    title: "<TITLE>",
-    body: "<BODY>",
+    title: "<TITLE>", // optional
+    body: "<BODY>", // optional
     topics: new List<string>(), // optional
     users: new List<string>(), // optional
     targets: new List<string>(), // optional
@@ -23,7 +24,10 @@ Message result = await messaging.CreatePush(
     sound: "<SOUND>", // optional
     color: "<COLOR>", // optional
     tag: "<TAG>", // optional
-    badge: "<BADGE>", // optional
+    badge: 0, // optional
     draft: false, // optional
-    scheduledAt: "" // optional
+    scheduledAt: "", // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: MessagePriority.Normal // optional
 );

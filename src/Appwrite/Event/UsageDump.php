@@ -2,16 +2,15 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class UsageDump extends Event
 {
     protected array $stats;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::USAGE_DUMP_QUEUE_NAME)
@@ -32,20 +31,14 @@ class UsageDump extends Event
     }
 
     /**
-     * Sends metrics to the usage worker.
+     * Prepare the payload for the usage dump event.
      *
-     * @return string|bool
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        if ($this->paused) {
-            return false;
-        }
-
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->enqueue([
+        return [
             'stats' => $this->stats,
-        ]);
+        ];
     }
 }

@@ -21,6 +21,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -32,7 +33,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
@@ -48,6 +49,7 @@ use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -76,7 +78,6 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -121,6 +122,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
 const APP_VERSION_STABLE = '1.6.1';
@@ -201,6 +203,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
@@ -231,7 +234,10 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-
+const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
+const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
+const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
+const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
@@ -253,9 +259,17 @@ const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
+const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
+const METRIC_FILES_IMAGES_TRANSFORMED = 'files.imagesTransformed';
+const METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED = '{bucketInternalId}.files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_FUNCTIONS  = 'functions';
@@ -288,6 +302,18 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_MAU = 'users.mau';
+const METRIC_DAU = 'users.dau';
+const METRIC_WAU = 'users.wau';
+const METRIC_WEBHOOKS = 'webhooks';
+const METRIC_PLATFORMS = 'platforms';
+const METRIC_PROVIDERS = 'providers';
+const METRIC_TOPICS = 'topics';
+const METRIC_KEYS = 'keys';
+const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
+const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 
 // Resource types
 
@@ -721,12 +747,19 @@ Database::addFilter(
         $data = \json_decode($message->getAttribute('data', []), true);
         $providerType = $message->getAttribute('providerType', '');
 
-        if ($providerType === MESSAGE_TYPE_EMAIL) {
-            $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
-        } elseif ($providerType === MESSAGE_TYPE_SMS) {
-            $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
-        } else {
-            $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);
+        switch ($providerType) {
+            case MESSAGE_TYPE_EMAIL:
+                $searchValues[] = $data['subject'];
+                $searchValues[] = MESSAGE_TYPE_EMAIL;
+                break;
+            case MESSAGE_TYPE_SMS:
+                $searchValues[] = $data['content'];
+                $searchValues[] = MESSAGE_TYPE_SMS;
+                break;
+            case MESSAGE_TYPE_PUSH:
+                $searchValues[] = $data['title'] ?? '';
+                $searchValues[] = MESSAGE_TYPE_PUSH;
+                break;
         }
 
         $search = \implode(' ', \array_filter($searchValues));
@@ -750,7 +783,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 }, Database::VAR_DATETIME);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
-    $elements = $attribute['formatOptions']['elements'];
+    $elements = $attribute['formatOptions']['elements'] ?? [];
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
@@ -853,31 +886,43 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'queue' => [
-            'type' => 'queue',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'publisher' => [
+            'type' => 'publisher',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'consumer' => [
+            'type' => 'consumer',
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
             'schemes' => ['redis'],
         ],
@@ -889,7 +934,7 @@ $register->set('pools', function () {
     $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
-        $workerCount = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
     }
@@ -949,12 +994,12 @@ $register->set('pools', function () {
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new Redis();
+                    $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
-                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -972,31 +1017,26 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
-                        break;
+                        return $adapter;
                     case 'pubsub':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new PubSub($resource()),
                             default => null
                         };
-                        break;
-                    case 'queue':
-                        $adapter = match ($dsn->getScheme()) {
-                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                    case 'publisher':
+                    case 'consumer':
+                        return match ($dsn->getScheme()) {
+                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
                             default => null
                         };
-                        break;
                     case 'cache':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
-                        break;
-
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-
-                return $adapter;
             });
 
             $group->add($pool);
@@ -1119,48 +1159,54 @@ App::setResource('localeCodes', function () {
 });
 
 // Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+App::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
-App::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
-App::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
-App::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-App::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
-App::setResource('queueForWebhooks', function (Connection $queue) {
-    return new Webhook($queue);
-}, ['queue']);
+App::setResource('consumer', function (Group $pools) {
+    return $pools->get('consumer')->pop()->getResource();
+}, ['pools']);
+App::setResource('queueForMessaging', function (Queue\Publisher $publisher) {
+    return new Messaging($publisher);
+}, ['publisher']);
+App::setResource('queueForMails', function (Queue\Publisher $publisher) {
+    return new Mail($publisher);
+}, ['publisher']);
+App::setResource('queueForBuilds', function (Queue\Publisher $publisher) {
+    return new Build($publisher);
+}, ['publisher']);
+App::setResource('queueForDatabase', function (Queue\Publisher $publisher) {
+    return new EventDatabase($publisher);
+}, ['publisher']);
+App::setResource('queueForDeletes', function (Queue\Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
+App::setResource('queueForEvents', function (Queue\Publisher $publisher) {
+    return new Event($publisher);
+}, ['publisher']);
+App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
-App::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
-App::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-App::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
+App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
+App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
+    return new Audit($publisher);
+}, ['publisher']);
+App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
+    return new Usage($publisher);
+}, ['publisher']);
+App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
+App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
+    return new Migration($publisher);
+}, ['publisher']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -1516,6 +1562,39 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -1530,6 +1609,27 @@ App::setResource('cache', function (Group $pools) {
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
+
+App::setResource('redis', function () {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
+    }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+});
+
+App::setResource('timelimit', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();
@@ -1796,6 +1896,10 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
+App::setResource('smsRates', function () {
+    return [];
+});
+
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
@@ -1839,3 +1943,13 @@ App::setResource('previewHostname', function (Request $request) {
 
     return '';
 }, ['request']);
+
+App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+    $key = $request->getHeader('x-appwrite-key');
+
+    if (empty($key)) {
+        return null;
+    }
+
+    return Key::decode($project, $key);
+}, ['request', 'project']);

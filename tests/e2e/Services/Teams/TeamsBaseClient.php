@@ -223,6 +223,8 @@ trait TeamsBaseClient
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
+        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
 
         $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
         $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
@@ -290,11 +292,10 @@ trait TeamsBaseClient
         $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
+        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
 
-        /**
-         * Test for FAILURE
-         */
-
+        // test for resending invitation
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -305,7 +306,11 @@ trait TeamsBaseClient
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',

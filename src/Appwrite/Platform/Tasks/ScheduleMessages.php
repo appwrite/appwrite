@@ -41,9 +41,11 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($schedule, $pools, $dbForPlatform) {
-                $queue = $pools->get('queue')->pop();
+                $queue = $pools->get('publisher')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
+
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)

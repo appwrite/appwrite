@@ -52,6 +52,13 @@ class UsageTest extends Scope
         }
     }
 
+    public static function getYesterday(): string
+    {
+        $date = new DateTime();
+        $date->modify('-1 day');
+        return $date->format(self::$formatTz);
+    }
+
     public static function getToday(): string
     {
         $date = new DateTime();
@@ -143,7 +150,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -324,7 +331,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -545,7 +552,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(29, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);

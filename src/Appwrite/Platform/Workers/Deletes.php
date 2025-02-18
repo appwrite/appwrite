@@ -7,8 +7,7 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -45,20 +44,21 @@ class Deletes extends Action
         $this
             ->desc('Deletes worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
+            ->inject('timelimit')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
             ->inject('certificates')
-            ->inject('abuseRetention')
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
+                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -66,7 +66,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -80,7 +80,6 @@ class Deletes extends Action
         $resource = $payload['resource'] ?? null;
         $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
-        $project  = new Document($payload['project'] ?? []);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -125,9 +124,6 @@ class Deletes extends Action
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
                 break;
-            case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
-                break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
                 break;
@@ -157,6 +153,13 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_SESSION_TARGETS:
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
+                break;
+            case DELETE_TYPE_MAINTENANCE:
+                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
+                $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
@@ -196,19 +199,28 @@ class Deletes extends Action
 
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
+                    'execution' => 'executions',
                     'message' => 'messages'
                 };
 
-                $resource = $getProjectDB($project)->getDocument(
-                    $collectionId,
-                    $document->getAttribute('resourceId')
-                );
+                try {
+                    $resource = $getProjectDB($project)->getDocument(
+                        $collectionId,
+                        $document->getAttribute('resourceId')
+                    );
+                } catch (Throwable $e) {
+                    Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
+                    return;
+                }
 
                 $delete = true;
 
                 switch ($document->getAttribute('resourceType')) {
                     case 'function':
                         $delete = $resource->isEmpty();
+                        break;
+                    case 'execution':
+                        $delete = false;
                         break;
                 }
 
@@ -495,7 +507,7 @@ class Deletes extends Action
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
             Audit::COLLECTION,
-            TimeLimit::COLLECTION,
+            AbuseDatabase::COLLECTION,
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -699,27 +711,6 @@ class Deletes extends Action
         $this->deleteByGroup('realtime', [
             Query::lessThan('timestamp', $datetime)
         ], $dbForPlatform);
-    }
-
-    /**
-     * @param Database $dbForPlatform
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
-    {
-        $projectId = $project->getId();
-        $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
-        $abuse = new Abuse($timeLimit);
-
-        try {
-            $abuse->cleanup($abuseRetention);
-        } catch (DatabaseException $e) {
-            Console::error('Failed to delete abuse logs for project ' . $projectId . ': ' . $e->getMessage());
-        }
     }
 
     /**
@@ -939,64 +930,38 @@ class Deletes extends Action
     }
 
     /**
-     * @param Document $document to be deleted
-     * @param Database $database to delete it from
-     * @param callable|null $callback to perform after document is deleted
-     * @return void
-     */
-    private function deleteById(Document $document, Database $database, callable $callback = null): void
-    {
-        if ($database->deleteDocument($document->getCollection(), $document->getId())) {
-            Console::success('Deleted document "' . $document->getId() . '" successfully');
-
-            if (is_callable($callback)) {
-                $callback($document);
-            }
-        } else {
-            Console::error('Failed to delete document: ' . $document->getId());
-        }
-    }
-
-    /**
      * @param string $collection collectionID
      * @param array $queries
      * @param Database $database
-     * @param callable|null $callback
+     * @param ?callable $callback
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
-    {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
+    protected function deleteByGroup(
+        string $collection,
+        array $queries,
+        Database $database,
+        ?callable $callback = null
+    ): void {
+        $start = \microtime(true);
 
-        $executionStart = \microtime(true);
+        try {
+            $documents = $database->deleteDocuments($collection, $queries);
+        } catch (\Throwable $th) {
+            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            return;
+        }
 
-        while ($sum === $limit) {
-            $chunk++;
-
-            try {
-                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
-            } catch (DatabaseException $e) {
-                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
-                return;
-            }
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
-
-            foreach ($results as $document) {
-                $this->deleteById($document, $database, $callback);
-                $count++;
+        if (\is_callable($callback)) {
+            foreach ($documents as $document) {
+                $callback($document);
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
+        $count = \count($documents);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**
@@ -1010,25 +975,23 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $results = [];
+        $limit = 1000;
         $sum = $limit;
         $cursor = null;
 
-        $executionStart = \microtime(true);
+        $start = \microtime(true);
 
         while ($sum === $limit) {
-            $chunk++;
 
-            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
-            if ($cursor instanceof Document) {
-                $mergedQueries[] = Query::cursorAfter($cursor);
+            $queries = \array_merge([Query::limit($limit)], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
             }
 
-            $results = $database->find($collection, $mergedQueries);
+            $results = $database->find($collection, $queries);
 
-            $sum = count($results);
+            $sum = \count($results);
 
             if ($sum > 0) {
                 $cursor = $results[$sum - 1];
@@ -1043,9 +1006,9 @@ class Deletes extends Action
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
 
-        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**

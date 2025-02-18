@@ -1,4 +1,4 @@
-import { Client, Messaging } from "@appwrite.io/console";
+import { Client, Messaging, MessagePriority } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -22,7 +22,10 @@ const result = await messaging.updatePush(
     '<TAG>', // tag (optional)
     null, // badge (optional)
     false, // draft (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    MessagePriority.Normal // priority (optional)
 );
 
 console.log(result);

@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.messaging import Messaging
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -9,8 +10,8 @@ messaging = Messaging(client)
 
 result = messaging.create_push(
     message_id = '<MESSAGE_ID>',
-    title = '<TITLE>',
-    body = '<BODY>',
+    title = '<TITLE>', # optional
+    body = '<BODY>', # optional
     topics = [], # optional
     users = [], # optional
     targets = [], # optional
@@ -21,7 +22,10 @@ result = messaging.create_push(
     sound = '<SOUND>', # optional
     color = '<COLOR>', # optional
     tag = '<TAG>', # optional
-    badge = '<BADGE>', # optional
+    badge = None, # optional
     draft = False, # optional
-    scheduled_at = '' # optional
+    scheduled_at = '', # optional
+    content_available = False, # optional
+    critical = False, # optional
+    priority = MessagePriority.NORMAL # optional
 )

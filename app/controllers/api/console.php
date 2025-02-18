@@ -1,6 +1,10 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
@@ -21,13 +25,19 @@ App::get('/v1/console/variables')
     ->desc('Get variables')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'console')
-    ->label('sdk.method', 'variables')
-    ->label('sdk.description', '/docs/references/console/variables.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CONSOLE_VARIABLES)
+    ->label('sdk', new Method(
+        namespace: 'console',
+        name: 'variables',
+        description: '/docs/references/console/variables.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CONSOLE_VARIABLES,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->action(function (Response $response) {
         $isDomainEnabled = !empty(System::getEnv('_APP_DOMAIN', ''))
@@ -60,18 +70,25 @@ App::post('/v1/console/assistant')
     ->desc('Ask query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'assistant')
-    ->label('sdk.method', 'chat')
-    ->label('sdk.description', '/docs/references/assistant/chat.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
+    ->label('sdk', new Method(
+        namespace: 'assistant',
+        name: 'chat',
+        description: '/docs/references/assistant/chat.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::TEXT
+    ))
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')
     ->param('prompt', '', new Text(2000), 'Prompt. A string containing questions asked to the AI assistant.')
     ->inject('response')
     ->action(function (string $prompt, Response $response) {
-        $ch = curl_init('http://appwrite-assistant:3003/');
+        $ch = curl_init('http://appwrite-assistant:3003/v1/models/assistant/prompt');
         $responseHeaders = [];
         $query = json_encode(['prompt' => $prompt]);
         $headers = ['accept: text/event-stream'];

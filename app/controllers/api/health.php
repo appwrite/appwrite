@@ -3,14 +3,18 @@
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -26,13 +30,19 @@ App::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/health/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        namespace: 'health',
+        name: 'get',
+        auth: [AuthType::KEY],
+        description: '/docs/references/health/get.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->action(function (Response $response) {
 
@@ -49,9 +59,6 @@ App::get('/v1/health/version')
     ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
     ->inject('response')
     ->action(function (Response $response) {
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
@@ -61,13 +68,19 @@ App::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getDB')
-    ->label('sdk.description', '/docs/references/health/get-db.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getDB',
+        description: '/docs/references/health/get-db.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
@@ -115,13 +128,19 @@ App::get('/v1/health/cache')
     ->desc('Get cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getCache')
-    ->label('sdk.description', '/docs/references/health/get-cache.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getCache',
+        description: '/docs/references/health/get-cache.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
@@ -169,74 +188,23 @@ App::get('/v1/health/cache')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-App::get('/v1/health/queue')
-    ->desc('Get queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueue')
-    ->label('sdk.description', '/docs/references/health/get-queue.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->inject('response')
-    ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
-
-        $output = [];
-
-        $configs = [
-            'Queue' => Config::getParam('pools-queue'),
-        ];
-
-        foreach ($configs as $key => $config) {
-            foreach ($config as $database) {
-                $checkStart = \microtime(true);
-                try {
-                    /** @var Connection $adapter */
-                    $adapter = $pools->get($database)->pop()->getResource();
-
-                    if ($adapter->ping()) {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    }
-                } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
-                }
-            }
-        }
-
-        $response->dynamic(new Document([
-            'statuses' => $output,
-            'total' => count($output),
-        ]), Response::MODEL_HEALTH_STATUS_LIST);
-    });
-
 App::get('/v1/health/pubsub')
     ->desc('Get pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getPubSub')
-    ->label('sdk.description', '/docs/references/health/get-pubsub.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getPubSub',
+        description: '/docs/references/health/get-pubsub.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
@@ -288,13 +256,19 @@ App::get('/v1/health/time')
     ->desc('Get time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getTime')
-    ->label('sdk.description', '/docs/references/health/get-time.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_TIME)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getTime',
+        description: '/docs/references/health/get-time.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_TIME,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->action(function (Response $response) {
 
@@ -345,21 +319,26 @@ App::get('/v1/health/queue/webhooks')
     ->desc('Get webhooks queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueWebhooks')
-    ->label('sdk.description', '/docs/references/health/get-queue-webhooks.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueWebhooks',
+        description: '/docs/references/health/get-queue-webhooks.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::WEBHOOK_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::WEBHOOK_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -372,21 +351,26 @@ App::get('/v1/health/queue/logs')
     ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueLogs')
-    ->label('sdk.description', '/docs/references/health/get-queue-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueLogs',
+        description: '/docs/references/health/get-queue-logs.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::AUDITS_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::AUDITS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -399,13 +383,19 @@ App::get('/v1/health/certificate')
     ->desc('Get the SSL certificate for a domain')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getCertificate')
-    ->label('sdk.description', '/docs/references/health/get-certificate.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_CERTIFICATE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getCertificate',
+        description: '/docs/references/health/get-certificate.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_CERTIFICATE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
@@ -449,21 +439,26 @@ App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueCertificates')
-    ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueCertificates',
+        description: '/docs/references/health/get-queue-certificates.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::CERTIFICATES_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::CERTIFICATES_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -476,21 +471,26 @@ App::get('/v1/health/queue/builds')
     ->desc('Get builds queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueBuilds')
-    ->label('sdk.description', '/docs/references/health/get-queue-builds.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueBuilds',
+        description: '/docs/references/health/get-queue-builds.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::BUILDS_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::BUILDS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -503,22 +503,27 @@ App::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueDatabases')
-    ->label('sdk.description', '/docs/references/health/get-queue-databases.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueDatabases',
+        description: '/docs/references/health/get-queue-databases.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (string $name, int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (string $name, int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client($name, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue($name));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -531,21 +536,26 @@ App::get('/v1/health/queue/deletes')
     ->desc('Get deletes queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueDeletes')
-    ->label('sdk.description', '/docs/references/health/get-queue-deletes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueDeletes',
+        description: '/docs/references/health/get-queue-deletes.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::DELETE_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::DELETE_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -558,21 +568,26 @@ App::get('/v1/health/queue/mails')
     ->desc('Get mails queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueMails')
-    ->label('sdk.description', '/docs/references/health/get-queue-mails.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueMails',
+        description: '/docs/references/health/get-queue-mails.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::MAILS_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::MAILS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -585,21 +600,26 @@ App::get('/v1/health/queue/messaging')
     ->desc('Get messaging queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueMessaging')
-    ->label('sdk.description', '/docs/references/health/get-queue-messaging.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueMessaging',
+        description: '/docs/references/health/get-queue-messaging.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::MESSAGING_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::MESSAGING_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -612,21 +632,26 @@ App::get('/v1/health/queue/migrations')
     ->desc('Get migrations queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueMigrations')
-    ->label('sdk.description', '/docs/references/health/get-queue-migrations.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueMigrations',
+        description: '/docs/references/health/get-queue-migrations.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::MIGRATIONS_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::MIGRATIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -639,21 +664,26 @@ App::get('/v1/health/queue/functions')
     ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueFunctions')
-    ->label('sdk.description', '/docs/references/health/get-queue-functions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueFunctions',
+        description: '/docs/references/health/get-queue-functions.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::FUNCTIONS_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -662,25 +692,30 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/usage')
-    ->desc('Get usage queue')
+App::get('/v1/health/queue/stats-resources')
+    ->desc('Get stats  resources queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsage')
-    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueStatsResources',
+        description: '/docs/references/health/get-queue-stats-resources.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::USAGE_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::STATS_RESOURCES_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -689,25 +724,62 @@ App::get('/v1/health/queue/usage')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     });
 
-App::get('/v1/health/queue/usage-dump')
+App::get('/v1/health/queue/stats-usage')
+    ->desc('Get stats usage queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueUsage',
+        description: '/docs/references/health/get-queue-stats-usage.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('publisher')
+    ->inject('response')
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
+        $threshold = \intval($threshold);
+
+        $size = $publisher->getQueueSize(new Queue(Event::STATS_USAGE_QUEUE_NAME));
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
+App::get('/v1/health/queue/stats-usage-dump')
     ->desc('Get usage dump queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsageDump')
-    ->label('sdk.description', '/docs/references/health/get-queue-usage-dump.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getQueueStatsUsageDump',
+        description: '/docs/references/health/get-queue-stats-usage-dump.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->inject('queue')
+    ->inject('publisher')
     ->inject('response')
-    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+    ->action(function (int|string $threshold, Publisher $publisher, Response $response) {
         $threshold = \intval($threshold);
 
-        $client = new Client(Event::USAGE_DUMP_QUEUE_NAME, $queue);
-        $size = $client->getQueueSize();
+        $size = $publisher->getQueueSize(new Queue(Event::STATS_USAGE_DUMP_QUEUE_NAME));
 
         if ($size >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
@@ -720,13 +792,19 @@ App::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorageLocal')
-    ->label('sdk.description', '/docs/references/health/get-storage-local.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getStorageLocal',
+        description: '/docs/references/health/get-storage-local.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->action(function (Response $response) {
 
@@ -763,13 +841,19 @@ App::get('/v1/health/storage')
     ->desc('Get storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorage')
-    ->label('sdk.description', '/docs/references/health/get-storage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getStorage',
+        description: '/docs/references/health/get-storage.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->inject('deviceForFiles')
     ->inject('deviceForFunctions')
@@ -804,13 +888,19 @@ App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getAntivirus')
-    ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_ANTIVIRUS)
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getAntivirus',
+        description: '/docs/references/health/get-storage-anti-virus.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_ANTIVIRUS,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->inject('response')
     ->action(function (Response $response) {
 
@@ -843,17 +933,28 @@ App::get('/v1/health/queue/failed/:name')
     ->desc('Get number of failed queue jobs')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getFailedJobs')
+    ->label('sdk', new Method(
+        auth: [AuthType::KEY],
+        namespace: 'health',
+        name: 'getFailedJobs',
+        description: '/docs/references/health/get-failed-queue-jobs.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_QUEUE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('name', '', new WhiteList([
         Event::DATABASE_QUEUE_NAME,
         Event::DELETE_QUEUE_NAME,
         Event::AUDITS_QUEUE_NAME,
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
-        Event::USAGE_QUEUE_NAME,
-        Event::USAGE_DUMP_QUEUE_NAME,
+        Event::STATS_RESOURCES_QUEUE_NAME,
+        Event::STATS_USAGE_QUEUE_NAME,
+        Event::STATS_USAGE_DUMP_QUEUE_NAME,
         Event::WEBHOOK_QUEUE_NAME,
         Event::CERTIFICATES_QUEUE_NAME,
         Event::BUILDS_QUEUE_NAME,
@@ -861,17 +962,12 @@ App::get('/v1/health/queue/failed/:name')
         Event::MIGRATIONS_QUEUE_NAME
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-    ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
-    ->inject('queue')
-    ->action(function (string $name, int|string $threshold, Response $response, Connection $queue) {
+    ->inject('publisher')
+    ->action(function (string $name, int|string $threshold, Response $response, Publisher $publisher) {
         $threshold = \intval($threshold);
 
-        $client = new Client($name, $queue);
-        $failed = $client->countFailedJobs();
+        $failed = $publisher->getQueueSize(new Queue($name), failedJobs: true);
 
         if ($failed >= $threshold) {
             throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue failed jobs threshold hit. Current size is {$failed} and threshold is {$threshold}.");
