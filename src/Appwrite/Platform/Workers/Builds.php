@@ -127,7 +127,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Webhooks $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 

@@ -516,7 +516,6 @@ class Databases extends Action
 
         $collectionId = $collection->getId();
         $collectionInternalId = $collection->getInternalId();
-        $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
