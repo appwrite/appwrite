@@ -11,7 +11,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -1320,17 +1319,10 @@ class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
         ]);
 
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => $subdomain . System::getEnv('_APP_DOMAIN_SITES', ''),
-            'resourceType' => 'site',
-            'resourceId' => $siteId,
-        ]);
+        $domain = $this->setupSiteDomain($site['body']['$id'], $subdomain);
 
-        $this->assertEquals(409, $rule['headers']['status-code']);
-        $this->assertStringContainsString("Domain already assigned to another resource.", $rule['body']['message']);
+        $this->assertEquals(409, $domain['headers']['status-code']);
+        $this->assertStringContainsString("Domain already assigned to another resource.", $domain['body']['message']);
 
         $this->cleanupSite($siteId);
 
