@@ -20,6 +20,7 @@ use Appwrite\Event\StatsUsageDump;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 /** /remove */
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -312,6 +313,10 @@ Server::setResource('queueForEvents', function (Publisher $publisher) {
 
 Server::setResource('queueForAudits', function (Publisher $publisher) {
     return new Audit($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForWebhooks', function (Publisher $publisher) {
+    return new Webhook($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForFunctions', function (Publisher $publisher) {
