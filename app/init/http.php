@@ -22,6 +22,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -43,6 +44,7 @@ use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
@@ -559,6 +561,7 @@ App::setResource('deviceForFunctions', function ($project) {
 App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
+
 
 App::setResource('mode', function ($request) {
     /** @var Appwrite\Utopia\Request $request */

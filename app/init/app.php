@@ -315,6 +315,12 @@ $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
+if (!App::isProduction()) {
+    // Allow specific domains to skip public domain validation in dev environment
+    // Useful for existing tests involving webhooks
+    PublicDomain::allow(['request-catcher']);
+}
+
 /*
  * ENV vars
  */
@@ -713,7 +719,6 @@ Database::addFilter(
         return $value;
     }
 );
-
 
 Database::addFilter(
     'messageSearch',
