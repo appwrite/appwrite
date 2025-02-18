@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -1307,7 +1308,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
 
-        $site = $this->createSite([
+        $site2 = $this->createSite([
             'siteId' => ID::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
@@ -1319,10 +1320,19 @@ class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
         ]);
 
-        $domain = $this->setupSiteDomain($site['body']['$id'], $subdomain);
+        $siteId2 = $site2['body']['$id'];
 
-        $this->assertEquals(409, $domain['headers']['status-code']);
-        $this->assertStringContainsString("Domain already assigned to another resource.", $domain['body']['message']);
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'resourceType' => 'site',
+            'resourceId' => $siteId2,
+        ]);
+
+        $this->assertEquals(409, $rule['headers']['status-code']);
+        $this->assertStringContainsString("Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.", $rule['body']['message']);
 
         $this->cleanupSite($siteId);
 
