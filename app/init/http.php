@@ -43,7 +43,6 @@ use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
