@@ -197,7 +197,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $attribute, null, $attribute, $event, $queueForRealtime);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
@@ -304,7 +304,7 @@ class Databases extends Action
 
                 throw $e;
             } finally {
-                $this->trigger($database, $collection, $project, $attribute, null, $attribute, $event, $queueForRealtime);
+                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -418,7 +418,7 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, null, $index, $index, $event, $queueForRealtime);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
     }
@@ -474,7 +474,7 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, null, $index, $index, $event, $queueForRealtime);
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
         }
     }
@@ -586,21 +586,19 @@ class Databases extends Action
      * @param Document $database
      * @param Document $collection
      * @param Document $project
+     * @param Realtime $queueForRealtime
      * @param Document|null $attribute
      * @param Document|null $index
-     * @param Document $payload
-     * @param Realtime $queueForRealtime
      * @return void
      */
     protected function trigger(
         Document $database,
         Document $collection,
         Document $project,
+        string $event,
+        Realtime $queueForRealtime,
         Document|null $attribute = null,
         Document|null $index = null,
-        Document $payload,
-        string $event,
-        Realtime $queueForRealtime
     ): void {
         $queueForRealtime
             ->setProject($project)
@@ -610,14 +608,16 @@ class Databases extends Action
             ->setParam('collectionId', $collection->getId());
 
         if ($attribute !== null) {
-            $queueForRealtime->setParam('attributeId', $attribute->getId());
+            $queueForRealtime
+                ->setParam('attributeId', $attribute->getId())
+                ->setPayload($attribute->getArrayCopy());
         }
         if ($index !== null) {
-            $queueForRealtime->setParam('indexId', $index->getId());
+            $queueForRealtime
+                ->setParam('indexId', $index->getId())
+                ->setPayload($index->getArrayCopy());
         }
 
-        $queueForRealtime
-            ->setPayload($payload->getArrayCopy())
-            ->trigger();
+        $queueForRealtime->trigger();
     }
 }

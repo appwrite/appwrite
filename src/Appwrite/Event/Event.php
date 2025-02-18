@@ -234,8 +234,9 @@ class Event
     }
 
     /**
-     * Get targets for this event.
+     * Set targets for this event.
      *
+     * @param array $targets
      * @return array
      */
     public function setTargets(array $targets): self
