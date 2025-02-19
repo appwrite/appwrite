@@ -528,7 +528,7 @@ App::init()
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        var_dump('Called');
+        var_dump('Init Called');
 
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
