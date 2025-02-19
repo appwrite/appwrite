@@ -137,7 +137,14 @@ App::post('/v1/projects')
         }
 
         $databases = Config::getParam('pools-database', []);
+        var_dump(
+           [
+               'location' => 'projects.php',
+               '_APP_REGION' => System::getEnv('_APP_REGION'),
+               'databases' => $databases
 
+           ]
+        );
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
