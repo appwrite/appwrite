@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Services;
 
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as CreateTemplateDeployment;
+use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
@@ -21,5 +22,6 @@ class Http extends Service
         $this->addAction(ListRuntimes::getName(), new ListRuntimes());
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());
         $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());
+        $this->addAction(CreateVcsDeployment::getName(), new CreateVcsDeployment());
     }
 }
