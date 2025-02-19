@@ -1105,8 +1105,8 @@ class FunctionsCustomServerTest extends Scope
 
         $output = json_decode($execution['body']['responseBody'], true);
 
-        $this->assertEquals(1, $output['APPWRITE_COMPUTE_CPUS']);
-        $this->assertEquals(1024, $output['APPWRITE_COMPUTE_MEMORY']);
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
 
         // Change the specs to 1vcpu 512mb
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
@@ -1133,8 +1133,8 @@ class FunctionsCustomServerTest extends Scope
 
         $output = json_decode($execution['body']['responseBody'], true);
 
-        $this->assertEquals(1, $output['APPWRITE_COMPUTE_CPUS']);
-        $this->assertEquals(512, $output['APPWRITE_COMPUTE_MEMORY']);
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
 
         /**
          * Test for FAILURE

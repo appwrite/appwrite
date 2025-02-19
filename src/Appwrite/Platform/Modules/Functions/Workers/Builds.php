@@ -160,8 +160,8 @@ class Builds extends Action
 
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
-        if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Realtime preparation
@@ -513,8 +513,6 @@ class Builds extends Action
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
-                'APPWRITE_COMPUTE_CPUS' => $cpus,
-                'APPWRITE_COMPUTE_MEMORY' => $memory,
                 'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
                 'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
                 'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
@@ -541,6 +539,8 @@ class Builds extends Action
                         'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_FUNCTION_CPUS' => $cpus,
+                        'APPWRITE_FUNCTION_MEMORY' => $memory,
                     ];
                     break;
                 case 'sites':
@@ -554,6 +554,8 @@ class Builds extends Action
                         'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
                         'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_SITE_CPUS' => $cpus,
+                        'APPWRITE_SITE_MEMORY' => $memory,
                     ];
                     break;
             }
@@ -783,12 +785,12 @@ class Builds extends Action
                 resource:$resource,
                 build: $build,
                 project: $project,
-                queue: $queueForUsage
+                queue: $queueForStatsUsage
             );
         }
     }
 
-    protected function sendUsage(Document $resource, Document $build, Document $project, Usage $queue): void
+    protected function sendUsage(Document $resource, Document $build, Document $project, StatsUsage $queue): void
     {
         $key = match($resource->getCollection()) {
             'functions' => 'functionInternalId',
@@ -836,7 +838,7 @@ class Builds extends Action
                 break;
         }
 
-        $queueForStatsUsage
+        $queue
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
