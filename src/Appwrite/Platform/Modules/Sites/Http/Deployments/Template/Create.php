@@ -93,14 +93,14 @@ class Create extends Base
             'version' => $version
         ]);
 
-        if (!empty($providerRepositoryId)) {
+        if (!empty($site->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, $template, $github);
 
             $queueForEvents
-                ->setParam('siteId', $site->getId())
-                ->setParam('deploymentId', $deployment->getId());
+            ->setParam('siteId', $site->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
