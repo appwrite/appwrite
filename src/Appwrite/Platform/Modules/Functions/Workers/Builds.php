@@ -138,7 +138,7 @@ class Builds extends Action
         if ($resource->isEmpty()) {
             throw new \Exception('Resource not found');
         }
-        
+
         // TODO: Sites support
         if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $resource->getId())) {
             throw new \Exception('Resource is blocked');
@@ -159,7 +159,7 @@ class Builds extends Action
         $runtime = $this->getRuntime($resource, $version);
 
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        
+
         if (\is_null($runtime)) {
             throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
