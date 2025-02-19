@@ -4,8 +4,8 @@ namespace Appwrite\Event;
 
 use InvalidArgumentException;
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 
 class Event
 {
@@ -24,11 +24,22 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    /** remove */
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
     public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
     public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+    /** /remove */
+
+    public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
+    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
+
+    public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
+    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
+
+    public const STATS_USAGE_DUMP_QUEUE_NAME = 'v1-stats-usage-dump';
+    public const STATS_USAGE_DUMP_CLASS_NAME = 'StatsUsageDumpV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
@@ -58,10 +69,10 @@ class Event
     protected bool $paused = false;
 
     /**
-     * @param Connection $connection
+     * @param Publisher $publisher
      * @return void
      */
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
     }
 
@@ -345,12 +356,11 @@ class Event
         }
 
         /** The getter is required since events like Databases need to override the queue name depending on the project */
-        $client = new Client($this->getQueue(), $this->connection);
+        $queue = new Queue($this->getQueue());
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
-
-        return $client->enqueue($payload);
+        return $this->publisher->enqueue($queue, $payload);
     }
 
     /**

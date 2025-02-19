@@ -5,6 +5,8 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\StatsResources;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
@@ -19,7 +21,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
@@ -160,18 +162,57 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
-CLI::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
+CLI::setResource('queueForStatsUsage', function (Connection $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
+CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
+}, ['publisher']);
+CLI::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
-CLI::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-CLI::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-CLI::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
+CLI::setResource('queueForFunctions', function (Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+CLI::setResource('queueForDeletes', function (Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
+CLI::setResource('queueForCertificates', function (Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');
