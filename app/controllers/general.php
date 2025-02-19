@@ -527,6 +527,9 @@ App::init()
         */
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        var_dump('Called');
+
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
