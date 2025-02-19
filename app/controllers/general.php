@@ -893,7 +893,6 @@ App::error()
                 ->trigger();
         }
 
-
         if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */

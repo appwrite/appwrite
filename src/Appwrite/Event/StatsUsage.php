@@ -8,7 +8,8 @@ use Utopia\Queue\Publisher;
 class StatsUsage extends Event
 {
     protected array $metrics = [];
-    protected array $reduce  = [];
+    protected array $reduce = [];
+    protected array $disabled = [];
 
     public function __construct(protected Publisher $publisher)
     {
@@ -50,6 +51,19 @@ class StatsUsage extends Event
     }
 
     /**
+     * Set disabled metrics.
+     *
+     * @param string $key
+     * @return self
+     */
+    public function disableMetric(string $key): self
+    {
+        $this->disabled[] = $key;
+
+        return $this;
+    }
+
+    /**
      * Prepare the payload for the event
      *
      * @return array
@@ -58,8 +72,15 @@ class StatsUsage extends Event
     {
         return [
             'project' => $this->getProject(),
-            'reduce'  => $this->reduce,
-            'metrics' => $this->metrics,
+            'reduce' => $this->reduce,
+            'metrics' => \array_filter($this->metrics, function ($metric) {
+                foreach ($this->disabled as $disabledMetric) {
+                    if (\str_ends_with($metric['key'], $disabledMetric)) {
+                        return false;
+                    }
+                }
+                return true;
+            }),
         ];
     }
 }
