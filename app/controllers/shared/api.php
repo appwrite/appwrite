@@ -163,11 +163,11 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             }
             break;
         case $document->getCollection() === 'sites':
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_SITES, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addReduce($document);
             }
             break;
