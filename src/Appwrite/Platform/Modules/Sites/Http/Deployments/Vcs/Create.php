@@ -16,6 +16,8 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
@@ -32,7 +34,7 @@ class Create extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/sites/:siteId/deployments/vcs')
-            ->desc('Create deployment')
+            ->desc('Create VCS deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
@@ -43,6 +45,8 @@ class Create extends Base
                 name: 'createVcsDeployment',
                 description: <<<EOT
                 Create a deployment when a site is connected to VCS.
+
+                This endpoint lets you create deployment from a branch, commit, or a tag.
                 EOT,
                 auth: [AuthType::KEY],
                 responses: [
@@ -53,6 +57,9 @@ class Create extends Base
                 ],
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
+            // TODO: Support tag and commit in future
+            ->param('type', '', new WhiteList(['branch']), 'Type of reference passed. Allowed values are: branch')
+            ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name')
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -64,7 +71,7 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Build $queueForBuilds, GitHub $github)
+    public function action(string $siteId, string $type, string $reference, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Build $queueForBuilds, GitHub $github)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -76,7 +83,19 @@ class Create extends Base
 
         $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
 
-        $deployment = $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, $template, $github);
+        $deployment = $this->redeployVcsSite(
+            request: $request,
+            site: $site,
+            project: $project,
+            installation: $installation,
+            dbForProject: $dbForProject,
+            dbForPlatform: $dbForPlatform,
+            queueForBuilds: $queueForBuilds,
+            template: $template,
+            github: $github,
+            reference: $reference,
+            referenceType: $type
+        );
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

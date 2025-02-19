@@ -19,7 +19,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -37,7 +37,12 @@ class Base extends Action
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
-        $providerBranch = $function->getAttribute('providerBranch', 'main');
+
+        // TODO: Support tag and commit in future
+        if ($referenceType === 'branch') {
+            $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
+        }
+
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
         $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
@@ -95,7 +100,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -113,7 +118,11 @@ class Base extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $providerBranch = $site->getAttribute('providerBranch', 'main');
+        // TODO: Support tag and commit in future
+        if ($referenceType === 'branch') {
+            $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
+        }
+
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
         $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";

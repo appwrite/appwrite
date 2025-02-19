@@ -19,9 +19,11 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -65,16 +67,18 @@ class Create extends Base
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
             ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the site template.')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
+            ->inject('gitHub')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $repository, string $owner, string $rootDirectory, string $version, bool $activate, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Build $queueForBuilds)
+    public function action(string $siteId, string $repository, string $owner, string $rootDirectory, string $version, bool $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Build $queueForBuilds, GitHub $github)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -88,6 +92,22 @@ class Create extends Base
             'rootDirectory' => $rootDirectory,
             'version' => $version
         ]);
+
+        if (!empty($site->getAttribute('providerRepositoryId'))) {
+            $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
+
+            $deployment = $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, $template, $github);
+
+            $queueForEvents
+            ->setParam('siteId', $site->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+            return;
+        }
 
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
