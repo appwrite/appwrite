@@ -19,7 +19,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -88,7 +88,7 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'activate' => true,
+            'activate' => $activate,
         ]));
 
         $queueForBuilds
@@ -100,7 +100,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -169,7 +169,7 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $site->getAttribute('providerRootDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
-            'activate' => true,
+            'activate' => $activate,
         ]));
 
         // Preview deployments for sites

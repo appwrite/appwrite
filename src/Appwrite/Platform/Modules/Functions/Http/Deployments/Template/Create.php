@@ -95,7 +95,17 @@ class Create extends Base
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
-            $deployment = $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+            $deployment = $this->redeployVcsFunction(
+                request: $request,
+                function: $function,
+                project: $project,
+                installation: $installation,
+                dbForProject: $dbForProject,
+                queueForBuilds: $queueForBuilds,
+                template: $template,
+                github: $github,
+                activate: $activate
+            );
 
             $queueForEvents
             ->setParam('functionId', $function->getId())

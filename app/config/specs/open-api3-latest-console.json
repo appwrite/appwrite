@@ -10361,6 +10361,11 @@
                                         "type": "string",
                                         "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
                                         "x-example": "<REFERENCE>"
+                                    },
+                                    "activate": {
+                                        "type": "boolean",
+                                        "description": "Automatically activate the deployment when it is finished building.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
@@ -25225,6 +25230,11 @@
                                         "type": "string",
                                         "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
                                         "x-example": "<REFERENCE>"
+                                    },
+                                    "activate": {
+                                        "type": "boolean",
+                                        "description": "Automatically activate the deployment when it is finished building.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
