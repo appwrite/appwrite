@@ -464,6 +464,38 @@ trait DatabasesBase
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
         $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
+
+        $integer = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'integer',
+            'required' => false,
+            'min' => 1,
+            'max' => 5,
+            'default' => 3
+        ]);
+        $this->assertEquals(202, $integer['headers']['status-code']);
+
+        sleep(1);
+
+        /**
+         * Update integer default value to 10
+         */
+        $integer = $this->client->call(Client::METHOD_PATCH, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/attributes/integer/'.$integer['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'integer',
+            'required' => false,
+            'default' => 10
+        ]);
+
+        $this->assertEquals(200, $integer['headers']['status-code']);
+        $this->assertEquals(PHP_INT_MIN, $integer['body']['min']);
+        $this->assertEquals(PHP_INT_MAX, $integer['body']['max']);
     }
 
     public function testUpdateAttributeEnum(): void
