@@ -228,14 +228,10 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                // Preview deployments for sites
-                $projectId = $project->getId();
-
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-
-                $rule = Authorization::skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -283,14 +279,10 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                // Preview deployments for sites
-                $projectId = $project->getId();
-
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-
-                $rule = Authorization::skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

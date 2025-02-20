@@ -740,12 +740,12 @@ class Builds extends Action
                     $configs = [
                         'screenshot' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://traefik/',
+                            'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=light',
                             'color' => 'light'
                         ],
                         'screenshotDark' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://traefik/',
+                            'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=dark',
                             'color' => 'dark'
                         ],
                     ];
