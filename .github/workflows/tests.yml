@@ -171,8 +171,12 @@ jobs:
           sleep 30
 
       - name: Wait for Open Runtimes
+        timeout-minutes: 3
         run: |
-          sh .github/scripts/ensure-executor.sh
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         run: |
@@ -238,8 +242,12 @@ jobs:
           sleep 30
 
       - name: Wait for Open Runtimes
+        timeout-minutes: 3
         run: |
-          sh .github/scripts/ensure-executor.sh
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         run: |
