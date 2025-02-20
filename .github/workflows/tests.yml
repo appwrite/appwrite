@@ -145,6 +145,7 @@ jobs:
           Locale,
           Projects,
           Realtime,
+          Sites,
           Storage,
           Teams,
           Users,
