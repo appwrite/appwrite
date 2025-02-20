@@ -274,7 +274,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ]));
 
                 $bucket = $dbForPlatform->getDocument('buckets', 'default');
-                
+
                 Console::info("    └── Creating files collection for default bucket...");
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
@@ -328,7 +328,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ]));
 
                 $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
-                
+
                 Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {

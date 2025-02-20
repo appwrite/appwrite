@@ -20,6 +20,7 @@ class Key
         protected string $name,
         protected bool $expired = false,
         protected array $disabledMetrics = [],
+        protected bool $hostnameOverride = false,
     ) {
     }
 
@@ -56,6 +57,12 @@ class Key
     public function getDisabledMetrics(): array
     {
         return $this->disabledMetrics;
+    }
+
+
+    public function getHostnameOverride(): bool
+    {
+        return $this->hostnameOverride;
     }
 
     /**
@@ -109,6 +116,7 @@ class Key
                 $name = $payload['name'] ?? 'Dynamic Key';
                 $projectId = $payload['projectId'] ?? '';
                 $disabledMetrics = $payload['disabledMetrics'] ?? [];
+                $hostnameOverride = $payload['hostnameOverride'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if ($projectId !== $project->getId()) {
@@ -122,7 +130,8 @@ class Key
                     $scopes,
                     $name,
                     $expired,
-                    $disabledMetrics
+                    $disabledMetrics,
+                    $hostnameOverride
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

@@ -1961,38 +1961,16 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-/**
- * JWT key from x-appwrite-key header.
- *
- * @return array<string, mixed> Decoded key-value pair from JWT
- */
-App::setResource('dynamicKey', function (Request $request) {
-    $apiKey = $request->getHeader('x-appwrite-key', '');
+App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
+    $allowed = false;
 
-    if (empty($apiKey) || !\str_contains($apiKey, '_')) {
-        return [];
+    if(App::isDevelopment()) {
+        $allowed = true;
+    } else if(!is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+        $allowed = true;
     }
 
-    [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
-
-    if ($keyType !== API_KEY_DYNAMIC) {
-        return [];
-    }
-
-    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
-
-    try {
-        $payload = $jwtObj->decode($authKey);
-    } catch (JWTException $error) {
-        return [];
-    }
-
-    return $payload;
-
-}, ['request']);
-
-App::setResource('previewHostname', function (Request $request, array $dynamicKey) {
-    if (App::isDevelopment() || $dynamicKey['overrideHostname'] ?? false) {
+    if($allowed === true) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;
@@ -2000,7 +1978,7 @@ App::setResource('previewHostname', function (Request $request, array $dynamicKe
     }
 
     return '';
-}, ['request', 'dynamicKey']);
+}, ['request', 'apiKey']);
 
 App::setResource('apiKey', function (Request $request, Document $project): ?Key {
     $key = $request->getHeader('x-appwrite-key');

@@ -752,7 +752,7 @@ class Builds extends Action
 
                     $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
                     $apiKey = $jwtObj->encode([
-                        'overrideHostname' => true
+                        'hostnameOverride' => true
                     ]);
 
                     // TODO: @Meldiron if becomes too slow, do concurrently
@@ -773,7 +773,6 @@ class Builds extends Action
 
                         $screenshot = $response->getBody();
 
-                        // TODO: @Khushboo replace with deviceForSites
                         $fileId = ID::unique();
                         $fileName = $fileId . '.png';
                         $path = $deviceForFiles->getPath($fileName);
