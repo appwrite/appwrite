@@ -7,6 +7,8 @@ return [
         'recovery',
         'invitation',
         'mfaChallenge',
+        'mfaEnabled',
+        'mfaDisabled',
         'sessionAlert',
         'otpSession'
     ],
