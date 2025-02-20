@@ -2581,7 +2581,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
