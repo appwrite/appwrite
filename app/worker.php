@@ -13,12 +13,14 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 /** remove */
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 /** /remove */
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -313,9 +315,17 @@ Server::setResource('queueForAudits', function (Publisher $publisher) {
     return new Audit($publisher);
 }, ['publisher']);
 
+Server::setResource('queueForWebhooks', function (Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
+
 Server::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+
+Server::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
 
 Server::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);

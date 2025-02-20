@@ -7,10 +7,17 @@ use Utopia\Database\Document;
 
 class Realtime extends Event
 {
+    protected array $targets = [];
+
     public function __construct()
     {
     }
 
+    /**
+     * Get Realtime payload for this event.
+     *
+     * @return array
+     */
     public function getRealtimePayload(): array
     {
         $payload = [];
@@ -22,6 +29,28 @@ class Realtime extends Event
         }
 
         return $payload;
+    }
+
+    /**
+     * Set targets for this realtime event.
+     *
+     * @param array $targets
+     * @return array
+     */
+    public function setTargets(array $targets): self
+    {
+        $this->targets = $targets;
+        return $this;
+    }
+
+    /**
+     * Get targets for this realtime event.
+     *
+     * @return array
+     */
+    public function getTargets(): array
+    {
+        return $this->targets;
     }
 
     /**
@@ -53,17 +82,33 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
-        RealtimeAdapter::send(
-            projectId: $target['projectId'] ?? $this->getProject()->getId(),
-            payload: $this->getRealtimePayload(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-            options: [
-                'permissionsChanged' => $target['permissionsChanged'],
-                'userId' => $this->getParam('userId')
-            ]
-        );
+        if (!empty($this->getTargets())) {
+            foreach ($this->getTargets() as $targetProjectId) {
+                RealtimeAdapter::send(
+                    projectId: $targetProjectId,
+                    payload: $this->getRealtimePayload(),
+                    events: $allEvents,
+                    channels: $target['channels'],
+                    roles: $target['roles'],
+                    options: [
+                        'permissionsChanged' => $target['permissionsChanged'],
+                        'userId' => $this->getParam('userId')
+                    ]
+                );
+            }
+        } else {
+            RealtimeAdapter::send(
+                projectId: $target['projectId'] ?? $this->getProject()->getId(),
+                payload: $this->getRealtimePayload(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles'],
+                options: [
+                    'permissionsChanged' => $target['permissionsChanged'],
+                    'userId' => $this->getParam('userId')
+                ]
+            );
+        }
 
         return true;
     }
