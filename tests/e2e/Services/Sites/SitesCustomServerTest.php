@@ -1510,8 +1510,6 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        \var_dump($domain);
-
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1528,14 +1526,27 @@ class SitesCustomServerTest extends Scope
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
         ], $this->getHeaders()));
 
-        \var_dump($file['headers']);
-        \var_dump(\strlen($file['body']));
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertNotEmpty(200, $file['body']);
+        $this->assertGreaterThan(4096, $file['headers']['content-length']);
+        $this->assertEquals('image/png', $file['headers']['content-type']);
+
+        $screenshotHash = \md5($file['body']);
+        $this->assertNotEmpty($screenshotHash);
+
+        $screenshotId = $deployment['body']['screenshotDark'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty(200, $file['body']);
+        $this->assertGreaterThan(4096, $file['headers']['content-length']);
+        $this->assertEquals('image/png', $file['headers']['content-type']);
 
-        // TODO: Dark file screenshot
-        // TODO: md5 different
+        $screenshotDarkHash = \md5($file['body']);
+        $this->assertNotEmpty($screenshotDarkHash);
+
+        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
 
         $this->cleanupSite($siteId);
     }
