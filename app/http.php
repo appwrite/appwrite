@@ -200,25 +200,8 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
 
         Console::info("    └── Creating collection: {$collection['$id']}...");
 
-        $attributes = array_map(fn ($attr) => new Document([
-            '$id' => ID::custom($attr['$id']),
-            'type' => $attr['type'],
-            'size' => $attr['size'],
-            'required' => $attr['required'],
-            'signed' => $attr['signed'],
-            'array' => $attr['array'],
-            'filters' => $attr['filters'],
-            'default' => $attr['default'] ?? null,
-            'format' => $attr['format'] ?? ''
-        ]), $collection['attributes']);
-
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
-        ]), $collection['indexes']);
+        $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+        $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
     }
@@ -328,6 +311,11 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForProject->create();
             } catch (Duplicate) {
                 Console::success('[Setup] - Skip: metadata table already exists');
+            }
+
+            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($dbForProject);
+                $audit->setup();
             }
 
             foreach ($projectCollections as $key => $collection) {
