@@ -2327,7 +2327,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => 100,
+            'default' => -10,
             'max' => 0,
         ]);
 
@@ -2589,7 +2589,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => 123.456,
+            'default' => -123.456,
             'max' => 0.0,
         ]);
 
