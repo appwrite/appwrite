@@ -304,6 +304,54 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             }
         });
 
+        $projectCollections = $collections['projects'];
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+
+        $cache = $app->getResource('cache');
+
+        foreach ($sharedTablesV2 as $hostname) {
+            $adapter = $pools
+                ->get($hostname)
+                ->pop()
+                ->getResource();
+
+            $dbForProject = (new Database($adapter, $cache))
+                ->setDatabase('appwrite')
+                ->setSharedTables(true)
+                ->setTenant(null)
+                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+
+            try {
+                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                $dbForProject->create();
+            } catch (Duplicate) {
+                Console::success('[Setup] - Skip: metadata table already exists');
+            }
+
+            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($dbForProject);
+                $audit->setup();
+            }
+
+            foreach ($projectCollections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
+                if (!$dbForProject->getCollection($key)->isEmpty()) {
+                    continue;
+                }
+
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+
+                Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
+
+                $dbForProject->createCollection($key, $attributes, $indexes);
+            }
+        }
+
         $pools->reclaim();
         Console::success('[Setup] - Server database init completed...');
     });
