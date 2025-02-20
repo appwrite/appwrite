@@ -8,7 +8,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
@@ -466,9 +466,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -588,9 +588,8 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
+        $secret = Auth::tokenGenerator();
         if ($membership->isEmpty()) {
-            $secret = Auth::tokenGenerator();
-
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -618,7 +617,8 @@ App::post('/v1/teams/:teamId/memberships')
                 $dbForProject->createDocument('memberships', $membership);
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        } else {
+        } elseif ($membership->getAttribute('confirm') === false) {
+            $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {
@@ -629,8 +629,9 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        } else {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
-
 
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
@@ -757,11 +758,11 @@ App::post('/v1/teams/:teamId/memberships')
                         $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
-                            $queueForUsage
+                            $queueForStatsUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
                     }
-                    $queueForUsage
+                    $queueForStatsUsage
                         ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();

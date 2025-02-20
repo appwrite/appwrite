@@ -6,7 +6,9 @@ use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait SitesBase
 {
@@ -228,6 +230,16 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function createTemplateDeployment(string $siteId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
     protected function getSiteUsage(string $siteId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
@@ -255,6 +267,27 @@ trait SitesBase
         ], $this->getHeaders()));
 
         return $site;
+    }
+
+    protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
+    {
+        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'resourceType' => 'site',
+            'resourceId' => $siteId,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
+        $domain = $rule['body']['domain'];
+
+        return $domain;
     }
 
     protected function getSiteDomain(string $siteId): string

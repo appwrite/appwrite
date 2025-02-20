@@ -6,6 +6,9 @@ use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait FunctionsBase
 {
@@ -206,6 +209,16 @@ trait FunctionsBase
         return $deployment;
     }
 
+    protected function createTemplateDeployment(string $functionId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/template', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
     protected function getFunctionUsage(string $functionId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
@@ -244,5 +257,48 @@ trait FunctionsBase
         ], $this->getHeaders()));
 
         return $function;
+    }
+
+    protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
+    {
+        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            'resourceType' => 'function',
+            'resourceId' => $functionId,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
+        $domain = $rule['body']['domain'];
+
+        return $domain;
+    }
+
+    protected function getFunctionDomain(string $functionId): string
+    {
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$functionId])->toString(),
+                Query::equal('resourceType', ['function'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $rules['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($rules['body']['rules']));
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        return $domain;
     }
 }

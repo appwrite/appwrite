@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class SitesCustomServerTest extends Scope
 {
@@ -73,13 +74,12 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'buildRuntime' => 'ssr-22',
             'outputDirectory' => './',
-            'subdomain' => 'test-site',
             'fallbackFile' => null,
         ]);
 
         $this->assertNotEmpty($siteId);
 
-        $rule = $this->getSiteDomain($siteId);
+        $rule = $this->setupSiteDomain($siteId);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -288,6 +288,8 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
             'key' => 'name',
@@ -566,11 +568,6 @@ class SitesCustomServerTest extends Scope
                 'installCommand' => $nextjsFramework['installCommand'],
                 'outputDirectory' => $nextjsFramework['outputDirectory'],
                 'providerRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateOwner' => $starterTemplate['body']['providerOwner'],
-                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
-                'templateRootDirectory' => $nextjsFramework['providerRootDirectory'],
-                'templateVersion' => $starterTemplate['body']['providerVersion'],
-                'providerBranch' => 'main',
             ]
         );
 
@@ -578,6 +575,20 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($site['body']['$id']);
 
         $siteId = $site['body']['$id'] ?? '';
+
+        $deployment = $this->createTemplateDeployment(
+            $siteId,
+            [
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'rootDirectory' => $nextjsFramework['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+                'activate' => true,
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $deployments = $this->listDeployments($siteId);
 
@@ -1214,18 +1225,27 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => $template['frameworks'][0]['buildCommand'],
             'installCommand' => $template['frameworks'][0]['installCommand'],
             'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
-            'templateRepository' => $template['providerRepositoryId'],
-            'templateOwner' => $template['providerOwner'],
-            'templateRootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
-            'templateVersion' => $template['providerVersion'],
         ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'version' => $template['providerVersion'],
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
         }, 50000, 500);
 
-        $domain = $this->getSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
@@ -1252,8 +1272,6 @@ class SitesCustomServerTest extends Scope
 
     public function testSiteDomainReclaiming(): void
     {
-        $subdomain = 'startup' . \uniqid();
-
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
             'name' => 'Startup site',
@@ -1264,10 +1282,12 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $subdomain = 'startup' . \uniqid();
+        $domain = $this->setupSiteDomain($siteId, $subdomain);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1288,7 +1308,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
 
-        $site = $this->createSite([
+        $site2 = $this->createSite([
             'siteId' => ID::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
@@ -1298,11 +1318,21 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
-        $this->assertEquals(400, $site['headers']['status-code']);
-        $this->assertStringContainsString("Subdomain already exists.", $site['body']['message']);
+        $siteId2 = $site2['body']['$id'];
+
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'resourceType' => 'site',
+            'resourceId' => $siteId2,
+        ]);
+
+        $this->assertEquals(409, $rule['headers']['status-code']);
+        $this->assertStringContainsString("Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.", $rule['body']['message']);
 
         $this->cleanupSite($siteId);
 
@@ -1338,10 +1368,16 @@ class SitesCustomServerTest extends Scope
             'buildCommand' => '',
             'installCommand' => '',
             'fallbackFile' => '',
-            'subdomain' => $subdomain
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+
+        $siteId = $site['body']['$id'];
+
+        $domain = $this->setupSiteDomain($siteId, $subdomain);
+
+        $this->assertNotEmpty($domain);
 
         $this->cleanupSite($site['body']['$id']);
     }
@@ -1361,6 +1397,8 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1425,6 +1463,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
+        $this->setupSiteDomain($siteId, $subdomain);
         $domain = $this->getSiteDomain($siteId);
 
         $this->assertNotEmpty($domain);

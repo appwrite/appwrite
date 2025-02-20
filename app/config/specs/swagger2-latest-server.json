@@ -3261,7 +3261,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "type": "string",
                         "x-example": "amex",
@@ -3281,7 +3281,8 @@
                             "union-china-pay",
                             "visa",
                             "mir",
-                            "maestro"
+                            "maestro",
+                            "rupay"
                         ],
                         "x-enum-name": "CreditCard",
                         "x-enum-keys": [
@@ -3300,7 +3301,8 @@
                             "Union China Pay",
                             "Visa",
                             "MIR",
-                            "Maestro"
+                            "Maestro",
+                            "Rupay"
                         ],
                         "in": "path"
                     },
@@ -7552,7 +7554,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -8284,7 +8286,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 389,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8356,7 +8358,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 387,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8565,30 +8567,6 @@
                                     "default": "",
                                     "x-example": "<PROVIDER_ROOT_DIRECTORY>"
                                 },
-                                "templateRepository": {
-                                    "type": "string",
-                                    "description": "Repository name of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_REPOSITORY>"
-                                },
-                                "templateOwner": {
-                                    "type": "string",
-                                    "description": "The name of the owner of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_OWNER>"
-                                },
-                                "templateRootDirectory": {
-                                    "type": "string",
-                                    "description": "Path to function code in the template repo.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                },
-                                "templateVersion": {
-                                    "type": "string",
-                                    "description": "Version (tag) for the repo linked to the function template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_VERSION>"
-                                },
                                 "specification": {
                                     "type": "string",
                                     "description": "Runtime specification for the function and builds.",
@@ -8630,7 +8608,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 390,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8681,7 +8659,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 287,
+                    "weight": 288,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8733,7 +8711,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 288,
+                    "weight": 289,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8792,7 +8770,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 388,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9036,7 +9014,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 293,
+                    "weight": 294,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9097,7 +9075,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 294,
+                    "weight": 295,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9177,7 +9155,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 391,
+                    "weight": 390,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -9245,6 +9223,209 @@
                 ]
             }
         },
+        "\/functions\/{functionId}\/deployments\/template": {
+            "post": {
+                "summary": "Create template deployment",
+                "operationId": "functionsCreateTemplateDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "schema": {
+                            "$ref": "#\/definitions\/deployment"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createTemplateDeployment",
+                    "weight": 391,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/create-template-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/functions#listTemplates) to find the template details.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "repository": {
+                                    "type": "string",
+                                    "description": "Repository name of the template.",
+                                    "default": null,
+                                    "x-example": "<REPOSITORY>"
+                                },
+                                "owner": {
+                                    "type": "string",
+                                    "description": "The name of the owner of the template.",
+                                    "default": null,
+                                    "x-example": "<OWNER>"
+                                },
+                                "rootDirectory": {
+                                    "type": "string",
+                                    "description": "Path to function code in the template repo.",
+                                    "default": null,
+                                    "x-example": "<ROOT_DIRECTORY>"
+                                },
+                                "version": {
+                                    "type": "string",
+                                    "description": "Version (tag) for the repo linked to the function template.",
+                                    "default": null,
+                                    "x-example": "<VERSION>"
+                                },
+                                "activate": {
+                                    "type": "boolean",
+                                    "description": "Automatically activate the deployment when it is finished building.",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "repository",
+                                "owner",
+                                "rootDirectory",
+                                "version"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/functions\/{functionId}\/deployments\/vcs": {
+            "post": {
+                "summary": "Create VCS deployment",
+                "operationId": "functionsCreateVcsDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "functions"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "schema": {
+                            "$ref": "#\/definitions\/deployment"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createVcsDeployment",
+                    "weight": 392,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "functions\/create-vcs-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment when a function is connected to VCS.\n\nThis endpoint lets you create deployment from a branch, commit, or a tag.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "functions.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "functionId",
+                        "description": "Function ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FUNCTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "description": "Type of reference passed. Allowed values are: branch",
+                                    "default": null,
+                                    "x-example": "branch",
+                                    "enum": [
+                                        "branch"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                    "default": null,
+                                    "x-example": "<REFERENCE>"
+                                },
+                                "activate": {
+                                    "type": "boolean",
+                                    "description": "Automatically activate the deployment when it is finished building.",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "reference"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "\/functions\/{functionId}\/deployments\/{deploymentId}": {
             "get": {
                 "summary": "Get deployment",
@@ -9269,7 +9450,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 295,
+                    "weight": 296,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9331,7 +9512,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 296,
+                    "weight": 297,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9397,7 +9578,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBuild",
-                    "weight": 297,
+                    "weight": 298,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9481,7 +9662,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 291,
+                    "weight": 292,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -9552,7 +9733,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 300,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9636,7 +9817,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 299,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9756,7 +9937,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 301,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9822,7 +10003,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
-                    "weight": 302,
+                    "weight": 303,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9891,7 +10072,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 304,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9950,7 +10131,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 303,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10004,8 +10185,8 @@
                                 },
                                 "secret": {
                                     "type": "boolean",
-                                    "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
-                                    "default": false,
+                                    "description": "Secret variables can be updated or deleted, but only functions can read them during build and runtime.",
+                                    "default": true,
                                     "x-example": false
                                 }
                             },
@@ -10042,7 +10223,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 326,
+                    "weight": 325,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -10117,7 +10298,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 325,
+                    "weight": 324,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -10243,7 +10424,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAntivirus",
-                    "weight": 146,
+                    "weight": 147,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10764,7 +10945,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFailedJobs",
-                    "weight": 147,
+                    "weight": 148,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10802,8 +10983,9 @@
                             "v1-audits",
                             "v1-mails",
                             "v1-functions",
-                            "v1-usage",
-                            "v1-usage-dump",
+                            "v1-stats-resources",
+                            "v1-stats-usage",
+                            "v1-stats-usage-dump",
                             "v1-webhooks",
                             "v1-certificates",
                             "v1-builds",
@@ -11136,10 +11318,10 @@
                 ]
             }
         },
-        "\/health\/queue\/usage": {
+        "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get usage queue",
-                "operationId": "healthGetQueueUsage",
+                "summary": "Get stats  resources queue",
+                "operationId": "healthGetQueueStatsResources",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11149,7 +11331,7 @@
                 "tags": [
                     "health"
                 ],
-                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite stats resources queue.",
                 "responses": {
                     "200": {
                         "description": "Health Queue",
@@ -11159,13 +11341,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsage",
+                    "method": "getQueueStatsResources",
                     "weight": 142,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage.md",
+                    "demo": "health\/get-queue-stats-resources.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-resources.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11198,10 +11380,72 @@
                 ]
             }
         },
-        "\/health\/queue\/usage-dump": {
+        "\/health\/queue\/stats-usage": {
+            "get": {
+                "summary": "Get stats usage queue",
+                "operationId": "healthGetQueueUsage",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "responses": {
+                    "200": {
+                        "description": "Health Queue",
+                        "schema": {
+                            "$ref": "#\/definitions\/healthQueue"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getQueueUsage",
+                    "weight": 143,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "health\/get-queue-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "health.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "threshold",
+                        "description": "Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 5000,
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/health\/queue\/stats-usage-dump": {
             "get": {
                 "summary": "Get usage dump queue",
-                "operationId": "healthGetQueueUsageDump",
+                "operationId": "healthGetQueueStatsUsageDump",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11221,13 +11465,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsageDump",
-                    "weight": 143,
+                    "method": "getQueueStatsUsageDump",
+                    "weight": 144,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage-dump.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage-dump.md",
+                    "demo": "health\/get-queue-stats-usage-dump.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage-dump.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11346,7 +11590,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorage",
-                    "weight": 145,
+                    "weight": 146,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11397,7 +11641,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorageLocal",
-                    "weight": 144,
+                    "weight": 145,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11939,7 +12183,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 379,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12014,7 +12258,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 376,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12172,7 +12416,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 383,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12327,7 +12571,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 378,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12522,7 +12766,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 385,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12716,7 +12960,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 377,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12834,7 +13078,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 384,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12950,7 +13194,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 382,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13005,7 +13249,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 386,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13067,7 +13311,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 380,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13141,7 +13385,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 381,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13215,7 +13459,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 351,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13290,7 +13534,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 350,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13405,7 +13649,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 363,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13518,7 +13762,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 349,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13609,7 +13853,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 362,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13698,7 +13942,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 341,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13825,7 +14069,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 354,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13950,7 +14194,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 344,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14053,7 +14297,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 357,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14154,7 +14398,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 342,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14269,7 +14513,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 355,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14382,7 +14626,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 343,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14541,7 +14785,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 356,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14697,7 +14941,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 345,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14800,7 +15044,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 358,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14901,7 +15145,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 346,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15004,7 +15248,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 359,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15105,7 +15349,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 347,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15208,7 +15452,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 360,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15309,7 +15553,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 348,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15412,7 +15656,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 361,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15513,7 +15757,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 353,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15568,7 +15812,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 364,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15630,7 +15874,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 352,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15704,7 +15948,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 373,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15778,7 +16022,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 366,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15851,7 +16095,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 365,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15941,7 +16185,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 368,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16001,7 +16245,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 369,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16080,7 +16324,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 370,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16142,7 +16386,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 367,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16216,7 +16460,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 372,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16297,7 +16541,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 371,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16388,7 +16632,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 374,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16451,7 +16695,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 375,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16525,7 +16769,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 394,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16597,7 +16841,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 392,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16687,12 +16931,6 @@
                                     "description": "Output Directory for site.",
                                     "default": "",
                                     "x-example": "<OUTPUT_DIRECTORY>"
-                                },
-                                "subdomain": {
-                                    "type": "string",
-                                    "description": "Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": "",
-                                    "x-example": "<SUBDOMAIN>"
                                 },
                                 "buildRuntime": {
                                     "type": "string",
@@ -16808,30 +17046,6 @@
                                     "default": "",
                                     "x-example": "<PROVIDER_ROOT_DIRECTORY>"
                                 },
-                                "templateRepository": {
-                                    "type": "string",
-                                    "description": "Repository name of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_REPOSITORY>"
-                                },
-                                "templateOwner": {
-                                    "type": "string",
-                                    "description": "The name of the owner of the template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_OWNER>"
-                                },
-                                "templateRootDirectory": {
-                                    "type": "string",
-                                    "description": "Path to site code in the template repo.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
-                                },
-                                "templateVersion": {
-                                    "type": "string",
-                                    "description": "Version (tag) for the repo linked to the site template.",
-                                    "default": "",
-                                    "x-example": "<TEMPLATE_VERSION>"
-                                },
                                 "specification": {
                                     "type": "string",
                                     "description": "Framework specification for the site and builds.",
@@ -16874,7 +17088,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFrameworks",
-                    "weight": 397,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16925,7 +17139,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 393,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16984,7 +17198,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 395,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17224,7 +17438,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 396,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17285,7 +17499,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 400,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17365,7 +17579,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 398,
+                    "weight": 399,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -17441,6 +17655,209 @@
                 ]
             }
         },
+        "\/sites\/{siteId}\/deployments\/template": {
+            "post": {
+                "summary": "Create deployment",
+                "operationId": "sitesCreateTemplateDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "schema": {
+                            "$ref": "#\/definitions\/deployment"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createTemplateDeployment",
+                    "weight": 400,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create-template-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/sites#listTemplates) to find the template details.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SITE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "repository": {
+                                    "type": "string",
+                                    "description": "Repository name of the template.",
+                                    "default": null,
+                                    "x-example": "<REPOSITORY>"
+                                },
+                                "owner": {
+                                    "type": "string",
+                                    "description": "The name of the owner of the template.",
+                                    "default": null,
+                                    "x-example": "<OWNER>"
+                                },
+                                "rootDirectory": {
+                                    "type": "string",
+                                    "description": "Path to site code in the template repo.",
+                                    "default": null,
+                                    "x-example": "<ROOT_DIRECTORY>"
+                                },
+                                "version": {
+                                    "type": "string",
+                                    "description": "Version (tag) for the repo linked to the site template.",
+                                    "default": null,
+                                    "x-example": "<VERSION>"
+                                },
+                                "activate": {
+                                    "type": "boolean",
+                                    "description": "Automatically activate the deployment when it is finished building.",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "repository",
+                                "owner",
+                                "rootDirectory",
+                                "version"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/vcs": {
+            "post": {
+                "summary": "Create VCS deployment",
+                "operationId": "sitesCreateVcsDeployment",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "schema": {
+                            "$ref": "#\/definitions\/deployment"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createVcsDeployment",
+                    "weight": 401,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create-vcs-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment when a site is connected to VCS.\n\nThis endpoint lets you create deployment from a branch, commit, or a tag.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SITE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "description": "Type of reference passed. Allowed values are: branch",
+                                    "default": null,
+                                    "x-example": "branch",
+                                    "enum": [
+                                        "branch"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                    "default": null,
+                                    "x-example": "<REFERENCE>"
+                                },
+                                "activate": {
+                                    "type": "boolean",
+                                    "description": "Automatically activate the deployment when it is finished building.",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "reference"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "\/sites\/{siteId}\/deployments\/{deploymentId}": {
             "get": {
                 "summary": "Get deployment",
@@ -17465,7 +17882,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 399,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17532,7 +17949,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeployment",
-                    "weight": 401,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17594,7 +18011,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 402,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17660,7 +18077,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeploymentBuild",
-                    "weight": 405,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17727,7 +18144,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentBuild",
-                    "weight": 406,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17796,7 +18213,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentBuildDownload",
-                    "weight": 404,
+                    "weight": 407,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -17867,7 +18284,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 403,
+                    "weight": 406,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -17938,7 +18355,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 408,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18020,7 +18437,7 @@
                 },
                 "x-appwrite": {
                     "method": "getLog",
-                    "weight": 407,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18084,7 +18501,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteLog",
-                    "weight": 409,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18153,7 +18570,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 412,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18212,7 +18629,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 410,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18266,8 +18683,8 @@
                                 },
                                 "secret": {
                                     "type": "boolean",
-                                    "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
-                                    "default": false,
+                                    "description": "Secret variables can be updated or deleted, but only sites can read them during build and runtime.",
+                                    "default": true,
                                     "x-example": false
                                 }
                             },
@@ -18304,7 +18721,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 411,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18371,7 +18788,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 413,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18430,6 +18847,12 @@
                                     "description": "Variable value. Max length: 8192 chars.",
                                     "default": null,
                                     "x-example": "<VALUE>"
+                                },
+                                "secret": {
+                                    "type": "boolean",
+                                    "description": "Secret variables can be updated or deleted, but only sites can read them during build and runtime.",
+                                    "default": null,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -18457,7 +18880,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 414,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18526,7 +18949,7 @@
                 },
                 "x-appwrite": {
                     "method": "listBuckets",
-                    "weight": 202,
+                    "weight": 203,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18598,7 +19021,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBucket",
-                    "weight": 201,
+                    "weight": 202,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18737,7 +19160,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucket",
-                    "weight": 203,
+                    "weight": 204,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18796,7 +19219,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateBucket",
-                    "weight": 204,
+                    "weight": 205,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18929,7 +19352,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteBucket",
-                    "weight": 205,
+                    "weight": 206,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18990,7 +19413,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
-                    "weight": 207,
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19074,7 +19497,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
-                    "weight": 206,
+                    "weight": 207,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -19167,7 +19590,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
-                    "weight": 208,
+                    "weight": 209,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19238,7 +19661,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
-                    "weight": 213,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19328,7 +19751,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
-                    "weight": 214,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19401,7 +19824,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
-                    "weight": 210,
+                    "weight": 211,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -19474,7 +19897,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
-                    "weight": 209,
+                    "weight": 210,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -19675,7 +20098,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
-                    "weight": 211,
+                    "weight": 212,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -19748,7 +20171,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 218,
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19824,7 +20247,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 217,
+                    "weight": 218,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19917,7 +20340,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 219,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19980,7 +20403,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 221,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20056,7 +20479,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 223,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20121,7 +20544,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 225,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20205,7 +20628,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
-                    "weight": 224,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20321,7 +20744,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
-                    "weight": 226,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20392,7 +20815,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
-                    "weight": 227,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20479,7 +20902,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
-                    "weight": 229,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20552,7 +20975,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
-                    "weight": 228,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20648,7 +21071,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 220,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20709,7 +21132,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 222,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20790,7 +21213,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 240,
+                    "weight": 241,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20862,7 +21285,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 231,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20957,7 +21380,7 @@
                 },
                 "x-appwrite": {
                     "method": "createArgon2User",
-                    "weight": 234,
+                    "weight": 235,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21048,7 +21471,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBcryptUser",
-                    "weight": 232,
+                    "weight": 233,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21139,7 +21562,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
-                    "weight": 248,
+                    "weight": 249,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21208,7 +21631,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
-                    "weight": 271,
+                    "weight": 272,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21269,7 +21692,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMD5User",
-                    "weight": 233,
+                    "weight": 234,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21360,7 +21783,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPHPassUser",
-                    "weight": 236,
+                    "weight": 237,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21451,7 +21874,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptUser",
-                    "weight": 237,
+                    "weight": 238,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21577,7 +22000,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
-                    "weight": 238,
+                    "weight": 239,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21689,7 +22112,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSHAUser",
-                    "weight": 235,
+                    "weight": 236,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21801,7 +22224,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 241,
+                    "weight": 242,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21855,7 +22278,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 269,
+                    "weight": 270,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21916,7 +22339,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 254,
+                    "weight": 255,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21995,7 +22418,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "weight": 272,
+                    "weight": 273,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22077,7 +22500,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateLabels",
-                    "weight": 250,
+                    "weight": 251,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22159,7 +22582,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 246,
+                    "weight": 247,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22232,7 +22655,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 245,
+                    "weight": 246,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22293,7 +22716,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfa",
-                    "weight": 259,
+                    "weight": 260,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22367,7 +22790,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
-                    "weight": 264,
+                    "weight": 265,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22441,7 +22864,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
-                    "weight": 260,
+                    "weight": 261,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22502,7 +22925,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
-                    "weight": 261,
+                    "weight": 262,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22561,7 +22984,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
-                    "weight": 263,
+                    "weight": 264,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22620,7 +23043,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
-                    "weight": 262,
+                    "weight": 263,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22681,7 +23104,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 252,
+                    "weight": 253,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22760,7 +23183,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
-                    "weight": 253,
+                    "weight": 254,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22839,7 +23262,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
-                    "weight": 255,
+                    "weight": 256,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22918,7 +23341,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 242,
+                    "weight": 243,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22977,7 +23400,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 257,
+                    "weight": 258,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23056,7 +23479,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
-                    "weight": 244,
+                    "weight": 245,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23115,7 +23538,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
-                    "weight": 265,
+                    "weight": 266,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23169,7 +23592,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
-                    "weight": 268,
+                    "weight": 269,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23225,7 +23648,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
-                    "weight": 267,
+                    "weight": 268,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23294,7 +23717,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
-                    "weight": 249,
+                    "weight": 250,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23373,7 +23796,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 247,
+                    "weight": 248,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23445,7 +23868,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTarget",
-                    "weight": 239,
+                    "weight": 240,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23558,7 +23981,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTarget",
-                    "weight": 243,
+                    "weight": 244,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23626,7 +24049,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTarget",
-                    "weight": 258,
+                    "weight": 259,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23716,7 +24139,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTarget",
-                    "weight": 270,
+                    "weight": 271,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23786,7 +24209,7 @@
                 },
                 "x-appwrite": {
                     "method": "createToken",
-                    "weight": 266,
+                    "weight": 267,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23868,7 +24291,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailVerification",
-                    "weight": 256,
+                    "weight": 257,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23947,7 +24370,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
-                    "weight": 251,
+                    "weight": 252,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,

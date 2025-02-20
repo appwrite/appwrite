@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
@@ -55,13 +55,15 @@ class Builds extends Action
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->inject('queueForUsage')
+            ->inject('queueForStatsUsage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForFiles, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForFiles, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $deviceForFiles, $log));
     }
 
     /**
@@ -70,7 +72,7 @@ class Builds extends Action
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
-     * @param Usage $queueForUsage
+     * @param StatsUsage $queueForStatsUsage
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
@@ -79,7 +81,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForFiles, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -100,7 +102,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -113,7 +115,7 @@ class Builds extends Action
      * @param Device $deviceForFiles
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
-     * @param Usage $queueForUsage
+     * @param StatsUsage $queueForStatsUsage
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param GitHub $github
@@ -127,7 +129,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -141,24 +143,33 @@ class Builds extends Action
 
         $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
         if ($resource->isEmpty()) {
-            throw new \Exception('Function not found', 404);
+            throw new \Exception('Resource not found');
+        }
+
+        // TODO: Sites support
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $resource->getId())) {
+            throw new \Exception('Resource is blocked');
         }
 
         $log->addTag('deploymentId', $deployment->getId());
 
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found', 404);
+            throw new \Exception('Deployment not found');
         }
 
-        // todo: figure out a better way, entrypoint is not required for sites
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
+            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+        }
 
         // Realtime preparation
         $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
@@ -509,8 +520,6 @@ class Builds extends Action
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
-                'APPWRITE_COMPUTE_CPUS' => $cpus,
-                'APPWRITE_COMPUTE_MEMORY' => $memory,
                 'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
                 'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
                 'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
@@ -537,6 +546,8 @@ class Builds extends Action
                         'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_FUNCTION_CPUS' => $cpus,
+                        'APPWRITE_FUNCTION_MEMORY' => $memory,
                     ];
                     break;
                 case 'sites':
@@ -550,6 +561,8 @@ class Builds extends Action
                         'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
                         'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_SITE_CPUS' => $cpus,
+                        'APPWRITE_SITE_MEMORY' => $memory,
                     ];
                     break;
             }
@@ -611,7 +624,7 @@ class Builds extends Action
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
-                                        throw new \Exception('Build not found', 404);
+                                        throw new \Exception('Build not found');
                                     }
 
                                     if ($build->getAttribute('status') === 'canceled') {
@@ -881,12 +894,12 @@ class Builds extends Action
                 resource:$resource,
                 build: $build,
                 project: $project,
-                queue: $queueForUsage
+                queue: $queueForStatsUsage
             );
         }
     }
 
-    protected function sendUsage(Document $resource, Document $build, Document $project, Usage $queue): void
+    protected function sendUsage(Document $resource, Document $build, Document $project, StatsUsage $queue): void
     {
         $key = match($resource->getCollection()) {
             'functions' => 'functionInternalId',
@@ -922,8 +935,8 @@ class Builds extends Action
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsSuccess']), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeSuccess']), (int)$build->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
@@ -939,10 +952,10 @@ class Builds extends Action
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
             ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['builds']), 1) // per function
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsStorage']), $build->getAttribute('size', 0))
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsCompute']), (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }

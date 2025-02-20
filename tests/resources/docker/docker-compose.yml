@@ -87,9 +87,9 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
 
-  appwrite-worker-usage:
-    entrypoint: worker-usage
-    container_name: appwrite-worker-usage
+  appwrite-worker-stats-usage:
+    entrypoint: worker-stats-usage
+    container_name: appwrite-worker-stats-usage
     build:
       context: .
     restart: unless-stopped
