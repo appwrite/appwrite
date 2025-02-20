@@ -1105,8 +1105,8 @@ class FunctionsCustomServerTest extends Scope
 
         $output = json_decode($execution['body']['responseBody'], true);
 
-        $this->assertEquals(1, $output['APPWRITE_COMPUTE_CPUS']);
-        $this->assertEquals(1024, $output['APPWRITE_COMPUTE_MEMORY']);
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
 
         // Change the specs to 1vcpu 512mb
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
@@ -1133,8 +1133,8 @@ class FunctionsCustomServerTest extends Scope
 
         $output = json_decode($execution['body']['responseBody'], true);
 
-        $this->assertEquals(1, $output['APPWRITE_COMPUTE_CPUS']);
-        $this->assertEquals(512, $output['APPWRITE_COMPUTE_MEMORY']);
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
 
         /**
          * Test for FAILURE
@@ -1941,6 +1941,49 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEmpty($execution['logs']);
             $this->assertEmpty($execution['errors']);
         }
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionSpecifications()
+    {
+        // Check if the function specifications are correctly set in builds
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Specification Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any'],
+            'specification' => Specification::S_2VCPU_2GB,
+            'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['specification']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $functionId = $function['body']['$id'] ?? '';
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertTrue(str_contains($deployment['body']['buildLogs'], '2048:2'));
+        }, 10000, 500);
+
+        // Check if the function specifications are correctly set in executions
+        $execution = $this->createExecution($functionId);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $this->assertEquals('2048', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
+        $this->assertEquals('2', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
         $this->cleanupFunction($functionId);
     }

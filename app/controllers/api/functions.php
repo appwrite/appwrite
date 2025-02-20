@@ -6,7 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -962,10 +962,10 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForPlatform')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1219,8 +1219,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_COMPUTE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-            'APPWRITE_COMPUTE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -1293,7 +1293,7 @@ App::post('/v1/functions/:functionId/executions')
                 throw $th;
             }
         } finally {
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
