@@ -47,6 +47,12 @@ class ProviderRepository extends Model
                 'default' => '',
                 'example' => 'node',
             ])
+            ->addRule('framework', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Auto-detected framework suggestion. Empty if getting response of getFramework().',
+                'default' => '',
+                'example' => 'nextjs',
+            ])
             ->addRule('pushedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Last commit date in ISO 8601 format.',
