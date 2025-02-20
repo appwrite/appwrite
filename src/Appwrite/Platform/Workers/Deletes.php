@@ -99,7 +99,7 @@ class Deletes extends Action
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -1048,7 +1048,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1059,6 +1059,11 @@ class Deletes extends Action
          * Delete deployment files
          */
         $this->deleteDeploymentFiles($deviceForFunctions, $document); //TODO: For sites, this should be deviceForSites
+
+        /**
+         * Delete deployment screenshots
+         */
+        $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
 
         /**
          * Delete builds

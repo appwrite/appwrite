@@ -84,7 +84,7 @@ class Deployment extends Model
             ])
             ->addRule('screenshotDark', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Screenshot with dark theme prefference file ID.',
+                'description' => 'Screenshot with dark theme preference file ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])

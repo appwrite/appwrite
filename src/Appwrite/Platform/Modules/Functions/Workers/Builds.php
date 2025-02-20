@@ -741,12 +741,12 @@ class Builds extends Action
                         'screenshot' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
                             'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=light',
-                            'color' => 'light'
+                            'theme' => 'light'
                         ],
                         'screenshotDark' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
                             'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=dark',
-                            'color' => 'dark'
+                            'theme' => 'dark'
                         ],
                     ];
 
