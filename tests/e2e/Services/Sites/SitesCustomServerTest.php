@@ -313,10 +313,7 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Env variable is Appwrite", $response['body']);
@@ -1249,19 +1246,13 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Astro Blog", $response['body']);
         $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/about', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/about');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Astro Blog", $response['body']);
@@ -1300,10 +1291,7 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
@@ -1350,10 +1338,7 @@ class SitesCustomServerTest extends Scope
             $this->assertEquals(0, $rules['body']['total']);
         }, 50000, 500);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
@@ -1416,10 +1401,7 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
@@ -1430,10 +1412,7 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $previewDomain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
@@ -1498,6 +1477,67 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    }
+
+    public function testSiteScreenshot(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Themed site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        \var_dump($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Themed website", $response['body']);
+        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['screenshot']);
+        $this->assertNotEmpty($deployment['body']['screenshotDark']);
+
+        $screenshotId = $deployment['body']['screenshot'];
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
+        ], $this->getHeaders()));
+
+        \var_dump($file['headers']);
+        \var_dump(\strlen($file['body']));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertNotEmpty(200, $file['body']);
+
+        // TODO: Dark file screenshot
+        // TODO: md5 different
+
+        $this->cleanupSite($siteId);
     }
 
     // TODO: Add tests for deletion of resources when site is deleted
