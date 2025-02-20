@@ -205,8 +205,6 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
-        $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
@@ -216,6 +214,9 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
+            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+            $dbForProject = new Database($adapter, $cache);
+
             if ($sharedTables) {
                 $dbForProject
                     ->setSharedTables(true)
@@ -236,7 +237,7 @@ App::post('/v1/projects')
                 $create = false;
             }
 
-            if ($create || $projectTables) {
+            if ($create || $projectTables || $dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
                 $audit = new Audit($dbForProject);
                 $audit->setup();
             }
