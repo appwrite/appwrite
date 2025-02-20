@@ -137,14 +137,22 @@ App::post('/v1/projects')
         }
 
         $databases = Config::getParam('pools-database', []);
-        var_dump(
-           [
-               'location' => 'projects.php',
-               '_APP_REGION' => System::getEnv('_APP_REGION'),
-               'databases' => $databases
 
-           ]
+        if ($region !== 'default') {
+            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+
+        var_dump([
+                'location' => 'projects.php',
+                '_APP_REGION' => System::getEnv('_APP_REGION'),
+                'databases' => $databases
+            ]
         );
+
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
