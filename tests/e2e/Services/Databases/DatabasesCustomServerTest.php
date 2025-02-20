@@ -2593,7 +2593,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         /**
          * Test against failure
