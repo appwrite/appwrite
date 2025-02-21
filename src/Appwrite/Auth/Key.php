@@ -21,6 +21,8 @@ class Key
         protected bool $expired = false,
         protected array $disabledMetrics = [],
         protected bool $hostnameOverride = false,
+        protected bool $bannerDisabled = false,
+        protected bool $projectCheckDisabled = false,
     ) {
     }
 
@@ -63,6 +65,17 @@ class Key
     public function getHostnameOverride(): bool
     {
         return $this->hostnameOverride;
+    }
+
+
+    public function isBannerDisabled(): bool
+    {
+        return $this->bannerDisabled;
+    }
+
+    public function isProjectCheckDisabled(): bool
+    {
+        return $this->projectCheckDisabled;
     }
 
     /**
@@ -117,9 +130,11 @@ class Key
                 $projectId = $payload['projectId'] ?? '';
                 $disabledMetrics = $payload['disabledMetrics'] ?? [];
                 $hostnameOverride = $payload['hostnameOverride'] ?? false;
+                $bannerDisabled = $payload['bannerDisabled'] ?? false;
+                $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
-                if ($projectId !== $project->getId()) {
+                if (!$projectCheckDisabled && $projectId !== $project->getId()) {
                     return $guestKey;
                 }
 
@@ -131,7 +146,9 @@ class Key
                     $name,
                     $expired,
                     $disabledMetrics,
-                    $hostnameOverride
+                    $hostnameOverride,
+                    $bannerDisabled,
+                    $projectCheckDisabled
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

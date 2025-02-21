@@ -1966,11 +1966,11 @@ App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
 
     if (App::isDevelopment()) {
         $allowed = true;
-    } elseif (!is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+    } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
         $allowed = true;
     }
 
-    if ($allowed === true) {
+    if ($allowed) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;

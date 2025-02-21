@@ -752,7 +752,9 @@ class Builds extends Action
 
                     $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
                     $apiKey = $jwtObj->encode([
-                        'hostnameOverride' => true
+                        'hostnameOverride' => true,
+                        'bannerDisabled' => true,
+                        'projectCheckDisabled' => true
                     ]);
 
                     // TODO: @Meldiron if becomes too slow, do concurrently
