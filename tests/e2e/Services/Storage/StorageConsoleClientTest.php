@@ -98,7 +98,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, count($response['body']));
+        $this->assertEquals(7, count($response['body']));
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['filesTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
