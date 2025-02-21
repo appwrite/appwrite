@@ -79,6 +79,25 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => null,
     ],
+    'OTHER' => [
+        'key' => 'other',
+        'name' => 'Other',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'ssr-22',
+        'adapter' => 'static',
+        'fallbackFile' => 'index.html',
+    ],
+    'REACT' => [
+        'key' => 'react',
+        'name' => 'React',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'ssr-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+        'fallbackFile' => 'index.html',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -121,6 +140,47 @@ return [
             ],
             [
                 'name' => 'PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-react',
+        'name' => 'React starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-react.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-react',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
                 'description' => 'Your Appwrite project name',
                 'value' => '{projectName}',
                 'placeholder' => '{projectName}',

@@ -44,6 +44,24 @@ return [
             ]
         ]
     ],
+    'react' => [
+        'key' => 'react',
+        'name' => 'React',
+        'buildRuntime' => 'ssr-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+                'envCommand' => '',
+                'fallbackFile' => 'index.html'
+            ]
+        ]
+    ],
     'nuxt' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
