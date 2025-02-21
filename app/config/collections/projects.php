@@ -1530,7 +1530,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('screenshot'), // File ID from 'screenshots' Console bucket
+                '$id' => ID::custom('screenshotLight'), // File ID from 'screenshots' Console bucket
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 32,

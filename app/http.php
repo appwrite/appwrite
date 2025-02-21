@@ -311,7 +311,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Screenshots',
-                    'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                    'maximumFileSize' => 5000000, // ~5MB
                     'allowedFileExtensions' => [ 'png' ],
                     'enabled' => true,
                     'compression' => Compression::GZIP,

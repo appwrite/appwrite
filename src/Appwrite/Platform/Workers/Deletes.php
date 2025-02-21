@@ -933,8 +933,8 @@ class Deletes extends Action
     private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
     {
         $screenshotIds = [];
-        if (!empty($deployment->getAttribute('screenshot', ''))) {
-            $screenshotIds[] = $deployment->getAttribute('screenshot', '');
+        if (!empty($deployment->getAttribute('screenshotLight', ''))) {
+            $screenshotIds[] = $deployment->getAttribute('screenshotLight', '');
         }
         if (!empty($deployment->getAttribute('screenshotDark', ''))) {
             $screenshotIds[] = $deployment->getAttribute('screenshotDark', '');

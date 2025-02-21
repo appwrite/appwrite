@@ -1519,10 +1519,10 @@ class SitesCustomServerTest extends Scope
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertNotEmpty($deployment['body']['screenshot']);
+        $this->assertNotEmpty($deployment['body']['screenshotLight']);
         $this->assertNotEmpty($deployment['body']['screenshotDark']);
 
-        $screenshotId = $deployment['body']['screenshot'];
+        $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
         ], $this->getHeaders()));
 

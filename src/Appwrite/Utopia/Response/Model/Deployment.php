@@ -76,9 +76,9 @@ class Deployment extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('screenshot', [
+            ->addRule('screenshotLight', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Screenshot file ID.',
+                'description' => 'Screenshot with light theme preference file ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])

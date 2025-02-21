@@ -738,14 +738,14 @@ class Builds extends Action
                     $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
                     $configs = [
-                        'screenshot' => [
+                        'screenshotLight' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=light',
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
                             'theme' => 'light'
                         ],
                         'screenshotDark' => [
                             'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://traefik/?appwrite-preview=1&appwrite-theme=dark',
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
                             'theme' => 'dark'
                         ],
                     ];
