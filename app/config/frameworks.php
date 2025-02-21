@@ -88,6 +88,24 @@ return [
             ]
         ]
     ],
+    'vue' => [
+        'key' => 'vue',
+        'name' => 'Vue.js',
+        'buildRuntime' => 'ssr-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+                'envCommand' => '',
+                'fallbackFile' => 'index.html'
+            ]
+        ]
+    ],
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',

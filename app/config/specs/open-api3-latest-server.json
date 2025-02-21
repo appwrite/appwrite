@@ -16416,7 +16416,9 @@
                                         "x-example": "nextjs",
                                         "enum": [
                                             "nextjs",
+                                            "react",
                                             "nuxt",
+                                            "vue",
                                             "sveltekit",
                                             "astro",
                                             "remix",
@@ -16759,7 +16761,9 @@
                                         "x-example": "nextjs",
                                         "enum": [
                                             "nextjs",
+                                            "react",
                                             "nuxt",
+                                            "vue",
                                             "sveltekit",
                                             "astro",
                                             "remix",
