@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class ProviderRepository extends Model
+class FrameworkProviderRepository extends Model
 {
     public function __construct()
     {
@@ -41,12 +41,6 @@ class ProviderRepository extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('runtime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Auto-detected runtime suggestion. Empty if getting response of getRuntime().',
-                'default' => '',
-                'example' => 'node',
-            ])
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Auto-detected framework suggestion. Empty if getting response of getFramework().',
@@ -69,7 +63,7 @@ class ProviderRepository extends Model
      */
     public function getName(): string
     {
-        return 'ProviderRepository';
+        return 'FrameworkProviderRepository';
     }
 
     /**
@@ -79,6 +73,6 @@ class ProviderRepository extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_PROVIDER_REPOSITORY;
+        return Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY;
     }
 }

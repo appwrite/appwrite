@@ -722,7 +722,11 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY_LIST,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY_LIST,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY_LIST,
             )
         ]
     ))
@@ -847,9 +851,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         }, $repos);
 
         $response->dynamic(new Document([
-            'providerRepositories' => $repos,
+            $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
             'total' => \count($repos),
-        ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
+        ]), ($type === 'framework') ? Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY_LIST : Response::MODEL_RUNTIME_PROVIDER_REPOSITORY_LIST);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -864,7 +868,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -961,7 +965,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
@@ -976,7 +980,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -1015,7 +1019,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
