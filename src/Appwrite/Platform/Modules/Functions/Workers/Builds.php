@@ -770,7 +770,7 @@ class Builds extends Action
                         );
 
                         if ($response->getStatusCode() >= 400) {
-                            throw new \Exception("Screenshot failed to generate: " . $response->getBody());
+                            throw new \Exception($response->getBody());
                         }
 
                         $screenshot = $response->getBody();
