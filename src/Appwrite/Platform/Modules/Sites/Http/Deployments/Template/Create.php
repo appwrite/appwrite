@@ -139,18 +139,15 @@ class Create extends Base
             'activate' => $activate,
         ]));
 
-        // Preview deployments url
-        $projectId = $project->getId();
-
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
-
-        $rule = Authorization::skip(
+        $domain = ID::unique() . "." . $sitesDomain;
+        $ruleId = md5($domain);
+        Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
-                '$id' => \md5($previewDomain),
+                '$id' => $ruleId,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
-                'domain' => $previewDomain,
+                'domain' => $domain,
                 'resourceType' => 'deployment',
                 'resourceId' => $deploymentId,
                 'resourceInternalId' => $deployment->getInternalId(),

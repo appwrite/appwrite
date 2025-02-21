@@ -1528,7 +1528,29 @@ return [
                 'default' => false,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('screenshotLight'), // File ID from 'screenshots' Console bucket
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('screenshotDark'), // File ID from 'screenshots' Console bucket
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

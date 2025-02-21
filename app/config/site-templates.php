@@ -539,4 +539,49 @@ return [
         'providerVersion' => '0.2.*',
         'variables' => [],
     ],
+    [
+        'key' => 'nextjs-starter',
+        'name' => 'Next.js starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nuxt-starter',
+        'name' => 'Nuxt starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'sveltekit-starter',
+        'name' => 'SvelteKit starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './sveltekit/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
 ];
