@@ -488,7 +488,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $email = \strtolower($email);
-        $name = (empty($name)) ? $email : $name;
+        $name = empty($name) ? $email : $name;
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -507,7 +507,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
-            $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
+            $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
             if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
@@ -715,7 +715,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name'))
+                    ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
 
