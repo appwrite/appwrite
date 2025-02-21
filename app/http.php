@@ -250,8 +250,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -304,8 +303,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_2')) {
+            if ($dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty()) {
                 Console::info("    └── Creating screenshots bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
