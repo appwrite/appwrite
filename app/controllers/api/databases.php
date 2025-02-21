@@ -2339,14 +2339,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
-    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
+    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        // Ensure attribute default is within range
+        $min = \is_null($min) ? PHP_INT_MIN : $min;
+        $max = \is_null($max) ? PHP_INT_MAX : $max;
+
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2398,14 +2403,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
-    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
+    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        // Ensure attribute default is within range
+        $min = \is_null($min) ? -PHP_FLOAT_MAX : $min;
+        $max = \is_null($max) ? PHP_FLOAT_MAX : $max;
+
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
