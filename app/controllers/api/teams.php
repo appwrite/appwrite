@@ -715,7 +715,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($name)
+                    ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
 
@@ -781,7 +781,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $name)
+                    ->setAttribute('userName', $invitee->getAttribute('name'))
                     ->setAttribute('userEmail', $invitee->getAttribute('email')),
                 Response::MODEL_MEMBERSHIP
             );
