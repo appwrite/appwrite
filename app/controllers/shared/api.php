@@ -1,8 +1,7 @@
 <?php
 
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
@@ -16,6 +15,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
@@ -98,28 +98,22 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
 
     switch (true) {
         case $document->getCollection() === 'teams':
-            $queueForStatsUsage
-                ->addMetric(METRIC_TEAMS, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_TEAMS, $value); // per project
             break;
         case $document->getCollection() === 'users':
-            $queueForStatsUsage
-                ->addMetric(METRIC_USERS, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_USERS, $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case $document->getCollection() === 'sessions': // sessions
-            $queueForStatsUsage
-                ->addMetric(METRIC_SESSIONS, $value); //per project
+            $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES, $value); // per project
+            $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
@@ -127,12 +121,10 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $databaseInternalId = $parts[1] ?? 0;
             $queueForStatsUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
-            ;
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
+                $queueForStatsUsage->addReduce($document);
             }
             break;
         case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
@@ -195,117 +187,79 @@ App::init()
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->inject('apiKey')
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        /** Default role */
         $roles = Config::getParam('roles', []);
-        $role = ($user->isEmpty())
+
+        $role = $user->isEmpty()
             ? Role::guests()->toString()
             : Role::users()->toString();
 
-        /** Allowed Scopes for the role */
         $scopes = $roles[$role]['scopes'];
-
-        $apiKey = $request->getHeader('x-appwrite-key', '');
 
         // API Key authentication
         if (!empty($apiKey)) {
-            // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
-
-            // Remove after migration
-            if (!\str_contains($apiKey, '_')) {
-                $keyType = API_KEY_STANDARD;
-                $authKey = $apiKey;
-            } else {
-                [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+            if ($apiKey->isExpired()) {
+                throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
-            if ($keyType === API_KEY_DYNAMIC) {
-                // Dynamic key
+            $role = $apiKey->getRole();
+            $scopes = $apiKey->getScopes();
 
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+            // Disable authorization checks for API keys
+            Authorization::setDefaultStatus(false);
 
-                try {
-                    $payload = $jwtObj->decode($authKey);
-                } catch (JWTException $error) {
-                    throw new Exception(Exception::API_KEY_EXPIRED);
-                }
+            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+                $user = new Document([
+                    '$id' => '',
+                    'status' => true,
+                    'type' => Auth::ACTIVITY_TYPE_APP,
+                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                    'password' => '',
+                    'name' => $apiKey->getName(),
+                ]);
 
-                $projectId = $payload['projectId'] ?? '';
-                $tokenScopes = $payload['scopes'] ?? [];
+                $queueForAudits->setUser($user);
+            }
 
-                // JWT includes project ID for better security
-                if ($projectId === $project->getId()) {
-                    $user = new Document([
-                        '$id' => '',
-                        'status' => true,
-                        'type' => Auth::ACTIVITY_TYPE_APP,
-                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                        'password' => '',
-                        'name' => 'Dynamic Key',
-                    ]);
+            if ($apiKey->getType() === API_KEY_STANDARD) {
+                $dbKey = $project->find(
+                    key: 'secret',
+                    find: $request->getHeader('x-appwrite-key', ''),
+                    subject: 'keys'
+                );
 
-                    $role = Auth::USER_ROLE_APPS;
-                    $scopes = \array_merge($roles[$role]['scopes'], $tokenScopes);
+                if ($dbKey) {
+                    $accessedAt = $dbKey->getAttribute('accessedAt', '');
 
-                    Authorization::setRole(Auth::USER_ROLE_APPS);
-                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
-
-                    $queueForAudits->setUser($user);
-                }
-            } elseif ($keyType === API_KEY_STANDARD) {
-                // No underline means no prefix. Backwards compatibility.
-                // Regular key
-
-                // Check if given key match project API keys
-                $key = $project->find('secret', $apiKey, 'keys');
-                if ($key) {
-                    $user = new Document([
-                        '$id' => '',
-                        'status' => true,
-                        'type' => Auth::ACTIVITY_TYPE_APP,
-                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                        'password' => '',
-                        'name' => $key->getAttribute('name', 'UNKNOWN'),
-                    ]);
-
-                    $role = Auth::USER_ROLE_APPS;
-                    $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
-
-                    $expire = $key->getAttribute('expire');
-                    if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                        throw new Exception(Exception::PROJECT_KEY_EXPIRED);
-                    }
-
-                    Authorization::setRole(Auth::USER_ROLE_APPS);
-                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
-
-                    $accessedAt = $key->getAttribute('accessedAt', '');
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                        $key->setAttribute('accessedAt', DateTime::now());
-                        $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                        $dbKey->setAttribute('accessedAt', DateTime::now());
+                        $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
                         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
 
                     $sdkValidator = new WhiteList($servers, true);
                     $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
                     if ($sdkValidator->isValid($sdk)) {
-                        $sdks = $key->getAttribute('sdks', []);
+                        $sdks = $dbKey->getAttribute('sdks', []);
+
                         if (!in_array($sdk, $sdks)) {
-                            array_push($sdks, $sdk);
-                            $key->setAttribute('sdks', $sdks);
+                            $sdks[] = $sdk;
+                            $dbKey->setAttribute('sdks', $sdks);
 
                             /** Update access time as well */
-                            $key->setAttribute('accessedAt', Datetime::now());
-                            $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                            $dbKey->setAttribute('accessedAt', Datetime::now());
+                            $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
                             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
@@ -313,8 +267,7 @@ App::init()
                     $queueForAudits->setUser($user);
                 }
             }
-        }
-        // Admin User Authentication
+        } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
@@ -330,7 +283,7 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $scopes = []; // reset scope if admin
+            $scopes = []; // Reset scope if admin
             foreach ($adminRoles as $role) {
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
@@ -345,9 +298,7 @@ App::init()
             Authorization::setRole($authRole);
         }
 
-        /**
-         * Update project last activity
-         */
+        // Update project last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
@@ -356,9 +307,7 @@ App::init()
             }
         }
 
-        /**
-         * Update user last activity
-         */
+        // Update user last activity
         if (!empty($user->getId())) {
             $accessedAt = $user->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
@@ -372,18 +321,18 @@ App::init()
             }
         }
 
-        /** Do not allow access to disabled services */
         /**
-         * @var ?\Appwrite\SDK\Method $method
+         * @var ?Method $method
          */
         $method = $route->getLabel('sdk', false);
 
-        if (is_array($method)) {
+        if (\is_array($method)) {
             $method = $method[0];
         }
 
         if (!empty($method)) {
             $namespace = $method->getNamespace();
+
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && !$project->getAttribute('services', [])[$namespace]
@@ -393,13 +342,13 @@ App::init()
             }
         }
 
-        /** Do now allow access if scope is not allowed */
+        // Do now allow access if scope is not allowed
         $scope = $route->getLabel('scope', 'none');
         if (!\in_array($scope, $scopes)) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
-        /** Do not allow access to blocked accounts */
+        // Do not allow access to blocked accounts
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
@@ -440,8 +389,9 @@ App::init()
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('mode')
+    ->inject('apiKey')
     ->inject('devKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode, ?Key $apiKey, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -472,7 +422,7 @@ App::init()
                 ->setParam('{ip}', $request->getIP())
                 ->setParam('{url}', $request->getHostname() . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
-                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                ->setParam('{chunkId}', (int)($start / ($end + 1 - $start)));
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -539,6 +489,12 @@ App::init()
             $queueForAudits->setUser($userClone);
         }
 
+        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
+            foreach ($apiKey->getDisabledMetrics() as $key) {
+                $queueForStatsUsage->disableMetric($key);
+            }
+        }
+
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
@@ -582,10 +538,7 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
@@ -627,8 +580,7 @@ App::init()
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
                     ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss')
-                ;
+                    ->addHeader('X-Appwrite-Cache', 'miss');
             }
         }
     });
@@ -789,6 +741,7 @@ App::shutdown()
             foreach ($queueForEvents->getParams() as $key => $value) {
                 $queueForAudits->setParam($key, $value);
             }
+
             $queueForAudits->trigger();
         }
 
@@ -808,9 +761,7 @@ App::shutdown()
             $queueForMessaging->trigger();
         }
 
-        /**
-         * Cache label
-         */
+        // Cache label
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $resource = $resourceType = null;

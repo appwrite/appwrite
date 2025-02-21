@@ -52,6 +52,13 @@ class UsageTest extends Scope
         }
     }
 
+    public static function getYesterday(): string
+    {
+        $date = new DateTime();
+        $date->modify('-1 day');
+        return $date->format(self::$formatTz);
+    }
+
     public static function getToday(): string
     {
         $date = new DateTime();

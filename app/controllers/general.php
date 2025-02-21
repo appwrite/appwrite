@@ -899,7 +899,6 @@ App::error()
                 ->trigger();
         }
 
-
         if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
@@ -1154,7 +1153,7 @@ App::get('/v1/ping')
     ->inject('dbForPlatform')
     ->inject('queueForEvents')
     ->action(function (Response $response, Document $project, Database $dbForPlatform, Event $queueForEvents) {
-        if ($project->isEmpty()) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
 

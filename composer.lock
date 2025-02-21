@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ed36bf1392e79d1b1bb07fb2a81f03bf",
+    "content-hash": "b1d26d441fe1fb6a26978d99ef01985f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1757,16 +1757,16 @@
         },
         {
             "name": "php-amqplib/php-amqplib",
-            "version": "v3.7.2",
+            "version": "v3.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-amqplib/php-amqplib.git",
-                "reference": "738a73eb0019b6c99d9bc25d7a0c0dd8f56a5199"
+                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/738a73eb0019b6c99d9bc25d7a0c0dd8f56a5199",
-                "reference": "738a73eb0019b6c99d9bc25d7a0c0dd8f56a5199",
+                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/9f50fe69a9f1a19e2cb25596a354d705de36fe59",
+                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59",
                 "shasum": ""
             },
             "require": {
@@ -1832,9 +1832,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-amqplib/php-amqplib/issues",
-                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.2"
+                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.3"
             },
-            "time": "2024-11-21T09:21:41+00:00"
+            "time": "2025-02-18T20:11:13+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -3966,25 +3966,26 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.7.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "fcea143edbad524bf871ddbebe801d981f91f181"
+                "reference": "dcae5b1c6deb3ff6865f4e68f012b3709c289bca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/fcea143edbad524bf871ddbebe801d981f91f181",
-                "reference": "fcea143edbad524bf871ddbebe801d981f91f181",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/dcae5b1c6deb3ff6865f4e68f012b3709c289bca",
+                "reference": "dcae5b1c6deb3ff6865f4e68f012b3709c289bca",
                 "shasum": ""
             },
             "require": {
+                "ext-gd": "*",
                 "ext-imagick": "*",
                 "php": ">=8.1"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
+                "phpstan/phpstan": "^1.10.0",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -4008,9 +4009,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.7.0"
+                "source": "https://github.com/utopia-php/image/tree/0.8.0"
             },
-            "time": "2024-10-02T05:45:38+00:00"
+            "time": "2025-02-20T11:49:03+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -5051,16 +5052,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.32",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2d02e1305ea5004fb0aec6b2618d6c597659b75c"
+                "reference": "d2880132c900f64108d3e4484a6c1ed1bed2303c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2d02e1305ea5004fb0aec6b2618d6c597659b75c",
-                "reference": "2d02e1305ea5004fb0aec6b2618d6c597659b75c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d2880132c900f64108d3e4484a6c1ed1bed2303c",
+                "reference": "d2880132c900f64108d3e4484a6c1ed1bed2303c",
                 "shasum": ""
             },
             "require": {
@@ -5096,9 +5097,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.32"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.0"
             },
-            "time": "2025-01-29T04:04:19+00:00"
+            "time": "2025-02-04T12:47:33+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5370,16 +5371,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.20.0",
+            "version": "v1.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "53072e8ea22213a7ed168a8a15b96fbb8b82d44b"
+                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/53072e8ea22213a7ed168a8a15b96fbb8b82d44b",
-                "reference": "53072e8ea22213a7ed168a8a15b96fbb8b82d44b",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/531fa0871fbde719c51b12afa3a443b8f4e4b425",
+                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425",
                 "shasum": ""
             },
             "require": {
@@ -5387,15 +5388,15 @@
                 "ext-mbstring": "*",
                 "ext-tokenizer": "*",
                 "ext-xml": "*",
-                "php": "^8.1.0"
+                "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.66.0",
-                "illuminate/view": "^10.48.25",
-                "larastan/larastan": "^2.9.12",
-                "laravel-zero/framework": "^10.48.25",
+                "friendsofphp/php-cs-fixer": "^3.68.5",
+                "illuminate/view": "^11.42.0",
+                "larastan/larastan": "^3.0.4",
+                "laravel-zero/framework": "^11.36.1",
                 "mockery/mockery": "^1.6.12",
-                "nunomaduro/termwind": "^1.17.0",
+                "nunomaduro/termwind": "^2.3",
                 "pestphp/pest": "^2.36.0"
             },
             "bin": [
@@ -5432,7 +5433,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-01-14T16:20:53+00:00"
+            "time": "2025-02-18T03:18:57+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -6190,16 +6191,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "c00d78fb6b29658347f9d37ebe104bffadf36299"
+                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/c00d78fb6b29658347f9d37ebe104bffadf36299",
-                "reference": "c00d78fb6b29658347f9d37ebe104bffadf36299",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
+                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
                 "shasum": ""
             },
             "require": {
@@ -6231,9 +6232,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.0.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.1.0"
             },
-            "time": "2024-10-13T11:29:49+00:00"
+            "time": "2025-02-19T13:28:12+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
