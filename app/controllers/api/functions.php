@@ -383,6 +383,7 @@ App::post('/v1/functions')
                     'resourceInternalId' => $function->getInternalId(),
                     'status' => 'verified',
                     'certificateId' => '',
+                    'region' => $project->getAttribute('region')
                 ]))
             );
 
