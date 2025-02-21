@@ -37724,6 +37724,16 @@
                     "description": "Whether the deployment should be automatically activated.",
                     "x-example": true
                 },
+                "screenshotLight": {
+                    "type": "string",
+                    "description": "Screenshot with light theme preference file ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "screenshotDark": {
+                    "type": "string",
+                    "description": "Screenshot with dark theme preference file ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
                 "status": {
                     "type": "string",
                     "description": "The deployment status. Possible values are \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
@@ -37808,6 +37818,8 @@
                 "buildSize",
                 "buildId",
                 "activate",
+                "screenshotLight",
+                "screenshotDark",
                 "status",
                 "buildLogs",
                 "buildTime",
