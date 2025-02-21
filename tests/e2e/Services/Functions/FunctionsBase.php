@@ -51,6 +51,18 @@ trait FunctionsBase
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 50000, 500);
 
+        // Not === so multipart/form-data works fine too
+        if (($params['activate'] ?? false) == true) {
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+            }, 100000, 500);
+        }
+
         return $deploymentId;
     }
 

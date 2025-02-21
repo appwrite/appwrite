@@ -270,11 +270,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if ($type === 'function') {
             $jwtExpiry = $resource->getAttribute('timeout', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
-            $apiKey = $jwtObj->encode([
+            $jwtKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
                 'scopes' => $resource->getAttribute('scopes', [])
             ]);
-            $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
+            $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $jwtKey;
             $headers['x-appwrite-trigger'] = 'http';
             $headers['x-appwrite-user-jwt'] = '';
         }
