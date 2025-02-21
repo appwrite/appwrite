@@ -118,6 +118,25 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
+        'key' => 'template-for-onelink',
+        'name' => 'Onelink template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-onelink.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './onelink',
+                'buildCommand' => 'npm run generate',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'Meldiron',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
+    [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
         'useCases' => ['starter'],
