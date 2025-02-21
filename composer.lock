@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "236b24287cd5bdcf705df586f12c560c",
+    "content-hash": "81769c65caf560ea69f2c13fc8b04e7d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3772,6 +3772,69 @@
             "time": "2025-02-12T08:08:29+00:00"
         },
         {
+            "name": "utopia-php/detector",
+            "version": "dev-feat-pseudocode-draft2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/detector.git",
+                "reference": "69958f4d765c5338a703f3e3638a3249ec227be8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/69958f4d765c5338a703f3e3638a3249ec227be8",
+                "reference": "69958f4d765c5338a703f3e3638a3249ec227be8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Detector\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Detector/"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test --config pint.json"
+                ],
+                "format": [
+                    "./vendor/bin/pint --config pint.json"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for fast and reliable environment identification.",
+            "keywords": [
+                "detector",
+                "framework",
+                "php",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/detector/tree/feat-pseudocode-draft2",
+                "issues": "https://github.com/utopia-php/detector/issues"
+            },
+            "time": "2025-02-18T15:22:56+00:00"
+        },
+        {
             "name": "utopia-php/domains",
             "version": "0.5.0",
             "source": {
@@ -6190,16 +6253,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.0.2",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "51087f87dcce2663e1fed4dfd4e56eccd580297e"
+                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/51087f87dcce2663e1fed4dfd4e56eccd580297e",
-                "reference": "51087f87dcce2663e1fed4dfd4e56eccd580297e",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
+                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
                 "shasum": ""
             },
             "require": {
@@ -6231,9 +6294,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.0.2"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.1.0"
             },
-            "time": "2025-02-17T20:25:51+00:00"
+            "time": "2025-02-19T13:28:12+00:00"
         },
         {
             "name": "phpstan/phpstan",
@@ -8806,6 +8869,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/detector",
+            "version": "dev-feat-pseudocode-draft2",
+            "alias": "0.1.99",
+            "alias_normalized": "0.1.99.0"
+        },
+        {
             "package": "utopia-php/framework",
             "version": "dev-fix-prevent-duplicate-compression",
             "alias": "0.33.99",
@@ -8814,6 +8883,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/detector": 20,
         "utopia-php/framework": 20
     },
     "prefer-stable": false,
@@ -8839,5 +8909,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

@@ -53,6 +53,7 @@
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.59.0",
+        "utopia-php/detector": "dev-feat-pseudocode-draft2 as 0.1.99",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "dev-fix-prevent-duplicate-compression as 0.33.99",
@@ -104,5 +105,11 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/detector"
+        }
+    ]
 }

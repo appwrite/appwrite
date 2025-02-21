@@ -26,22 +26,35 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Detector\Adapter\Bun;
-use Utopia\Detector\Adapter\CPP;
-use Utopia\Detector\Adapter\Dart;
-use Utopia\Detector\Adapter\Deno;
-use Utopia\Detector\Adapter\Dotnet;
-use Utopia\Detector\Adapter\Java;
-use Utopia\Detector\Adapter\JavaScript;
-use Utopia\Detector\Adapter\PHP;
-use Utopia\Detector\Adapter\Python;
-use Utopia\Detector\Adapter\Ruby;
-use Utopia\Detector\Adapter\Swift;
-use Utopia\Detector\Detector;
+use Utopia\Detector\Detection\Framework\Astro;
+use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\NextJs;
+use Utopia\Detector\Detection\Framework\Nuxt;
+use Utopia\Detector\Detection\Framework\Remix;
+use Utopia\Detector\Detection\Framework\SvelteKit;
+use Utopia\Detector\Detection\Packager\NPM;
+use Utopia\Detector\Detection\Packager\PNPM;
+use Utopia\Detector\Detection\Packager\Yarn;
+use Utopia\Detector\Detection\Runtime\Bun;
+use Utopia\Detector\Detection\Runtime\CPP;
+use Utopia\Detector\Detection\Runtime\Dart;
+use Utopia\Detector\Detection\Runtime\Deno;
+use Utopia\Detector\Detection\Runtime\Dotnet;
+use Utopia\Detector\Detection\Runtime\Java;
+use Utopia\Detector\Detection\Runtime\Node;
+use Utopia\Detector\Detection\Runtime\PHP;
+use Utopia\Detector\Detection\Runtime\Python;
+use Utopia\Detector\Detection\Runtime\Ruby;
+use Utopia\Detector\Detection\Runtime\Swift;
+use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Packager;
+use Utopia\Detector\Detector\Runtime;
+use Utopia\Detector\Detector\Strategy;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -544,8 +557,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_VCS_CONTENT_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
-    ->desc('Detect runtime settings from source code')
+App::post('/v1/vcs/github/installations/:installationId/detections')
+    ->alias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
+    ->desc('Detect runtime and framework settings from source code')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
@@ -556,18 +570,22 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_DETECTION,
+                model: Response::MODEL_RUNTIME_DETECTION,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FRAMEWORK_DETECTION,
             )
         ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $providerRepositoryId, string $type, string $providerRootDirectory, GitHub $github, Response $response, Database $dbForPlatform) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -593,32 +611,103 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
-        $detectorFactory = new Detector($files, $languages);
+        $detector = new Packager($files);
+        $detector
+            ->addOption(new Yarn())
+            ->addOption(new PNPM())
+            ->addOption(new NPM());
+        $detectedPackager = $detector->detect();
 
-        $detectorFactory
-            ->addDetector(new JavaScript())
-            ->addDetector(new Bun())
-            ->addDetector(new PHP())
-            ->addDetector(new Python())
-            ->addDetector(new Dart())
-            ->addDetector(new Swift())
-            ->addDetector(new Ruby())
-            ->addDetector(new Java())
-            ->addDetector(new CPP())
-            ->addDetector(new Deno())
-            ->addDetector(new Dotnet());
+        $packagerName = !\is_null($detectedPackager) ? $detectedPackager->getName() : 'npm';
 
-        $runtime = $detectorFactory->detect();
+        if ($type === 'framework') {
+            $detection = new Document([
+                'framework' => '',
+                'installCommand' => '',
+                'buildCommand' => '',
+                'outputDirectory' => '',
+            ]);
 
-        $runtimes = Config::getParam('runtimes');
-        $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-            return $runtimes[$key]['key'] === $runtime;
-        }))[0] ?? '';
+            $frameworkDetector = new Framework($files, $packagerName);
+            $frameworkDetector
+                ->addOption(new Flutter())
+                ->addOption(new Nuxt())
+                ->addOption(new Astro())
+                ->addOption(new Remix())
+                ->addOption(new SvelteKit())
+                ->addOption(new NextJs());
 
-        $detection = [];
-        $detection['runtime'] = $runtimeDetail;
+            $detectedFramework = $frameworkDetector->detect();
 
-        $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
+            if ($detectedFramework) {
+                $framework = $detectedFramework->getName();
+                $detection->setAttribute('installCommand', $detectedFramework->getInstallCommand());
+                $detection->setAttribute('buildCommand', $detectedFramework->getBuildCommand());
+                $detection->setAttribute('outputDirectory', $detectedFramework->getOutputDirectory());
+            } else {
+                $framework = 'other';
+                $detection->setAttribute('installCommand', '');
+                $detection->setAttribute('buildCommand', '');
+                $detection->setAttribute('outputDirectory', './');
+            }
+
+            $frameworks = Config::getParam('frameworks');
+            $frameworkDetail = \array_reverse(\array_filter(\array_keys($frameworks), function ($key) use ($framework, $frameworks) {
+                return $frameworks[$key]['key'] === $framework;
+            }))[0] ?? '';
+            $detection->setAttribute('framework', $frameworkDetail);
+
+            $response->dynamic($detection, Response::MODEL_FRAMEWORK_DETECTION);
+        } else {
+            $detection = new Document([
+                'runtime' => '',
+                'commands' => '',
+                'entrypoint' => '',
+            ]);
+
+            $strategies = [
+                new Strategy(Strategy::FILEMATCH),
+                new Strategy(Strategy::LANGUAGES),
+                new Strategy(Strategy::EXTENSION),
+            ];
+
+            foreach ($strategies as $strategy) {
+                $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packagerName);
+                $runtimeDetector
+                    ->addOption(new Node())
+                    ->addOption(new Bun())
+                    ->addOption(new Deno())
+                    ->addOption(new PHP())
+                    ->addOption(new Python())
+                    ->addOption(new Dart())
+                    ->addOption(new Swift())
+                    ->addOption(new Ruby())
+                    ->addOption(new Java())
+                    ->addOption(new CPP())
+                    ->addOption(new Dotnet());
+
+                $detectedRuntime = $runtimeDetector->detect();
+
+                if ($detectedRuntime) {
+                    $detection->setAttribute('commands', $detectedRuntime->getCommands());
+                    $detection->setAttribute('entrypoint', $detectedRuntime->getEntrypoint());
+                    $runtime = $detectedRuntime->getName();
+                    break;
+                }
+            }
+
+            if (!empty($runtime)) {
+                $runtimes = Config::getParam('runtimes');
+                $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+                    return $runtimes[$key]['key'] === $runtime;
+                }))[0] ?? '';
+                $detection->setAttribute('runtime', $runtimeDetail);
+            } else {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Runtime not detected.');
+            }
+
+            $response->dynamic($detection, Response::MODEL_RUNTIME_DETECTION);
+        }
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -633,17 +722,21 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY_LIST,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY_LIST,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY_LIST,
             )
         ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $type, string $search, GitHub $github, Response $response, Database $dbForPlatform) {
         if (empty($search)) {
             $search = "";
         }
@@ -673,39 +766,81 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return $repo;
         }, $repos);
 
-        $repos = batch(\array_map(function ($repo) use ($github) {
-            return function () use ($repo, $github) {
-                try {
-                    $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-                    $files = \array_column($files, 'name');
-                    $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+        $repos = batch(\array_map(function ($repo) use ($type, $github) {
+            return function () use ($repo, $type, $github) {
+                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                $files = \array_column($files, 'name');
+                $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+                if ($type === 'framework') {
+                    try {
+                        $frameworkDetector = new Framework($files);
+                        $frameworkDetector
+                            ->addOption(new Flutter())
+                            ->addOption(new Nuxt())
+                            ->addOption(new Astro())
+                            ->addOption(new Remix())
+                            ->addOption(new SvelteKit())
+                            ->addOption(new NextJs());
 
-                    $detectorFactory = new Detector($files, $languages);
+                        $detectedFramework = $frameworkDetector->detect();
 
-                    $detectorFactory
-                        ->addDetector(new JavaScript())
-                        ->addDetector(new Bun())
-                        ->addDetector(new PHP())
-                        ->addDetector(new Python())
-                        ->addDetector(new Dart())
-                        ->addDetector(new Swift())
-                        ->addDetector(new Ruby())
-                        ->addDetector(new Java())
-                        ->addDetector(new CPP())
-                        ->addDetector(new Deno())
-                        ->addDetector(new Dotnet());
+                        if ($detectedFramework) {
+                            $framework = $detectedFramework->getName();
+                        } else {
+                            $framework = 'other';
+                        }
 
-                    $runtime = $detectorFactory->detect();
+                        $frameworks = Config::getParam('frameworks');
+                        $frameworkDetail = \array_reverse(\array_filter(\array_keys($frameworks), function ($key) use ($framework, $frameworks) {
+                            return $frameworks[$key]['key'] === $framework;
+                        }))[0] ?? '';
+                        $repo['framework'] = $frameworkDetail;
+                    } catch (Throwable $error) {
+                        $repo['framework'] = "";
+                        Console::warning("Framework not detected for " . $repo['organization'] . "/" . $repo['name']);
+                    }
+                } else {
+                    try {
+                        $strategies = [
+                            new Strategy(Strategy::FILEMATCH),
+                            new Strategy(Strategy::LANGUAGES),
+                            new Strategy(Strategy::EXTENSION),
+                        ];
 
-                    $runtimes = Config::getParam('runtimes');
-                    $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                        return $runtimes[$key]['key'] === $runtime;
-                    }))[0] ?? '';
+                        foreach ($strategies as $strategy) {
+                            $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, 'npm');
+                            $runtimeDetector
+                                ->addOption(new Node())
+                                ->addOption(new Bun())
+                                ->addOption(new Deno())
+                                ->addOption(new PHP())
+                                ->addOption(new Python())
+                                ->addOption(new Dart())
+                                ->addOption(new Swift())
+                                ->addOption(new Ruby())
+                                ->addOption(new Java())
+                                ->addOption(new CPP())
+                                ->addOption(new Dotnet());
 
-                    $repo['runtime'] = $runtimeDetail;
-                } catch (Throwable $error) {
-                    $repo['runtime'] = "";
-                    Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                            $detectedRuntime = $runtimeDetector->detect();
+
+                            if ($detectedRuntime) {
+                                $runtime = $detectedRuntime->getName();
+                                break;
+                            }
+                        }
+
+                        if (!empty($runtime)) {
+                            $runtimes = Config::getParam('runtimes');
+                            $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+                                return $runtimes[$key]['key'] === $runtime;
+                            }))[0] ?? '';
+                            $repo['runtime'] = $runtimeDetail;
+                        }
+                    } catch (Throwable $error) {
+                        $repo['runtime'] = "";
+                        Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                    }
                 }
                 return $repo;
             };
@@ -716,9 +851,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         }, $repos);
 
         $response->dynamic(new Document([
-            'providerRepositories' => $repos,
+            $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
             'total' => \count($repos),
-        ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
+        ]), ($type === 'framework') ? Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY_LIST : Response::MODEL_RUNTIME_PROVIDER_REPOSITORY_LIST);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -733,7 +868,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -830,7 +965,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
@@ -845,7 +980,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY,
+                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -884,7 +1019,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
