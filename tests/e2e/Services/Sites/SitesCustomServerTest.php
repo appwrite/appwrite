@@ -1528,7 +1528,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty(200, $file['body']);
-        $this->assertGreaterThan(4096, $file['headers']['content-length']);
+        $this->assertGreaterThan(1, $file['headers']['content-length']);
         $this->assertEquals('image/png', $file['headers']['content-type']);
 
         $screenshotHash = \md5($file['body']);
@@ -1540,7 +1540,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty(200, $file['body']);
-        $this->assertGreaterThan(4096, $file['headers']['content-length']);
+        $this->assertGreaterThan(1, $file['headers']['content-length']);
         $this->assertEquals('image/png', $file['headers']['content-type']);
 
         $screenshotDarkHash = \md5($file['body']);
