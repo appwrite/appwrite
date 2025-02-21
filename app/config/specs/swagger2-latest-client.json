@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.6.1",
+        "version": "1.7.0",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -3557,7 +3557,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "type": "string",
                         "x-example": "amex",
@@ -3577,7 +3577,8 @@
                             "union-china-pay",
                             "visa",
                             "mir",
-                            "maestro"
+                            "maestro",
+                            "rupay"
                         ],
                         "x-enum-name": "CreditCard",
                         "x-enum-keys": [
@@ -3596,7 +3597,8 @@
                             "Union China Pay",
                             "Visa",
                             "MIR",
-                            "Maestro"
+                            "Maestro",
+                            "Rupay"
                         ],
                         "in": "path"
                     },
@@ -4547,7 +4549,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4927,7 +4929,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 306,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5009,7 +5011,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 305,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5127,7 +5129,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 307,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5198,7 +5200,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 331,
+                    "weight": 325,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5271,7 +5273,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 330,
+                    "weight": 324,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5768,7 +5770,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 376,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5852,7 +5854,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 380,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7716,6 +7718,11 @@
             "x-globalAttributes": []
         },
         {
+            "name": "sites",
+            "description": "The Sites Service allows you view, create and manage your web applications.",
+            "x-globalAttributes": []
+        },
+        {
             "name": "functions",
             "description": "The Functions Service allows you view, create and manage your Cloud Functions.",
             "x-globalAttributes": []
@@ -9330,7 +9337,7 @@
                 },
                 "duration": {
                     "type": "number",
-                    "description": "Function execution duration in seconds.",
+                    "description": "Resource(function\/site) execution duration in seconds.",
                     "x-example": 0.4,
                     "format": "double"
                 },

@@ -13,6 +13,7 @@ use Swoole\Table;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -249,8 +250,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -275,6 +275,59 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
                 Console::info("    └── Creating files collection for default bucket...");
+                $files = $collections['buckets']['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
+                }
+
+                $attributes = array_map(fn ($attr) => new Document([
+                    '$id' => ID::custom($attr['$id']),
+                    'type' => $attr['type'],
+                    'size' => $attr['size'],
+                    'required' => $attr['required'],
+                    'signed' => $attr['signed'],
+                    'array' => $attr['array'],
+                    'filters' => $attr['filters'],
+                    'default' => $attr['default'] ?? null,
+                    'format' => $attr['format'] ?? ''
+                ]), $files['attributes']);
+
+                $indexes = array_map(fn ($index) => new Document([
+                    '$id' => ID::custom($index['$id']),
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]), $files['indexes']);
+
+                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            }
+
+            if ($dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty()) {
+                Console::info("    └── Creating screenshots bucket...");
+                $dbForPlatform->createDocument('buckets', new Document([
+                    '$id' => ID::custom('screenshots'),
+                    '$collection' => ID::custom('buckets'),
+                    'name' => 'Screenshots',
+                    'maximumFileSize' => 5000000, // ~5MB
+                    'allowedFileExtensions' => [ 'png' ],
+                    'enabled' => true,
+                    'compression' => Compression::GZIP,
+                    'encryption' => false,
+                    'antivirus' => false,
+                    'fileSecurity' => true,
+                    '$permissions' => [
+                        Permission::create(Role::any()),
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                    'search' => 'buckets Screenshots',
+                ]));
+
+                $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+                Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
                     throw new Exception('Files collection is not configured.');

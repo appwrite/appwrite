@@ -186,7 +186,7 @@ class V21 extends Migration
                 $document->setAttribute('scopes', []);
 
                 // Add size attribute
-                $document->setAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT);
+                $document->setAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         }
 
         return $document;

@@ -62,15 +62,16 @@ class Executor
         string $version,
         float $cpus,
         int $memory,
+        int $timeout,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
         string $command = null,
+        string $outputDirectory = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         // Remove after migration
         if ($version == 'v3') {
@@ -90,6 +91,7 @@ class Executor
             'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
+            'outputDirectory' => $outputDirectory
         ];
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
@@ -113,10 +115,9 @@ class Executor
     public function getLogs(
         string $deploymentId,
         string $projectId,
+        string $timeout,
         callable $callback
     ) {
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
@@ -142,6 +143,11 @@ class Executor
         $response = $this->call(self::METHOD_DELETE, $route, [
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
+
+        // Temporary fix for race condition
+        if ($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
+            return true; // OK, removal already in progress
+        }
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {

@@ -125,7 +125,7 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
-const APP_VERSION_STABLE = '1.6.1';
+const APP_VERSION_STABLE = '1.7.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -137,6 +137,7 @@ const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
+const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -155,9 +156,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
-const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
-const APP_FUNCTION_CPUS_DEFAULT = 0.5;
-const APP_FUNCTION_MEMORY_DEFAULT = 512;
+const APP_COMPUTE_CPUS_DEFAULT = 0.5;
+const APP_COMPUTE_MEMORY_DEFAULT = 512;
+const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
@@ -183,6 +184,7 @@ const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
+const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
@@ -272,6 +274,7 @@ const METRIC_FILES_IMAGES_TRANSFORMED = 'files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED = '{bucketInternalId}.files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
+const METRIC_SITES = 'sites';
 const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
@@ -290,15 +293,29 @@ const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.compute.success';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
+const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
+const METRIC_SITES_ID_BUILDS  = 'sites.{siteInternalId}.builds';
+const METRIC_SITES_ID_BUILDS_SUCCESS  = 'sites.{siteInternalId}.builds.success';
+const METRIC_SITES_ID_BUILDS_FAILED  = 'sites.{siteInternalId}.builds.failed';
+const METRIC_SITES_ID_BUILDS_STORAGE = 'sites.{siteInternalId}.builds.storage';
+const METRIC_SITES_ID_BUILDS_COMPUTE  = 'sites.{siteInternalId}.builds.compute';
+const METRIC_SITES_ID_BUILDS_COMPUTE_SUCCESS  = 'sites.{siteInternalId}.builds.compute.success';
+const METRIC_SITES_ID_BUILDS_COMPUTE_FAILED  = 'sites.{siteInternalId}.builds.compute.failed';
+const METRIC_SITES_ID_BUILDS_MB_SECONDS = 'sites.{siteInternalId}.builds.mbSeconds';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
-const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
 const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
 const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.executions.mbSeconds';
+const METRIC_SITE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_SITE_ID_DEPLOYMENTS_STORAGE = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_SITE_ID_BUILDS  = '{siteInternalId}.builds';
+const METRIC_SITE_ID_BUILDS_STORAGE = '{siteInternalId}.builds.storage';
+const METRIC_SITE_ID_BUILDS_COMPUTE  = '{siteInternalId}.builds.compute';
+const METRIC_SITE_ID_BUILDS_MB_SECONDS = '{siteInternalId}.builds.mbSeconds';
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
@@ -319,6 +336,7 @@ const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceIn
 
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
+const RESOURCE_TYPE_SITES = 'sites';
 const RESOURCE_TYPE_DATABASES = 'databases';
 const RESOURCE_TYPE_BUCKETS = 'buckets';
 const RESOURCE_TYPE_PROVIDERS = 'providers';
@@ -339,6 +357,7 @@ if (!App::isProduction()) {
 /*
  * ENV vars
  */
+Config::load('template-runtimes', __DIR__ . '/config/template-runtimes.php');
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
@@ -346,6 +365,7 @@ Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
+Config::load('frameworks', __DIR__ . '/config/frameworks.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
 Config::load('usage', __DIR__ . '/config/usage.php');
@@ -370,7 +390,9 @@ Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
+Config::load('framework-specifications', __DIR__ . '/config/frameworks/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
+Config::load('site-templates', __DIR__ . '/config/site-templates.php');
 
 /**
  * New DB Filters
@@ -593,7 +615,7 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getInternalId()]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -1639,6 +1661,10 @@ App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+App::setResource('deviceForSites', function ($project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
+
 App::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
@@ -1935,16 +1961,24 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHostname', function (Request $request) {
+App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
+    $allowed = false;
+
     if (App::isDevelopment()) {
-        $host = $request->getQuery('appwrite-hostname') ?? '';
+        $allowed = true;
+    } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+        $allowed = true;
+    }
+
+    if ($allowed) {
+        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;
         }
     }
 
     return '';
-}, ['request']);
+}, ['request', 'apiKey']);
 
 App::setResource('apiKey', function (Request $request, Document $project): ?Key {
     $key = $request->getHeader('x-appwrite-key');

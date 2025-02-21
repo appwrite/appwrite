@@ -118,6 +118,9 @@ class Exception extends \Exception
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
     public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
+    /** Console */
+    public const RESOURCE_ALREADY_EXISTS           = 'resource_already_exists';
+
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
     public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
@@ -151,6 +154,11 @@ class Exception extends \Exception
     public const PROVIDER_CONTRIBUTION_CONFLICT    = 'provider_contribution_conflict';
     public const GENERAL_PROVIDER_FAILURE          = 'general_provider_failure';
 
+    /** Sites */
+    public const SITE_NOT_FOUND                    = 'site_not_found';
+    public const SITE_FRAMEWORK_UNSUPPORTED        = 'site_framework_unsupported';
+    public const SITE_TEMPLATE_NOT_FOUND           = 'site_template_not_found';
+
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
@@ -170,6 +178,9 @@ class Exception extends \Exception
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
     public const EXECUTION_IN_PROGRESS             = 'execution_in_progress';
+
+    /** Log */
+    public const LOG_NOT_FOUND                     = 'log_not_found';
 
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';
@@ -247,6 +258,7 @@ class Exception extends \Exception
     /** Variables */
     public const VARIABLE_NOT_FOUND                = 'variable_not_found';
     public const VARIABLE_ALREADY_EXISTS           = 'variable_already_exists';
+    public const VARIABLE_CANNOT_UNSET_SECRET      = 'variable_cannot_unset_secret';
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';

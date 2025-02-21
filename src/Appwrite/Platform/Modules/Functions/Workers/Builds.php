@@ -1,12 +1,14 @@
 <?php
 
-namespace Appwrite\Platform\Workers;
+namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -22,10 +24,13 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -55,9 +60,10 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('isResourceBlocked')
+            ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $deviceForFiles, $log));
     }
 
     /**
@@ -70,11 +76,12 @@ class Builds extends Action
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -95,7 +102,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -105,6 +112,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param StatsUsage $queueForStatsUsage
@@ -112,54 +120,60 @@ class Builds extends Action
      * @param Database $dbForProject
      * @param GitHub $github
      * @param Document $project
-     * @param Document $function
+     * @param Document $resource
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
+     *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
+        $resourceKey = match($resource->getCollection()) {
+            'functions' => 'functionId',
+            'sites' => 'siteId',
+            default => throw new \Exception('Invalid resource type')
+        };
+
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
-        $functionId = $function->getId();
-        $log->addTag('functionId', $function->getId());
+        $log->addTag($resourceKey, $resource->getId());
 
-        $function = $dbForProject->getDocument('functions', $functionId);
-        if ($function->isEmpty()) {
-            throw new \Exception('Function not found');
+        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        if ($resource->isEmpty()) {
+            throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
-            throw new \Exception('Function blocked');
+        // TODO: Sites support
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $resource->getId())) {
+            throw new \Exception('Resource is blocked');
         }
 
-        $deploymentId = $deployment->getId();
-        $log->addTag('deploymentId', $deploymentId);
+        $log->addTag('deploymentId', $deployment->getId());
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
             throw new \Exception('Deployment not found');
         }
 
-        if (empty($deployment->getAttribute('entrypoint', ''))) {
+        if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
             throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
-        $version = $function->getAttribute('version', 'v2');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
-        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $key = $function->getAttribute('runtime');
-        $runtime = $runtimes[$key] ?? null;
-        if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        $version = $this->getVersion($resource);
+        $runtime = $this->getRuntime($resource, $version);
+
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Realtime preparation
-        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => $function->getId(),
+        $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
+            $resourceKey => $resource->getId(),
             'deploymentId' => $deployment->getId()
         ]);
 
@@ -178,7 +192,7 @@ class Builds extends Action
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
+                'runtime' => $resource->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower($deviceForFunctions->getType()),
                 'logs' => '',
@@ -271,7 +285,7 @@ class Builds extends Action
             } elseif ($isNewBuild && $isVcsEnabled) {
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
-                $rootDirectory = $function->getAttribute('providerRootDirectory', '');
+                $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
@@ -352,7 +366,7 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -370,7 +384,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
                     $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
                     $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
-                    $deployment->setAttribute('providerCommitMessage', "Create '" . $function->getAttribute('name', '') . "' function");
+                    $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -401,9 +415,10 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                if ($directorySize > $functionsSizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
+
+                if ($directorySize > $sizeLimit) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -425,7 +440,7 @@ class Builds extends Action
                 $directorySize = $deviceForFunctions->getFileSize($source);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             /** Request the executor to build the code... */
@@ -433,7 +448,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             /** Trigger Webhook */
@@ -443,8 +458,8 @@ class Builds extends Action
                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                     ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
-                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                    ->setParam('functionId', $function->getId())
+                    ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                    ->setParam($resourceKey, $resource->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
@@ -474,23 +489,26 @@ class Builds extends Action
             $vars = [];
 
             // Shared vars
-            foreach ($function->getAttribute('varsProject', []) as $var) {
+            foreach ($resource->getAttribute('varsProject', []) as $var) {
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
             // Function vars
-            foreach ($function->getAttribute('vars', []) as $var) {
+            foreach ($resource->getAttribute('vars', []) as $var) {
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
-            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
+            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+            $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
-                'scopes' => $function->getAttribute('scopes', [])
+                'scopes' => $resource->getAttribute('scopes', [])
             ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -499,16 +517,6 @@ class Builds extends Action
 
             // Appwrite vars
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
-                'APPWRITE_FUNCTION_ID' => $function->getId(),
-                'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-                'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-                'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-                'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-                'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                'APPWRITE_FUNCTION_CPUS' => $cpus,
-                'APPWRITE_FUNCTION_MEMORY' => $memory,
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -526,7 +534,43 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
-            $command = $deployment->getAttribute('commands', '');
+            switch ($resource->getCollection()) {
+                case 'functions':
+                    $vars = [
+                        ...$vars,
+                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_FUNCTION_ID' => $resource->getId(),
+                        'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
+                        'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                        'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_FUNCTION_CPUS' => $cpus,
+                        'APPWRITE_FUNCTION_MEMORY' => $memory,
+                    ];
+                    break;
+                case 'sites':
+                    $vars = [
+                        ...$vars,
+                        'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_SITE_ID' => $resource->getId(),
+                        'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
+                        'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
+                        'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
+                        'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
+                        'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_SITE_CPUS' => $cpus,
+                        'APPWRITE_SITE_MEMORY' => $memory,
+                    ];
+                    break;
+            }
+
+            $command = $this->getCommand(
+                resource: $resource,
+                deployment: $deployment
+            );
 
             $response = null;
             $err = null;
@@ -539,11 +583,11 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
-                        $version = $function->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
+                        // TODO: Detect adapter if adapter is empty
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
@@ -552,21 +596,24 @@ class Builds extends Action
                             version: $version,
                             cpus: $cpus,
                             memory: $memory,
+                            timeout: $timeout,
                             remove: true,
-                            entrypoint: $deployment->getAttribute('entrypoint'),
+                            entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
-                            command: $command
+                            command: $command,
+                            outputDirectory: $resource->getAttribute('outputDirectory', '')
                         );
                     } catch (\Throwable $error) {
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, $timeout, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
+                            timeout: $timeout,
                             callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
                                 if ($isCanceled) {
                                     return;
@@ -586,9 +633,25 @@ class Builds extends Action
                                         return;
                                     }
 
-                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
+                                    $currentLogs = $build->getAttribute('logs', '');
+
+                                    $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
+                                    foreach (\explode("\n", $streamLogs) as $streamLog) {
+                                        if (empty($streamLog)) {
+                                            continue;
+                                        }
+
+                                        $streamLog = \str_replace("{APPWRITE_LINEBREAK_PLACEHOLDER}", "\n", $streamLog);
+                                        $streamParts = \explode(" ", $streamLog, 2);
+
+                                        // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
+                                        $currentLogs .= $streamParts[1];
+                                    }
+
+                                    $build = $build->setAttribute('logs', $currentLogs);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
@@ -630,7 +693,7 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
 
-            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
@@ -642,22 +705,138 @@ class Builds extends Action
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            $build->setAttribute('logs', $response['output']);
+
+            $logs = '';
+            foreach ($response['output'] as $log) {
+                $logs .= $log['content'];
+            }
+            $build->setAttribute('logs', $logs);
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             Console::success("Build id: $buildId created");
 
+            if ($resource->getCollection() === 'sites') {
+                try {
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("resourceType", ["deployment"]),
+                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    ]));
+
+                    if ($rule->isEmpty()) {
+                        throw new \Exception("Rule for build not found");
+                    }
+
+                    $client = new FetchClient();
+                    $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+
+                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+                    $configs = [
+                        'screenshotLight' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
+                            'theme' => 'light'
+                        ],
+                        'screenshotDark' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
+                            'theme' => 'dark'
+                        ],
+                    ];
+
+                    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+                    $apiKey = $jwtObj->encode([
+                        'hostnameOverride' => true,
+                        'bannerDisabled' => true,
+                        'projectCheckDisabled' => true
+                    ]);
+
+                    // TODO: @Meldiron if becomes too slow, do concurrently
+                    foreach ($configs as $key => $config) {
+                        $config['headers'] = \array_merge($config['headers'] ?? [], [
+                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                        ]);
+
+                        $response = $client->fetch(
+                            url: 'http://appwrite-browser:3000/v1/screenshots',
+                            method: 'POST',
+                            body: $config
+                        );
+
+                        if ($response->getStatusCode() >= 400) {
+                            throw new \Exception($response->getBody());
+                        }
+
+                        $screenshot = $response->getBody();
+
+                        $fileId = ID::unique();
+                        $fileName = $fileId . '.png';
+                        $path = $deviceForFiles->getPath($fileName);
+                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+
+                        if (!$success) {
+                            throw new \Exception("Screenshot failed to save");
+                        }
+
+                        $teamId = $project->getAttribute('teamId', '');
+                        $file = new Document([
+                            '$id' => $fileId,
+                            '$permissions' => [
+                                Permission::read(Role::team(ID::custom($teamId))),
+                            ],
+                            'bucketId' => $bucket->getId(),
+                            'bucketInternalId' => $bucket->getInternalId(),
+                            'name' => $fileName,
+                            'path' => $path,
+                            'signature' => $deviceForFiles->getFileHash($path),
+                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'sizeOriginal' => \strlen($screenshot),
+                            'sizeActual' => $deviceForFiles->getFileSize($path),
+                            'algorithm' => Compression::GZIP,
+                            'comment' => '',
+                            'chunksTotal' => 1,
+                            'chunksUploaded' => 1,
+                            'openSSLVersion' => null,
+                            'openSSLCipher' => null,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                            'search' => implode(' ', [$fileId, $fileName]),
+                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                        ]);
+                        $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+
+                        $deployment->setAttribute($key, $fileId);
+                    }
+
+                    $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                } catch (\Throwable $th) {
+                    Console::warning("Screenshot failed to generate:");
+                    Console::warning($th->getMessage());
+                    Console::warning($th->getTraceAsString());
+                }
+            }
+
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
-                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $function->setAttribute('deployment', $deployment->getId());
-                $function->setAttribute('live', true);
-                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $resource->setAttribute('live', true);
+                switch ($resource->getCollection()) {
+                    case 'functions':
+                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                        break;
+                    case 'sites':
+                        $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                        break;
+                }
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -668,12 +847,14 @@ class Builds extends Action
             /** Update function schedule */
 
             // Inform scheduler if function is still active
-            $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule
-                ->setAttribute('resourceUpdatedAt', DateTime::now())
-                ->setAttribute('schedule', $function->getAttribute('schedule'))
-                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+            if ($resource->getCollection() === 'functions') {
+                $schedule = $dbForPlatform->getDocument('schedules', $resource->getAttribute('scheduleId'));
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $resource->getAttribute('schedule'))
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+            }
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -685,12 +866,13 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage());
+
+            $build->setAttribute('logs', "[31m" . $th->getMessage() . "[0m");
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
         } finally {
             /**
@@ -709,34 +891,134 @@ class Builds extends Action
                 channels: $target['channels'],
                 roles: $target['roles']
             );
+            $this->sendUsage(
+                resource:$resource,
+                build: $build,
+                project: $project,
+                queue: $queueForStatsUsage
+            );
+        }
+    }
 
-            /** Trigger usage queue */
-            if ($build->getAttribute('status') === 'ready') {
-                $queueForStatsUsage
+    protected function sendUsage(Document $resource, Document $build, Document $project, StatsUsage $queue): void
+    {
+        $key = match($resource->getCollection()) {
+            'functions' => 'functionInternalId',
+            'sites' => 'siteInternalId',
+            default => throw new \Exception('Invalid resource type')
+        };
+
+        $metrics = match($resource->getCollection()) {
+            'functions' => [
+                'builds' => METRIC_FUNCTION_ID_BUILDS,
+                'buildsSuccess' => METRIC_FUNCTION_ID_BUILDS_SUCCESS,
+                'buildsFailed' => METRIC_FUNCTION_ID_BUILDS_FAILED,
+                'buildsComputeSuccess' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS,
+                'buildsComputeFailed' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED,
+                'buildsStorage' => METRIC_FUNCTION_ID_BUILDS_STORAGE,
+                'buildsCompute' => METRIC_FUNCTION_ID_BUILDS_COMPUTE,
+                'buildsMbSeconds' => METRIC_FUNCTION_ID_BUILDS_MB_SECONDS
+            ],
+            'sites' => [
+                'builds' => METRIC_SITES_ID_BUILDS,
+                'buildsSuccess' => METRIC_SITES_ID_BUILDS_SUCCESS,
+                'buildsFailed' => METRIC_SITES_ID_BUILDS_FAILED,
+                'buildsComputeSuccess' => METRIC_SITES_ID_BUILDS_COMPUTE_SUCCESS,
+                'buildsComputeFailed' => METRIC_SITES_ID_BUILDS_COMPUTE_FAILED,
+                'buildsStorage' => METRIC_SITES_ID_BUILDS_STORAGE,
+                'buildsCompute' => METRIC_SITES_ID_BUILDS_COMPUTE,
+                'buildsMbSeconds' => METRIC_SITES_ID_BUILDS_MB_SECONDS
+            ]
+        };
+
+        switch ($build->getAttribute('status')) {
+            case 'ready':
+                $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
-            } elseif ($build->getAttribute('status') === 'failed') {
-                $queueForStatsUsage
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+                break;
+            case 'failed':
+                $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$build->getAttribute('duration', 0) * 1000);
+                break;
+        }
+
+        $queue
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->setProject($project)
+            ->trigger();
+    }
+
+    protected function getRuntime(Document $resource, string $version): array
+    {
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $key =  $resource->getAttribute('runtime');
+        $runtime = match ($resource->getCollection()) {
+            'functions' => $runtimes[$resource->getAttribute('runtime')] ?? null,
+            'sites' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
+            default => null
+        };
+        if (\is_null($runtime)) {
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+        }
+
+        return $runtime;
+    }
+
+    protected function getVersion(Document $resource): string
+    {
+        return match ($resource->getCollection()) {
+            'functions' => $resource->getAttribute('version', 'v2'),
+            'sites' => 'v4',
+        };
+    }
+
+    protected function getCommand(Document $resource, Document $deployment): string
+    {
+        if ($resource->getCollection() === 'functions') {
+            return $deployment->getAttribute('commands', '');
+        } elseif ($resource->getCollection() === 'sites') {
+            $commands = [];
+
+            $frameworks = Config::getParam('frameworks', []);
+            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+
+            $envCommand = '';
+            $bundleCommand = '';
+
+            if (!is_null($framework)) {
+                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                if (!is_null($adapter) && isset($adapter['envCommand'])) {
+                    $envCommand = $adapter['envCommand'];
+                }
+                if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
+                    $bundleCommand = $adapter['bundleCommand'];
+                }
             }
 
-            $queueForStatsUsage
-                ->addMetric(METRIC_BUILDS, 1) // per project
-                ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-                ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->setProject($project)
-                ->trigger();
+            $commands[] = $envCommand;
+            $commands[] = $deployment->getAttribute('installCommand', '');
+            $commands[] = $deployment->getAttribute('buildCommand', '');
+            $commands[] = $bundleCommand;
+
+            $commands = array_filter($commands, fn ($command) => !empty($command));
+
+            return implode(' && ', $commands);
         }
+
+        return '';
     }
 
     /**
@@ -746,7 +1028,7 @@ class Builds extends Action
      * @param string $owner
      * @param string $repositoryName
      * @param Document $project
-     * @param Document $function
+     * @param Document $resource
      * @param string $deploymentId
      * @param Database $dbForProject
      * @param Database $dbForPlatform
@@ -757,9 +1039,9 @@ class Builds extends Action
      * @throws Conflict
      * @throws Restricted
      */
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForPlatform): void
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $resource, string $deploymentId, Database $dbForProject, Database $dbForPlatform): void
     {
-        if ($function->getAttribute('providerSilentMode', false) === true) {
+        if ($resource->getAttribute('providerSilentMode', false) === true) {
             return;
         }
 
@@ -781,16 +1063,14 @@ class Builds extends Action
                 default => $status
             };
 
-            $functionName = $function->getAttribute('name');
+            $resourceName = $resource->getAttribute('name');
             $projectName = $project->getAttribute('name');
 
-            $name = "{$functionName} ({$projectName})";
+            $name = "{$resourceName} ({$projectName})";
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
-            $functionId = $function->getId();
-            $projectId = $project->getId();
-            $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";
+            $providerTargetUrl = "{$protocol}://{$hostname}/console/project-{$project->getId()}/functions/function-{$resource->getId()}";
 
             $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
         }
@@ -817,9 +1097,34 @@ class Builds extends Action
 
             // Wrap in try/finally to ensure lock file gets deleted
             try {
+                $resourceType = match($resource->getCollection()) {
+                    'functions' => 'function',
+                    'sites' => 'site',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("resourceType", ["deployment"]),
+                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                ]));
+
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $previewUrl = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $previweQrCode = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
+                    default => throw new \Exception('Invalid resource type')
+                };
+
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $function, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);

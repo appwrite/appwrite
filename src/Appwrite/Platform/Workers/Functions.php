@@ -256,8 +256,9 @@ class Functions extends Action
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
+            'resourceInternalId' => $function->getInternalId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'trigger' => $trigger,
@@ -326,7 +327,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -403,8 +404,9 @@ class Functions extends Action
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionInternalId' => $function->getInternalId(),
-                'functionId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'trigger' => $trigger,
@@ -479,8 +481,8 @@ class Functions extends Action
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT),
-            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT),
+            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT),
+            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -518,8 +520,8 @@ class Functions extends Action
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
             );
 
@@ -558,8 +560,8 @@ class Functions extends Action
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
                 ->trigger()
             ;
         }
@@ -590,6 +592,10 @@ class Functions extends Action
             'functionId' => $function->getId(),
             'executionId' => $execution->getId()
         ]);
+
+        // Ensure all placeholder got related attribute
+        $execution = $execution->setAttribute('functionId', $execution->getAttribute('resourceId'));
+
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],
