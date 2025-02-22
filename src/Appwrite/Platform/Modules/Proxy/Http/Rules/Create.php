@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -122,6 +123,13 @@ class Create extends Action
             $domain = new Domain($domain);
         } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
+        }
+
+        // Apex domain prevention due to CNAME limitations
+        if (empty(App::getEnv('_APP_DOMAINS_NAMESERVERS', ''))) {
+            if ($domain->get() === $domain->getRegisterable()) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The instance does not allow root-level (apex) domains.');
+            }
         }
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
