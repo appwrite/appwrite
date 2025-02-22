@@ -8,6 +8,8 @@ use Tests\E2E\Client;
 trait ProxyBase
 {
     use Async;
+    
+    // TODO: @Meldiron different kinds of rules, creation failure, list, get, update status
 
     protected function createRule(mixed $params): mixed
     {
