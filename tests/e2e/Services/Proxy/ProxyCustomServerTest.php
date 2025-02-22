@@ -14,10 +14,7 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRule(): void
     {
-        $rule = $this->createRule([
-            'domain' => 'api.myapp.com',
-            'resourceType' => 'api'
-        ]);
+        $rule = $this->createAPIRule('api.myapp.com');
 
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('api.myapp.com', $rule['body']['domain']);
@@ -37,20 +34,13 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRuleSetup(): void
     {
-        $ruleId = $this->setupRule([
-            'domain' => 'api2.myapp.com',
-            'resourceType' => 'api'
-        ]);
+        $ruleId = $this->setupAPIRule('api2.myapp.com');
         $this->cleanupRule($ruleId);
     }
 
     public function testCreateRuleApex(): void
     {
-        $rule = $this->createRule([
-            'domain' => 'myapp.com',
-            'resourceType' => 'api'
-        ]);
-
+        $rule = $this->createAPIRule('myapp.com');
         $this->assertEquals(400, $rule['headers']['status-code']);
     }
 }

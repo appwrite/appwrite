@@ -1101,15 +1101,14 @@ class UsageTest extends Scope
 
         $rule = $this->client->call(
             Client::METHOD_POST,
-            '/proxy/rules',
+            '/proxy/rules/function',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
                 'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
-                'resourceType' => 'function',
-                'resourceId' => $functionId,
+                'functionId' => $functionId,
             ],
         );
 

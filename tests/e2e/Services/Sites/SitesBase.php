@@ -284,13 +284,12 @@ trait SitesBase
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $subdomain = $subdomain ? $subdomain : ID::unique();
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
-            'resourceType' => 'site',
-            'resourceId' => $siteId,
+            'siteId' => $siteId,
         ]);
 
         $this->assertEquals(201, $rule['headers']['status-code']);

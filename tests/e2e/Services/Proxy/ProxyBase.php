@@ -8,15 +8,43 @@ use Tests\E2E\Client;
 trait ProxyBase
 {
     use Async;
-    
+
     // TODO: @Meldiron different kinds of rules, creation failure, list, get, update status
 
-    protected function createRule(mixed $params): mixed
+    protected function createAPIRule(string $domain): mixed
     {
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
+        ], $this->getHeaders()), [
+            'domain' => $domain,
+        ]);
+
+        return $rule;
+    }
+
+    protected function createSiteRule(string $domain, string $siteId): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $domain,
+            'siteId' => $siteId,
+        ]);
+
+        return $rule;
+    }
+
+    protected function createFunctionRule(string $domain, string $functionId): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $domain,
+            'functionId' => $functionId,
+        ]);
 
         return $rule;
     }
@@ -31,9 +59,27 @@ trait ProxyBase
         return $rule;
     }
 
-    protected function setupRule(mixed $params): string
+    protected function setupAPIRule(string $domain): string
     {
-        $rule = $this->createRule($params);
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
+
+        return $rule['body']['$id'];
+    }
+
+    protected function setupFunctionRule(string $domain, string $functionId): string
+    {
+        $rule = $this->createFunctionRule($domain, $functionId);
+
+        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
+
+        return $rule['body']['$id'];
+    }
+
+    protected function setupSiteRule(string $domain, string $siteId): string
+    {
+        $rule = $this->createSiteRule($domain, $siteId);
 
         $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
 

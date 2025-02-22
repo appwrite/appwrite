@@ -24,8 +24,7 @@ class ProjectsCustomServerTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => 'api.appwrite.test',
         ]);
 
@@ -39,8 +38,7 @@ class ProjectsCustomServerTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // duplicate rule
-        $response2 = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
+        $response2 = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => 'abc.test.io',
         ]);
 
@@ -52,8 +50,7 @@ class ProjectsCustomServerTest extends Scope
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => $functionsDomain,
         ]);
 
@@ -62,24 +59,21 @@ class ProjectsCustomServerTest extends Scope
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => $sitesDomain,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // prevent functions domain
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'function',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', $headers, [
             'domain' => $functionsDomain,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // prevent sites domain
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'site',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', $headers, [
             'domain' => $sitesDomain,
         ]);
 
@@ -98,8 +92,7 @@ class ProjectsCustomServerTest extends Scope
         ];
 
         foreach ($deniedDomains as $deniedDomain) {
-            $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-                'resourceType' => 'api',
+            $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
                 'domain' => $deniedDomain,
             ]);
 

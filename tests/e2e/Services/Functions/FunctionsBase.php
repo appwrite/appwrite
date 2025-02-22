@@ -274,13 +274,12 @@ trait FunctionsBase
     protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
         $subdomain = $subdomain ? $subdomain : ID::unique();
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-            'resourceType' => 'function',
-            'resourceId' => $functionId,
+            'functionId' => $functionId,
         ]);
 
         $this->assertEquals(201, $rule['headers']['status-code']);
