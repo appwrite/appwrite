@@ -82,8 +82,8 @@ class Get extends Action
 
         $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
             Query::equal("projectInternalId", [$project->getInternalId()]),
-            Query::equal("resourceType", ["deployment"]),
-            Query::equal("resourceInternalId", [$deployment->getInternalId()])
+            Query::equal("type", ["deployment"]),
+            Query::equal("value", [$deployment->getId()])
         ]));
 
         if (!empty($rule)) {

@@ -127,10 +127,10 @@ class Create extends Action
             'projectInternalId' => $project->getInternalId(),
             'domain' => $domain->get(),
             'status' => $status,
-            'resourceType' => 'site',
-            'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getInternalId(),
+            'type' => 'deployment',
+            'value' => $site->getAttribute('deploymentId', ''),
             'certificateId' => '',
+            'automation' => 'site=' . $site->getId()
         ]);
 
         try {

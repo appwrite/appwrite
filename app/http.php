@@ -519,7 +519,6 @@ $http->on('Task', function () use ($register, $domains) {
                 if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
-                $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));

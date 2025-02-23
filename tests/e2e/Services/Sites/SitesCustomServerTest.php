@@ -79,7 +79,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $rule = $this->setupSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -88,7 +88,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $rule,
+            'value' => $domain,
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
@@ -115,7 +115,7 @@ class SitesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::equal('resourceId', [$siteId])
+                    Query::equal('automation', ['site=' . $siteId])
                 ]
             ]);
 
@@ -130,7 +130,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $rule,
+            'value' => $domain,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted

@@ -122,8 +122,8 @@ class XList extends Action
 
             $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getInternalId()]),
-                Query::equal("resourceType", ["deployment"]),
-                Query::equal("resourceInternalId", [$result->getInternalId()])
+                Query::equal("type", ["deployment"]),
+                Query::equal("value", [$result->getId()])
             ]));
 
             if (!empty($rule)) {

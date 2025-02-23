@@ -724,8 +724,8 @@ class Builds extends Action
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
-                        Query::equal("resourceType", ["deployment"]),
-                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("value", [$deployment->getId()])
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -837,7 +837,10 @@ class Builds extends Action
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         break;
                 }
+
+                // TODO: @Meldiron DO NOT FORGET!!! Update rules with correct automation (function=$functionId, site=$siteId)
             }
+
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -1105,8 +1108,8 @@ class Builds extends Action
 
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                     Query::equal("projectInternalId", [$project->getInternalId()]),
-                    Query::equal("resourceType", ["deployment"]),
-                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    Query::equal("type", ["deployment"]),
+                    Query::equal("value", [$deployment->getId()])
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';

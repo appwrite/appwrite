@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
+namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
@@ -20,6 +20,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
+use Utopia\Validator\URL;
 
 class Create extends Action
 {
@@ -27,25 +28,25 @@ class Create extends Action
 
     public static function getName()
     {
-        return 'createAPIRule';
+        return 'createRedirectRule';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/proxy/rules/api')
+            ->setHttpPath('/v1/proxy/rules/redirect')
             ->groups(['api', 'proxy'])
-            ->desc('Create API rule')
+            ->desc('Create Redirect rule')
             ->label('scope', 'rules.write')
             ->label('event', 'rules.[ruleId].create')
             ->label('audits.event', 'rule.create')
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                name: 'createAPIRule',
+                name: 'createRedirectRule',
                 description: <<<EOT
-                Create a new proxy rule for serving Appwrite's API on custom domain.
+                Create a new proxy rule for to redirect from custom domain to another domain.
                 EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -59,6 +60,7 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
+            ->param('target', null, new URL(), 'Target URL of redirection')
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')
@@ -67,7 +69,7 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $domain, string $target, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
     {
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -119,8 +121,8 @@ class Create extends Action
             'projectInternalId' => $project->getInternalId(),
             'domain' => $domain->get(),
             'status' => $status,
-            'type' => 'api',
-            'value' => '',
+            'type' => 'redirect',
+            'value' => $target,
             'certificateId' => '',
         ]);
 

@@ -244,9 +244,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deploymentId,
-                        'resourceInternalId' => $deployment->getInternalId(),
+                        'type' => 'deployment',
+                        'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
                     ]))

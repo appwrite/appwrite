@@ -308,8 +308,8 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$siteId])->toString(),
-                Query::equal('resourceType', ['site'])->toString(),
+                Query::equal('automation', ['site=' . $siteId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
 
@@ -323,7 +323,6 @@ trait SitesBase
         return $domain;
     }
 
-
     protected function getDeploymentDomain(string $deploymentId): string
     {
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
@@ -331,8 +330,8 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$deploymentId])->toString(),
-                Query::equal('resourceType', ['deployment'])->toString(),
+                Query::equal('value', [$deploymentId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
 
