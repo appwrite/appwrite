@@ -134,8 +134,6 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(self::WAIT);
-
         $requestsTotal = $data['requestsTotal'];
 
         $response = $this->client->call(
@@ -318,8 +316,6 @@ class UsageTest extends Scope
         $storageTotal  = $data['storageTotal'];
         $filesTotal    = $data['filesTotal'];
 
-        sleep(self::WAIT);
-
         $response = $this->client->call(
             Client::METHOD_GET,
             '/project/usage',
@@ -476,8 +472,6 @@ class UsageTest extends Scope
 
         $requestsTotal += 1;
 
-        sleep(self::WAIT);
-
         for ($i = 0; $i < self::CREATE; $i++) {
             $name = uniqid() . ' collection';
 
@@ -538,8 +532,6 @@ class UsageTest extends Scope
         $databasesTotal = $data['databasesTotal'];
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
-
-        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -709,8 +701,6 @@ class UsageTest extends Scope
     //         $this->assertEquals(201, $response['headers']['status-code']);
     //     }
 
-    //     sleep(self::WAIT);
-
     //     for ($i = 0; $i < 3; $i++) {
     //         try {
     //             $newProjectMetrics = $this->client->call(
@@ -752,7 +742,6 @@ class UsageTest extends Scope
     //             if ($i === 2) {
     //                 throw $e;
     //             }
-    //             sleep(self::WAIT);
     //             continue;
     //         }
     //     }
@@ -791,8 +780,6 @@ class UsageTest extends Scope
 
     //         $this->assertEquals(204, $response['headers']['status-code']);
     //     }
-
-    //     sleep(self::WAIT);
 
     //     for ($i = 0; $i < 3; $i++) {
     //         try {
@@ -835,7 +822,6 @@ class UsageTest extends Scope
     //             if ($i === 2) {
     //                 throw $e;
     //             }
-    //             sleep(self::WAIT);
     //             continue;
     //         }
     //     }
@@ -1027,8 +1013,6 @@ class UsageTest extends Scope
         $executionTime = $data['executionTime'];
         $executions = $data['executions'];
 
-        sleep(self::WAIT);
-
         $response = $this->client->call(
             Client::METHOD_GET,
             '/functions/' . $functionId . '/usage?range=30d',
@@ -1152,7 +1136,6 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        sleep(self::WAIT + 20);
         $tries = 0;
 
         while (true) {
