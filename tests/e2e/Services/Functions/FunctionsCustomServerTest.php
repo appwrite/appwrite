@@ -13,7 +13,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
