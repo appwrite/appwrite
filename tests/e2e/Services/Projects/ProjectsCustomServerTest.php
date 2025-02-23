@@ -30,7 +30,7 @@ class ProjectsCustomServerTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'resourceType' => 'api',
             'domain' => 'abc.test.io',
         ]);

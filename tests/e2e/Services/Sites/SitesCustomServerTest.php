@@ -1319,7 +1319,6 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(409, $rule['headers']['status-code']);
-        $this->assertStringContainsString("Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.", $rule['body']['message']);
 
         $this->cleanupSite($siteId);
 

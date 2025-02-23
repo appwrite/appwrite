@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
@@ -134,12 +135,8 @@ class Create extends Action
 
         try {
             $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (\Throwable $e) {
-            if ($e->getCode() === Exception::DOCUMENT_ALREADY_EXISTS) {
-                throw new Exception(Exception::RULE_ALREADY_EXISTS);
-            }
-
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'An unexpected error occurred: ' . $e->getMessage());
+        } catch (Duplicate $e) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
         if ($rule->getAttribute('status', '') === 'verifying') {
