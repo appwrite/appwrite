@@ -23,7 +23,7 @@ class UsageTest extends Scope
     use SideServer;
     use FunctionsBase;
 
-    private const WAIT = 35;
+    private const WAIT = 5;
     private const CREATE = 20;
 
     protected string $projectId;
@@ -470,6 +470,8 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
+        sleep(self::WAIT);
+
         $requestsTotal += 1;
 
         for ($i = 0; $i < self::CREATE; $i++) {
@@ -487,8 +489,6 @@ class UsageTest extends Scope
                     'data' => ['name' => $name]
                 ]
             );
-
-            var_dump($response['body']);
 
             $this->assertEquals($name, $response['body']['name']);
             $this->assertNotEmpty($response['body']['$id']);
@@ -534,6 +534,8 @@ class UsageTest extends Scope
         $databasesTotal = $data['databasesTotal'];
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
+
+        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
