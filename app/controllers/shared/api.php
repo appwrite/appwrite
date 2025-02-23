@@ -803,7 +803,6 @@ App::shutdown()
             }
         }
 
-        var_dump("in shutdown");
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
