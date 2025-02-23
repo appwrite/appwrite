@@ -885,7 +885,10 @@ App::error()
             }
         }
 
-        if ($project->getId() !== 'console') {
+        /**
+         * If its not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
+         */
+        if (!$publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
