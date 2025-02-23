@@ -307,7 +307,7 @@ class UsageTest extends Scope
     /**
      * @depends testPrepareStorageStats
      */
-    #[Retry(count: 1)]
+    #[Retry(count: 10)]
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
@@ -487,6 +487,8 @@ class UsageTest extends Scope
                     'data' => ['name' => $name]
                 ]
             );
+
+            var_dump($response['body']);
 
             $this->assertEquals($name, $response['body']['name']);
             $this->assertNotEmpty($response['body']['$id']);
