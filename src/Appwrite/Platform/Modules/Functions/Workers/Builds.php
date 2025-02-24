@@ -849,6 +849,28 @@ class Builds extends Action
                             $rule = $rule->setAttribute('value', $deployment->getId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         });
+
+                        // VCS branch
+                        $branchName = $deployment->getAttribute('providerBranch');
+                        if (!empty($branchName)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["branch=" . $branchName]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
+
+                        // VCS commit
+                        $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                        if (!empty($commitHash)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["commit=" . $commitHash]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
                         break;
                 }
             }

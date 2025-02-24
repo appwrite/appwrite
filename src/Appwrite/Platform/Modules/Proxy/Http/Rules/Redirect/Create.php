@@ -20,7 +20,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\URL;
 
 class Create extends Action
 {
@@ -60,7 +59,7 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('target', null, new URL(), 'Target URL of redirection')
+            ->param('target', null, new ValidatorDomain(), 'Target domain (hostname) of redirection')
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')
@@ -93,6 +92,12 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
+        try {
+            $target = new Domain($target);
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Target may not start with http:// or https://.');
+        }
+
         // Apex domain prevention due to CNAME limitations
         if (empty(App::getEnv('_APP_DOMAINS_NAMESERVERS', ''))) {
             if ($domain->get() === $domain->getRegisterable()) {
@@ -108,8 +113,8 @@ class Create extends Action
             $status = 'verified';
         }
         if ($status === 'created') {
-            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
-            $validator = new CNAME($target->get());
+            $dnsTarget = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
+            $validator = new CNAME($dnsTarget->get());
             if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
             }
@@ -122,7 +127,7 @@ class Create extends Action
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'redirect',
-            'value' => $target,
+            'value' => $target->get(),
             'certificateId' => '',
         ]);
 

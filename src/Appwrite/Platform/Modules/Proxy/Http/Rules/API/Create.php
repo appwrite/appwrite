@@ -85,6 +85,10 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
+        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
+        }
+
         try {
             $domain = new Domain($domain);
         } catch (\Throwable) {

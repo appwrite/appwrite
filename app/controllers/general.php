@@ -534,7 +534,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $utopia->getRoute()?->label('error', '');
         return false;
     } elseif ($type === 'redirect') {
-        $response->redirect($rule->getAttribute('value', ''));
+        $path = ($swooleRequest->server['request_uri'] ?? '/');
+        $query = ($swooleRequest->server['query_string'] ?? '');
+        if (!empty($query)) {
+            $path .= '?' . $query;
+        }
+
+        $url = 'https://' . $rule->getAttribute('value', '') . $path;
+
+        $response->redirect($url);
         return true;
     } else {
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
@@ -712,7 +720,7 @@ App::init()
         } elseif (!empty($origin)) {
             // Auto-allow domains with linked rule
             if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin)));
+                $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
             } else {
                 $rule = Authorization::skip(
                     fn () => $dbForPlatform->find('rules', [
