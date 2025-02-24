@@ -24168,7 +24168,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/databases#querying-documents). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: domain, resourceType, resourceId, url",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/databases#querying-documents). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: domain, type, value, automation, url",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -24188,10 +24188,12 @@
                         "in": "query"
                     }
                 ]
-            },
+            }
+        },
+        "\/proxy\/rules\/api": {
             "post": {
-                "summary": "Create rule",
-                "operationId": "proxyCreateRule",
+                "summary": "Create API rule",
+                "operationId": "proxyCreateAPIRule",
                 "consumes": [
                     "application\/json"
                 ],
@@ -24211,13 +24213,82 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "createRule",
+                    "method": "createAPIRule",
                     "weight": 423,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "proxy\/create-rule.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule.",
+                    "demo": "proxy\/create-a-p-i-rule.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule for serving Appwrite's API on custom domain.",
+                    "rate-limit": 10,
+                    "rate-time": 60,
+                    "rate-key": "userId:{userId}, url:{url}",
+                    "scope": "rules.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "domain": {
+                                    "type": "string",
+                                    "description": "Domain name.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            },
+                            "required": [
+                                "domain"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/proxy\/rules\/function": {
+            "post": {
+                "summary": "Create function rule",
+                "operationId": "proxyCreateFunctionRule",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "proxy"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Rule",
+                        "schema": {
+                            "$ref": "#\/definitions\/proxyRule"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createFunctionRule",
+                    "weight": 425,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "proxy\/create-function-rule.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule for executing Appwrite Function on custom domain.",
                     "rate-limit": 10,
                     "rate-time": 60,
                     "rate-key": "userId:{userId}, url:{url}",
@@ -24248,29 +24319,168 @@
                                     "default": null,
                                     "x-example": null
                                 },
-                                "resourceType": {
+                                "functionId": {
                                     "type": "string",
-                                    "description": "Action definition for the rule. Possible values are \"api\", \"function\" and \"site\"",
+                                    "description": "ID of function to be executed.",
                                     "default": null,
-                                    "x-example": "api",
-                                    "enum": [
-                                        "api",
-                                        "function",
-                                        "site"
-                                    ],
-                                    "x-enum-name": null,
-                                    "x-enum-keys": []
-                                },
-                                "resourceId": {
-                                    "type": "string",
-                                    "description": "ID of resource for the action type. If resourceType is \"api\", leave empty. If resourceType is \"function\", provide ID of the function.",
-                                    "default": "",
-                                    "x-example": "<RESOURCE_ID>"
+                                    "x-example": "<FUNCTION_ID>"
                                 }
                             },
                             "required": [
                                 "domain",
-                                "resourceType"
+                                "functionId"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/proxy\/rules\/redirect": {
+            "post": {
+                "summary": "Create Redirect rule",
+                "operationId": "proxyCreateRedirectRule",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "proxy"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Rule",
+                        "schema": {
+                            "$ref": "#\/definitions\/proxyRule"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createRedirectRule",
+                    "weight": 426,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "proxy\/create-redirect-rule.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule for to redirect from custom domain to another domain.",
+                    "rate-limit": 10,
+                    "rate-time": 60,
+                    "rate-key": "userId:{userId}, url:{url}",
+                    "scope": "rules.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "domain": {
+                                    "type": "string",
+                                    "description": "Domain name.",
+                                    "default": null,
+                                    "x-example": null
+                                },
+                                "target": {
+                                    "type": "string",
+                                    "description": "Target URL of redirection",
+                                    "default": null,
+                                    "x-example": "https:\/\/example.com"
+                                }
+                            },
+                            "required": [
+                                "domain",
+                                "target"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/proxy\/rules\/site": {
+            "post": {
+                "summary": "Create site rule",
+                "operationId": "proxyCreateSiteRule",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "proxy"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Rule",
+                        "schema": {
+                            "$ref": "#\/definitions\/proxyRule"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createSiteRule",
+                    "weight": 424,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "proxy\/create-site-rule.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new proxy rule for serving Appwrite Site on custom domain.",
+                    "rate-limit": 10,
+                    "rate-time": 60,
+                    "rate-key": "userId:{userId}, url:{url}",
+                    "scope": "rules.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "domain": {
+                                    "type": "string",
+                                    "description": "Domain name.",
+                                    "default": null,
+                                    "x-example": null
+                                },
+                                "siteId": {
+                                    "type": "string",
+                                    "description": "ID of site to be executed.",
+                                    "default": null,
+                                    "x-example": "<SITE_ID>"
+                                }
+                            },
+                            "required": [
+                                "domain",
+                                "siteId"
                             ]
                         }
                     }
@@ -40434,15 +40644,20 @@
                     "description": "Domain name.",
                     "x-example": "appwrite.company.com"
                 },
-                "resourceType": {
+                "type": {
                     "type": "string",
-                    "description": "Action definition for the rule. Possible values are \"api\", \"function\", or \"redirect\"",
-                    "x-example": "function"
+                    "description": "Action definition for the rule. Possible values are \"api\", \"deployment\", or \"redirect\"",
+                    "x-example": "deployment"
                 },
-                "resourceId": {
+                "value": {
                     "type": "string",
-                    "description": "ID of resource for the action type. If resourceType is \"api\" or \"url\", it is empty. If resourceType is \"function\", it is ID of the function.",
-                    "x-example": "myAwesomeFunction"
+                    "description": "Detail specification for the type. If type is \"api\", this is empty. If type is \"redirect\", this is URL. If type is \"deployment\", this is deployment ID.",
+                    "x-example": "67a9cf1a00150ee93abd"
+                },
+                "automation": {
+                    "type": "string",
+                    "description": "Action that result in update of rule. If VCS branch, value can be of syntax \"branch=[name]\"",
+                    "x-example": "branch=dev"
                 },
                 "status": {
                     "type": "string",
@@ -40465,8 +40680,9 @@
                 "$createdAt",
                 "$updatedAt",
                 "domain",
-                "resourceType",
-                "resourceId",
+                "type",
+                "value",
+                "automation",
                 "status",
                 "logs",
                 "renewAt"
@@ -40598,6 +40814,11 @@
                     "type": "string",
                     "description": "Defines if HTTPS is enforced for all requests.",
                     "x-example": "enabled"
+                },
+                "_APP_DOMAINS_NAMESERVERS": {
+                    "type": "string",
+                    "description": "Comma-separated list of nameservers.",
+                    "x-example": "ns1.example.com,ns2.example.com"
                 }
             },
             "required": [
@@ -40609,7 +40830,8 @@
                 "_APP_DOMAIN_ENABLED",
                 "_APP_ASSISTANT_ENABLED",
                 "_APP_DOMAIN_SITES",
-                "_APP_OPTIONS_FORCE_HTTPS"
+                "_APP_OPTIONS_FORCE_HTTPS",
+                "_APP_DOMAINS_NAMESERVERS"
             ]
         },
         "mfaChallenge": {
