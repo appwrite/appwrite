@@ -273,6 +273,8 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    // This is first Sites test with Proxy
+    // If this fails, it may not be related to variables; but Router flow failing
     public function testVariablesE2E(): void
     {
         $siteId = $this->setupSite([

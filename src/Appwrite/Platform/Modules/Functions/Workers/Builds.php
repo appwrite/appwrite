@@ -831,14 +831,26 @@ class Builds extends Action
                     case 'functions':
                         $resource->setAttribute('deployment', $deployment->getId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["function=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
                         break;
                     case 'sites':
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["site=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
                         break;
                 }
-
-                // TODO: @Meldiron DO NOT FORGET!!! Update rules with correct automation (function=$functionId, site=$siteId)
             }
 
 
@@ -1133,5 +1145,35 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
+    {
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit(100),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            if (\count($results) > 0) {
+                $cursor = $results[\count($results) - 1];
+            } else {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }

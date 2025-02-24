@@ -298,8 +298,8 @@ trait FunctionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$functionId])->toString(),
-                Query::equal('resourceType', ['function'])->toString(),
+                Query::equal('automation', ['function=' . $functionId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
 

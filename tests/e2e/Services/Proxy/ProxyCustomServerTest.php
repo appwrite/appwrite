@@ -14,13 +14,15 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRule(): void
     {
-        $rule = $this->createAPIRule('api.myapp.com');
+        $domain = \uniqid() . '-api.myapp.com';
+        $rule = $this->createAPIRule($domain);
 
         $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->assertEquals('api.myapp.com', $rule['body']['domain']);
+        $this->assertEquals($domain, $rule['body']['domain']);
         $this->assertArrayHasKey('$id', $rule['body']);
-        $this->assertArrayHasKey('resourceType', $rule['body']);
-        $this->assertArrayHasKey('resourceId', $rule['body']);
+        $this->assertArrayHasKey('type', $rule['body']);
+        $this->assertArrayHasKey('value', $rule['body']);
+        $this->assertArrayHasKey('automation', $rule['body']);
         $this->assertArrayHasKey('status', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
@@ -34,7 +36,7 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRuleSetup(): void
     {
-        $ruleId = $this->setupAPIRule('api2.myapp.com');
+        $ruleId = $this->setupAPIRule(\uniqid() . '-api2.myapp.com');
         $this->cleanupRule($ruleId);
     }
 

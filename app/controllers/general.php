@@ -162,19 +162,19 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $deployment = $dbForProject->getDocument('deployments', $rule->getAttribute('value'));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('value')));
 
-        if ($deployment->getAttribute('resourceType', '') === 'function') {
+        if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
-        } elseif ($deployment->getAttribute('resourceType', '') === 'site') {
+        } elseif ($deployment->getAttribute('resourceType', '') === 'sites') {
             $type = 'site';
         }
 
         $resource = $type === 'function' ?
-            $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', '')) :
-            $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', ''));
+            Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
+            Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
-        $isPreview = $type === 'function' ? false : ($resource->getAttribute('deploymentId', '') === $deployment->getId());
+        $isPreview = $type === 'function' ? false : (!\str_starts_with($rule->getAttribute('automation', ''), 'site='));
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');

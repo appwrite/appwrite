@@ -332,6 +332,7 @@ trait SitesBase
             'queries' => [
                 Query::equal('value', [$deploymentId])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
+                Query::equal('automation', [''])->toString(),
             ],
         ]);
 
