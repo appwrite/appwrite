@@ -252,11 +252,11 @@ class ProxyCustomServerTest extends Scope
     {
         $rules = $this->listRules();
         $this->assertEquals(200, $rules['headers']['status-code']);
-        foreach($rules['body']['rules'] as $rule) {
+        foreach ($rules['body']['rules'] as $rule) {
             $rule = $this->deleteRule($rule['$id']);
             $this->assertEquals(204, $rule['headers']['status-code']);
         }
-        
+
         $rules = $this->listRules();
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(0, $rules['body']['total']);
