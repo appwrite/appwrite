@@ -652,10 +652,14 @@ App::get('/v1/databases/:databaseId/logs')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+
+        $logsDB = $getLogsDB($project);
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -673,7 +677,7 @@ App::get('/v1/databases/:databaseId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -723,10 +727,8 @@ App::get('/v1/databases/:databaseId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -1041,10 +1043,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+
+        $logsDB = $getLogsDB($project);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1064,7 +1070,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -1114,10 +1120,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -3684,10 +3688,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('documentId', '', new UID(), 'Document ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+
+        $logsDB = $getLogsDB($project);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3717,7 +3725,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3767,10 +3775,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 

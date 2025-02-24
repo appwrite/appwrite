@@ -978,10 +978,15 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $providerId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+
+        $logsDB = $getLogsDB($project);
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -998,7 +1003,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -1047,10 +1052,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -2208,10 +2211,14 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $topicId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $logsDB = $getLogsDB($project);
+
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2228,7 +2235,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2278,10 +2285,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -2620,10 +2625,14 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $subscriberId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $logsDB = $getLogsDB($project);
+
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2640,7 +2649,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2690,10 +2699,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -3387,10 +3394,14 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $messageId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $logsDB = $getLogsDB($project);
+
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3407,7 +3418,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($logsDB);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3457,10 +3468,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 

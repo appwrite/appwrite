@@ -1345,10 +1345,13 @@ App::get('/v1/teams/:teamId/logs')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $teamId, array $queries, Response $response, Documnt $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $logsDB = $getLogsDB($project);
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1366,7 +1369,7 @@ App::get('/v1/teams/:teamId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($getLogsDB);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -1415,9 +1418,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

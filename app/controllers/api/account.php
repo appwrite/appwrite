@@ -2706,8 +2706,9 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->inject('project')
+    ->inject('getLogsDB')
+    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Document $project, callable $getLogsDB) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2719,9 +2720,15 @@ App::get('/v1/account/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new EventAudit($dbForProject);
+        $logsDB = $getLogsDB($project);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
+        $audit = new EventAudit($logsDB);
+
+        $logs = $audit->getLogsByUser(
+            $user->getInternalId(),
+            $limit,
+            $offset
+        );
 
         $output = [];
 
@@ -2750,10 +2757,8 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByUser($user->getInternalId()),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 

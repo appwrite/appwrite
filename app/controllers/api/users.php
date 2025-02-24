@@ -845,10 +845,12 @@ App::get('/v1/users/:userId/logs')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
+    ->inject('project')
+    ->inject('getLogsDB')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $userId, array $queries, Response $response, Document $project, callable $getLogsDB, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -915,10 +917,8 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByUser($user->getInternalId()),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
