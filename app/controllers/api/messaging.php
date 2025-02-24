@@ -25,7 +25,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Activity;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -1003,7 +1003,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -2235,7 +2235,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2649,7 +2649,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3418,7 +3418,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
