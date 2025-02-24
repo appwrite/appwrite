@@ -108,7 +108,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
             'registration' => DateTime::now(),
             'reset' => false,
-            'name' => $name,
+            'name' => !empty($name) ? $name : 'Unnamed User',
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
@@ -198,13 +198,14 @@ App::post('/v1/users')
     ->param('email', null, new Email(), 'User email.', true)
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $name = $name ?? '';
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
