@@ -151,7 +151,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($ruleId);
     }
 
-    public function testCreatSiteRule(): void
+    public function testCreateSiteRule(): void
     {
         $domain = \uniqid() . '-site.custom.localhost';
 
@@ -250,6 +250,13 @@ class ProxyCustomServerTest extends Scope
 
     public function testListRules()
     {
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach($rules['body']['rules'] as $rule) {
+            $rule = $this->deleteRule($rule['$id']);
+            $this->assertEquals(204, $rule['headers']['status-code']);
+        }
+        
         $rules = $this->listRules();
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(0, $rules['body']['total']);

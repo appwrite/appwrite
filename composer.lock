@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "236b24287cd5bdcf705df586f12c560c",
+    "content-hash": "6883b3e81cfb0c5355997def668d5df2",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3919,16 +3919,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-fix-prevent-duplicate-compression",
+            "version": "0.33.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2"
+                "reference": "e91d4c560d1b809e25faa63d564fef034363b50f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
-                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/e91d4c560d1b809e25faa63d564fef034363b50f",
+                "reference": "e91d4c560d1b809e25faa63d564fef034363b50f",
                 "shasum": ""
             },
             "require": {
@@ -3960,9 +3960,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/fix-prevent-duplicate-compression"
+                "source": "https://github.com/utopia-php/http/tree/0.33.16"
             },
-            "time": "2025-02-03T12:02:35+00:00"
+            "time": "2025-01-16T15:58:50+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8804,18 +8804,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-fix-prevent-duplicate-compression",
-            "alias": "0.33.99",
-            "alias_normalized": "0.33.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

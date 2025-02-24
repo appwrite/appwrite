@@ -1289,13 +1289,7 @@ App::get('/v1/ping')
 App::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
-    ->inject('utopia')
-    ->action(function (App $utopia) {
-        $handeledByRouter = $utopia->getRoute()?->getLabel('router', false);
-        if ($handeledByRouter === true) {
-            return;
-        }
-
+    ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 

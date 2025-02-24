@@ -288,7 +288,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'domain' => $domain,
                                 'type' => 'deployment',
                                 'value' => $deployment->getId(),
-                                'automation' => 'commit=' . $providerBranch,
+                                'automation' => 'commit=' . $providerCommitHash,
                                 'status' => 'verified',
                                 'certificateId' => '',
                             ]))
