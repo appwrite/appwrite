@@ -27,7 +27,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Activity;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -868,7 +868,9 @@ App::get('/v1/users/:userId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $logsDB = $getLogsDB($project);
+
+        $audit = new Activity($logsDB);
 
         $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 

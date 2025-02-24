@@ -20,7 +20,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Activity;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -677,7 +677,7 @@ App::get('/v1/databases/:databaseId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -1070,7 +1070,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3725,7 +3725,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($logsDB);
+        $audit = new Activity($logsDB);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 

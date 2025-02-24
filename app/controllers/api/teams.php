@@ -26,7 +26,7 @@ use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Activity;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -1369,7 +1369,7 @@ App::get('/v1/teams/:teamId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($getLogsDB);
+        $audit = new Activity($logsDB);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 

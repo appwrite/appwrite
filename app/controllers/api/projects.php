@@ -21,7 +21,8 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Activity;
+use Utopia\Audit\Adapter\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -242,8 +243,8 @@ App::post('/v1/projects')
             }
 
             if (!$create && $sharedTablesV1) {
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), $audit->getAttributes());
+                $indexes = \array_map(fn (array $index) => new Document($index), $audit->getIndexes());
                 $dbForProject->createDocument(Database::METADATA, new Document([
                     '$id' => ID::custom('audit'),
                     '$permissions' => [Permission::create(Role::any())],
