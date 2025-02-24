@@ -34,7 +34,11 @@ class LetsEncrypt implements Adapter
             $stdout,
             $stderr
         );
-
+        var_dump([
+            'location' =>  'issueCertificate.1',
+            'certificate' =>   "certbot certonly -v --webroot --noninteractive --agree-tos$staging --email  {$this->email} --cert-name  $certName -w  ".APP_STORAGE_CERTIFICATES." -d $domain",
+            'result' => $exit,
+        ]);
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {
             throw new Exception('Failed to issue a certificate with message: ' . $stderr);
@@ -71,7 +75,13 @@ class LetsEncrypt implements Adapter
             "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
             "      keyFile: /storage/certificates/{$domain}/privkey.pem"
         ]);
+        var_dump([
+            'location' =>  'issueCertificate.2',
+            'config' => $config,
+            'path' => APP_STORAGE_CONFIG . '/' . $domain . '.yml',
+            'file_put_contents' =>   file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config),
 
+        ]);
         // Save configuration into Traefik using our new cert files
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
             throw new Exception('Failed to save Traefik configuration.');
