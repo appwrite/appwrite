@@ -37,7 +37,7 @@ use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
-use Utopia\Audit\Adapter\Activity;
+use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -2722,7 +2722,7 @@ App::get('/v1/account/logs')
 
         $logsDB = $getLogsDB($project);
 
-        $audit = new Activity($logsDB);
+        $audit = new EventAudit($logsDB);
 
         $logs = $audit->getLogsByUser(
             $user->getInternalId(),
