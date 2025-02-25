@@ -48,7 +48,7 @@ class Rule extends Model
             ])
             ->addRule('automation', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action that result in update of rule. If VCS branch, value can be of syntax "branch=[name]"',
+                'description' => 'Action that results in a rule update. If VCS branch, value can be of syntax "branch=[name]"',
                 'array' => false,
                 'default' => '',
                 'example' => 'branch=dev',
