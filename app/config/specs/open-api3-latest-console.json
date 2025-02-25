@@ -3387,7 +3387,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3408,7 +3408,8 @@
                                 "union-china-pay",
                                 "visa",
                                 "mir",
-                                "maestro"
+                                "maestro",
+                                "rupay"
                             ],
                             "x-enum-name": "CreditCard",
                             "x-enum-keys": [
@@ -3427,7 +3428,8 @@
                                 "Union China Pay",
                                 "Visa",
                                 "MIR",
-                                "Maestro"
+                                "Maestro",
+                                "Rupay"
                             ]
                         },
                         "in": "path"
@@ -7823,7 +7825,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -11585,7 +11587,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
-                    "weight": 134,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11692,60 +11694,12 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
-                    "weight": 130,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "health\/get-pub-sub.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-pubsub.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "health.read",
-                    "platforms": [
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": []
-                    }
-                ]
-            }
-        },
-        "\/health\/queue": {
-            "get": {
-                "summary": "Get queue",
-                "operationId": "healthGetQueue",
-                "tags": [
-                    "health"
-                ],
-                "description": "Check the Appwrite queue messaging servers are up and connection is successful.",
-                "responses": {
-                    "200": {
-                        "description": "Health Status",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/healthStatus"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getQueue",
-                    "weight": 129,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "health\/get-queue.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11788,7 +11742,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
-                    "weight": 136,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11849,7 +11803,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
-                    "weight": 135,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11910,7 +11864,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
-                    "weight": 137,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11982,7 +11936,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
-                    "weight": 138,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12081,8 +12035,9 @@
                                 "v1-audits",
                                 "v1-mails",
                                 "v1-functions",
-                                "v1-usage",
-                                "v1-usage-dump",
+                                "v1-stats-resources",
+                                "v1-stats-usage",
+                                "v1-stats-usage-dump",
                                 "v1-webhooks",
                                 "v1-certificates",
                                 "v1-builds",
@@ -12130,7 +12085,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
-                    "weight": 142,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12191,7 +12146,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
-                    "weight": 133,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12252,7 +12207,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
-                    "weight": 139,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12313,7 +12268,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
-                    "weight": 140,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12374,7 +12329,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
-                    "weight": 141,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12413,14 +12368,14 @@
                 ]
             }
         },
-        "\/health\/queue\/usage": {
+        "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get usage queue",
-                "operationId": "healthGetQueueUsage",
+                "summary": "Get stats  resources queue",
+                "operationId": "healthGetQueueStatsResources",
                 "tags": [
                     "health"
                 ],
-                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite stats resources queue.",
                 "responses": {
                     "200": {
                         "description": "Health Queue",
@@ -12434,13 +12389,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsage",
-                    "weight": 143,
+                    "method": "getQueueStatsResources",
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage.md",
+                    "demo": "health\/get-queue-stats-resources.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-resources.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12474,10 +12429,71 @@
                 ]
             }
         },
-        "\/health\/queue\/usage-dump": {
+        "\/health\/queue\/stats-usage": {
+            "get": {
+                "summary": "Get stats usage queue",
+                "operationId": "healthGetQueueUsage",
+                "tags": [
+                    "health"
+                ],
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "responses": {
+                    "200": {
+                        "description": "Health Queue",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/healthQueue"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getQueueUsage",
+                    "weight": 143,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "health\/get-queue-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "health.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "threshold",
+                        "description": "Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 5000
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/health\/queue\/stats-usage-dump": {
             "get": {
                 "summary": "Get usage dump queue",
-                "operationId": "healthGetQueueUsageDump",
+                "operationId": "healthGetQueueStatsUsageDump",
                 "tags": [
                     "health"
                 ],
@@ -12495,13 +12511,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsageDump",
+                    "method": "getQueueStatsUsageDump",
                     "weight": 144,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage-dump.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage-dump.md",
+                    "demo": "health\/get-queue-stats-usage-dump.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage-dump.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12557,7 +12573,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
-                    "weight": 132,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12714,7 +12730,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
-                    "weight": 131,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17609,17 +17625,17 @@
                                     },
                                     "endpoint": {
                                         "type": "string",
-                                        "description": "Source's Appwrite Endpoint",
+                                        "description": "Source Appwrite endpoint",
                                         "x-example": "https:\/\/example.com"
                                     },
                                     "projectId": {
                                         "type": "string",
-                                        "description": "Source's Project ID",
+                                        "description": "Source Project ID",
                                         "x-example": "<PROJECT_ID>"
                                     },
                                     "apiKey": {
                                         "type": "string",
-                                        "description": "Source's API Key",
+                                        "description": "Source API Key",
                                         "x-example": "<API_KEY>"
                                     }
                                 },
@@ -20320,6 +20336,368 @@
                         }
                     }
                 }
+            }
+        },
+        "\/projects\/{projectId}\/dev-keys": {
+            "get": {
+                "summary": "List dev keys",
+                "operationId": "projectsListDevKeys",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Dev Keys List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKeyList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listDevKeys",
+                    "weight": 395,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/list-dev-keys.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterList all the project\\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create dev key",
+                "operationId": "projectsCreateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createDevKey",
+                    "weight": 392,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/create-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/projects\/{projectId}\/dev-keys\/{keyId}": {
+            "get": {
+                "summary": "Get dev key",
+                "operationId": "projectsGetDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDevKey",
+                    "weight": 394,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/get-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a project\\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update dev key",
+                "operationId": "projectsUpdateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateDevKey",
+                    "weight": 393,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/update-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a project\\'s dev key by its unique ID. Use this endpoint to update a project\\'s dev key name or expiration time.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete dev key",
+                "operationId": "projectsDeleteDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDevKey",
+                    "weight": 396,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/delete-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a project\\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
             }
         },
         "\/projects\/{projectId}\/jwts": {
@@ -31084,6 +31462,30 @@
                     "keys"
                 ]
             },
+            "devKeyList": {
+                "description": "Dev Keys List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of keys documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "keys": {
+                        "type": "array",
+                        "description": "List of keys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "keys"
+                ]
+            },
             "platformList": {
                 "description": "Platforms List",
                 "type": "object",
@@ -34797,6 +35199,14 @@
                         },
                         "x-example": {}
                     },
+                    "devKeys": {
+                        "type": "array",
+                        "description": "List of dev keys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": {}
+                    },
                     "smtpEnabled": {
                         "type": "boolean",
                         "description": "Status for custom SMTP",
@@ -34975,6 +35385,7 @@
                     "platforms",
                     "webhooks",
                     "keys",
+                    "devKeys",
                     "smtpEnabled",
                     "smtpSenderName",
                     "smtpSenderEmail",
@@ -35162,6 +35573,56 @@
                     "secret",
                     "accessedAt",
                     "sdks"
+                ]
+            },
+            "devKey": {
+                "description": "DevKey",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Key ID.",
+                        "x-example": "5e5ea5c16897e"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Key creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Key update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Key name.",
+                        "x-example": "My API Key"
+                    },
+                    "expire": {
+                        "type": "string",
+                        "description": "Key expiration date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "Secret key.",
+                        "x-example": "919c2d18fb5d4...a2ae413da83346ad2"
+                    },
+                    "accessedAt": {
+                        "type": "string",
+                        "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "name",
+                    "expire",
+                    "secret",
+                    "accessedAt"
                 ]
             },
             "mockNumber": {
