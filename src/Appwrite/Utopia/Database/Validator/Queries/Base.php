@@ -24,7 +24,15 @@ class Base extends Queries
     public function __construct(string $collection, array $allowedAttributes)
     {
         $config = Config::getParam('collections', []);
-        $collections = array_merge($config['projects'], $config['buckets'], $config['databases'], $config['console']);
+
+        $collections = array_merge(
+            $config['projects'],
+            $config['buckets'],
+            $config['databases'],
+            $config['console'],
+            $config['log']
+        );
+
         $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
@@ -35,6 +43,7 @@ class Base extends Queries
         $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
+
             if (!isset($allowedAttributesLookup[$key])) {
                 continue;
             }
