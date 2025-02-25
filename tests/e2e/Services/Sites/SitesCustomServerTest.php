@@ -1010,41 +1010,6 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    // public function testLoadSite(): void
-    // {
-    //     $site = $this->createSite([
-    //         'buildRuntime' => 'ssr-22',
-    //         'fallbackFile' => null,
-    //         'framework' => 'other',
-    //         'name' => 'Test Site',
-    //         'outputDirectory' => './',
-    //         'providerBranch' => 'main',
-    //         'providerRootDirectory' => './',
-    //         'siteId' => ID::unique()
-    //     ]);
-
-    //     $siteId = $site['body']['$id'] ?? '';
-    //     $this->assertNotEmpty($siteId);
-
-    //     $deployment = $this->createDeployment($siteId, [
-    //         'code' => $this->packageSite('static'),
-    //         'activate' => 'false'
-    //     ]);
-
-    //     $deploymentId = $deployment['body']['$id'] ?? '';
-
-    //     $this->assertEventually(function () use ($siteId, $deploymentId) {
-    //         $deployment = $this->getDeployment($siteId, $deploymentId);
-
-    //         $this->assertEquals('ready', $deployment['body']['status']);
-    //     }, 30000, 300);
-
-    //     // get rule for this site from rules collection
-
-    //     $response = $this->client->call(Client::METHOD_GET, $domain);
-    //     var_dump($response);
-    // }
-
     public function testUpdateSpecs(): void
     {
         $siteId = $this->setupSite([
@@ -1205,6 +1170,118 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('buildRuntime', $framework);
         $this->assertArrayHasKey('runtimes', $framework);
         $this->assertArrayHasKey('adapters', $framework);
+    }
+
+    public function testSiteStatic(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Non-SPA site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-spa'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Index page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Contact page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("Page not found", $response['body']); // Title
+        $this->assertStringContainsString("Go to homepage", $response['body']); // Button
+        $this->assertStringContainsString("Powered by", $response['body']); // Brand
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteStaticSPA(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SPA site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '404.html',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-spa'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Index page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Contact page", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Customized 404 page", $response['body']);
+        $this->assertStringNotContainsString("Powered by", $response['body']); // Brand
+
+        $this->cleanupSite($siteId);
     }
 
     public function testSiteTemplate(): void
