@@ -1362,9 +1362,11 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs, remove after 1 log cycle
-        $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
-        $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T00:00+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
