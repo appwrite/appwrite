@@ -239,8 +239,12 @@ class ProxyCustomServerTest extends Scope
     {
         $domain = \uniqid() . '-site-branch.custom.localhost';
 
-        $siteId = $this->setupSite();
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
         $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
 
         $ruleId = $this->setupSiteRule($domain, $siteId, 'dev');
         $this->assertNotEmpty($ruleId);
