@@ -996,7 +996,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
 
         // Temp fix for logs
         $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T00:00+00:00'))),
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T09:00+00:00'))),
             Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
         ]);
 
@@ -2226,7 +2226,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
 
         // Temp fix for logs
         $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T00:00+00:00'))),
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T09:00+00:00'))),
             Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
         ]);
 
@@ -2638,7 +2638,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
 
         // Temp fix for logs
         $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T00:00+00:00'))),
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T09:00+00:00'))),
             Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
         ]);
 
@@ -3405,7 +3405,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
 
         // Temp fix for logs
         $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T00:00+00:00'))),
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-25T09:00+00:00'))),
             Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
         ]);
 
