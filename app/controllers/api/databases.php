@@ -723,10 +723,8 @@ App::get('/v1/databases/:databaseId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -1114,10 +1112,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -3767,10 +3763,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 

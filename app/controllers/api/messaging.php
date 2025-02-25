@@ -1047,10 +1047,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -2278,10 +2276,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -2690,10 +2686,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
@@ -3457,10 +3451,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            //'total' => $audit->countLogsByResource($resource),
-            //'logs' => $output,
-            'total' => 0,
-            'logs' => [],
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
