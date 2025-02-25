@@ -1894,7 +1894,7 @@ App::get('/v1/storage/:bucketId/usage')
         $metrics = [
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
-            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_FILES_TRANSFORMATIONS),
+            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_FILES_IMAGES_TRANSFORMED),
         ];
 
 
@@ -1949,7 +1949,7 @@ App::get('/v1/storage/:bucketId/usage')
             'filesStorageTotal' => $usage[$metrics[1]]['total'],
             'files' => $usage[$metrics[0]]['data'],
             'storage' => $usage[$metrics[1]]['data'],
-            'fileTransformations' => $usage[$metrics[2]]['data'],
-            'fileTransformationsTotal' => $usage[$metrics[2]]['total'],
+            'imageTransformations' => $usage[$metrics[2]]['data'],
+            'imageTransformationsTotal' => $usage[$metrics[2]]['total'],
         ]), Response::MODEL_USAGE_BUCKETS);
     });

@@ -104,7 +104,7 @@ class StorageConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
         $this->assertIsArray($response['body']['files']);
         $this->assertIsArray($response['body']['storage']);
-        $this->assertIsArray($response['body']['fileTransformations']);
-        $this->assertIsNumeric($response['body']['fileTransformationsTotal']);
+        $this->assertIsArray($response['body']['imageTransformations']);
+        $this->assertIsNumeric($response['body']['imageTransformationsTotal']);
     }
 }
