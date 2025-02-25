@@ -24,6 +24,9 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Detector\Detection\Rendering\SSG;
+use Utopia\Detector\Detection\Rendering\SSR;
+use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -590,7 +593,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: true,
+                            remove: false,
                             entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -690,6 +693,28 @@ class Builds extends Action
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
+
+            $listFilesCommand = "cd /usr/local/build/" . $resource->getAttribute('outputDirectory') . " && find . -name 'node_modules' -prune -o -type f -print";
+            $response = $executor->executeCommand(
+                deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
+                command: $listFilesCommand,
+                timeout: 60
+            );
+
+            $files = array_map('trim', array_filter(explode("\n", $response['output'])));
+
+            $detector = new Rendering($files, $resource->getAttribute('framework'));
+            $detector
+                ->addOption(new SSR())
+                ->addOption(new SSG());
+            $detectedRenderingStrategy = $detector->detect();
+
+            $renderingStrategy = $detectedRenderingStrategy->getName();
+            $fallbackFile = $detectedRenderingStrategy->getFallbackFile();
+
+            $resource->setAttribute('adapter', $renderingStrategy);
+            $resource->setAttribute('fallbackFile', $fallbackFile);
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));

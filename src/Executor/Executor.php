@@ -249,6 +249,31 @@ class Executor
         return $response['body'];
     }
 
+    public function executeCommand(
+        string $deploymentId,
+        string $projectId,
+        string $command,
+        int $timeout
+    ) {
+        $runtimeId = "$projectId-$deploymentId-build";
+        $route = "/runtimes/$runtimeId/commands";
+
+        $params = [
+            'command' => $command,
+            'timeout' => $timeout
+        ];
+
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
+
+        return $response['body'];
+    }
+
     /**
      * Call
      *
