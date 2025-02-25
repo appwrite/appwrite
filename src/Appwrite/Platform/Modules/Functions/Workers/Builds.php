@@ -900,10 +900,6 @@ class Builds extends Action
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
-            \var_dump($th->getMessage());
-            \var_dump($th->getLine());
-            \var_dump($th->getFile());
-            \var_dump($th->getTraceAsString());
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
