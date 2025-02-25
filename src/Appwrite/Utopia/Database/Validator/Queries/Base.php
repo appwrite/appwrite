@@ -30,7 +30,7 @@ class Base extends Queries
             $config['buckets'],
             $config['databases'],
             $config['console'],
-            $config['log']
+            $config['logs']
         );
 
         $collection = $collections[$collection];
