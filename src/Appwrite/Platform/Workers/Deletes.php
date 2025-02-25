@@ -7,6 +7,7 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
+use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -21,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -91,13 +93,13 @@ class Deletes extends Action
                         $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -510,7 +512,8 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION
+            Audit::COLLECTION,
+            AbuseDatabase::COLLECTION,
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -740,14 +743,13 @@ class Deletes extends Action
     /**
      * @param callable $getProjectDB
      * @param Device $deviceForSites
-     * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Document $document function document
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -758,8 +760,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for site " . $siteId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['site']),
-            Query::equal('resourceInternalId', [$siteInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['site=' . $siteId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -779,22 +781,25 @@ class Deletes extends Action
          */
         Console::info("Deleting deployments for site " . $siteId);
         $deploymentInternalIds = [];
+        $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
-            $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $deploymentIds[] = $document->getId();
+            $this->deleteDeploymentFiles($deviceForSites, $document);
+            $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
          * Delete rules for all deployments of the site
          */
-        //TODO: If functions also have previews in the future, change the logic here to use unique identifier for sites and functions
-        foreach ($deploymentInternalIds as $deploymentInternalId) {
-            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentInternalId);
+        foreach ($deploymentIds as $deploymentId) {
+            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentId);
             $this->deleteByGroup('rules', [
-                Query::equal('resourceType', ['deployment']),
-                Query::equal('resourceInternalId', [$deploymentInternalId]),
+                Query::equal('type', ['deployment']),
+                Query::equal('value', [$deploymentId]),
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
                 $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -852,8 +857,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['function=' . $functionId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -876,9 +881,10 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
@@ -924,6 +930,65 @@ class Deletes extends Action
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
+    }
+
+    private function deleteDeploymentRules(Database $dbForPlatform, Document $deployment, Document $project, CertificatesAdapter $certificates): void
+    {
+        Console::info("Deleting rules for site " . $deployment->getId());
+        $this->deleteByGroup('rules', [
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deployment->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
+            $this->deleteRule($dbForPlatform, $document, $certificates);
+        });
+    }
+
+    private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
+    {
+        $screenshotIds = [];
+        if (!empty($deployment->getAttribute('screenshotLight', ''))) {
+            $screenshotIds[] = $deployment->getAttribute('screenshotLight', '');
+        }
+        if (!empty($deployment->getAttribute('screenshotDark', ''))) {
+            $screenshotIds[] = $deployment->getAttribute('screenshotDark', '');
+        }
+
+        if (empty($screenshotIds)) {
+            return;
+        }
+        Console::info("Deleting screenshots for deployment " . $deployment->getId());
+
+        $bucket = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+        if ($bucket->isEmpty()) {
+            Console::error('Failed to get bucket for deployment screenshots');
+            return;
+        }
+
+        foreach ($screenshotIds as $id) {
+            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getInternalId(), $id));
+
+            if ($file->isEmpty()) {
+                Console::error('Failed to get deployment screenshot: ' . $id);
+                continue;
+            }
+
+            $path = $file->getAttribute('path', '');
+
+            try {
+                if ($deviceForFiles->delete($path, true)) {
+                    Console::success('Deleted deployment screenshot: ' . $path);
+                } else {
+                    Console::error('Failed to delete deployment screenshot: ' . $path);
+                }
+            } catch (\Throwable $th) {
+                Console::error('Failed to delete deployment screenshot: ' . $path);
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
+        }
     }
 
     /**
@@ -991,13 +1056,14 @@ class Deletes extends Action
     /**
      * @param callable $getProjectDB
      * @param Device $deviceForFunctions
+     * @param Device $deviceForSites
      * @param Device $deviceForBuilds
      * @param Document $document
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1007,7 +1073,16 @@ class Deletes extends Action
         /**
          * Delete deployment files
          */
-        $this->deleteDeploymentFiles($deviceForFunctions, $document); //TODO: For sites, this should be deviceForSites
+        match ($document->getAttribute('resourceType')) {
+            'functions' => $this->deleteDeploymentFiles($deviceForFunctions, $document),
+            'sites' => $this->deleteDeploymentFiles($deviceForSites, $document),
+            default => throw new Exception('Invalid resource type')
+        };
+
+        /**
+         * Delete deployment screenshots
+         */
+        $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
 
         /**
          * Delete builds
@@ -1025,8 +1100,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for deployment " . $deploymentId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['deployment']),
-            Query::equal('resourceInternalId', [$deploymentInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deploymentId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -1040,64 +1115,38 @@ class Deletes extends Action
     }
 
     /**
-     * @param Document $document to be deleted
-     * @param Database $database to delete it from
-     * @param callable|null $callback to perform after document is deleted
-     * @return void
-     */
-    private function deleteById(Document $document, Database $database, callable $callback = null): void
-    {
-        if ($database->deleteDocument($document->getCollection(), $document->getId())) {
-            Console::success('Deleted document "' . $document->getId() . '" successfully');
-
-            if (is_callable($callback)) {
-                $callback($document);
-            }
-        } else {
-            Console::error('Failed to delete document: ' . $document->getId());
-        }
-    }
-
-    /**
      * @param string $collection collectionID
      * @param array $queries
      * @param Database $database
-     * @param callable|null $callback
+     * @param ?callable $callback
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
-    {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
+    protected function deleteByGroup(
+        string $collection,
+        array $queries,
+        Database $database,
+        ?callable $callback = null
+    ): void {
+        $start = \microtime(true);
 
-        $executionStart = \microtime(true);
+        try {
+            $documents = $database->deleteDocuments($collection, $queries);
+        } catch (\Throwable $th) {
+            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            return;
+        }
 
-        while ($sum === $limit) {
-            $chunk++;
-
-            try {
-                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
-            } catch (DatabaseException $e) {
-                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
-                return;
-            }
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
-
-            foreach ($results as $document) {
-                $this->deleteById($document, $database, $callback);
-                $count++;
+        if (\is_callable($callback)) {
+            foreach ($documents as $document) {
+                $callback($document);
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
+        $count = \count($documents);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**
@@ -1111,25 +1160,23 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $results = [];
+        $limit = 1000;
         $sum = $limit;
         $cursor = null;
 
-        $executionStart = \microtime(true);
+        $start = \microtime(true);
 
         while ($sum === $limit) {
-            $chunk++;
 
-            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
-            if ($cursor instanceof Document) {
-                $mergedQueries[] = Query::cursorAfter($cursor);
+            $queries = \array_merge([Query::limit($limit)], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
             }
 
-            $results = $database->find($collection, $mergedQueries);
+            $results = $database->find($collection, $queries);
 
-            $sum = count($results);
+            $sum = \count($results);
 
             if ($sum > 0) {
                 $cursor = $results[$sum - 1];
@@ -1144,9 +1191,9 @@ class Deletes extends Action
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
 
-        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**

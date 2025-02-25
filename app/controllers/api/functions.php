@@ -6,7 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -962,10 +962,10 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForPlatform')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1219,8 +1219,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_COMPUTE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-            'APPWRITE_COMPUTE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -1293,7 +1293,7 @@ App::post('/v1/functions/:functionId/executions')
                 throw $th;
             }
         } finally {
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
@@ -1585,7 +1585,7 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-    ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+    ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -1729,10 +1729,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, ?bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1749,9 +1750,14 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        if ($variable->getAttribute('secret') === true && $secret === false) {
+            throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
+        }
+
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('secret', $secret ?? $variable->getAttribute('secret'))
             ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']));
 
         try {

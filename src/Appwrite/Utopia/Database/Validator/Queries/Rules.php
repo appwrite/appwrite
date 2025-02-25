@@ -6,8 +6,9 @@ class Rules extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'domain',
-        'resourceType',
-        'resourceId',
+        'type',
+        'value',
+        'automation',
         'url'
     ];
 

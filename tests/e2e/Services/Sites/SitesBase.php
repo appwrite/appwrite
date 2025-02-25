@@ -6,7 +6,9 @@ use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait SitesBase
 {
@@ -47,7 +49,19 @@ trait SitesBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 50000, 500);
+        }, 100000, 500);
+
+        // Not === so multipart/form-data works fine too
+        if (($params['activate'] ?? false) == true) {
+            $this->assertEventually(function () use ($siteId, $deploymentId) {
+                $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+            }, 100000, 500);
+        }
 
         return $deploymentId;
     }
@@ -100,6 +114,46 @@ trait SitesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $params);
+
+        return $variable;
+    }
+
+    protected function getVariable(string $siteId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
+    protected function listVariables(string $siteId, mixed $params = []): mixed
+    {
+        $variables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variables;
+    }
+
+    protected function updateVariable(string $siteId, string $variableId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variable;
+    }
+
+    protected function deleteVariable(string $siteId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
         return $variable;
     }
@@ -188,6 +242,16 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function createTemplateDeployment(string $siteId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
     protected function getSiteUsage(string $siteId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
@@ -217,6 +281,26 @@ trait SitesBase
         return $site;
     }
 
+    protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
+    {
+        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'siteId' => $siteId,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
+        $domain = $rule['body']['domain'];
+
+        return $domain;
+    }
+
     protected function getSiteDomain(string $siteId): string
     {
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
@@ -224,8 +308,31 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$siteId])->toString(),
-                Query::equal('resourceType', ['site'])->toString(),
+                Query::equal('automation', ['site=' . $siteId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $rules['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($rules['body']['rules']));
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        return $domain;
+    }
+
+    protected function getDeploymentDomain(string $deploymentId): string
+    {
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('value', [$deploymentId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+                Query::equal('automation', [''])->toString(),
             ],
         ]);
 

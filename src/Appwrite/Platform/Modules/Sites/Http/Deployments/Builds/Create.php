@@ -10,11 +10,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Create extends Action
 {
@@ -53,15 +56,16 @@ class Create extends Action
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') //TODO: remove it later
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -75,14 +79,14 @@ class Create extends Action
         }
 
         $path = $deployment->getAttribute('path');
-        if (empty($path) || !$deviceForFunctions->exists($path)) {
+        if (empty($path) || !$deviceForSites->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $deploymentId = ID::unique();
 
-        $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-        $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+        $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+        $deviceForSites->transfer($path, $destination, $deviceForSites);
 
         $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
@@ -96,6 +100,24 @@ class Create extends Action
             'outputDirectory' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
         ]));
+
+        // Preview deployments for sites
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $domain = ID::unique() . "." . $sitesDomain;
+        $ruleId = md5($domain);
+        Authorization::skip(
+            fn () => $dbForPlatform->createDocument('rules', new Document([
+                '$id' => $ruleId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'domain' => $domain,
+                'type' => 'deployment',
+                'value' => $deployment->getId(),
+                'status' => 'verified',
+                'certificateId' => '',
+                'search' => implode(' ', [$ruleId, $domain]),
+            ]))
+        );
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

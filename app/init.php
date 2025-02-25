@@ -21,6 +21,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -32,7 +33,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
@@ -239,8 +240,6 @@ const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
 const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
-
-
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
@@ -271,6 +270,8 @@ const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
 const METRIC_BUCKET_ID_FILES_TRANSFORMATIONS  = '{bucketInternalId}.files.transformations';
+const METRIC_FILES_IMAGES_TRANSFORMED = 'files.imagesTransformed';
+const METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED = '{bucketInternalId}.files.imagesTransformed';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
 const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
 const METRIC_SITES = 'sites';
@@ -318,6 +319,18 @@ const METRIC_SITE_ID_BUILDS_MB_SECONDS = '{siteInternalId}.builds.mbSeconds';
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_MAU = 'users.mau';
+const METRIC_DAU = 'users.dau';
+const METRIC_WAU = 'users.wau';
+const METRIC_WEBHOOKS = 'webhooks';
+const METRIC_PLATFORMS = 'platforms';
+const METRIC_PROVIDERS = 'providers';
+const METRIC_TOPICS = 'topics';
+const METRIC_KEYS = 'keys';
+const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
+const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 
 // Resource types
 
@@ -1198,6 +1211,9 @@ App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
+App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
 App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
     return new Audit($publisher);
 }, ['publisher']);
@@ -1568,6 +1584,39 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -1635,6 +1684,7 @@ function getDevice(string $root, string $connection = ''): Device
         $accessSecret = '';
         $bucket = '';
         $region = '';
+        $url = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
 
         try {
             $dsn = new DSN($connection);
@@ -1649,7 +1699,7 @@ function getDevice(string $root, string $connection = ''): Device
 
         switch ($device) {
             case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl, $url);
             case STORAGE::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
@@ -1675,7 +1725,8 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
-                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                $s3EndpointUrl = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
                 $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
@@ -1910,13 +1961,31 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHostname', function (Request $request) {
+App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
+    $allowed = false;
+
     if (App::isDevelopment()) {
-        $host = $request->getQuery('appwrite-hostname') ?? '';
+        $allowed = true;
+    } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+        $allowed = true;
+    }
+
+    if ($allowed) {
+        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
         if (!empty($host)) {
             return $host;
         }
     }
 
     return '';
-}, ['request']);
+}, ['request', 'apiKey']);
+
+App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+    $key = $request->getHeader('x-appwrite-key');
+
+    if (empty($key)) {
+        return null;
+    }
+
+    return Key::decode($project, $key);
+}, ['request', 'project']);

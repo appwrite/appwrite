@@ -80,13 +80,12 @@ class Create extends Action
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') // TODO: Remove this later once volume is added to executor
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
+    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForLocal, Build $queueForBuilds)
     {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -168,7 +167,7 @@ class Create extends Action
 
         // Save to storage
         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
-        $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = $deviceForSites->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
@@ -180,7 +179,7 @@ class Create extends Action
             }
         }
 
-        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForSites->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -203,7 +202,7 @@ class Create extends Action
                 }
             }
 
-            $fileSize = $deviceForFunctions->getFileSize($path);
+            $fileSize = $deviceForSites->getFileSize($path);
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -228,24 +227,20 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                // Preview deployments for sites
-                $projectId = $project->getId();
-
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-
-                $rule = Authorization::skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deploymentId,
-                        'resourceInternalId' => $deployment->getInternalId(),
+                        'type' => 'deployment',
+                        'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
                     ]))
                 );
             } else {
@@ -283,24 +278,20 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                // Preview deployments for sites
-                $projectId = $project->getId();
-
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-
-                $rule = Authorization::skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deploymentId,
-                        'resourceInternalId' => $deployment->getInternalId(),
+                        'type' => 'deployment',
+                        'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
                     ]))
                 );
             } else {
