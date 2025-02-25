@@ -292,9 +292,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $execution->setAttribute('status', 'processing'); // waiting / processing / completed / failed
 
             $queueForEvents
-                        ->setParam('functionId', $resource->getId())
-                        ->setParam('executionId', $execution->getId())
-                        ->setContext('function', $resource);
+                ->setParam('functionId', $resource->getId())
+                ->setParam('executionId', $execution->getId())
+                ->setContext('function', $resource);
         } elseif ($type === 'site') {
             $execution->setAttribute('resourceType', 'sites');
 
