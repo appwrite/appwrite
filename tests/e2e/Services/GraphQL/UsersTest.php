@@ -427,7 +427,6 @@ class UsersTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
-
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
@@ -452,11 +451,10 @@ class UsersTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
-
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePrefs']);
-        $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
+        $this->assertEquals(['data' => \json_encode(['key' => 'value'])], $user['body']['data']['usersUpdatePrefs']['prefs']);
     }
 
     /**
