@@ -138,8 +138,12 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/ping');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $functionId = $this->setupFunction();
+        $setup = $this->setupFunction();
+        $functionId = $setup['functionId'];
+        $deploymentId = $setup['deploymentId'];
+
         $this->assertNotEmpty($functionId);
+        $this->assertNotEmpty($deploymentId);
 
         $ruleId = $this->setupFunctionRule($domain, $functionId);
         $this->assertNotEmpty($ruleId);
@@ -149,6 +153,32 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals($functionId, $response['body']['APPWRITE_FUNCTION_ID']);
 
         $this->cleanupRule($ruleId);
+
+        $this->cleanupFunction($functionId);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('automation', ['function=' . $functionId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('value', [$deploymentId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+        });
     }
 
     public function testCreateSiteRule(): void
@@ -162,8 +192,12 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/contact');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $siteId = $this->setupSite();
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
         $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
 
         $ruleId = $this->setupSiteRule($domain, $siteId);
         $this->assertNotEmpty($ruleId);
@@ -173,6 +207,32 @@ class ProxyCustomServerTest extends Scope
         $this->assertStringContainsString('Contact page', $response['body']);
 
         $this->cleanupRule($ruleId);
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('automation', ['site=' . $siteId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('value', [$deploymentId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+        });
     }
 
     public function testCreatSiteBranchRule(): void

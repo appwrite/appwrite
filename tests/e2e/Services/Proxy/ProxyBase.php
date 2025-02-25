@@ -146,6 +146,26 @@ trait ProxyBase
         $this->assertEquals(204, $rule['headers']['status-code'], 'Failed to cleanup rule: ' . \json_encode($rule));
     }
 
+    protected function cleanupSite(string $siteId): void
+    {
+        $site = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $site['headers']['status-code'], 'Failed to cleanup site: ' . \json_encode($site));
+    }
+
+    protected function cleanupFunction(string $functionId): void
+    {
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $function['headers']['status-code'], 'Failed to cleanup function: ' . \json_encode($function));
+    }
+
     protected function setupSite(): mixed
     {
         // Site
@@ -191,7 +211,7 @@ trait ProxyBase
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
-        return $siteId;
+        return ['siteId' => $siteId, 'deploymentId' => $deploymentId];
     }
 
     protected function setupFunction(): mixed
@@ -236,7 +256,7 @@ trait ProxyBase
             $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
-        return $functionId;
+        return ['functionId' => $functionId, 'deploymentId' => $deploymentId];
     }
 
     private function packageSite(string $site): CURLFile
