@@ -1171,11 +1171,12 @@ class Builds extends Action
 
     protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
     {
+        $limit = 100;
         $cursor = null;
 
         do {
             $queries = \array_merge([
-                Query::limit(100),
+                Query::limit($limit),
                 Query::equal("projectInternalId", [$project->getInternalId()])
             ], $queries);
 
@@ -1185,9 +1186,12 @@ class Builds extends Action
 
             $results = $database->find('rules', $queries);
 
-            if (\count($results) > 0) {
-                $cursor = $results[\count($results) - 1];
-            } else {
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
                 $cursor = null;
             }
 
