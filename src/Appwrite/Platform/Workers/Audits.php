@@ -7,7 +7,6 @@ use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -126,22 +125,22 @@ class Audits extends Action
         }
 
         if ($shouldProcessBatch) {
-            foreach ($this->logs as $projectLogs) {
-                $dbForProject = $getProjectDB($projectLogs['project']);
+            try {
+                foreach ($this->logs as $internalId => $projectLogs) {
+                    $dbForProject = $getProjectDB($projectLogs['project']);
 
-                Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
-                $audit = new Audit($dbForProject);
+                    Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
+                    $audit = new Audit($dbForProject);
 
-                try {
                     $audit->logBatch($projectLogs['logs']);
                     Console::success('Audit logs processed successfully');
-                } catch (Throwable $e) {
-                    Console::error('Error processing audit logs: ' . $e->getMessage());
-                } finally {
-                    // Clear the pending events after successful batch processing
-                    $this->logs = [];
-                    $this->lastTriggeredTime = time();
+
+                    unset($this->logs[$internalId]);
                 }
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs: ' . $e->getMessage());
+            } finally {
+                $this->lastTriggeredTime = time();
             }
         }
     }
