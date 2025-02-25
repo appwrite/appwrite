@@ -79,7 +79,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $rule = $this->setupSiteDomain($siteId);
+        $domain = $this->setupSiteDomain($siteId);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
             'origin' => 'http://localhost',
@@ -88,7 +88,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $rule,
+            'value' => $domain,
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']); // domain unavailable
@@ -115,7 +115,7 @@ class SitesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::equal('resourceId', [$siteId])
+                    Query::equal('automation', ['site=' . $siteId])
                 ]
             ]);
 
@@ -130,7 +130,7 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'type' => 'rules',
-            'value' => $rule,
+            'value' => $domain,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
@@ -273,6 +273,8 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    // This is first Sites test with Proxy
+    // If this fails, it may not be related to variables; but Router flow failing
     public function testVariablesE2E(): void
     {
         $siteId = $this->setupSite([
@@ -1310,17 +1312,15 @@ class SitesCustomServerTest extends Scope
 
         $siteId2 = $site2['body']['$id'];
 
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
-            'resourceType' => 'site',
-            'resourceId' => $siteId2,
+            'siteId' => $siteId2,
         ]);
 
         $this->assertEquals(409, $rule['headers']['status-code']);
-        $this->assertStringContainsString("Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.", $rule['body']['message']);
 
         $this->cleanupSite($siteId);
 

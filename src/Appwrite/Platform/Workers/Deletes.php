@@ -761,8 +761,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for site " . $siteId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['site']),
-            Query::equal('resourceInternalId', [$siteInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['site=' . $siteId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -782,23 +782,25 @@ class Deletes extends Action
          */
         Console::info("Deleting deployments for site " . $siteId);
         $deploymentInternalIds = [];
+        $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForFunctions, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
+            $deploymentIds[] = $document->getId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
             $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
          * Delete rules for all deployments of the site
          */
-        //TODO: If functions also have previews in the future, change the logic here to use unique identifier for sites and functions
-        foreach ($deploymentInternalIds as $deploymentInternalId) {
-            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentInternalId);
+        foreach ($deploymentIds as $deploymentId) {
+            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentId);
             $this->deleteByGroup('rules', [
-                Query::equal('resourceType', ['deployment']),
-                Query::equal('resourceInternalId', [$deploymentInternalId]),
+                Query::equal('type', ['deployment']),
+                Query::equal('value', [$deploymentId]),
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
                 $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -856,8 +858,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['function=' . $functionId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -880,9 +882,10 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
@@ -928,6 +931,18 @@ class Deletes extends Action
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
+    }
+
+    private function deleteDeploymentRules(Database $dbForPlatform, Document $deployment, Document $project, CertificatesAdapter $certificates): void
+    {
+        Console::info("Deleting rules for site " . $deployment->getId());
+        $this->deleteByGroup('rules', [
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deployment->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
+            $this->deleteRule($dbForPlatform, $document, $certificates);
+        });
     }
 
     private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
@@ -1081,8 +1096,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for deployment " . $deploymentId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['deployment']),
-            Query::equal('resourceInternalId', [$deploymentInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deploymentId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);

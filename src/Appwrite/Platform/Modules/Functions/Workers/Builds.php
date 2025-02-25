@@ -724,8 +724,8 @@ class Builds extends Action
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
-                        Query::equal("resourceType", ["deployment"]),
-                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("value", [$deployment->getId()])
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -831,13 +831,50 @@ class Builds extends Action
                     case 'functions':
                         $resource->setAttribute('deployment', $deployment->getId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["function=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
                         break;
                     case 'sites':
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["site=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
+
+                        // VCS branch
+                        $branchName = $deployment->getAttribute('providerBranch');
+                        if (!empty($branchName)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["branch=" . $branchName]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
+
+                        // VCS commit
+                        $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                        if (!empty($commitHash)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["commit=" . $commitHash]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
                         break;
                 }
             }
+
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -1105,8 +1142,8 @@ class Builds extends Action
 
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                     Query::equal("projectInternalId", [$project->getInternalId()]),
-                    Query::equal("resourceType", ["deployment"]),
-                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    Query::equal("type", ["deployment"]),
+                    Query::equal("value", [$deployment->getId()])
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -1130,5 +1167,39 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }
