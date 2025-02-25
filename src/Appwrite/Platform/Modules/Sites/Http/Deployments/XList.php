@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -119,16 +118,6 @@ class XList extends Action
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
             $result->setAttribute('buildSize', $build->getAttribute('size', 0));
             $result->setAttribute('size', $result->getAttribute('size', 0));
-
-            $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                Query::equal("projectInternalId", [$project->getInternalId()]),
-                Query::equal("resourceType", ["deployment"]),
-                Query::equal("resourceInternalId", [$result->getInternalId()])
-            ]));
-
-            if (!empty($rule)) {
-                $result->setAttribute('domain', $rule->getAttribute('domain', ''));
-            }
         }
 
         $response->dynamic(new Document([
