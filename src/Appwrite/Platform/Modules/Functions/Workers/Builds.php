@@ -7,6 +7,8 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -27,9 +29,11 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Detector\Detection\Rendering\SSG;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detector\Rendering;
+use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -59,9 +63,10 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('isResourceBlocked')
+            ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $deviceForFiles, $log));
     }
 
     /**
@@ -74,11 +79,12 @@ class Builds extends Action
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -99,7 +105,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -109,6 +115,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Device $deviceForFiles
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param StatsUsage $queueForStatsUsage
@@ -125,7 +132,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -737,6 +744,109 @@ class Builds extends Action
             }
 
             Console::success("Build id: $buildId created");
+
+            if ($resource->getCollection() === 'sites') {
+                try {
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("resourceType", ["deployment"]),
+                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    ]));
+
+                    if ($rule->isEmpty()) {
+                        throw new \Exception("Rule for build not found");
+                    }
+
+                    $client = new FetchClient();
+                    $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
+
+                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+                    $configs = [
+                        'screenshotLight' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
+                            'theme' => 'light'
+                        ],
+                        'screenshotDark' => [
+                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
+                            'theme' => 'dark'
+                        ],
+                    ];
+
+                    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+                    $apiKey = $jwtObj->encode([
+                        'hostnameOverride' => true,
+                        'bannerDisabled' => true,
+                        'projectCheckDisabled' => true
+                    ]);
+
+                    // TODO: @Meldiron if becomes too slow, do concurrently
+                    foreach ($configs as $key => $config) {
+                        $config['headers'] = \array_merge($config['headers'] ?? [], [
+                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                        ]);
+
+                        $response = $client->fetch(
+                            url: 'http://appwrite-browser:3000/v1/screenshots',
+                            method: 'POST',
+                            body: $config
+                        );
+
+                        if ($response->getStatusCode() >= 400) {
+                            throw new \Exception($response->getBody());
+                        }
+
+                        $screenshot = $response->getBody();
+
+                        $fileId = ID::unique();
+                        $fileName = $fileId . '.png';
+                        $path = $deviceForFiles->getPath($fileName);
+                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+
+                        if (!$success) {
+                            throw new \Exception("Screenshot failed to save");
+                        }
+
+                        $teamId = $project->getAttribute('teamId', '');
+                        $file = new Document([
+                            '$id' => $fileId,
+                            '$permissions' => [
+                                Permission::read(Role::team(ID::custom($teamId))),
+                            ],
+                            'bucketId' => $bucket->getId(),
+                            'bucketInternalId' => $bucket->getInternalId(),
+                            'name' => $fileName,
+                            'path' => $path,
+                            'signature' => $deviceForFiles->getFileHash($path),
+                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'sizeOriginal' => \strlen($screenshot),
+                            'sizeActual' => $deviceForFiles->getFileSize($path),
+                            'algorithm' => Compression::GZIP,
+                            'comment' => '',
+                            'chunksTotal' => 1,
+                            'chunksUploaded' => 1,
+                            'openSSLVersion' => null,
+                            'openSSLCipher' => null,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                            'search' => implode(' ', [$fileId, $fileName]),
+                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                        ]);
+                        $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+
+                        $deployment->setAttribute($key, $fileId);
+                    }
+
+                    $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                } catch (\Throwable $th) {
+                    Console::warning("Screenshot failed to generate:");
+                    Console::warning($th->getMessage());
+                    Console::warning($th->getTraceAsString());
+                }
+            }
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {

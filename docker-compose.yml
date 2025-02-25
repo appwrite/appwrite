@@ -205,7 +205,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.3.0-sites-rc.9
+    image: appwrite/console:5.3.0-sites-rc.13
     restart: unless-stopped
     networks:
       - appwrite
@@ -435,6 +435,7 @@ services:
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -946,6 +947,12 @@ services:
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
+
+  appwrite-browser:
+    container_name: appwrite-browser
+    image: appwrite/browser:0.2.0
+    networks:
+      - appwrite
 
   openruntimes-executor:
     container_name: openruntimes-executor

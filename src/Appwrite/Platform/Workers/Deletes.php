@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -92,13 +93,13 @@ class Deletes extends Action
                         $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $certificates, $project);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -749,7 +750,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -783,9 +784,10 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($deviceForFunctions, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
         });
 
         /**
@@ -928,6 +930,53 @@ class Deletes extends Action
         $this->deleteRuntimes($getProjectDB, $document, $project);
     }
 
+    private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
+    {
+        $screenshotIds = [];
+        if (!empty($deployment->getAttribute('screenshotLight', ''))) {
+            $screenshotIds[] = $deployment->getAttribute('screenshotLight', '');
+        }
+        if (!empty($deployment->getAttribute('screenshotDark', ''))) {
+            $screenshotIds[] = $deployment->getAttribute('screenshotDark', '');
+        }
+
+        if (empty($screenshotIds)) {
+            return;
+        }
+        Console::info("Deleting screenshots for deployment " . $deployment->getId());
+
+        $bucket = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+        if ($bucket->isEmpty()) {
+            Console::error('Failed to get bucket for deployment screenshots');
+            return;
+        }
+
+        foreach ($screenshotIds as $id) {
+            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getInternalId(), $id));
+
+            if ($file->isEmpty()) {
+                Console::error('Failed to get deployment screenshot: ' . $id);
+                continue;
+            }
+
+            $path = $file->getAttribute('path', '');
+
+            try {
+                if ($deviceForFiles->delete($path, true)) {
+                    Console::success('Deleted deployment screenshot: ' . $path);
+                } else {
+                    Console::error('Failed to delete deployment screenshot: ' . $path);
+                }
+            } catch (\Throwable $th) {
+                Console::error('Failed to delete deployment screenshot: ' . $path);
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
+        }
+    }
+
     /**
      * @param Device $device
      * @param Document $deployment
@@ -999,7 +1048,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1010,6 +1059,11 @@ class Deletes extends Action
          * Delete deployment files
          */
         $this->deleteDeploymentFiles($deviceForFunctions, $document); //TODO: For sites, this should be deviceForSites
+
+        /**
+         * Delete deployment screenshots
+         */
+        $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
 
         /**
          * Delete builds

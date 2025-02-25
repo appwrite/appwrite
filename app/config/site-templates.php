@@ -79,6 +79,35 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => null,
     ],
+    'OTHER' => [
+        'key' => 'other',
+        'name' => 'Other',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'ssr-22',
+        'adapter' => 'static',
+        'fallbackFile' => 'index.html',
+    ],
+    'REACT' => [
+        'key' => 'react',
+        'name' => 'React',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'ssr-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+        'fallbackFile' => 'index.html',
+    ],
+    'VUE' => [
+        'key' => 'vue',
+        'name' => 'Vue.js',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'ssr-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+        'fallbackFile' => 'index.html',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -88,6 +117,25 @@ function getFramework(string $frameworkEnum, array $overrides)
 }
 
 return [
+    [
+        'key' => 'template-for-onelink',
+        'name' => 'Onelink template',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/template-for-onelink.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './onelink',
+                'buildCommand' => 'npm run generate',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'Meldiron',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
     [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
@@ -130,6 +178,130 @@ return [
         ]
     ],
     [
+        'key' => 'starter-for-react',
+        'name' => 'React starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-react.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-react',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-vue',
+        'name' => 'Vue starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-vue.png',
+        'frameworks' => [
+            getFramework('VUE', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-vue',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-react-native',
+        'name' => 'React Native starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-react-native.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './',
+                'fallbackFile' => '+not-found.html',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-react-native',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'EXPO_PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'EXPO_PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'EXPO_PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-nextjs',
         'name' => 'Next.js starter',
         'useCases' => ['starter'],
@@ -162,6 +334,47 @@ return [
             ],
             [
                 'name' => 'NEXT_PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-nuxt',
+        'name' => 'Nuxt starter',
+        'useCases' => ['starter'],
+        'demoImage' => $url . '/console/images/sites/templates/starter-for-nuxt.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-nuxt',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'NUXT_PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'NUXT_PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'NUXT_PUBLIC_APPWRITE_PROJECT_NAME',
                 'description' => 'Your Appwrite project name',
                 'value' => '{projectName}',
                 'placeholder' => '{projectName}',
@@ -279,54 +492,6 @@ return [
         'variables' => []
     ],
     [
-        'key' => 'nextjs-starter',
-        'name' => 'Next.js starter',
-        'useCases' => ['starter'],
-        'demoImage' => '',
-        'frameworks' => [
-            getFramework('NEXTJS', [
-                'providerRootDirectory' => './nextjs/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nuxt-starter',
-        'name' => 'Nuxt starter',
-        'useCases' => ['starter'],
-        'demoImage' => '',
-        'frameworks' => [
-            getFramework('NUXT', [
-                'providerRootDirectory' => './nuxt/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'sveltekit-starter',
-        'name' => 'SvelteKit starter',
-        'useCases' => ['starter'],
-        'demoImage' => '',
-        'frameworks' => [
-            getFramework('SVELTEKIT', [
-                'providerRootDirectory' => './sveltekit/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
         'key' => 'astro-starter',
         'name' => 'Astro starter',
         'useCases' => ['starter'],
@@ -366,6 +531,51 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './flutter/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nextjs-starter',
+        'name' => 'Next.js starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nuxt-starter',
+        'name' => 'Nuxt starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'sveltekit-starter',
+        'name' => 'SvelteKit starter website',
+        'useCases' => ['starter'],
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './sveltekit/starter',
             ]),
         ],
         'vcsProvider' => 'github',
