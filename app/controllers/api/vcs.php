@@ -249,6 +249,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
                     ]))
                 );
 
@@ -268,6 +269,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'automation' => 'branch=' . $providerBranch,
                                 'status' => 'verified',
                                 'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
                             ]))
                         );
                     } catch (Duplicate $err) {
@@ -291,6 +293,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'automation' => 'commit=' . $providerCommitHash,
                                 'status' => 'verified',
                                 'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
                             ]))
                         );
                     } catch (Duplicate $err) {

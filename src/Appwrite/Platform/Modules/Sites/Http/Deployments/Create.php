@@ -241,6 +241,7 @@ class Create extends Action
                         'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
                     ]))
                 );
             } else {
@@ -291,6 +292,7 @@ class Create extends Action
                         'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
                     ]))
                 );
             } else {

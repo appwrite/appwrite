@@ -676,14 +676,16 @@ App::init()
                     }
 
                     if ($domainDocument->isEmpty()) {
+                        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                            '$id' => System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique(),
+                            '$id' => $ruleId,
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
                             'projectId' => 'console',
-                            'projectInternalId' => 'console'
+                            'projectInternalId' => 'console',
+                            'search' => implode(' ', [$ruleId, $domain->get()]),
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);

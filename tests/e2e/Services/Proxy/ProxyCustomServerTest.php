@@ -315,7 +315,6 @@ class ProxyCustomServerTest extends Scope
         $this->assertCount(2, $rules['body']['rules']);
         $this->assertEquals($rule2Id, $rules['body']['rules'][0]['$id']);
 
-
         $rules = $this->listRules([
             'queries' => [
                 Query::equal('domain', [$rule2Domain])->toString()
@@ -324,5 +323,50 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertCount(1, $rules['body']['rules']);
         $this->assertEquals($rule2Id, $rules['body']['rules'][0]['$id']);
+
+        $rules = $this->listRules([
+            'search' => $rule1Domain,
+            'queries' => [ Query::orderDesc('$createdAt') ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleIds = \array_column($rules['body']['rules'], '$id');
+        $this->assertContains($rule1Id, $ruleIds);
+
+        $rules = $this->listRules([
+            'search' => $rule2Domain,
+            'queries' => [ Query::orderDesc('$createdAt') ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleIds = \array_column($rules['body']['rules'], '$id');
+        $this->assertContains($rule2Id, $ruleIds);
+
+        $rules = $this->listRules([
+            'search' => $rule1Id,
+            'queries' => [ Query::orderDesc('$createdAt') ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleDomains = \array_column($rules['body']['rules'], 'domain');
+        $this->assertContains($rule1Domain, $ruleDomains);
+
+        $rules = $this->listRules([
+            'search' => $rule2Id,
+            'queries' => [ Query::orderDesc('$createdAt') ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleDomains = \array_column($rules['body']['rules'], 'domain');
+        $this->assertContains($rule2Domain, $ruleDomains);
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach ($rules['body']['rules'] as $rule) {
+            $rule = $this->deleteRule($rule['$id']);
+            $this->assertEquals(204, $rule['headers']['status-code']);
+        }
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(0, $rules['body']['total']);
+        $this->assertCount(0, $rules['body']['rules']);
     }
 }

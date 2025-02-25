@@ -132,7 +132,8 @@ class Create extends Action
             'type' => 'deployment',
             'value' => $site->getAttribute('deploymentId', ''),
             'certificateId' => '',
-            'automation' => !empty($branch) ? ('branch=' . $branch) : ('site=' . $site->getId())
+            'automation' => !empty($branch) ? ('branch=' . $branch) : ('site=' . $site->getId()),
+            'search' => implode(' ', [$ruleId, $domain->get()]),
         ]);
 
         try {

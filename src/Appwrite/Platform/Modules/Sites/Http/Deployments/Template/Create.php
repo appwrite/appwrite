@@ -152,6 +152,7 @@ class Create extends Base
                 'value' => $deployment->getId(),
                 'status' => 'verified',
                 'certificateId' => '',
+                'search' => implode(' ', [$ruleId, $domain]),
             ]))
         );
 

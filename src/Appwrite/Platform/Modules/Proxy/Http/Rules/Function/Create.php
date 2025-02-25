@@ -130,7 +130,8 @@ class Create extends Action
             'type' => 'deployment',
             'value' => $function->getAttribute('deployment', ''),
             'certificateId' => '',
-            'automation' => 'function=' . $function->getId()
+            'automation' => 'function=' . $function->getId(),
+            'search' => implode(' ', [$ruleId, $domain->get()]),
         ]);
 
         try {

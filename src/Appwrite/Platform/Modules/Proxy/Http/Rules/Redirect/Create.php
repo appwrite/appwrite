@@ -129,6 +129,7 @@ class Create extends Action
             'type' => 'redirect',
             'value' => $target->get(),
             'certificateId' => '',
+            'search' => implode(' ', [$ruleId, $domain->get()]),
         ]);
 
         try {
