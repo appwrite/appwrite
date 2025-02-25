@@ -998,13 +998,9 @@ App::get('/v1/messaging/providers/:providerId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -1051,7 +1047,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2230,13 +2226,9 @@ App::get('/v1/messaging/topics/:topicId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -2284,7 +2276,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2644,13 +2636,9 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -2698,7 +2686,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3413,13 +3401,9 @@ App::get('/v1/messaging/messages/:messageId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -3467,7 +3451,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

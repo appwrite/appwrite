@@ -674,13 +674,9 @@ App::get('/v1/databases/:databaseId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -728,7 +724,7 @@ App::get('/v1/databases/:databaseId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1072,13 +1068,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -1126,7 +1118,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3727,13 +3719,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -3781,7 +3769,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

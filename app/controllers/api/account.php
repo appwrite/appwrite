@@ -2719,13 +2719,9 @@ App::get('/v1/account/logs')
         $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
         $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
-
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
 
         $output = [];
 
@@ -2754,7 +2750,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
