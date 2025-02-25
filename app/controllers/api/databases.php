@@ -23,6 +23,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -669,6 +670,10 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Temp fix for logs, remove after 1 log cycle
+        $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
+        $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -1059,7 +1064,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // Temp fix for logs, remove after 1 log cycle
+        $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
+        $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -3712,6 +3726,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        // Temp fix for logs, remove after 1 log cycle
+        $queries[] = Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-126T00:00+0')));
+        $queries[] = Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+0')));
 
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
