@@ -351,6 +351,7 @@ class Event
      */
     public function trigger(): string|bool
     {
+        var_dump('in trigger');
         if ($this->paused) {
             return false;
         }
