@@ -2,7 +2,7 @@
 
 /**
  * Continent codes with names and approximate central coordinates
- * 
+ *
  * Coordinates represent approximate geographical centers of each continent
  * Note: These are simplified centroids and may not represent the exact geographical center
  */
