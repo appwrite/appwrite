@@ -360,6 +360,10 @@ class Event
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
+        var_dump([
+            'queue' => $this->getQueue(),
+            'payload' => $payload,
+            ]);
         return $this->publisher->enqueue($queue, $payload);
     }
 
