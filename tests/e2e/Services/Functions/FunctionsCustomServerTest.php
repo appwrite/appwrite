@@ -470,9 +470,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotNull($entrypoint);
 
         /**
-         * If below test ever starts failing, it means temaplate used in
+         * If below test ever starts failing, it means template used in
          * this test now has some variables. This test currently doesnt test variables.
-         * Remove bellow assertion and update test to crete variable,
+         * Remove below assertion and update test to crete variable,
          * and ensure variable works as expected in execution.
          */
         $this->assertEmpty($template['body']['variables']);
@@ -582,7 +582,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('waiting', $execution['body']['status']);
         $executionId = $execution['body']['$id'];
 
-        // Wait for async execuntion to finish
+        // Wait for async execution to finish
         sleep(5);
 
         // Ensure execution was successful
@@ -1061,7 +1061,7 @@ class FunctionsCustomServerTest extends Scope
 
         /**
          * Ensure size output and size filters work exactly.
-         * Prevents buildSize being counted towards deployemtn size
+         * Prevents buildSize being counted towards deployment size
          */
         $response = $this->client->call(
             Client::METHOD_GET,

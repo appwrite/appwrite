@@ -50,7 +50,7 @@ class TemplateFunction extends Model
             ])
             ->addRule('cron', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution schedult in CRON format.',
+                'description' => 'Function execution schedule in CRON format.',
                 'default' => '',
                 'example' => '0 0 * * *',
             ])

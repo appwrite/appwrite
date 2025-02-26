@@ -9,7 +9,7 @@ use Appwrite\Auth\Hash;
  *
  * string salt
  * string saltSeparator
- * strin signerKey
+ * string signerKey
  *
  * Reference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
 */

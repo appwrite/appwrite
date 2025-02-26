@@ -720,14 +720,14 @@
 * sync: main -> 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7705
 * Sync main 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7727
 * Updated header by @DylanG-64 in https://github.com/appwrite/appwrite/pull/7728
-* chore: update exector, runtimes by @loks0n in https://github.com/appwrite/appwrite/pull/7729
+* chore: update executor, runtimes by @loks0n in https://github.com/appwrite/appwrite/pull/7729
 * feat: pint by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7738
 * feat: cascading response/request filters by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7745
 * Revert 7629 revert 7614 chore usage queue health by @christyjacob4 in https://github.com/appwrite/appwrite/pull/7707
 * fix: migration 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7737
 * sync: main 1.5.x 3 by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7747
 * Allow users to disable APIs by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7725
-* Feat seperate image IDs by @abnegate in https://github.com/appwrite/appwrite/pull/7749
+* Feat separate image IDs by @abnegate in https://github.com/appwrite/appwrite/pull/7749
 * fix: account endpoint order by @loks0n in https://github.com/appwrite/appwrite/pull/7739
 * Feat image jwts by @abnegate in https://github.com/appwrite/appwrite/pull/7751
 
@@ -945,7 +945,7 @@
 - Override forEachDocument() to skip the cache collection [#6144](https://github.com/appwrite/appwrite/pull/6144)
 - Support for v2 functions [#6142](https://github.com/appwrite/appwrite/pull/6142)
 - Change executor hostname back to appwrite-executor [#6160](https://github.com/appwrite/appwrite/pull/6160)
-- Make URL optional for Create Membership API and Serverside Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
+- Make URL optional for Create Membership API and Server-side Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
 
 # Version 1.4.1
 
@@ -1193,7 +1193,7 @@
 - Fixed Migration for Attributes and Indexes by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3568
 - Fixed Closed Icon in the alerts to be centered by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3594
 - Fixed Response Model for Get and Update Database Endpoint by @ishanvyas22 in https://github.com/appwrite/appwrite/pull/3553
-- Fixed Missing Usage on Functions exection by @Meldiron in https://github.com/appwrite/appwrite/pull/3543
+- Fixed Missing Usage on Functions execution by @Meldiron in https://github.com/appwrite/appwrite/pull/3543
 - Fixed Validation for Permissions to only accept a maximum of 100 Permissions for all endpoints by @Meldiron in https://github.com/appwrite/appwrite/pull/3532
 - Fixed backwards compatibility for Create Email Session Endpoint by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3517
 
@@ -1210,7 +1210,7 @@
 - Fixed SMS for `createVerification` by @christyjacob4 in https://github.com/appwrite/appwrite/pull/3454
 - Fixed missing Attributes when creating an Index by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
 - Fixed broken Link for Documents under Collections by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
-- Fixed all `$createdAt` and `$updatedAt` occurences in the UI by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
+- Fixed all `$createdAt` and `$updatedAt` occurrences in the UI by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
 - Fixed Delete Document from the UI by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3463
 - Fixed internal Attribute and Index key on Migration by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3455
 
@@ -1276,7 +1276,7 @@
   - Node 18
 - Webhooks now have a Signature Key for proof of Origin by @shimonewman in https://github.com/appwrite/appwrite/pull/3351
 - Start using Docker Compose V2 (from `docker-compose` to `docker compose`) by @Meldiron in https://github.com/appwrite/appwrite/pull/3362
-- Added support for selfhosted Gitlab (OAuth) by @Meldiron in https://github.com/appwrite/appwrite/pull/3366
+- Added support for self-hosted GitLab (OAuth) by @Meldiron in https://github.com/appwrite/appwrite/pull/3366
 - Added Dailymotion OAuth Provider by @2002Bishwajeet in https://github.com/appwrite/appwrite/pull/3371
 - Added Autodesk OAuth Provider by @Haimantika in https://github.com/appwrite/appwrite/pull/3420
 - Ignore Service Checks when using API Key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3270
@@ -1368,10 +1368,10 @@
 - Fixed search when a User is updated
 - Fixed aspect ratio bug in Avatars API
 - Fixed wrong `Fail to Warmup ...` error message in Executor
-- Fixed UI when file uploader is covered by jumpt to top button
+- Fixed UI when file uploader is covered by jump to top button
 - Fixed bug that allowed Queries on failed indexes
 - Fixed UI when an alert with a lot text disappears too fast by increasing duration
-- Fixed issues with cache and case-sensivity on ID's
+- Fixed issues with cache and case-sensitivity on ID's
 - Fixed storage stats by upgrading to `BIGINT`
 - Fixed `storage.total` stats which now is a sum of `storage.files.total` and `storage.deployments.total`
 - Fixed Project logo preview
@@ -1403,7 +1403,7 @@
 
 # Version 0.13.3
 ## Bugs
-- Fixed search for terms that inlcude `@` characters
+- Fixed search for terms that include `@` characters
 - Fixed Bucket permissions
 - Fixed file upload error in UI
 - Fixed input field for float attributes in UI
@@ -1427,11 +1427,11 @@
 ## Features
 ### Functions
 - Synchronous function execution
-- Improved functions execution times by alot
+- Improved functions execution times by a lot
 - Added a new worker to build deployments
 - Functions are now executed differently and your functions need to be adapted **Breaking Change**
 - Tags are now called Deployments **Breaking Change**
-- Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
+- Renamed `tagId` to `deploymentId` in collections **Breaking Change**
 - Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
 - Java runtimes are currently not supported **Breaking Change**
 ### Storage
@@ -1483,8 +1483,8 @@
 
 ## Upgrades
 
-- Upgraded `redis` extenstion to version 5.3.7
-- Upgraded `swoole` extenstion to version 4.8.7
+- Upgraded `redis` extension to version 5.3.7
+- Upgraded `swoole` extension to version 4.8.7
 - Upgraded GEO IP database to version March 2022
 
 # Version 0.12.3
@@ -1504,9 +1504,9 @@
 
 ## Upgrades
 
-- Upgraded `redis` extenstion to version 5.3.6
-- Upgraded `swoole` extenstion to version 4.8.6
-- Upgraded `imagick` extenstion to version 3.7.0
+- Upgraded `redis` extension to version 5.3.6
+- Upgraded `swoole` extension to version 4.8.6
+- Upgraded `imagick` extension to version 3.7.0
 - Upgraded GEO IP database to version February 2022
 
 # Version 0.12.1
@@ -1545,8 +1545,8 @@
 - Wildcard permissions `*` are now `role:all` **Breaking Change**
 - Collections can be enabled and disabled
 - Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
-- Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
-- Offset cannot be higher than 5000 now and cursor pagination is required
+- Accessing collections with insufficient permissions now return a `401` instead of `404` status code
+- Offset cannot be greater than 5000 now and cursor pagination is required
 - Added Cursor pagination to all endpoints that provide pagination by offset
 - Added new Usage worker to aggregate usage statistics
 - Added new Database worker to handle heavy database tasks in the background
@@ -1577,7 +1577,7 @@
 - Added negative rotation values to file preview endpoint
 - Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
-- Added following langauges to the Locale service:
+- Added following languages to the Locale service:
   - Latin
   - Sindhi
   - Telugu
@@ -1602,11 +1602,11 @@
 - Fix security vulnerability in the ACME-Challenge (#2779)
 
 ## Upgrades
-- Upgraded redis extenstion to version 5.3.6
-- Upgraded swoole extenstion to version 4.8.6
-- Upgraded imagick extenstion to version 3.7.0
-- Upgraded yaml extenstion to version 2.2.2
-- Upgraded maxminddb extenstion to version 1.11.0
+- Upgraded redis extension to version 5.3.6
+- Upgraded swoole extension to version 4.8.6
+- Upgraded imagick extension to version 3.7.0
+- Upgraded yaml extension to version 2.2.2
+- Upgraded maxminddb extension to version 1.11.0
 - Upgraded GEO IP database to version February 2022
 
 # Version 0.11.0
@@ -1758,7 +1758,7 @@
   - Java 11.0
   - Node 16.0
   - Dart 2.13
-- Added a new gravity option when croping storage images using the file preview endpoint (#1260)
+- Added a new gravity option when cropping storage images using the file preview endpoint (#1260)
 - Upgraded GEOIP DB file to Jun 2021 release (#1256)
 - Added file created date to file info on the console (#1183)
 - Added file size to file info on the console (#1183)
@@ -1954,7 +1954,7 @@
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
 - New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
-- Introducing new permssion types: role:guest & role:member
+- Introducing new permission types: role:guest & role:member
 - Disabled rate-limits on server side integrations
 - Refactored migration script 
 
@@ -1999,7 +1999,7 @@
 - Fixed a bug that caused blocked users to be able to create sessions ([#777](https://github.com/appwrite/appwrite/pull/781))
 - Fixed an issue where Special characters in _APP_OPENSSL_KEY_V1_ env caused an error ([#732](https://github.com/appwrite/appwrite/issues/732))
 - Fixed an issue where Account webhook doesn't trigger through the console ([#493](https://github.com/appwrite/appwrite/issues/493))
-- Fixed case sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))
+- Fixed case-sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))
 - Fixed redirect to Appwrite login page when deep link is provided ([#427](https://github.com/appwrite/appwrite/issues/427))
 - Fixed an issue where Creating documents fails for parent documents would result in an error ([#514](https://github.com/appwrite/appwrite/issues/514))
 - Fixed an issue with Email Sending Problem using external smtp ([#707](https://github.com/appwrite/appwrite/issues/707))
@@ -2022,7 +2022,7 @@
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
-- Fixed bug denying authentication with Github OAuth provider
+- Fixed bug denying authentication with GitHub OAuth provider
 - Fixed a bug making read permission overwrite write permission in some cases
 - Fixed consistent property names in databases by enforcing camel case
 

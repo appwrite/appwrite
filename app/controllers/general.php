@@ -88,7 +88,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         }
     }
 
-    // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
+    // Skip Appwrite Router for ACME challenge. Necessary for certificate generation
     $path = ($swooleRequest->server['request_uri'] ?? '/');
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;

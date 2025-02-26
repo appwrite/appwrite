@@ -216,7 +216,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
+                'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERVICE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -765,7 +765,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value greater than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -783,7 +783,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve harddrive health.',
+                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve hard drive health.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,

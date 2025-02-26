@@ -33,7 +33,7 @@ class RequestTest extends TestCase
         $route = new Route(Request::METHOD_GET, '/test');
         $route->label('sdk.method', 'method');
         $route->label('sdk.namespace', 'namespace');
-        // set test header to prevent header populaten inside the request class
+        // set test header to prevent header populated inside the request class
         $this->request->addHeader('EXAMPLE', 'VALUE');
         $this->request->setRoute($route);
         $this->request->setQueryString([

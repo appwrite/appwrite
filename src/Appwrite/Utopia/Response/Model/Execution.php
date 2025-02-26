@@ -26,7 +26,7 @@ class Execution extends Model
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Execution upate date in ISO 8601 format.',
+                'description' => 'Execution update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

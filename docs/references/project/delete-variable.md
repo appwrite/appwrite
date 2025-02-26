@@ -1,1 +1,2 @@
-Delete a project variable by its unique ID. 
+Delete a project variable by its unique ID.
+

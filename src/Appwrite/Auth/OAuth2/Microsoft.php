@@ -132,7 +132,7 @@ class Microsoft extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Microsoft sign up process
+     * If present, the email is verified. This was verified through a manual Microsoft sign up process
      *
      * @param string $accessToken
      *
@@ -201,7 +201,7 @@ class Microsoft extends OAuth2
     }
 
     /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the Tenant ID from the JSON stored in appSecret. Defaults to 'common' as a fallback
      *
      * @return string
      */

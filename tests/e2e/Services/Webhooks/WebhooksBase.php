@@ -1103,7 +1103,7 @@ trait WebhooksBase
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://appwrite-non-existing-domain.com', // set non-existent URL
+            'url' => 'http://appwrite-nonexistent-domain.example.com', // set nonexistent URL
             'security' => false,
         ]);
 

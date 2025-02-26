@@ -250,7 +250,7 @@ class Exception extends \Exception
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
 
-    /** GraphqQL */
+    /** GraphQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 

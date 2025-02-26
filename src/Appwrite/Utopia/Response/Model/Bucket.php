@@ -69,7 +69,7 @@ class Bucket extends Model
             ])
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Compression algorithm choosen for compression. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'description' => 'Compression algorithm chosen for compression. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
                 'default' => '',
                 'example' => 'gzip',
                 'array' => false

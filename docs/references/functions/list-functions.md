@@ -1,1 +1,2 @@
-Get a list of all the project's functions. You can use the query params to filter your results.
+Get a list of all the project's functions.
+You can use the query params to filter your results.
