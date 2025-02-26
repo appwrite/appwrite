@@ -17,7 +17,7 @@ use Utopia\System\System;
 
 class Audits extends Action
 {
-    private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
+    private const BATCH_SIZE_DEVELOPMENT = 3; // smaller batch size for development
     private const BATCH_SIZE_PRODUCTION = 5_000;
     private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
