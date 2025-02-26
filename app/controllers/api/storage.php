@@ -935,15 +935,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    ->inject('request')
     ->inject('response')
-    ->inject('project')
+    ->inject('plan')
     ->inject('dbForProject')
-    ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
     ->inject('queueForStatsUsage')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, array $plan, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -963,6 +961,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if (isset($plan['imageTransformations'])) {
+            if ($plan['imageTransformations'] === -1) {
+                throw new Exception(Exception::STORAGE_FILE_PREVIEW_BLOCKED);
+            }
         }
 
         if ($fileSecurity && !$valid) {
@@ -1073,8 +1077,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $queueForStatsUsage
             ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
-        ;
+            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1);
 
         $transformedAt = $file->getAttribute('transformedAt', '');
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
@@ -1085,8 +1088,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType($contentType)
-            ->file($data)
-        ;
+            ->file($data);
 
         unset($image);
     });
