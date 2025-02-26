@@ -86,17 +86,19 @@ class Realtime extends Event
             ? $this->getTargets()
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
-        RealtimeAdapter::send(
-            projectId: $projectIds,
-            payload: $this->getRealtimePayload(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-            options: [
-                'permissionsChanged' => $target['permissionsChanged'],
-                'userId' => $this->getParam('userId')
-            ]
-        );
+        foreach ($projectIds as $projectId) {
+            RealtimeAdapter::send(
+                projectId: $projectId,
+                payload: $this->getRealtimePayload(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles'],
+                options: [
+                    'permissionsChanged' => $target['permissionsChanged'],
+                    'userId' => $this->getParam('userId')
+                ]
+            );
+        }
 
         return true;
     }
