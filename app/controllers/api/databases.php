@@ -299,6 +299,9 @@ function updateAttribute(
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
+            $min ??= $attribute->getAttribute('formatOptions')['min'];
+            $max ??= $attribute->getAttribute('formatOptions')['max'];
+
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
@@ -1550,8 +1553,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
-        $min = \is_null($min) ? PHP_INT_MIN : $min;
-        $max = \is_null($max) ? PHP_INT_MAX : $max;
+        $min ??= PHP_INT_MIN;
+        $max ??= PHP_INT_MAX;
 
         if ($min > $max) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -1627,8 +1630,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
-        $min = \is_null($min) ? -PHP_FLOAT_MAX : $min;
-        $max = \is_null($max) ? PHP_FLOAT_MAX : $max;
+        $min ??= -PHP_FLOAT_MAX;
+        $max ??= PHP_FLOAT_MAX;
 
         if ($min > $max) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -2347,11 +2350,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-
-        // Ensure attribute default is within range
-        $min = \is_null($min) ? PHP_INT_MIN : $min;
-        $max = \is_null($max) ? PHP_INT_MAX : $max;
-
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2411,11 +2409,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-
-        // Ensure attribute default is within range
-        $min = \is_null($min) ? -PHP_FLOAT_MAX : $min;
-        $max = \is_null($max) ? PHP_FLOAT_MAX : $max;
-
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
