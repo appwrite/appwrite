@@ -595,6 +595,7 @@ App::init()
                         'location' => 'general.php.1',
                         'domainDocument' => $domainDocument
                     ]);
+
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
@@ -605,6 +606,7 @@ App::init()
                             'projectId' => 'console',
                             'projectInternalId' => 'console'
                         ]);
+
                         var_dump([
                             'location' => 'general.php.2',
                             'domainDocument' => $domainDocument
