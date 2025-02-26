@@ -136,11 +136,6 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
-        var_dump([
-         'location' =>  'execute.1',
-          'certificate' =>   $certificate
-        ]);
-
         $success = false;
 
         try {
@@ -189,10 +184,6 @@ class Certificates extends Action
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', DateTime::now());
-            var_dump([
-                'location' =>  'execute.2',
-                'certificate' =>   $certificate
-            ]);
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForFunctions);

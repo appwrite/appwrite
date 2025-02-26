@@ -63,7 +63,6 @@ class Usage extends Action
 
 
         if (empty($project->getAttribute('database'))) {
-            var_dump($payload);
             return;
         }
 
