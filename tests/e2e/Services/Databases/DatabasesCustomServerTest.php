@@ -2327,8 +2327,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => -10,
-            'max' => 0,
+            'default' => 10,
+            'max' => 100,
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
@@ -2588,8 +2588,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'required' => false,
-            'default' => -123.456,
-            'max' => 0.0,
+            'default' => 23.456,
+            'max' => 100.0,
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
