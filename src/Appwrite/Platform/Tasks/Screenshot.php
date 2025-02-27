@@ -99,15 +99,18 @@ class Screenshot extends Action
         
         Console::info("Team created");
         
+        $projectName = 'Demo Project';
+        $projectId = ID::unique();
+        
         // Create project
         $project = $client->call(Client::METHOD_POST, '/projects', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => $cookieConsole
         ], [
-            'projectId' => ID::unique(),
+            'projectId' => $projectId,
             'region' => 'default',
-            'name' => 'Demo Project',
+            'name' => $projectName,
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
             'url' => 'https://appwrite.io',
@@ -141,6 +144,7 @@ class Screenshot extends Action
             'installCommand' => $framework['installCommand'],
             'outputDirectory' => $framework['outputDirectory'],
             'providerRootDirectory' => $framework['providerRootDirectory'],
+            'timeout' => 60
         ]);
         
         if($site['headers']['status-code'] !== 201) {
@@ -150,9 +154,42 @@ class Screenshot extends Action
         
         Console::info("Site created");
         
-        // TODO: Add variables, and replace placeholders
-        
         $siteId = $site['body']['$id'];
+
+        // Create variables
+        if(!empty($template['variables'] ?? [])) {
+            foreach($template['variables'] as $variable) {
+                if(empty($variable['value'] ?? '')) {
+                    if(($variable['required'] ?? false) === true) {
+                        throw new \Exception("Missing required variable: {$variable['name']}");
+                    }
+                    
+                    continue;
+                }
+                
+                $value = $variable['value'];
+                $value = \str_replace('{projectName}', $projectName, $value);
+                $value = \str_replace('{projectId}', $projectId, $value);
+                $value = \str_replace('{apiEndpoint}', 'http://localhost/v1', $value);
+                
+                $response = $client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => $cookieConsole
+                ], [
+                    'key' => $variable['name'],
+                    'value' => $value
+                ]);
+                
+                if($response['headers']['status-code'] !== 201) {
+                    Console::error(\json_encode($response));
+                    throw new \Exception("Failed to create variable");
+                }
+            }
+
+            Console::info("Variables created");
+        }
         
         // Create deployment
         $deployment = $client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', [

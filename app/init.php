@@ -1970,12 +1970,12 @@ App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = true;
     }
 
-    if ($allowed) {
-        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
-        if (!empty($host)) {
-            return $host;
-        }
+
+    $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', ''));
+    if (!empty($host)) {
+        return $host;
     }
+
 
     return '';
 }, ['request', 'apiKey']);

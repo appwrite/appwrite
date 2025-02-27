@@ -953,7 +953,9 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.0
+    ports:
+      - 5555:3000
+    image: appwrite/browser:0.2.2
     networks:
       - appwrite
 
