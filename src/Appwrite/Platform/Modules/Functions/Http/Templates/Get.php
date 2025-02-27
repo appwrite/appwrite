@@ -29,7 +29,6 @@ class Get extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/templates/:templateId')
             ->desc('Get function template')
-            ->groups(['api'])
             ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(

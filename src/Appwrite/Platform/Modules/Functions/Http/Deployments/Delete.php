@@ -63,11 +63,11 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForSites)
+    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForFunctions)
     {
-        $site = $dbForProject->getDocument('sites', $siteId);
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
+        $function = $dbForProject->getDocument('functions', $functionId);
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -75,7 +75,7 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -84,20 +84,20 @@ class Delete extends Action
         }
 
         if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceForSites->delete($deployment->getAttribute('path', '')))) {
+            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
 
-        if ($site->getAttribute('deployment') === $deployment->getId()) { // Reset site deployment
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
-                'deploymentId' => '',
+        if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                'deployment' => '',
                 'deploymentInternalId' => '',
             ])));
         }
 
         $queueForEvents
-            ->setParam('siteId', $site->getId())
+            ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
         $queueForDeletes
