@@ -591,10 +591,6 @@ App::init()
                             Query::equal('domain', [$domain->get()])
                         ]);
                     }
-                    var_dump([
-                        'location' => 'general.php.1',
-                        'domainDocument' => $domainDocument
-                    ]);
 
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
@@ -607,10 +603,6 @@ App::init()
                             'projectInternalId' => 'console'
                         ]);
 
-                        var_dump([
-                            'location' => 'general.php.2',
-                            'domainDocument' => $domainDocument
-                        ]);
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
 
                         Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
