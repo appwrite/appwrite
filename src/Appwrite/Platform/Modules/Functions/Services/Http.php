@@ -13,6 +13,7 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Update as UpdateDeploym
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecution;
+use Appwrite\Platform\Modules\Functions\Http\Executions\Delete as DeleteExecution;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Get as GetExecution;
 use Appwrite\Platform\Modules\Functions\Http\Executions\XList as ListExecutions;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
@@ -22,8 +23,15 @@ use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
 use Appwrite\Platform\Modules\Functions\Http\Runtimes\XList as ListRuntimes;
 use Appwrite\Platform\Modules\Functions\Http\Specifications\XList as ListSpecifications;
+use Appwrite\Platform\Modules\Functions\Http\Templates\Get as GetTemplate;
+use Appwrite\Platform\Modules\Functions\Http\Templates\XList as ListTemplates;
 use Appwrite\Platform\Modules\Functions\Http\Usage\Get as GetUsage;
 use Appwrite\Platform\Modules\Functions\Http\Usage\XList as ListUsage;
+use Appwrite\Platform\Modules\Functions\Http\Variables\Create as CreateVariable;
+use Appwrite\Platform\Modules\Functions\Http\Variables\Delete as DeleteVariable;
+use Appwrite\Platform\Modules\Functions\Http\Variables\Get as GetVariable;
+use Appwrite\Platform\Modules\Functions\Http\Variables\Update as UpdateVariable;
+use Appwrite\Platform\Modules\Functions\Http\Variables\XList as ListVariables;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -61,9 +69,21 @@ class Http extends Service
         $this->addAction(CreateExecution::getName(), new CreateExecution());
         $this->addAction(GetExecution::getName(), new GetExecution());
         $this->addAction(ListExecutions::getName(), new ListExecutions());
+        $this->addAction(DeleteExecution::getName(), new DeleteExecution());
 
         // Usage
         $this->addAction(GetUsage::getName(), new GetUsage());
         $this->addAction(ListUsage::getName(), new ListUsage());
+
+        // Variables
+        $this->addAction(CreateVariable::getName(), new CreateVariable());
+        $this->addAction(GetVariable::getName(), new GetVariable());
+        $this->addAction(ListVariables::getName(), new ListVariables());
+        $this->addAction(UpdateVariable::getName(), new UpdateVariable());
+        $this->addAction(DeleteVariable::getName(), new DeleteVariable());
+
+        // Templates
+        $this->addAction(GetTemplate::getName(), new GetTemplate());
+        $this->addAction(ListTemplates::getName(), new ListTemplates());
     }
 }
