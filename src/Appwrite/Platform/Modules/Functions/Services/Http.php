@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Services;
 
+use Appwrite\Platform\Modules\Functions\Http\Deployments\Builds\Create as CreateBuild;
+use Appwrite\Platform\Modules\Functions\Http\Deployments\Builds\Update as UpdateBuild;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Delete as DeleteDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Download\Get as DownloadDeployment;
@@ -10,6 +12,9 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as Crea
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Update as UpdateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
+use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecution;
+use Appwrite\Platform\Modules\Functions\Http\Executions\Get as GetExecution;
+use Appwrite\Platform\Modules\Functions\Http\Executions\XList as ListExecutions;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Delete as DeleteFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Get as GetFunction;
@@ -49,6 +54,13 @@ class Http extends Service
         $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());
         $this->addAction(CreateVcsDeployment::getName(), new CreateVcsDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
+        $this->addAction(CreateBuild::getName(), new CreateBuild());
+        $this->addAction(UpdateBuild::getName(), new UpdateBuild());
+
+        // Executions
+        $this->addAction(CreateExecution::getName(), new CreateExecution());
+        $this->addAction(GetExecution::getName(), new GetExecution());
+        $this->addAction(ListExecutions::getName(), new ListExecutions());
 
         // Usage
         $this->addAction(GetUsage::getName(), new GetUsage());
