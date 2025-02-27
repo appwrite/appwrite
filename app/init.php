@@ -21,6 +21,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -308,6 +309,8 @@ const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
 const METRIC_TOPICS = 'topics';
+const METRIC_TARGETS = 'targets';
+const METRIC_PROVIDER_TYPE_TARGETS = '{providerType}.targets';
 const METRIC_KEYS = 'keys';
 const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
 const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
@@ -1669,6 +1672,7 @@ function getDevice(string $root, string $connection = ''): Device
         $accessSecret = '';
         $bucket = '';
         $region = '';
+        $url = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
 
         try {
             $dsn = new DSN($connection);
@@ -1683,7 +1687,7 @@ function getDevice(string $root, string $connection = ''): Device
 
         switch ($device) {
             case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl, $url);
             case STORAGE::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
@@ -1709,7 +1713,8 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
-                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                $s3EndpointUrl = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
                 $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
@@ -1954,3 +1959,13 @@ App::setResource('previewHostname', function (Request $request) {
 
     return '';
 }, ['request']);
+
+App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+    $key = $request->getHeader('x-appwrite-key');
+
+    if (empty($key)) {
+        return null;
+    }
+
+    return Key::decode($project, $key);
+}, ['request', 'project']);

@@ -488,7 +488,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $email = \strtolower($email);
-        $name = (empty($name)) ? $email : $name;
+        $name = empty($name) ? $email : $name;
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -507,7 +507,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
-            $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
+            $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
             if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
@@ -588,9 +588,8 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
+        $secret = Auth::tokenGenerator();
         if ($membership->isEmpty()) {
-            $secret = Auth::tokenGenerator();
-
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -618,7 +617,8 @@ App::post('/v1/teams/:teamId/memberships')
                 $dbForProject->createDocument('memberships', $membership);
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        } else {
+        } elseif ($membership->getAttribute('confirm') === false) {
+            $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {
@@ -629,8 +629,9 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        } else {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
-
 
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
@@ -714,7 +715,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name'))
+                    ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
 
@@ -1361,13 +1362,15 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -1414,7 +1417,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

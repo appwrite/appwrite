@@ -98,8 +98,10 @@ class StatsUsageDump extends Action
      * @param Message $message
      * @param callable $getProjectDB
      * @param callable $getLogsDB
+     * @param Registry $register
      * @return void
      * @throws Exception
+     * @throws \Throwable
      * @throws \Utopia\Database\Exception
      */
     public function action(Message $message, callable $getProjectDB, callable $getLogsDB, Registry $register): void
@@ -110,7 +112,6 @@ class StatsUsageDump extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
-
 
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
@@ -152,7 +153,9 @@ class StatsUsageDump extends Action
                             'value' => $value,
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
+
                         $documentClone = new Document($document->getArrayCopy());
+
                         $dbForProject->createOrUpdateDocumentsWithIncrease(
                             'stats',
                             'value',
@@ -315,7 +318,7 @@ class StatsUsageDump extends Action
         console::log('[' . DateTime::now() . '] DB Storage Calculation [' . $key . '] took ' . (($end - $start) * 1000) . ' milliseconds');
     }
 
-    protected function writeToLogsDB(Document $project, Document $document)
+    protected function writeToLogsDB(Document $project, Document $document): void
     {
         if (!System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', false)) {
             Console::log('Dual Writing is disabled. Skipping...');
