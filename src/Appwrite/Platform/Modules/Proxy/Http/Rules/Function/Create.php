@@ -21,6 +21,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -61,6 +62,7 @@ class Create extends Action
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('functionId', '', new UID(), 'ID of function to be executed.')
+            ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')
@@ -70,7 +72,7 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $domain, string $functionId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
+    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
     {
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -131,7 +133,8 @@ class Create extends Action
             'value' => $function->getAttribute('deployment', ''),
             'certificateId' => '',
             'automation' => 'function=' . $function->getId(),
-            'search' => implode(' ', [$ruleId, $domain->get()]),
+            'automation' => !empty($branch) ? ('branch=' . $branch) : ('function=' . $function->getId()),
+            'search' => implode(' ', [$ruleId, $domain->get(), $branch]),
         ]);
 
         try {
