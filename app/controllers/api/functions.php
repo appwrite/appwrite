@@ -411,7 +411,7 @@ App::post('/v1/functions')
             /** Trigger Realtime Events */
             $queueForRealtime
                 ->from($ruleCreate)
-                ->setTargets(['console', $project->getId()])
+                ->setSubscribers(['console', $project->getId()])
                 ->trigger();
         }
 

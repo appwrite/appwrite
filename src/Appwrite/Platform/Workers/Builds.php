@@ -383,7 +383,7 @@ class Builds extends Action
                      */
                     $queueForRealtime
                         ->setProject($project)
-                        ->setTargets(['console'])
+                        ->setSubscribers(['console'])
                         ->setEvent($event)
                         ->setParam('functionId', $function->getId())
                         ->setParam('deploymentId', $deployment->getId())
@@ -457,7 +457,7 @@ class Builds extends Action
             /** Trigger Realtime Event */
             $queueForRealtime
                 ->setProject($project)
-                ->setTargets(['console'])
+                ->setSubscribers(['console'])
                 ->setEvent($event)
                 ->setParam('functionId', $function->getId())
                 ->setParam('deploymentId', $deployment->getId())
@@ -589,7 +589,7 @@ class Builds extends Action
                                      */
                                     $queueForRealtime
                                         ->setProject($project)
-                                        ->setTargets(['console'])
+                                        ->setSubscribers(['console'])
                                         ->setEvent($event)
                                         ->setParam('functionId', $function->getId())
                                         ->setParam('deploymentId', $deployment->getId())
@@ -686,7 +686,7 @@ class Builds extends Action
              */
             $queueForRealtime
                 ->setProject($project)
-                ->setTargets(['console'])
+                ->setSubscribers(['console'])
                 ->setEvent($event)
                 ->setParam('functionId', $function->getId())
                 ->setParam('deploymentId', $deployment->getId())

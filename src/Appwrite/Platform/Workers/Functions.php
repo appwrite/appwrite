@@ -600,7 +600,7 @@ class Functions extends Action
         /** Trigger Realtime Events */
         $queueForRealtime
             ->from($queueForEvents)
-            ->setTargets(['console', $project->getId()])
+            ->setSubscribers(['console', $project->getId()])
             ->trigger();
 
         if (!empty($error)) {

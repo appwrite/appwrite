@@ -394,7 +394,7 @@ class Certificates extends Action
             /** Trigger Realtime Events */
             $queueForRealtime
                 ->from($queueForEvents)
-                ->setTargets(['console', $projectId])
+                ->setSubscribers(['console', $projectId])
                 ->trigger();
         }
     }

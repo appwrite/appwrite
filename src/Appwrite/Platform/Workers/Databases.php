@@ -601,17 +601,17 @@ class Databases extends Action
     ): void {
         $queueForRealtime
             ->setProject($project)
-            ->setTargets(['console'])
+            ->setSubscribers(['console'])
             ->setEvent($event)
             ->setParam('databaseId', $database->getId())
             ->setParam('collectionId', $collection->getId());
 
-        if ($attribute !== null) {
+        if ($attribute !== null && !empty($attribute)) {
             $queueForRealtime
                 ->setParam('attributeId', $attribute->getId())
                 ->setPayload($attribute->getArrayCopy());
         }
-        if ($index !== null) {
+        if ($index !== null && !empty($index)) {
             $queueForRealtime
                 ->setParam('indexId', $index->getId())
                 ->setPayload($index->getArrayCopy());

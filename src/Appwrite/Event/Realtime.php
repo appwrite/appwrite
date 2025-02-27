@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 
 class Realtime extends Event
 {
-    protected array $targets = [];
+    protected array $subscribers = [];
 
     public function __construct()
     {
@@ -32,25 +32,25 @@ class Realtime extends Event
     }
 
     /**
-     * Set targets for this realtime event.
+     * Set subscribers for this realtime event.
      *
-     * @param array $targets
+     * @param array $subscribers
      * @return array
      */
-    public function setTargets(array $targets): self
+    public function setSubscribers(array $subscribers): self
     {
-        $this->targets = $targets;
+        $this->subscribers = $subscribers;
         return $this;
     }
 
     /**
-     * Get targets for this realtime event.
+     * Get subscribers for this realtime event.
      *
      * @return array
      */
-    public function getTargets(): array
+    public function getSubscribers(): array
     {
-        return $this->targets;
+        return $this->subscribers;
     }
 
     /**
@@ -82,8 +82,8 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
-        $projectIds = !empty($this->getTargets())
-            ? $this->getTargets()
+        $projectIds = !empty($this->getSubscribers())
+            ? $this->getSubscribers()
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
         foreach ($projectIds as $projectId) {
