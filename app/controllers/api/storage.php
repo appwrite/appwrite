@@ -936,12 +936,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
-    ->inject('plan')
     ->inject('dbForProject')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
     ->inject('queueForStatsUsage')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, array $plan, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -961,12 +960,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
-        if (isset($plan['imageTransformations'])) {
-            if ($plan['imageTransformations'] === -1) {
-                throw new Exception(Exception::STORAGE_FILE_PREVIEW_BLOCKED);
-            }
         }
 
         if ($fileSecurity && !$valid) {

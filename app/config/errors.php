@@ -480,11 +480,6 @@ return [
         'description' => 'The requested file is not publicly readable.',
         'code' => 403,
     ],
-    Exception::STORAGE_FILE_PREVIEW_BLOCKED => [
-        'name' => Exception::STORAGE_FILE_PREVIEW_BLOCKED,
-        'description' => 'File preview is not available on your pricing current tier.',
-        'code' => 403,
-    ],
 
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
