@@ -693,7 +693,7 @@ App::init()
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                             '$id' => $ruleId,
                             'domain' => $domain->get(),
-                            'resourceType' => 'api',
+                            'type' => 'api',
                             'status' => 'verifying',
                             'projectId' => 'console',
                             'projectInternalId' => 'console',
