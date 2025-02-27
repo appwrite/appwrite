@@ -1625,6 +1625,12 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
 
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin");
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin");
+        $this->assertEquals(404, $file['headers']['status-code']);
+
         $this->cleanupSite($siteId);
     }
 

@@ -742,7 +742,7 @@ class Builds extends Action
                     $client = new FetchClient();
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
-                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+                    $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                     $configs = [
                         'screenshotLight' => [
