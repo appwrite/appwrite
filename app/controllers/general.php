@@ -208,7 +208,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             'site' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
             default => null
         };
-        
+
         // Static site enforced runtime
         if ($resource->getAttribute('adapter', '') === 'static') {
             $runtime = $runtimes['static-1'] ?? null;
