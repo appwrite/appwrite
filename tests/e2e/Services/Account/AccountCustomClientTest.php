@@ -277,6 +277,7 @@ class AccountCustomClientTest extends Scope
     {
         sleep(5);
         $session = $data['session'] ?? '';
+
         /**
          * Test for SUCCESS
          */
