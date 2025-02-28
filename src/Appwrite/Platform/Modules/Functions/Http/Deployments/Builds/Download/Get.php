@@ -37,7 +37,7 @@ class Get extends Action
                 namespace: 'functions',
                 name: 'getDeploymentBuildDownload',
                 description: <<<EOT
-                Get a site build content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
+                Get a function build content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
                 EOT,
                 auth: [AuthType::KEY, AuthType::JWT],
                 responses: [
