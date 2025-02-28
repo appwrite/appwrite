@@ -63,6 +63,7 @@ App::get('/v1/project/usage')
                 METRIC_BUILDS_STORAGE,
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_FILES_IMAGES_TRANSFORMED,
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -363,6 +364,7 @@ App::get('/v1/project/usage')
             'authPhoneTotal' => $authPhoneTotal,
             'authPhoneEstimate' => $authPhoneEstimate,
             'authPhoneCountryBreakdown' => $authPhoneCountryBreakdown,
+            'imageTransformations' => $total[METRIC_FILES_IMAGES_TRANSFORMED],
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
