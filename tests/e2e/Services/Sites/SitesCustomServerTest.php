@@ -1634,5 +1634,45 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    // TODO: Add tests for deletion of resources when site is deleted
+    public function testSiteDownload(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'ssr-22',
+            'fallbackFile' => null,
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'adapter' => 'static',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $this->getDeploymentDownload($siteId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $deploymentMd5 = \md5($response['body']);
+
+        $response = $this->getBuildDownload($siteId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $buildMd5 = \md5($response['body']);
+
+        $this->assertNotEquals($deploymentMd5, $buildMd5);
+
+        $this->cleanupSite($siteId);
+    }
 }
