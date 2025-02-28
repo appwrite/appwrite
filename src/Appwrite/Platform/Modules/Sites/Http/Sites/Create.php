@@ -69,7 +69,7 @@ class Create extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
-            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Allows: static, ssr', true)
+            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)

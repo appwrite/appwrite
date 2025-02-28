@@ -62,11 +62,12 @@ class Builds extends Action
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('deviceForSites')
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $deviceForFiles, $log));
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForSites, $isResourceBlocked, $deviceForFiles, $log));
     }
 
     /**
@@ -79,12 +80,13 @@ class Builds extends Action
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
+     * @param Device $deviceForSites
      * @param Device $deviceForFiles
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -105,7 +107,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForSites, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -115,6 +117,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Device $deviceForSites
      * @param Device $deviceForFiles
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
@@ -132,12 +135,17 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForSites, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
             default => throw new \Exception('Invalid resource type')
+        };
+
+        $device = match ($resource->getCollection()) {
+            'sites' => $deviceForSites,
+            'functions' => $deviceForFunctions,
         };
 
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
@@ -149,8 +157,7 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        // TODO: Sites support
-        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $resource->getId())) {
+        if ($isResourceBlocked($project, $resourceKey === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new \Exception('Resource is blocked');
         }
 
@@ -272,8 +279,8 @@ class Builds extends Action
                     $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
                     Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
-                    $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                    $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
+                    $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                    $result = $localDevice->transfer($tmpPathFile, $source, $device);
 
                     if (!$result) {
                         throw new \Exception("Unable to move file");
@@ -281,7 +288,7 @@ class Builds extends Action
 
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
 
-                    $directorySize = $deviceForFunctions->getFileSize($source);
+                    $directorySize = $device->getFileSize($source);
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
                 }
@@ -429,8 +436,8 @@ class Builds extends Action
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
                 Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
-                $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
+                $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $source, $device);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
@@ -440,7 +447,7 @@ class Builds extends Action
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
 
-                $directorySize = $deviceForFunctions->getFileSize($source);
+                $directorySize = $device->getFileSize($source);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
@@ -749,8 +756,8 @@ class Builds extends Action
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
-                        Query::equal("resourceType", ["deployment"]),
-                        Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("value", [$deployment->getId()])
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -760,7 +767,7 @@ class Builds extends Action
                     $client = new FetchClient();
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
-                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+                    $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                     $configs = [
                         'screenshotLight' => [
@@ -856,13 +863,50 @@ class Builds extends Action
                     case 'functions':
                         $resource->setAttribute('deployment', $deployment->getId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["function=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
                         break;
                     case 'sites':
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                        $this->listRules($project, [
+                            Query::equal("automation", ["site=" . $resource->getId()]),
+                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule->setAttribute('value', $deployment->getId());
+                            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                        });
+
+                        // VCS branch
+                        $branchName = $deployment->getAttribute('providerBranch');
+                        if (!empty($branchName)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["branch=" . $branchName]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
+
+                        // VCS commit
+                        $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                        if (!empty($commitHash)) {
+                            $this->listRules($project, [
+                                Query::equal("automation", ["commit=" . $commitHash]),
+                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                                $rule = $rule->setAttribute('value', $deployment->getId());
+                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                            });
+                        }
                         break;
                 }
             }
+
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -1130,8 +1174,8 @@ class Builds extends Action
 
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                     Query::equal("projectInternalId", [$project->getInternalId()]),
-                    Query::equal("resourceType", ["deployment"]),
-                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                    Query::equal("type", ["deployment"]),
+                    Query::equal("value", [$deployment->getId()])
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -1155,5 +1199,39 @@ class Builds extends Action
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }

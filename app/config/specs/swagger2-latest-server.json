@@ -17008,9 +17008,15 @@
                                 },
                                 "adapter": {
                                     "type": "string",
-                                    "description": "Framework adapter. Allows: static, ssr",
+                                    "description": "Framework adapter defining rendering strategy. Allowed values are: static, ssr",
                                     "default": "",
-                                    "x-example": "<ADAPTER>"
+                                    "x-example": "static",
+                                    "enum": [
+                                        "static",
+                                        "ssr"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 },
                                 "installationId": {
                                     "type": "string",
@@ -17369,9 +17375,15 @@
                                 },
                                 "adapter": {
                                     "type": "string",
-                                    "description": "Framework adapter. Usuallly allows: static, ssr",
+                                    "description": "Framework adapter defining rendering strategy. Allowed values are: static, ssr",
                                     "default": "",
-                                    "x-example": "<ADAPTER>"
+                                    "x-example": "static",
+                                    "enum": [
+                                        "static",
+                                        "ssr"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 },
                                 "fallbackFile": {
                                     "type": "string",
@@ -28054,11 +28066,6 @@
                     "x-example": 128,
                     "format": "int32"
                 },
-                "domain": {
-                    "type": "string",
-                    "description": "Preview domain.",
-                    "x-example": "deploy1-project1.appwrite.site"
-                },
                 "providerRepositoryName": {
                     "type": "string",
                     "description": "The name of the vcs provider repository",
@@ -28127,7 +28134,6 @@
                 "status",
                 "buildLogs",
                 "buildTime",
-                "domain",
                 "providerRepositoryName",
                 "providerRepositoryOwner",
                 "providerRepositoryUrl",

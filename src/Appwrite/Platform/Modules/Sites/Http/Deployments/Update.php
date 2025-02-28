@@ -44,7 +44,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_FUNCTION,
+                        model: Response::MODEL_SITE,
                     )
                 ]
             ))

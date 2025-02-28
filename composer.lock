@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "81769c65caf560ea69f2c13fc8b04e7d",
+    "content-hash": "6d3952c126526006ed5a7d5a4741b755",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -279,16 +279,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.12.1",
+            "version": "0.12.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "f510c0a40911935b77b86859eb5223d58d660df1"
+                "reference": "901eddb1e45a8e0f689302e40af871c181ecbe40"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/f510c0a40911935b77b86859eb5223d58d660df1",
-                "reference": "f510c0a40911935b77b86859eb5223d58d660df1",
+                "url": "https://api.github.com/repos/brick/math/zipball/901eddb1e45a8e0f689302e40af871c181ecbe40",
+                "reference": "901eddb1e45a8e0f689302e40af871c181ecbe40",
                 "shasum": ""
             },
             "require": {
@@ -297,7 +297,7 @@
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.2",
                 "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "5.16.0"
+                "vimeo/psalm": "6.8.8"
             },
             "type": "library",
             "autoload": {
@@ -327,7 +327,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.12.1"
+                "source": "https://github.com/brick/math/tree/0.12.2"
             },
             "funding": [
                 {
@@ -335,7 +335,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-11-29T23:19:16+00:00"
+            "time": "2025-02-26T10:21:45+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2694,16 +2694,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.2.3",
+            "version": "v7.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "7ce6078c79a4a7afff931c413d2959d3bffbfb8d"
+                "reference": "78981a2ffef6437ed92d4d7e2a86a82f256c6dc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/7ce6078c79a4a7afff931c413d2959d3bffbfb8d",
-                "reference": "7ce6078c79a4a7afff931c413d2959d3bffbfb8d",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/78981a2ffef6437ed92d4d7e2a86a82f256c6dc6",
+                "reference": "78981a2ffef6437ed92d4d7e2a86a82f256c6dc6",
                 "shasum": ""
             },
             "require": {
@@ -2769,7 +2769,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.2.3"
+                "source": "https://github.com/symfony/http-client/tree/v7.2.4"
             },
             "funding": [
                 {
@@ -2785,7 +2785,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-01-28T15:51:35+00:00"
+            "time": "2025-02-13T10:27:23+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3982,16 +3982,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-fix-prevent-duplicate-compression",
+            "version": "0.33.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2"
+                "reference": "73fac6fbce9f56282dba4e52a58cf836ec434644"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
-                "reference": "a1efe3e10038afe4109af833ce7a25a8ec4b5ed2",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/73fac6fbce9f56282dba4e52a58cf836ec434644",
+                "reference": "73fac6fbce9f56282dba4e52a58cf836ec434644",
                 "shasum": ""
             },
             "require": {
@@ -4023,9 +4023,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/fix-prevent-duplicate-compression"
+                "source": "https://github.com/utopia-php/http/tree/0.33.17"
             },
-            "time": "2025-02-03T12:02:35+00:00"
+            "time": "2025-02-24T17:35:48+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5114,16 +5114,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.0",
+            "version": "0.40.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "d2880132c900f64108d3e4484a6c1ed1bed2303c"
+                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d2880132c900f64108d3e4484a6c1ed1bed2303c",
-                "reference": "d2880132c900f64108d3e4484a6c1ed1bed2303c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/df180676b6fbde7832ae1495af3e2f3e8f700837",
+                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837",
                 "shasum": ""
             },
             "require": {
@@ -5159,9 +5159,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.1"
             },
-            "time": "2025-02-04T12:47:33+00:00"
+            "time": "2025-02-26T07:07:10+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8493,16 +8493,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.2.0",
+            "version": "v7.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "d34b22ba9390ec19d2dd966c40aa9e8462f27a7e"
+                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/d34b22ba9390ec19d2dd966c40aa9e8462f27a7e",
-                "reference": "d34b22ba9390ec19d2dd966c40aa9e8462f27a7e",
+                "url": "https://api.github.com/repos/symfony/process/zipball/d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
+                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
                 "shasum": ""
             },
             "require": {
@@ -8534,7 +8534,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.2.0"
+                "source": "https://github.com/symfony/process/tree/v7.2.4"
             },
             "funding": [
                 {
@@ -8550,7 +8550,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-06T14:24:19+00:00"
+            "time": "2025-02-05T08:33:46+00:00"
         },
         {
             "name": "symfony/string",
@@ -8873,18 +8873,11 @@
             "version": "dev-feat-pseudocode-draft2",
             "alias": "0.1.99",
             "alias_normalized": "0.1.99.0"
-        },
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-fix-prevent-duplicate-compression",
-            "alias": "0.33.99",
-            "alias_normalized": "0.33.99.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/detector": 20,
-        "utopia-php/framework": 20
+        "utopia-php/detector": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

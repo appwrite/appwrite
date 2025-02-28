@@ -284,13 +284,12 @@ trait SitesBase
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $subdomain = $subdomain ? $subdomain : ID::unique();
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules', array_merge([
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
-            'resourceType' => 'site',
-            'resourceId' => $siteId,
+            'siteId' => $siteId,
         ]);
 
         $this->assertEquals(201, $rule['headers']['status-code']);
@@ -309,8 +308,8 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$siteId])->toString(),
-                Query::equal('resourceType', ['site'])->toString(),
+                Query::equal('automation', ['site=' . $siteId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
 
@@ -324,7 +323,6 @@ trait SitesBase
         return $domain;
     }
 
-
     protected function getDeploymentDomain(string $deploymentId): string
     {
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
@@ -332,8 +330,9 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('resourceId', [$deploymentId])->toString(),
-                Query::equal('resourceType', ['deployment'])->toString(),
+                Query::equal('value', [$deploymentId])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+                Query::equal('automation', [''])->toString(),
             ],
         ]);
 

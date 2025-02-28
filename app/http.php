@@ -303,9 +303,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty()) {
+            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 Console::info("    └── Creating screenshots bucket...");
-                $dbForPlatform->createDocument('buckets', new Document([
+                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Screenshots',
@@ -316,16 +316,11 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'encryption' => false,
                     'antivirus' => false,
                     'fileSecurity' => true,
-                    '$permissions' => [
-                        Permission::create(Role::any()),
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
+                    '$permissions' => [],
                     'search' => 'buckets Screenshots',
-                ]));
+                ])));
 
-                $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                 Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
@@ -353,7 +348,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes));
             }
         });
 
@@ -519,7 +514,6 @@ $http->on('Task', function () use ($register, $domains) {
                 if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
-                $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));

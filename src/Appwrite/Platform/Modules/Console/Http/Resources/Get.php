@@ -23,7 +23,7 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'getResources';
+        return 'getResource';
     }
 
     public function __construct()

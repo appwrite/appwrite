@@ -93,13 +93,13 @@ class Deletes extends Action
                         $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -743,14 +743,13 @@ class Deletes extends Action
     /**
      * @param callable $getProjectDB
      * @param Device $deviceForSites
-     * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Document $document function document
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -761,8 +760,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for site " . $siteId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['site']),
-            Query::equal('resourceInternalId', [$siteInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['site=' . $siteId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -782,23 +781,25 @@ class Deletes extends Action
          */
         Console::info("Deleting deployments for site " . $siteId);
         $deploymentInternalIds = [];
+        $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
-            $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $deploymentIds[] = $document->getId();
+            $this->deleteDeploymentFiles($deviceForSites, $document);
             $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
          * Delete rules for all deployments of the site
          */
-        //TODO: If functions also have previews in the future, change the logic here to use unique identifier for sites and functions
-        foreach ($deploymentInternalIds as $deploymentInternalId) {
-            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentInternalId);
+        foreach ($deploymentIds as $deploymentId) {
+            Console::info("Deleting rules for site " . $siteId .  "'s deployment " . $deploymentId);
             $this->deleteByGroup('rules', [
-                Query::equal('resourceType', ['deployment']),
-                Query::equal('resourceInternalId', [$deploymentInternalId]),
+                Query::equal('type', ['deployment']),
+                Query::equal('value', [$deploymentId]),
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
                 $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -856,8 +857,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('automation', ['function=' . $functionId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -880,9 +881,10 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
 
         /**
@@ -928,6 +930,18 @@ class Deletes extends Action
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
+    }
+
+    private function deleteDeploymentRules(Database $dbForPlatform, Document $deployment, Document $project, CertificatesAdapter $certificates): void
+    {
+        Console::info("Deleting rules for site " . $deployment->getId());
+        $this->deleteByGroup('rules', [
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deployment->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
+            $this->deleteRule($dbForPlatform, $document, $certificates);
+        });
     }
 
     private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
@@ -1042,13 +1056,14 @@ class Deletes extends Action
     /**
      * @param callable $getProjectDB
      * @param Device $deviceForFunctions
+     * @param Device $deviceForSites
      * @param Device $deviceForBuilds
      * @param Document $document
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1058,7 +1073,11 @@ class Deletes extends Action
         /**
          * Delete deployment files
          */
-        $this->deleteDeploymentFiles($deviceForFunctions, $document); //TODO: For sites, this should be deviceForSites
+        match ($document->getAttribute('resourceType')) {
+            'functions' => $this->deleteDeploymentFiles($deviceForFunctions, $document),
+            'sites' => $this->deleteDeploymentFiles($deviceForSites, $document),
+            default => throw new Exception('Invalid resource type')
+        };
 
         /**
          * Delete deployment screenshots
@@ -1081,8 +1100,8 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for deployment " . $deploymentId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['deployment']),
-            Query::equal('resourceInternalId', [$deploymentInternalId]),
+            Query::equal('type', ['deployment']),
+            Query::equal('value', [$deploymentId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);

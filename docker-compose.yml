@@ -76,6 +76,7 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
@@ -205,7 +206,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.3.0-sites-rc.13
+    image: appwrite/console:5.3.0-sites-rc.15
     restart: unless-stopped
     networks:
       - appwrite
@@ -348,6 +349,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -434,6 +436,7 @@ services:
       - appwrite
     volumes:
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
@@ -968,6 +971,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       # Host mount nessessary to share files between executor and runtimes.
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
@@ -1139,5 +1143,6 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-functions:
+  appwrite-sites:
   appwrite-builds:
   appwrite-config:
