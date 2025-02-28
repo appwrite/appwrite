@@ -99,6 +99,8 @@ class Create extends Action
             'installCommand' => $site->getAttribute('installCommand', ''),
             'outputDirectory' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
+            'screenshotLight' => '',
+            'screenshotDark' => ''
         ]));
 
         // Preview deployments for sites
