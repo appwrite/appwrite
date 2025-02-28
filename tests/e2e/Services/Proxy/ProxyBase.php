@@ -81,7 +81,7 @@ trait ProxyBase
         return $rule;
     }
 
-    protected function createFunctionRule(string $domain, string $functionId): mixed
+    protected function createFunctionRule(string $domain, string $functionId, string $branch = ''): mixed
     {
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
@@ -89,6 +89,7 @@ trait ProxyBase
         ], $this->getHeaders()), [
             'domain' => $domain,
             'functionId' => $functionId,
+            'branch' => $branch,
         ]);
 
         return $rule;
@@ -122,9 +123,9 @@ trait ProxyBase
         return $rule['body']['$id'];
     }
 
-    protected function setupFunctionRule(string $domain, string $functionId): string
+    protected function setupFunctionRule(string $domain, string $functionId, string $branch = ''): string
     {
-        $rule = $this->createFunctionRule($domain, $functionId);
+        $rule = $this->createFunctionRule($domain, $functionId, $branch);
 
         $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
 
