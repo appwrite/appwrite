@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
+namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -25,15 +25,16 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId')
+            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId')
             ->desc('Get deployment')
-            ->groups(['api', 'sites'])
-            ->label('scope', 'sites.read')
+            ->groups(['api', 'functions'])
+            ->label('scope', 'functions.read')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
-                namespace: 'sites',
+                namespace: 'functions',
                 name: 'getDeployment',
                 description: <<<EOT
-                Get a site deployment by its unique ID.
+                Get a function deployment by its unique ID.
                 EOT,
                 auth: [AuthType::KEY],
                 responses: [
@@ -43,24 +44,24 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject)
+    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject)
     {
-        $site = $dbForProject->getDocument('sites', $siteId);
+        $function = $dbForProject->getDocument('functions', $functionId);
 
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

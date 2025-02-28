@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
+namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -31,15 +31,16 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/sites/:siteId/deployments')
+            ->setHttpPath('/v1/functions/:functionId/deployments')
             ->desc('List deployments')
-            ->groups(['api', 'sites'])
-            ->label('scope', 'sites.read')
+            ->groups(['api', 'functions'])
+            ->label('scope', 'functions.read')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
-                namespace: 'sites',
+                namespace: 'functions',
                 name: 'listDeployments',
                 description: <<<EOT
-                Get a list of all the site's code deployments. You can use the query params to filter your results.
+                Get a list of all the function's code deployments. You can use the query params to filter your results.
                 EOT,
                 auth: [AuthType::KEY],
                 responses: [
@@ -49,7 +50,7 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('functionId', '', new UID(), 'Function ID.')
             ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
@@ -57,12 +58,12 @@ class XList extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, array $queries, string $search, Response $response, Database $dbForProject)
+    public function action(string $functionId, array $queries, string $search, Response $response, Database $dbForProject)
     {
-        $site = $dbForProject->getDocument('sites', $siteId);
+        $function = $dbForProject->getDocument('functions', $functionId);
 
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         try {
@@ -76,8 +77,8 @@ class XList extends Action
         }
 
         // Set resource queries
-        $queries[] = Query::equal('resourceInternalId', [$site->getInternalId()]);
-        $queries[] = Query::equal('resourceType', ['sites']);
+        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
+        $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries

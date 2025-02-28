@@ -191,7 +191,7 @@ return [
         'name' => 'Functions',
         'subtitle' => 'The Functions Service allows you view, create and manage your Cloud Functions.',
         'description' => '/docs/services/functions.md',
-        'controller' => 'api/functions.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/functions',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Variables;
+namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -26,15 +26,15 @@ class Get extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/sites/:siteId/variables/:variableId')
+            ->setHttpPath('/v1/functions/:functionId/variables/:variableId')
             ->desc('Get variable')
-            ->groups(['api', 'sites'])
-            ->label('scope', 'sites.read')
-            ->label('resourceType', RESOURCE_TYPE_SITES)
+            ->groups(['api', 'functions'])
+            ->label('scope', 'functions.read')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label(
                 'sdk',
                 new Method(
-                    namespace: 'sites',
+                    namespace: 'functions',
                     name: 'getVariable',
                     description: <<<EOT
                     Get a variable by its unique ID.
@@ -48,27 +48,27 @@ class Get extends Base
                     ],
                 )
             )
-            ->param('siteId', '', new UID(), 'Site unique ID.', false)
+            ->param('functionId', '', new UID(), 'Function unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)
+    public function action(string $functionId, string $variableId, Response $response, Database $dbForProject)
     {
-        $site = $dbForProject->getDocument('sites', $siteId);
+        $function = $dbForProject->getDocument('functions', $functionId);
 
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
             $variable === false ||
             $variable->isEmpty() ||
-            $variable->getAttribute('resourceInternalId') !== $site->getInternalId() ||
-            $variable->getAttribute('resourceType') !== 'site'
+            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceType') !== 'function'
         ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
