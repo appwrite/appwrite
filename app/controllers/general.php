@@ -12,10 +12,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
@@ -184,6 +181,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             'site' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
             default => null
         };
+
+        // Static site enforced runtime
+        if ($resource->getAttribute('adapter', '') === 'static') {
+            $runtime = $runtimes['static-1'] ?? null;
+        }
 
         if (\is_null($runtime)) {
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
