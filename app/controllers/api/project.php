@@ -40,13 +40,17 @@ App::get('/v1/project/usage')
     ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
+    ->inject('getLogsDB')
     ->inject('smsRates')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, array $smsRates) {
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Document $project, Database $dbForProject, callable $getLogsDB, array $smsRates) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
         $lastDay = (new DateTime($endDate))->format($format);
+
+        $dbForLogs = call_user_func($getLogsDB, $project);
 
         $metrics = [
             'total' => [
@@ -95,9 +99,11 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
-                $result = $dbForProject->findOne('stats', [
+                $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
+
+                $result = $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -105,7 +111,9 @@ App::get('/v1/project/usage')
             }
 
             foreach ($metrics['period'] as $metric) {
-                $results = $dbForProject->find('stats', [
+                $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
+
+                $results = $db->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
