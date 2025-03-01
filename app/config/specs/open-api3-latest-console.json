@@ -36630,6 +36630,12 @@
                         },
                         "x-example": []
                     },
+                    "imageTransformationsTotal": {
+                        "type": "integer",
+                        "description": "An array of aggregated number of image transformations.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "imageTransformations": {
                         "type": "integer",
                         "description": "Total aggregated number of image transformations.",
@@ -36667,6 +36673,7 @@
                     "authPhoneCountryBreakdown",
                     "databasesReads",
                     "databasesWrites",
+                    "imageTransformationsTotal",
                     "imageTransformations"
                 ]
             },
