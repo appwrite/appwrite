@@ -64,4 +64,7 @@ return [
 
     // Adobe PDF
     'application/pdf',
+
+    // Android Apk
+    'application/vnd.android.package-archive',
 ];
