@@ -146,6 +146,7 @@ trait ProjectCustom
         $project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
+            'teamId' => $team['body']['$id'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
