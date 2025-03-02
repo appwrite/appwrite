@@ -60,6 +60,7 @@ class Webhooks extends Action
             throw new Exception('Missing payload');
         }
         var_dump($project);
+
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
