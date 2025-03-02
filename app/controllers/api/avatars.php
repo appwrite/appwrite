@@ -8,6 +8,8 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
+use chillerlan\QRCode\Common\EccLevel;
+use chillerlan\QRCode\Output\QRImagick;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
@@ -485,17 +487,28 @@ App::get('/v1/avatars/qr')
         contentType: ContentType::IMAGE_PNG
     ))
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
-    ->param('size', 400, new Range(1, 1000), 'QR code size. Pass an integer between 1 to 1000. Defaults to 400.', true)
-    ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
+    ->param('size', 512, new Range(32, 1024), 'QR code size. Pass an integer between 32 to 1024. Defaults to 512.', true)
+    ->param('margin', 1, new Range(0, 128), 'Margin from edge. Pass an integer between 0 to 128. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
-    ->action(function (string $text, int $size, int $margin, bool $download, Response $response) {
-
+    ->action(function (string $text, int $size, int $margin, mixed $download, Response $response) {
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
+
         $options = new QROptions([
-            'addQuietzone' => true,
             'quietzoneSize' => $margin,
-            'outputType' => QRCode::OUTPUT_IMAGICK,
+            'addQuietzone' => $margin > 0,
+            'readerUseImagickIfAvailable' => true,
+            'outputInterface' => QRGdRounded::class,
+            'returnResource' => true,
+            'outputBase64' => false,
+            'scale' => 64,
+            'quality' => 75,
+            'imagickFormat' => 'png',
+            'drawCircularModules' => true,
+            'addLogoSpace' => true,
+            'eccLevel' => EccLevel::H, // Needed for addLogoSpace
+            'logoSpaceWidth' => 10,
+            'logoSpaceHeight' => 10,
         ]);
 
         $qrcode = new QRCode($options);
@@ -507,10 +520,33 @@ App::get('/v1/avatars/qr')
         $image = new Image($qrcode->render($text));
         $image->crop((int) $size, (int) $size);
 
+        $logo = \file_get_contents('https://appwrite.io/assets/logomark/logo.png');
+        $logoImg = new Image($logo);
+        $logoImg->crop(128 + 16, 128);
+
+        $image->image->setImageColorspace($logoImg->image->getImageColorspace());
+
+        $image->image->compositeImage($logoImg->image, Imagick::COMPOSITE_OVER, 192 - 8, 192);
+
+        $markerUrl = 'https://cloud.appwrite.io/v1/storage/buckets/67c4487d0010bd67a4f4/files/marker3/view?project=67c2cb23003706429442';
+        $marker = \file_get_contents($markerUrl);
+
+        $markerImg = new Image($marker);
+        $markerImg->crop(120, 120);
+        $image->image->compositeImage($markerImg->image, Imagick::COMPOSITE_OVER, 16, 16);
+
+        $markerImg->image->rotateImage('transparent', 90);
+        $image->image->compositeImage($markerImg->image, Imagick::COMPOSITE_OVER, 376, 16);
+
+        $markerImg->image->rotateImage('transparent', 180);
+        $image->image->compositeImage($markerImg->image, Imagick::COMPOSITE_OVER, 16, 376);
+
+        // TODO: Overlay last small marker too
+
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->send($image->output('png', 9));
+            ->send($image->output('png', 75));
     });
 
 App::get('/v1/avatars/initials')
@@ -1277,3 +1313,81 @@ App::get('/v1/cards/cloud-og')
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
+
+class QRGdRounded extends QRImagick
+{
+    protected function module(int $x, int $y, int $M_TYPE): void
+    {
+        if (!$this->matrix->isDark($M_TYPE)) {
+            return;
+        }
+
+        $this->imagickDraw->setFillColor($this->getModuleValue($M_TYPE));
+
+
+        /*
+           $this->imagickDraw->circle(
+               (($x + 0.5) * $this->scale),
+               (($y + 0.5) * $this->scale),
+               ((($x + 0.5 + $this->circleRadius) * $this->scale) - 8),
+               ((($y + 0.5) * $this->scale) - 8)
+           );
+
+           return;
+           */
+
+        $neighbours = $this->matrix->checkNeighbours($x, $y);
+        $x1         = ($x * $this->scale);
+        $y1         = ($y * $this->scale);
+        $x2         = (($x + 1) * $this->scale);
+        $y2         = (($y + 1) * $this->scale);
+        $rectsize   = (int)($this->scale / 2);
+
+        // ------------------
+        // Outer rounding
+        // ------------------
+
+        if (($neighbours & (1 << 7))) { // neighbour left
+            // top left
+            $this->imagickDraw->rectangle($x1, $y1, ($x1 + $rectsize), ($y1 + $rectsize));
+            // bottom left
+            $this->imagickDraw->rectangle($x1, ($y2 - $rectsize), ($x1 + $rectsize), $y2);
+        }
+
+        if (($neighbours & (1 << 3))) { // neighbour right
+            // top right
+            $this->imagickDraw->rectangle(($x2 - $rectsize), $y1, $x2, ($y1 + $rectsize));
+            // bottom right
+            $this->imagickDraw->rectangle(($x2 - $rectsize), ($y2 - $rectsize), $x2, $y2);
+        }
+
+        if (($neighbours & (1 << 1))) { // neighbour top
+            // top left
+            $this->imagickDraw->rectangle($x1, $y1, ($x1 + $rectsize), ($y1 + $rectsize));
+            // top right
+            $this->imagickDraw->rectangle(($x2 - $rectsize), $y1, $x2, ($y1 + $rectsize));
+        }
+
+        if (($neighbours & (1 << 5))) { // neighbour bottom
+            // bottom left
+            $this->imagickDraw->rectangle($x1, ($y2 - $rectsize), ($x1 + $rectsize), $y2);
+            // bottom right
+            $this->imagickDraw->rectangle(($x2 - $rectsize), ($y2 - $rectsize), $x2, $y2);
+        }
+
+        $this->imagickDraw->circle(
+            (($x + 0.5) * $this->scale),
+            (($y + 0.5) * $this->scale),
+            ((($x + 0.5 + $this->circleRadius) * $this->scale) + 2),
+            ((($y + 0.5) * $this->scale) + 2)
+        );
+
+        /*
+        $this->imagickDraw->rectangle(
+            $x1, $y1, $x2, $y2
+        );
+        */
+
+        return;
+    }
+}
