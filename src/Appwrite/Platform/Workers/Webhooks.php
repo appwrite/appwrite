@@ -54,6 +54,12 @@ class Webhooks extends Action
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
 
+        var_dump([
+            'id' =>  $project->getId(),
+            'region' => $project->getAttribute('region'),
+
+        ]);
+
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
