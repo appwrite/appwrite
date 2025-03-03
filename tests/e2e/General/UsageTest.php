@@ -1142,49 +1142,38 @@ class UsageTest extends Scope
 
         $tries = 0;
 
-        while (true) {
-            try {
-                // Compare new values with old values
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/functions/' . $functionId . '/usage?range=30d',
-                    $this->getConsoleHeaders()
-                );
+        $this->assertEventually(function () use ($functionId, $functionsMetrics, $projectMetrics) {
+            // Compare new values with old values
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/functions/' . $functionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals(19, count($response['body']));
-                $this->assertEquals('30d', $response['body']['range']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(19, count($response['body']));
+            $this->assertEquals('30d', $response['body']['range']);
 
-                // Check if the new values are greater than the old values
-                $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
-                $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+            // Check if the new values are greater than the old values
+            $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
+            $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
 
-                $response = $this->client->call(
-                    Client::METHOD_GET,
-                    '/project/usage',
-                    $this->getConsoleHeaders(),
-                    [
-                        'period' => '1h',
-                        'startDate' => self::getToday(),
-                        'endDate' => self::getTomorrow(),
-                    ]
-                );
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
 
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
-                $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
-
-                break;
-            } catch (ExpectationFailedException $th) {
-                if ($tries >= 5) {
-                    throw $th;
-                } else {
-                    $tries++;
-                    sleep(5);
-                }
-            }
-        }
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+            $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+        });
     }
 
     public function tearDown(): void
