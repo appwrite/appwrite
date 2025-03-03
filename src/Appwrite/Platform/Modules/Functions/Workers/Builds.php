@@ -605,7 +605,7 @@ class Builds extends Action
                             memory: $memory,
                             timeout: $timeout,
                             remove: true,
-                            entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
+                            entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,

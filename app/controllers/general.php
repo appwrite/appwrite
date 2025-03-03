@@ -12,10 +12,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
@@ -126,30 +123,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $type = $rule->getAttribute('type', '');
 
     if ($type === 'deployment') {
-        $method = $utopia->getRoute()?->getLabel('sdk', null);
-
-        if (empty($method)) {
-            $utopia->getRoute()?->label('sdk', new Method(
-                namespace: 'functions',
-                name: 'createExecution',
-                description: '/docs/references/functions/create-execution.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_EXECUTION,
-                    )
-                ],
-                contentType: ContentType::MULTIPART,
-                requestType: 'application/json',
-            ));
-        } else {
-            /** @var Method $method */
-            $method->setNamespace('functions');
-            $method->setMethodName('createExecution');
-            $utopia->getRoute()?->label('sdk', $method);
-        }
-
         if (System::getEnv('_APP_OPTIONS_COMPUTE_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && $request->getHostname() !== APP_HOSTNAME_INTERNAL) {
                 if ($request->getMethod() !== Request::METHOD_GET) {

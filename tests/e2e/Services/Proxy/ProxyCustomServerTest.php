@@ -256,6 +256,27 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($ruleId);
     }
 
+    public function testCreatFunctionBranchRule(): void
+    {
+        $domain = \uniqid() . '-function-branch.custom.localhost';
+
+        $setup = $this->setupFunction();
+        $functionId = $setup['functionId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($functionId);
+        $this->assertNotEmpty($deploymentId);
+
+        $ruleId = $this->setupFunctionRule($domain, $functionId, 'dev');
+        $this->assertNotEmpty($ruleId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('branch=dev', $rule['body']['automation']);
+
+        $this->cleanupRule($ruleId);
+    }
+
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain

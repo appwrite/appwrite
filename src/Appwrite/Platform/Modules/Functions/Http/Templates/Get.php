@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Templates;
+namespace Appwrite\Platform\Modules\Functions\Http\Templates;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -27,21 +27,22 @@ class Get extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/sites/templates/:templateId')
-            ->desc('Get site template')
+            ->setHttpPath('/v1/functions/templates/:templateId')
+            ->desc('Get function template')
             ->label('scope', 'public')
-            ->groups(['api', 'sites'])
+            ->groups(['api', 'functions'])
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
-                namespace: 'sites',
+                namespace: 'functions',
                 name: 'getTemplate',
                 description: <<<EOT
-                Get a site template using ID. You can use template details in [createSite](/docs/references/cloud/server-nodejs/sites#create) method.
+                Get a function template using ID. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.
                 EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_TEMPLATE_SITE,
+                        model: Response::MODEL_TEMPLATE_FUNCTION,
                     )
                 ]
             ))
@@ -52,17 +53,18 @@ class Get extends Base
 
     public function action(string $templateId, Response $response)
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('function-templates', []);
 
-        $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
-            return $item['key'] === $templateId;
+        $filtered = \array_filter($templates, function ($template) use ($templateId) {
+            return $template['id'] === $templateId;
         });
-        $template = array_shift($allowedTemplates);
+
+        $template = array_shift($filtered);
 
         if (empty($template)) {
-            throw new Exception(Exception::SITE_TEMPLATE_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);
         }
 
-        $response->dynamic(new Document($template), Response::MODEL_TEMPLATE_SITE);
+        $response->dynamic(new Document($template), Response::MODEL_TEMPLATE_FUNCTION);
     }
 }

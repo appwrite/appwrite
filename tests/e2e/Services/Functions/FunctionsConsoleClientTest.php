@@ -497,4 +497,44 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testFunctionDownload(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Download Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any']
+        ]);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.js',
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $this->getDeploymentDownload($functionId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $deploymentMd5 = \md5($response['body']);
+
+        $response = $this->getBuildDownload($functionId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $buildMd5 = \md5($response['body']);
+
+        $this->assertNotEquals($deploymentMd5, $buildMd5);
+
+        $this->cleanupFunction($functionId);
+    }
 }

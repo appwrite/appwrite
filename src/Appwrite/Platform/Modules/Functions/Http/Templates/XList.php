@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Templates;
+namespace Appwrite\Platform\Modules\Functions\Http\Templates;
 
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -28,39 +28,40 @@ class XList extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/sites/templates')
-            ->desc('List templates')
+            ->setHttpPath('/v1/functions/templates')
+            ->desc('List function templates')
             ->label('scope', 'public')
-            ->groups(['api', 'sites'])
+            ->groups(['api', 'functions'])
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
-                namespace: 'sites',
+                namespace: 'functions',
                 name: 'listTemplates',
                 description: <<<EOT
-                List available site templates. You can use template details in [createSite](/docs/references/cloud/server-nodejs/sites#create) method.
+                List available function templates. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.
                 EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_TEMPLATE_SITE_LIST,
+                        model: Response::MODEL_TEMPLATE_FUNCTION_LIST,
                     )
                 ]
             ))
-            ->param('frameworks', [], new ArrayList(new WhiteList(array_keys(Config::getParam('frameworks')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of frameworks allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' frameworks are allowed.', true)
-            ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools', 'starter', 'databases', 'ai', 'messaging', 'utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
+            ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
+            ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
             ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
             ->param('offset', 0, new Range(0, 5000), 'Offset the list of returned templates. Maximum offset is 5000.', true)
             ->inject('response')
             ->callback([$this, 'action']);
     }
 
-    public function action(array $frameworks, array $usecases, int $limit, int $offset, Response $response)
+    public function action(array $runtimes, array $usecases, int $limit, int $offset, Response $response)
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('function-templates', []);
 
-        if (!empty($frameworks)) {
-            $templates = \array_filter($templates, function ($template) use ($frameworks) {
-                return \count(\array_intersect($frameworks, \array_column($template['frameworks'], 'name'))) > 0;
+        if (!empty($runtimes)) {
+            $templates = \array_filter($templates, function ($template) use ($runtimes) {
+                return \count(\array_intersect($runtimes, \array_column($template['runtimes'], 'name'))) > 0;
             });
         }
 
@@ -74,6 +75,6 @@ class XList extends Base
         $response->dynamic(new Document([
             'templates' => $responseTemplates,
             'total' => \count($responseTemplates),
-        ]), Response::MODEL_TEMPLATE_SITE_LIST);
+        ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     }
 }
