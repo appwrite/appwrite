@@ -1311,29 +1311,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $maxTimeSeconds = 10;
-        $startTime = time();
         // Poll until deployment is built
-        while (true) {
+        $this->assertEventually(function () use ($function, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
-            ) {
-                break;
-            }
-
-            if (time() - $startTime >= $maxTimeSeconds) {
-                throw new \Exception('Deployment timed out after ' . $maxTimeSeconds . ' seconds');
-            }
-
-            \sleep(1);
-        }
+            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+        });
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
