@@ -15,19 +15,17 @@ trait WebhooksBase
 {
     use Async;
 
-    protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
+    protected function awaitDeploymentIsBuilt($functionId, $deploymentId): void
     {
-        $this->assertEventually(function () use ($functionId, $deploymentId, $checkForSuccess) {
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if ($checkForSuccess) {
-                $this->assertEquals(200, $deployment['headers']['status-code']);
-                $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-            }
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
         });
     }
 
