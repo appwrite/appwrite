@@ -83,6 +83,7 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\RuntimeDetection;
@@ -247,6 +248,8 @@ class Response extends SwooleResponse
     // VCS
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
+    public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
+    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_FRAMEWORK_PROVIDER_REPOSITORY = 'frameworkProviderRepository';
     public const MODEL_FRAMEWORK_PROVIDER_REPOSITORY_LIST = 'frameworkProviderRepositoryList';
     public const MODEL_RUNTIME_PROVIDER_REPOSITORY = 'runtimeProviderRepository';
@@ -458,6 +461,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateRuntime())
             ->setModel(new TemplateVariable())
             ->setModel(new Installation())
+            ->setModel(new ProviderRepository())
             ->setModel(new FrameworkProviderRepository())
             ->setModel(new RuntimeProviderRepository())
             ->setModel(new FrameworkDetection())

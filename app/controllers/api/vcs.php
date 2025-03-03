@@ -14,7 +14,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -696,16 +695,18 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 $framework = 'other';
                 $detection->setAttribute('installCommand', '');
                 $detection->setAttribute('buildCommand', '');
-                $detection->setAttribute('outputDirectory', './');
+                $detection->setAttribute('outputDirectory', '');
             }
 
             $frameworks = Config::getParam('frameworks');
-            $frameworkDetail = \array_reverse(\array_filter(\array_keys($frameworks), function ($key) use ($framework, $frameworks) {
-                return $frameworks[$key]['key'] === $framework;
-            }))[0] ?? '';
+            $frameworkDetail = '';
+            foreach ($frameworks as $key => $config) {
+                if ($config['key'] === $framework) {
+                    $frameworkDetail = $key;
+                    break;
+                }
+            }
             $detection->setAttribute('framework', $frameworkDetail);
-
-            $response->dynamic($detection, Response::MODEL_FRAMEWORK_DETECTION);
         } else {
             $detection = new Document([
                 'runtime' => '',
@@ -746,16 +747,19 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
 
             if (!empty($runtime)) {
                 $runtimes = Config::getParam('runtimes');
-                $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                    return $runtimes[$key]['key'] === $runtime;
-                }))[0] ?? '';
+                $runtimeDetail = '';
+                foreach ($runtimes as $key => $config) {
+                    if ($config['key'] === $runtime) {
+                        $runtimeDetail = $key;
+                        break;
+                    }
+                }
                 $detection->setAttribute('runtime', $runtimeDetail);
             } else {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Runtime not detected.');
+                throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
             }
-
-            $response->dynamic($detection, Response::MODEL_RUNTIME_DETECTION);
         }
+        $response->dynamic($detection, $type === 'framework' ? Response::MODEL_FRAMEWORK_DETECTION : Response::MODEL_RUNTIME_DETECTION);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -818,37 +822,47 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return function () use ($repo, $type, $github) {
                 $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
-                $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+
+                $detector = new Packager($files);
+                $detector
+                    ->addOption(new Yarn())
+                    ->addOption(new PNPM())
+                    ->addOption(new NPM());
+                $detectedPackager = $detector->detect();
+
+                $packagerName = !\is_null($detectedPackager) ? $detectedPackager->getName() : 'npm';
+
                 if ($type === 'framework') {
-                    try {
-                        $frameworkDetector = new Framework($files);
-                        $frameworkDetector
-                            ->addOption(new Flutter())
-                            ->addOption(new Nuxt())
-                            ->addOption(new Astro())
-                            ->addOption(new Remix())
-                            ->addOption(new SvelteKit())
-                            ->addOption(new NextJs());
+                    $frameworkDetector = new Framework($files, $packagerName);
+                    $frameworkDetector
+                        ->addOption(new Flutter())
+                        ->addOption(new Nuxt())
+                        ->addOption(new Astro())
+                        ->addOption(new Remix())
+                        ->addOption(new SvelteKit())
+                        ->addOption(new NextJs());
 
-                        $detectedFramework = $frameworkDetector->detect();
+                    $detectedFramework = $frameworkDetector->detect();
 
-                        if ($detectedFramework) {
-                            $framework = $detectedFramework->getName();
-                        } else {
-                            $framework = 'other';
-                        }
-
-                        $frameworks = Config::getParam('frameworks');
-                        $frameworkDetail = \array_reverse(\array_filter(\array_keys($frameworks), function ($key) use ($framework, $frameworks) {
-                            return $frameworks[$key]['key'] === $framework;
-                        }))[0] ?? '';
-                        $repo['framework'] = $frameworkDetail;
-                    } catch (Throwable $error) {
-                        $repo['framework'] = "";
-                        Console::warning("Framework not detected for " . $repo['organization'] . "/" . $repo['name']);
+                    if ($detectedFramework) {
+                        $framework = $detectedFramework->getName();
+                    } else {
+                        $framework = 'other';
                     }
+
+                    $frameworks = Config::getParam('frameworks');
+                    $frameworkDetail = '';
+                    foreach ($frameworks as $key => $config) {
+                        if ($config['key'] === $framework) {
+                            $frameworkDetail = $key;
+                            break;
+                        }
+                    }
+                    $repo['framework'] = !empty($frameworkDetail) ? $frameworkDetail : 'other';
                 } else {
                     try {
+                        $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+
                         $strategies = [
                             new Strategy(Strategy::FILEMATCH),
                             new Strategy(Strategy::LANGUAGES),
@@ -856,7 +870,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         ];
 
                         foreach ($strategies as $strategy) {
-                            $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, 'npm');
+                            $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packagerName);
                             $runtimeDetector
                                 ->addOption(new Node())
                                 ->addOption(new Bun())
@@ -880,14 +894,18 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                         if (!empty($runtime)) {
                             $runtimes = Config::getParam('runtimes');
-                            $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                                return $runtimes[$key]['key'] === $runtime;
-                            }))[0] ?? '';
+                            $runtimeDetail = '';
+                            foreach ($runtimes as $key => $config) {
+                                if ($config['key'] === $runtime) {
+                                    $runtimeDetail = $key;
+                                    break;
+                                }
+                            }
                             $repo['runtime'] = $runtimeDetail;
                         }
                     } catch (Throwable $error) {
                         $repo['runtime'] = "";
-                        Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                        throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED, "Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
                     }
                 }
                 return $repo;
@@ -916,7 +934,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -1013,7 +1031,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
@@ -1028,7 +1046,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_RUNTIME_PROVIDER_REPOSITORY,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
             )
         ]
     ))
@@ -1067,7 +1085,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_RUNTIME_PROVIDER_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
