@@ -82,6 +82,8 @@ trait ProjectCustom
                 'sites.write',
                 'execution.read',
                 'execution.write',
+                'log.read',
+                'log.write',
                 'locale.read',
                 'avatars.read',
                 'health.read',
