@@ -345,4 +345,24 @@ trait SitesBase
 
         return $domain;
     }
+
+    protected function getDeploymentDownload(string $siteId, string $deploymentId): mixed
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        return $response;
+    }
+
+    protected function getBuildDownload(string $siteId, string $deploymentId): mixed
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/build/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        return $response;
+    }
 }
