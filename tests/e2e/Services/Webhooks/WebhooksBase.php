@@ -14,6 +14,8 @@ trait WebhooksBase
 {
     protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
     {
+        $maxTimeSeconds = 10;
+        $startTime = time();
         while (true) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
@@ -26,6 +28,10 @@ trait WebhooksBase
                 || \in_array($deployment['body']['status'], ['ready', 'failed'])
             ) {
                 break;
+            }
+
+            if (time() - $startTime >= $maxTimeSeconds) {
+                throw new \Exception('Deployment timed out after ' . $maxTimeSeconds . ' seconds');
             }
 
             \sleep(1);
