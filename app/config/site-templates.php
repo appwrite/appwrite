@@ -508,7 +508,6 @@ return [
         'useCases' => ['starter'],
         'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
-        'demoImage' => '',
         'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
@@ -526,7 +525,6 @@ return [
         'useCases' => ['starter'],
         'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
-        'demoImage' => '',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
@@ -544,7 +542,6 @@ return [
         'useCases' => ['starter'],
         'screenshotDark' => $url . '/images/sites/templates/flutter-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/flutter-starter-light.png',
-        'demoImage' => '',
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './flutter/starter',
