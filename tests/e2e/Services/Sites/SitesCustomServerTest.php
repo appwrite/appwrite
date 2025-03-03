@@ -2,8 +2,8 @@
 
 namespace Tests\E2E\Services\Sites;
 
-use Appwrite\Tests\Retry;
 use Appwrite\Sites\Specification;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
