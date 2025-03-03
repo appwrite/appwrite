@@ -31,6 +31,7 @@ class XList extends Base
             ->setHttpPath('/v1/sites/templates')
             ->desc('List templates')
             ->label('scope', 'public')
+            ->groups(['api', 'sites'])
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listTemplates',
