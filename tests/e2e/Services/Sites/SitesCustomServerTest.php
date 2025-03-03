@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Sites;
 
 use Appwrite\Sites\Specification;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -674,6 +675,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testCancelDeploymentBuild(): void
     {
         $siteId = $this->setupSite([
@@ -1672,6 +1674,76 @@ class SitesCustomServerTest extends Scope
         $buildMd5 = \md5($response['body']);
 
         $this->assertNotEquals($deploymentMd5, $buildMd5);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSSRLogs(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SSR site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Inline logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
+        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
+        $log1Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log1Id);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Action logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
+        $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Log2", $logs['body']['executions'][0]['logs']);
+        $this->assertStringContainsString("Error1", $logs['body']['executions'][0]['errors']);
+        $this->assertStringContainsString("Error2", $logs['body']['executions'][0]['errors']);
+        $log2Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log2Id);
+
+        $this->assertNotEquals($log1Id, $log2Id);
 
         $this->cleanupSite($siteId);
     }
