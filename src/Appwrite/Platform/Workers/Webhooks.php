@@ -59,7 +59,12 @@ class Webhooks extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
-        var_dump($project);
+        var_dump([
+            'id' => $project->getId(),
+            'webhooks' => $project->getAttribute('webhooks'),
+            'region' => $project->getAttribute('region'),
+                ]
+        );
 
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
