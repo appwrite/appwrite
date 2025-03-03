@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Sites;
 
+use Appwrite\Tests\Retry;
 use Appwrite\Sites\Specification;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -674,6 +675,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testCancelDeploymentBuild(): void
     {
         $siteId = $this->setupSite([

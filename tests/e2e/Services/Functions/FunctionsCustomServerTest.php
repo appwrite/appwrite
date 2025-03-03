@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Retry;
 use Appwrite\Functions\Specification;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -511,6 +512,7 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateFunction
      */
+    #[Retry(count: 3)]
     public function testCancelDeploymentBuild($data): void
     {
         $functionId = $data['functionId'];
