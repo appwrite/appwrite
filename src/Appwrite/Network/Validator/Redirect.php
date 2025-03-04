@@ -3,7 +3,6 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator\Host;
-use Utopia\CLI\Console;
 
 /**
  * Redirect
