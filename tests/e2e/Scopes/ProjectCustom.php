@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Scopes;
 
-use Appwrite\Network\Validator\Origin;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
