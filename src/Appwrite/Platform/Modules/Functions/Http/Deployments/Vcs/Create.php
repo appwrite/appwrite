@@ -38,6 +38,7 @@ class Create extends Base
             ->desc('Create VCS deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')

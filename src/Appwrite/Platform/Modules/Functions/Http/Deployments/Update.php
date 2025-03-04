@@ -33,6 +33,7 @@ class Update extends Action
             ->desc('Update deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')

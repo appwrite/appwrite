@@ -35,6 +35,7 @@ class XList extends Action
             ->desc('List deployments')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listDeployments',

@@ -33,6 +33,7 @@ class XList extends Base
             ->desc('Get sites usage')
             ->groups(['api', 'sites', 'usage'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listUsage',

@@ -43,6 +43,7 @@ class Create extends Base
             ->desc('Create site')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')

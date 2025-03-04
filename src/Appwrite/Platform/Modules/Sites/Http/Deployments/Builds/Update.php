@@ -36,6 +36,7 @@ class Update extends Action
             ->desc('Cancel deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(

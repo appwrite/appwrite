@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Download build')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.read')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
                 name: 'getDeploymentBuildDownload',
