@@ -142,7 +142,11 @@ class StatsUsageDump extends Action
                     }
 
                     foreach ($this->periods as $period => $format) {
-                        $time = 'inf' === $period ? null : date($format, time());
+                        $time = null;
+
+                        if ($period !== 'inf') {
+                            $time = $receivedAt !== 'NONE' ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+                        }
                         $id = \md5("{$time}_{$period}_{$key}");
 
                         $document = new Document([
