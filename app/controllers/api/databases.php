@@ -3469,23 +3469,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $document->setAttribute('$collectionId', $collection->getId());
 
             static $relatedCollectionsCache = [];
-            
+
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
-            
+
             // First collect all required related collection IDs
             $relatedCollectionIds = [];
             foreach ($relationships as $relationship) {
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $cacheKey = 'database_' . $database->getInternalId() . '_' . $relatedCollectionId;
-                
+
                 if (!isset($relatedCollectionsCache[$cacheKey])) {
                     $relatedCollectionIds[$cacheKey] = $relatedCollectionId;
                 }
             }
-            
+
             // Fetch all required collections in a single batch if needed
             if (!empty($relatedCollectionIds)) {
                 foreach ($relatedCollectionIds as $cacheKey => $relatedCollectionId) {

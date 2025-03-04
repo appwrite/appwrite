@@ -810,35 +810,35 @@ App::get('/v1/users/:userId/memberships')
         }
 
         $memberships = $user->getAttribute('memberships', []);
-        
+
         // Get all team IDs to fetch in a single query
         $teamIds = array_map(function ($membership) {
             return $membership->getAttribute('teamId');
         }, $memberships);
-        
+
         // Fetch all teams in a single query if there are any memberships
         $teams = [];
         if (!empty($teamIds)) {
             $teamsDocuments = $dbForProject->find('teams', [
                 Query::equal('$id', $teamIds),
             ]);
-            
+
             // Index teams by ID for quick lookup
             foreach ($teamsDocuments as $team) {
                 $teams[$team->getId()] = $team;
             }
         }
-        
+
         // Now map memberships with team data
         $memberships = array_map(function ($membership) use ($teams, $user) {
             $teamId = $membership->getAttribute('teamId');
             $team = $teams[$teamId] ?? null;
-            
+
             $membership
                 ->setAttribute('teamName', $team ? $team->getAttribute('name') : '')
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'));
-                
+
             return $membership;
         }, $memberships);
 

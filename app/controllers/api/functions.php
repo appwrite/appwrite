@@ -1919,7 +1919,7 @@ App::post('/v1/functions/:functionId/executions')
         static $functionCache = [];
         static $deploymentCache = [];
         static $buildCache = [];
-        
+
         // Get function document with caching
         $cacheKey = $functionId;
         if (!isset($functionCache[$cacheKey])) {
