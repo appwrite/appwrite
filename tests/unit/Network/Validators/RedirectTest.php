@@ -11,7 +11,6 @@ class RedirectTest extends TestCase
     {
         $validator = new Redirect(
             ['appwrite.io', 'localhost', 'example.com'], // allowed hostnames
-            [] // no schemes allowed
         );
 
         // Valid hostnames
@@ -21,6 +20,7 @@ class RedirectTest extends TestCase
         $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback'));
         $this->assertEquals(true, $validator->isValid('https://localhost'));
         $this->assertEquals(true, $validator->isValid('http://localhost:3000'));
+        $this->assertEquals(true, $validator->isValid('http://localhost/v1/mock/tests/general/oauth2/success'));
         $this->assertEquals(true, $validator->isValid('https://example.com/auth/callback?token=123'));
 
         // Invalid hostnames
@@ -33,8 +33,7 @@ class RedirectTest extends TestCase
     public function testSchemeValidation(): void
     {
         $validator = new Redirect(
-            [], // no hostnames allowed
-            ['appwrite-ios', 'exp', 'exps'] // allowed schemes
+            schemes: ['appwrite-ios', 'exp', 'exps'] // allowed schemes
         );
 
         // Valid schemes

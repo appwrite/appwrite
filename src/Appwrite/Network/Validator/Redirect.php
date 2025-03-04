@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator\Host;
+use Utopia\CLI\Console;
 
 /**
  * Redirect
@@ -20,7 +21,7 @@ class Redirect extends Host
      * @param array $hostnames
      * @param array $schemes
      */
-    public function __construct(array $hostnames, array $schemes)
+    public function __construct(array $hostnames = [], array $schemes = [])
     {
         $this->hostnames = $hostnames;
         $this->schemes = $schemes;
