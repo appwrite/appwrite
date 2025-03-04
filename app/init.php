@@ -1214,11 +1214,11 @@ App::setResource('hostnames', function ($console, $project) {
         ...$project->getAttribute('platforms', [])
     ];
 
-    $platforms = array_filter($platforms, fn ($node) => in_array([
+    $platforms = array_filter($platforms, fn ($platform) => in_array($platform['type'], [
         Origin::CLIENT_TYPE_WEB,
         Origin::CLIENT_TYPE_FLUTTER_WEB,
-    ], $node['type']));
-    $platforms = array_filter($platforms, fn ($node) => !empty($node['hostname']));
+    ]));
+    $platforms = array_filter($platforms, fn ($platform) => !empty($platform['hostname']));
 
     // Environment variable configured hostnames
     $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
