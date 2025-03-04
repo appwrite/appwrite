@@ -134,7 +134,7 @@ class StatsUsageDump extends Action
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
                         try {
-                            $this->handleDatabaseStorage($key, $dbForProject, $project);
+                            $this->handleDatabaseStorage($key, $dbForProject, $project, $receivedAt);
                         } catch (\Exception $e) {
                             console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
                         }
@@ -175,12 +175,12 @@ class StatsUsageDump extends Action
         }
     }
 
-    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project): void
+    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project, string $receivedAt): void
     {
         $data = explode('.', $key);
         $start = microtime(true);
 
-        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) {
+        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) use ($receivedAt) {
             $id = \md5("{$time}_{$period}_{$key}");
 
             $document = new Document([
@@ -201,7 +201,11 @@ class StatsUsageDump extends Action
         };
 
         foreach ($this->periods as $period => $format) {
-            $time = 'inf' === $period ? null : date($format, time());
+            $time = null;
+
+            if ($period !== 'inf') {
+                $time = $receivedAt !== 'NONE' ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+            }
             $id = \md5("{$time}_{$period}_{$key}");
 
             $value = 0;
