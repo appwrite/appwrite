@@ -17,15 +17,15 @@ use Utopia\System\System;
 
 class Audits extends Action
 {
-    private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
-    private const BATCH_SIZE_PRODUCTION = 5_000;
-    private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+    protected const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
+    protected const BATCH_SIZE_PRODUCTION = 5_000;
+    protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
-    private int $lastTriggeredTime = 0;
+    protected int $lastTriggeredTime = 0;
 
-    private array $logs = [];
+    protected array $logs = [];
 
-    private function getBatchSize(): int
+    protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
             ? self::BATCH_SIZE_DEVELOPMENT
