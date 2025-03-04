@@ -3383,7 +3383,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3404,7 +3404,8 @@
                                 "union-china-pay",
                                 "visa",
                                 "mir",
-                                "maestro"
+                                "maestro",
+                                "rupay"
                             ],
                             "x-enum-name": "CreditCard",
                             "x-enum-keys": [
@@ -3423,7 +3424,8 @@
                                 "Union China Pay",
                                 "Visa",
                                 "MIR",
-                                "Maestro"
+                                "Maestro",
+                                "Rupay"
                             ]
                         },
                         "in": "path"
@@ -4365,7 +4367,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4418,7 +4420,7 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
                         },
                         {
                             "name": "createDocuments",
@@ -4438,7 +4440,7 @@
                                     "model": "#\/components\/schemas\/documentList"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
                         }
                     ],
                     "auth": {

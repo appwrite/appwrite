@@ -3261,7 +3261,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "type": "string",
                         "x-example": "amex",
@@ -3281,7 +3281,8 @@
                             "union-china-pay",
                             "visa",
                             "mir",
-                            "maestro"
+                            "maestro",
+                            "rupay"
                         ],
                         "x-enum-name": "CreditCard",
                         "x-enum-keys": [
@@ -3300,7 +3301,8 @@
                             "Union China Pay",
                             "Visa",
                             "MIR",
-                            "Maestro"
+                            "Maestro",
+                            "Rupay"
                         ],
                         "in": "path"
                     },
@@ -7552,7 +7554,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -7601,7 +7603,7 @@
                                     "model": "#\/definitions\/document"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
                         },
                         {
                             "name": "createDocuments",
@@ -7621,7 +7623,7 @@
                                     "model": "#\/definitions\/documentList"
                                 }
                             ],
-                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n"
                         }
                     ],
                     "auth": {
@@ -10932,7 +10934,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
-                    "weight": 136,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11043,63 +11045,12 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
-                    "weight": 132,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "health\/get-pub-sub.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-pubsub.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "health.read",
-                    "platforms": [
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": [],
-                        "Key": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": []
-                    }
-                ]
-            }
-        },
-        "\/health\/queue": {
-            "get": {
-                "summary": "Get queue",
-                "operationId": "healthGetQueue",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "description": "Check the Appwrite queue messaging servers are up and connection is successful.",
-                "responses": {
-                    "200": {
-                        "description": "Health Status",
-                        "schema": {
-                            "$ref": "#\/definitions\/healthStatus"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getQueue",
-                    "weight": 131,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "health\/get-queue.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11145,7 +11096,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
-                    "weight": 138,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11207,7 +11158,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
-                    "weight": 137,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11269,7 +11220,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
-                    "weight": 139,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11340,7 +11291,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
-                    "weight": 140,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11440,8 +11391,9 @@
                             "v1-audits",
                             "v1-mails",
                             "v1-functions",
-                            "v1-usage",
-                            "v1-usage-dump",
+                            "v1-stats-resources",
+                            "v1-stats-usage",
+                            "v1-stats-usage-dump",
                             "v1-webhooks",
                             "v1-certificates",
                             "v1-builds",
@@ -11488,7 +11440,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
-                    "weight": 144,
+                    "weight": 143,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11550,7 +11502,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
-                    "weight": 135,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11612,7 +11564,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
-                    "weight": 141,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11674,7 +11626,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
-                    "weight": 142,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11736,7 +11688,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
-                    "weight": 143,
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11774,10 +11726,10 @@
                 ]
             }
         },
-        "\/health\/queue\/usage": {
+        "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get usage queue",
-                "operationId": "healthGetQueueUsage",
+                "summary": "Get stats  resources queue",
+                "operationId": "healthGetQueueStatsResources",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11787,7 +11739,7 @@
                 "tags": [
                     "health"
                 ],
-                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite stats resources queue.",
                 "responses": {
                     "200": {
                         "description": "Health Queue",
@@ -11797,13 +11749,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsage",
-                    "weight": 145,
+                    "method": "getQueueStatsResources",
+                    "weight": 144,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage.md",
+                    "demo": "health\/get-queue-stats-resources.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-resources.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11836,10 +11788,72 @@
                 ]
             }
         },
-        "\/health\/queue\/usage-dump": {
+        "\/health\/queue\/stats-usage": {
+            "get": {
+                "summary": "Get stats usage queue",
+                "operationId": "healthGetQueueUsage",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite internal queue server.",
+                "responses": {
+                    "200": {
+                        "description": "Health Queue",
+                        "schema": {
+                            "$ref": "#\/definitions\/healthQueue"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getQueueUsage",
+                    "weight": 145,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "health\/get-queue-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "health.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "threshold",
+                        "description": "Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 5000,
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/health\/queue\/stats-usage-dump": {
             "get": {
                 "summary": "Get usage dump queue",
-                "operationId": "healthGetQueueUsageDump",
+                "operationId": "healthGetQueueStatsUsageDump",
                 "consumes": [
                     "application\/json"
                 ],
@@ -11859,13 +11873,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsageDump",
+                    "method": "getQueueStatsUsageDump",
                     "weight": 146,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage-dump.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage-dump.md",
+                    "demo": "health\/get-queue-stats-usage-dump.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage-dump.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11922,7 +11936,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
-                    "weight": 134,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12086,7 +12100,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
-                    "weight": 133,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,

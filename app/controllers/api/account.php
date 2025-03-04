@@ -17,7 +17,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
@@ -2433,9 +2433,9 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2584,11 +2584,11 @@ App::post('/v1/account/tokens/phone')
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForUsage
+                        $queueForStatsUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 }
-                $queueForUsage
+                $queueForStatsUsage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                     ->setProject($project)
                     ->trigger();
@@ -2716,13 +2716,15 @@ App::get('/v1/account/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
 
         $output = [];
 
@@ -2751,7 +2753,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3679,9 +3681,9 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3776,11 +3778,11 @@ App::post('/v1/account/verification/phone')
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForUsage
+                        $queueForStatsUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 }
-                $queueForUsage
+                $queueForStatsUsage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                     ->setProject($project)
                     ->trigger();
@@ -4311,9 +4313,9 @@ App::post('/v1/account/mfa/challenge')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -4384,11 +4386,11 @@ App::post('/v1/account/mfa/challenge')
                         $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
-                            $queueForUsage
+                            $queueForStatsUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
                     }
-                    $queueForUsage
+                    $queueForStatsUsage
                         ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();

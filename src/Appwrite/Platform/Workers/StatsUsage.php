@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\UsageDump;
+use Appwrite\Event\StatsUsageDump;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -11,20 +11,26 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
-class Usage extends Action
+class StatsUsage extends Action
 {
     private array $stats = [];
     private int $lastTriggeredTime = 0;
-    private int $aggregationInterval = 20;
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
-    private const KEYS_THRESHOLD = 20000;
+    private const BATCH_SIZE_DEVELOPMENT = 1;
+    private const BATCH_SIZE_PRODUCTION = 10_000;
 
     public static function getName(): string
     {
-        return 'usage';
+        return 'stats-usage';
     }
 
+    private function getBatchSize(): int
+    {
+        return System::getEnv('_APP_ENV', 'development') === 'development'
+            ? self::BATCH_SIZE_DEVELOPMENT
+            : self::BATCH_SIZE_PRODUCTION;
+    }
     /**
      * @throws Exception
      */
@@ -32,41 +38,33 @@ class Usage extends Action
     {
 
         $this
-        ->desc('Usage worker')
-        ->inject('message')
-        ->inject('project')
-        ->inject('getProjectDB')
-        ->inject('queueForUsageDump')
-        ->callback(function (Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump) {
-            $this->action($message, $project, $getProjectDB, $queueForUsageDump);
-        });
+            ->desc('Stats usage worker')
+            ->inject('message')
+            ->inject('getProjectDB')
+            ->inject('queueForStatsUsageDump')
+            ->callback([$this, 'action']);
 
-        $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $this->lastTriggeredTime = time();
     }
 
     /**
      * @param Message $message
-     * @param Document $project
      * @param callable $getProjectDB
-     * @param UsageDump $queueForUsageDump
+     * @param StatsUsageDump $queueForStatsUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump): void
+    public function action(Message $message, callable $getProjectDB, StatsUsageDump $queueForStatsUsageDump): void
     {
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+        //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-
-        if (empty($project->getAttribute('database'))) {
-            var_dump($payload);
-            return;
-        }
-
+        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
+        $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
@@ -81,12 +79,7 @@ class Usage extends Action
             );
         }
 
-
-        $this->stats[$projectId]['project'] = [
-            '$id' => $project->getId(),
-            '$internalId' => $project->getInternalId(),
-            'database' => $project->getAttribute('database'),
-        ];
+        $this->stats[$projectId]['project'] = $project;
         $this->stats[$projectId]['receivedAt'] = DateTime::now();
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
@@ -100,12 +93,12 @@ class Usage extends Action
 
         // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
-            $this->keys >= self::KEYS_THRESHOLD ||
-            (time() - $this->lastTriggeredTime > $this->aggregationInterval  && $this->keys > 0)
+            $this->keys >= $this->getBatchSize() ||
+            (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
             Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
 
-            $queueForUsageDump
+            $queueForStatsUsageDump
                 ->setStats($this->stats)
                 ->trigger();
 
@@ -196,12 +189,8 @@ class Usage extends Action
                     $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
                     $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
                     $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
-                    $buildsSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS)));
-                    $buildsFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED)));
                     $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
                     $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
-                    $buildsComputeSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS)));
-                    $buildsComputeFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED)));
                     $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
                     $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
@@ -226,20 +215,6 @@ class Usage extends Action
                         ];
                     }
 
-                    if (!empty($buildsSuccess['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_SUCCESS,
-                            'value' => ($buildsSuccess['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsFailed['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_FAILED,
-                            'value' => ($buildsFailed['value'] * -1),
-                        ];
-                    }
-
                     if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
                             'key' => METRIC_BUILDS_STORAGE,
@@ -251,20 +226,6 @@ class Usage extends Action
                         $metrics[] = [
                             'key' => METRIC_BUILDS_COMPUTE,
                             'value' => ($buildsCompute['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsComputeSuccess['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_COMPUTE_SUCCESS,
-                            'value' => ($buildsComputeSuccess['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($buildsComputeFailed['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_COMPUTE_FAILED,
-                            'value' => ($buildsComputeFailed['value'] * -1),
                         ];
                     }
 

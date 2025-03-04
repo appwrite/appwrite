@@ -7,18 +7,69 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-const METRIC_COLLECTION_LEVEL_STORAGE = 4;
-const METRIC_DATABASE_LEVEL_STORAGE = 3;
-const METRIC_PROJECT_LEVEL_STORAGE = 2;
-
-class UsageDump extends Action
+class StatsUsageDump extends Action
 {
+    public const METRIC_COLLECTION_LEVEL_STORAGE = 4;
+    public const METRIC_DATABASE_LEVEL_STORAGE = 3;
+    public const METRIC_PROJECT_LEVEL_STORAGE = 2;
     protected array $stats = [];
+
+    protected Registry $register;
+
+    /**
+     * Metrics to skip writing to logsDB
+     * As these metrics are calculated separately
+     * by logs DB
+     * @var array
+     */
+    protected array $skipBaseMetrics = [
+        METRIC_DATABASES => true,
+        METRIC_BUCKETS => true,
+        METRIC_USERS => true,
+        METRIC_FUNCTIONS => true,
+        METRIC_TEAMS => true,
+        METRIC_MESSAGES => true,
+        METRIC_MAU => true,
+        METRIC_WEBHOOKS => true,
+        METRIC_PLATFORMS => true,
+        METRIC_PROVIDERS => true,
+        METRIC_TOPICS => true,
+        METRIC_KEYS => true,
+        METRIC_FILES => true,
+        METRIC_FILES_STORAGE => true,
+        METRIC_DEPLOYMENTS_STORAGE => true,
+        METRIC_BUILDS_STORAGE => true,
+        METRIC_DEPLOYMENTS => true,
+        METRIC_BUILDS => true,
+        METRIC_COLLECTIONS => true,
+        METRIC_DOCUMENTS => true,
+    ];
+
+    /**
+     * Skip metrics associated with parent IDs
+     * these need to be checked individually with `str_ends_with`
+     */
+    protected array $skipParentIdMetrics = [
+        '.files',
+        '.files.storage',
+        '.collections',
+        '.documents',
+        '.deployments',
+        '.deployments.storage',
+        '.builds',
+        '.builds.storage',
+    ];
+
+    /**
+     * @var callable
+     */
+    protected mixed $getLogsDB;
+
     protected array $periods = [
         '1h' => 'Y-m-d H:00',
         '1d' => 'Y-m-d 00:00',
@@ -27,7 +78,7 @@ class UsageDump extends Action
 
     public static function getName(): string
     {
-        return 'usage-dump';
+        return 'stats-usage-dump';
     }
 
     /**
@@ -38,34 +89,35 @@ class UsageDump extends Action
         $this
             ->inject('message')
             ->inject('getProjectDB')
-            ->callback(function (Message $message, callable $getProjectDB) {
-                $this->action($message, $getProjectDB);
-            });
+            ->inject('getLogsDB')
+            ->inject('register')
+            ->callback([$this, 'action']);
     }
 
     /**
      * @param Message $message
      * @param callable $getProjectDB
+     * @param callable $getLogsDB
+     * @param Registry $register
      * @return void
      * @throws Exception
+     * @throws \Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, callable $getProjectDB): void
+    public function action(Message $message, callable $getProjectDB, callable $getLogsDB, Registry $register): void
     {
+        $this->getLogsDB = $getLogsDB;
+        $this->register = $register;
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
 
-            /**
-             * End temp bug fallback
-             */
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-            $receivedAt = $stats['receivedAt'] ?? 'NONE';
+            $receivedAt = $stats['receivedAt'] ?? null;
             if ($numberOfKeys === 0) {
                 continue;
             }
@@ -73,6 +125,7 @@ class UsageDump extends Action
             console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
+                /** @var \Utopia\Database\Database $dbForProject */
                 $dbForProject = $getProjectDB($project);
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
@@ -81,7 +134,7 @@ class UsageDump extends Action
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
                         try {
-                            $this->handleDatabaseStorage($key, $dbForProject);
+                            $this->handleDatabaseStorage($key, $dbForProject, $project, $receivedAt);
                         } catch (\Exception $e) {
                             console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
                         }
@@ -89,35 +142,31 @@ class UsageDump extends Action
                     }
 
                     foreach ($this->periods as $period => $format) {
-                        $time = 'inf' === $period ? null : date($format, time());
+                        $time = null;
+
+                        if ($period !== 'inf') {
+                            $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+                        }
                         $id = \md5("{$time}_{$period}_{$key}");
 
-                        try {
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
-                                'period' => $period,
-                                'time' => $time,
-                                'metric' => $key,
-                                'value' => $value,
-                                'region' => System::getEnv('_APP_REGION', 'default'),
-                            ]));
-                        } catch (Duplicate $th) {
-                            if ($value < 0) {
-                                $dbForProject->decreaseDocumentAttribute(
-                                    'stats',
-                                    $id,
-                                    'value',
-                                    abs($value)
-                                );
-                            } else {
-                                $dbForProject->increaseDocumentAttribute(
-                                    'stats',
-                                    $id,
-                                    'value',
-                                    $value
-                                );
-                            }
-                        }
+                        $document = new Document([
+                            '$id' => $id,
+                            'period' => $period,
+                            'time' => $time,
+                            'metric' => $key,
+                            'value' => $value,
+                            'region' => System::getEnv('_APP_REGION', 'default'),
+                        ]);
+
+                        $documentClone = new Document($document->getArrayCopy());
+
+                        $dbForProject->createOrUpdateDocumentsWithIncrease(
+                            'stats',
+                            'value',
+                            [$document]
+                        );
+
+                        $this->writeToLogsDB($project, $documentClone);
                     }
                 }
             } catch (\Exception $e) {
@@ -126,44 +175,37 @@ class UsageDump extends Action
         }
     }
 
-    private function handleDatabaseStorage(string $key, Database $dbForProject): void
+    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project, string $receivedAt): void
     {
         $data = explode('.', $key);
         $start = microtime(true);
 
-        $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string|null $time) {
+        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) use ($receivedAt) {
             $id = \md5("{$time}_{$period}_{$key}");
 
-            try {
-                $dbForProject->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'period' => $period,
-                    'time' => $time,
-                    'metric' => $key,
-                    'value' => $value,
-                    'region' => System::getEnv('_APP_REGION', 'default'),
-                ]));
-            } catch (Duplicate $th) {
-                if ($value < 0) {
-                    $dbForProject->decreaseDocumentAttribute(
-                        'stats',
-                        $id,
-                        'value',
-                        abs($value)
-                    );
-                } else {
-                    $dbForProject->increaseDocumentAttribute(
-                        'stats',
-                        $id,
-                        'value',
-                        $value
-                    );
-                }
-            }
+            $document = new Document([
+                '$id' => $id,
+                'period' => $period,
+                'time' => $time,
+                'metric' => $key,
+                'value' => $value,
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            $documentClone = new Document($document->getArrayCopy());
+            $dbForProject->createOrUpdateDocumentsWithIncrease(
+                'stats',
+                'value',
+                [$document]
+            );
+            $this->writeToLogsDB($project, $documentClone);
         };
 
         foreach ($this->periods as $period => $format) {
-            $time = 'inf' === $period ? null : date($format, time());
+            $time = null;
+
+            if ($period !== 'inf') {
+                $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+            }
             $id = \md5("{$time}_{$period}_{$key}");
 
             $value = 0;
@@ -176,7 +218,7 @@ class UsageDump extends Action
 
             switch (count($data)) {
                 // Collection Level
-                case METRIC_COLLECTION_LEVEL_STORAGE:
+                case self::METRIC_COLLECTION_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
@@ -198,18 +240,18 @@ class UsageDump extends Action
                     }
 
                     // Update Collection
-                    $updateMetric($dbForProject, $diff, $key, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $key, $period, $time);
 
                     // Update Database
                     $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
-                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $databaseKey, $period, $time);
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
                     break;
                     // Database Level
-                case METRIC_DATABASE_LEVEL_STORAGE:
+                case self::METRIC_DATABASE_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
 
@@ -242,14 +284,14 @@ class UsageDump extends Action
 
                     // Update Database
                     $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
-                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $databaseKey, $period, $time);
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
                     break;
                     // Project Level
-                case METRIC_PROJECT_LEVEL_STORAGE:
+                case self::METRIC_PROJECT_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
                     // Get all project databases
                     $databases = $dbForProject->find('database');
@@ -274,7 +316,7 @@ class UsageDump extends Action
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
                     break;
             }
         }
@@ -282,5 +324,38 @@ class UsageDump extends Action
         $end = microtime(true);
 
         console::log('[' . DateTime::now() . '] DB Storage Calculation [' . $key . '] took ' . (($end - $start) * 1000) . ' milliseconds');
+    }
+
+    protected function writeToLogsDB(Document $project, Document $document): void
+    {
+        if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
+            Console::log('Dual Writing is disabled. Skipping...');
+            return;
+        }
+
+        if (array_key_exists($document->getAttribute('metric'), $this->skipBaseMetrics)) {
+            return;
+        }
+        foreach ($this->skipParentIdMetrics as $skipMetric) {
+            if (str_ends_with($document->getAttribute('metric'), $skipMetric)) {
+                return;
+            }
+        }
+
+        /** @var \Utopia\Database\Database $dbForLogs*/
+        $dbForLogs = call_user_func($this->getLogsDB, $project);
+
+        try {
+            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+                'stats',
+                'value',
+                [$document]
+            );
+            Console::success('Usage logs pushed to Logs DB');
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+        }
+
+        $this->register->get('pools')->get('logs')->reclaim();
     }
 }
