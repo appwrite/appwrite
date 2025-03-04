@@ -17,8 +17,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 /** remove */
-use Appwrite\Event\Usage;
-use Appwrite\Event\UsageDump;
 /** /remove */
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
@@ -270,14 +268,6 @@ Server::setResource('publisher', function (Group $pools) {
 Server::setResource('consumer', function (Group $pools) {
     return $pools->get('consumer')->pop()->getResource();
 }, ['pools']);
-
-Server::setResource('queueForUsage', function (Publisher $publisher) {
-    return new Usage($publisher);
-}, ['publisher']);
-
-Server::setResource('queueForUsageDump', function (Publisher $publisher) {
-    return new UsageDump($publisher);
-}, ['publisher']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
