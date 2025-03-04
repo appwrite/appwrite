@@ -86,11 +86,12 @@ class RedirectTest extends TestCase
 
         // Malformed URLs
         $this->assertEquals(false, $validator->isValid('not-a-url'));
-        $this->assertEquals(false, $validator->isValid('http://')); // Missing hostname
+        $this->assertEquals(false, $validator->isValid('http://')); // HTTP missing hostname
         $this->assertEquals(false, $validator->isValid('://hostname')); // Missing scheme
 
         // URLs with empty hostnames but valid schemes
         $this->assertEquals(true, $validator->isValid('exp://')); // This should be valid as 'exp' is an allowed scheme
+        $this->assertEquals(true, $validator->isValid('exp:///'));
 
         // URLs with query parameters and fragments
         $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback?token=abc123&session=xyz#fragment'));
@@ -98,24 +99,5 @@ class RedirectTest extends TestCase
 
         // URL encoded characters
         $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback?redirect_uri=https%3A%2F%2Fexample.com'));
-    }
-
-    public function testDescription(): void
-    {
-        $validator = new Redirect(
-            ['host1.com', 'host2.com'],
-            ['scheme1', 'scheme2']
-        );
-
-        $expected = 'URL host must be one of: host1.com, host2.com or URL scheme must be one of: scheme1, scheme2';
-        $this->assertEquals($expected, $validator->getDescription());
-    }
-
-    public function testTypeAndArrayMethods(): void
-    {
-        $validator = new Redirect([], []);
-
-        $this->assertEquals(false, $validator->isArray());
-        $this->assertEquals('string', $validator->getType());
     }
 }

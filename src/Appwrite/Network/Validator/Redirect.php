@@ -24,6 +24,8 @@ class Redirect extends Host
     {
         $this->hostnames = $hostnames;
         $this->schemes = $schemes;
+
+        parent::__construct($hostnames);
     }
 
     /**
@@ -48,16 +50,19 @@ class Redirect extends Host
      */
     public function isValid($value): bool
     {
-        $parsed = \parse_url($value);
-
-        $hostname = $parsed['host'] ?? '';
-        if (!empty($hostname) && \in_array($hostname, $this->hostnames)) {
-            return $this->isValid($value);
+        if (empty($value)) {
+            return false;
         }
+        $parsed = \parse_url($value);
 
         $scheme = $parsed['scheme'] ?? '';
         if (!empty($scheme) && \in_array($scheme, $this->schemes)) {
             return true;
+        }
+
+        $hostname = $parsed['host'] ?? '';
+        if (!empty($hostname) && \in_array($hostname, $this->hostnames) && in_array($scheme, ['http', 'https'])) {
+            return parent::isValid($value);
         }
 
         // `parse_url` couldn't handle the URL, try extracting scheme with regex
