@@ -53,21 +53,6 @@ trait ProjectCustom
         $this->assertEquals(201, $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        // Add localhost as a platform
-        $platform = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/platforms', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Local development',
-            'hostname' => 'localhost',
-            'type' => Origin::CLIENT_TYPE_WEB,
-        ]);
-
-        $this->assertEquals(201, $platform['headers']['status-code']);
-        $this->assertNotEmpty($platform['body']);
-
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
