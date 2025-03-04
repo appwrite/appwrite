@@ -25,6 +25,7 @@ class Audits extends Action
 
     private array $logs = [];
 
+
     protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
