@@ -47,7 +47,7 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "0.51.*",
         "utopia-php/analytics": "0.10.*",
-        "utopia-php/audit": "0.54.0",
+        "utopia-php/audit": "0.54.*",
         "utopia-php/cache": "0.11.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
@@ -97,16 +97,6 @@
     "config": {
         "platform": {
             "php": "8.3"
-        },
-        "allow-plugins": {
-            "php-http/discovery": false,
-            "tbachert/spi": false
         }
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/appwrite/sdk-generator"
-        }
-    ]
+    }
 }

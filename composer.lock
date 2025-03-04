@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c2209d50d5e1a4fc625c914f58160521",
+    "content-hash": "cfc5d9267ecdd5f5159addd4ebfffd2d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5071,22 +5071,7 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\": "tests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "vendor/bin/phpcs"
-                ],
-                "format": [
-                    "vendor/bin/phpcbf"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5098,8 +5083,8 @@
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.1",
-                "issues": "https://github.com/appwrite/sdk-generator/issues"
+                "issues": "https://github.com/appwrite/sdk-generator/issues",
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.1"
             },
             "time": "2025-02-26T07:07:10+00:00"
         },

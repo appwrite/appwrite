@@ -3192,7 +3192,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($documents) && !empty($documentId)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, use $id inside the documents');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, set $id in each document');
         }
 
         if (!empty($data)) {
@@ -3353,7 +3353,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $document['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
             } else {
                 if (empty($document['$id'])) {
-                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is required inside documents when creating bulk documents');
+                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id must be set in each document when creating bulk documents');
                 }
 
                 $document['$id'] = $document['$id'] == 'unique()' ? ID::unique() : $document['$id'];
@@ -3445,7 +3445,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ->dynamic($documents[0], Response::MODEL_DOCUMENT);
         }
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
