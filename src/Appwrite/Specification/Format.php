@@ -225,7 +225,7 @@ abstract class Format
                     case 'getDeploymentDownload':
                         switch ($param) {
                             case 'type':
-                                return 'Deployment';
+                                return 'DeploymentDownloadType';
                         }
                         break;
                     case 'getUsage':
