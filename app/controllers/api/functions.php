@@ -295,7 +295,7 @@ App::post('/v1/functions')
 
         $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
-                'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
