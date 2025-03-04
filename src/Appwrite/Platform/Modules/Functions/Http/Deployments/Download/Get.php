@@ -15,6 +15,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Swoole\Request;
+use Utopia\Validator\WhiteList;
 
 class Get extends Action
 {
@@ -30,6 +31,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', [ 'type' => 'output' ])
             ->groups(['api', 'functions'])
             ->desc('Download deployment')
             ->label('scope', 'functions.read')
@@ -52,14 +54,16 @@ class Get extends Action
             ))
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('deviceForBuilds')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions)
+    public function action(string $functionId, string $deploymentId, string $type, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions, Device $deviceForBuilds)
     {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -75,8 +79,23 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $path = $deployment->getAttribute('path', '');
-        if (!$deviceForFunctions->exists($path)) {
+        switch ($type) {
+            case 'output':
+                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+                if ($build->isEmpty()) {
+                    throw new Exception(Exception::BUILD_NOT_FOUND);
+                }
+
+                $path = $build->getAttribute('path', '');
+                $device = $deviceForBuilds;
+                break;
+            case 'source':
+                $path = $deployment->getAttribute('path', '');
+                $device = $deviceForFunctions;
+                break;
+        }
+
+        if (!$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -86,7 +105,7 @@ class Get extends Action
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
-        $size = $deviceForFunctions->getFileSize($path);
+        $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -108,13 +127,13 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceForFunctions->read($path, $start, ($end - $start + 1)));
+            $response->send($device->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFunctions->read(
+                    $device->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -123,7 +142,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForFunctions->read($path));
+            $response->send($device->read($path));
         }
     }
 }

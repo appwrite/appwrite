@@ -313,22 +313,14 @@ trait FunctionsBase
         return $domain;
     }
 
-    protected function getDeploymentDownload(string $functionId, string $deploymentId): mixed
+    protected function getDeploymentDownload(string $functionId, string $deploymentId, string $type): mixed
     {
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        return $response;
-    }
-
-    protected function getBuildDownload(string $functionId, string $deploymentId): mixed
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/build/download', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'type' => $type
+        ]);
 
         return $response;
     }
