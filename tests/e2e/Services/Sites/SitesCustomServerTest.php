@@ -1747,4 +1747,9 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testUpdateDeploymentStatus(): void
+    {
+        // TODO: Create site, create deployment A, ensure site A. create dpeloyment B, ensure site B. Activate deploymnt A, ensure site A. Cleanup
+    }
 }

@@ -8,8 +8,8 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeploym
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Delete as DeleteDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Download\Get as DownloadDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Get as GetDeployment;
+use Appwrite\Platform\Modules\Functions\Http\Deployments\Status\Update as UpdateDeploymentStatus;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as CreateTemplateDeployment;
-use Appwrite\Platform\Modules\Functions\Http\Deployments\Update as UpdateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecution;
@@ -56,7 +56,7 @@ class Http extends Service
         // Deployments
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());
         $this->addAction(GetDeployment::getName(), new GetDeployment());
-        $this->addAction(UpdateDeployment::getName(), new UpdateDeployment());
+        $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
         $this->addAction(ListDeployments::getName(), new ListDeployments());
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());

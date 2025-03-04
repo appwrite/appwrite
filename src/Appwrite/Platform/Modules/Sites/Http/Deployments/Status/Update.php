@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
+namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -20,15 +20,16 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateDeployment';
+        return 'updateDeploymentStatus';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId')
-            ->desc('Update deployment')
+            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/status')
+            ->httpAlias('/v1/sites/:siteId/deployments/:deploymentId')
+            ->desc('Update deployment status')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
@@ -36,7 +37,7 @@ class Update extends Action
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
-                name: 'updateDeployment',
+                name: 'updateDeploymentStatus',
                 description: <<<EOT
                 Update the site active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your site.
                 EOT,

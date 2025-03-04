@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
+namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -22,15 +22,16 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateDeployment';
+        return 'updateDeploymentStatus';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId')
-            ->desc('Update deployment')
+            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/status')
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId')
+            ->desc('Update deployment status')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
@@ -38,7 +39,7 @@ class Update extends Action
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
-                name: 'updateDeployment',
+                name: 'updateDeploymentStatus',
                 description: <<<EOT
                 Update the function active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your function.
                 EOT,

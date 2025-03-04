@@ -1989,4 +1989,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testUpdateDeploymentStatus(): void
+    {
+        // TODO: Create function, create deployment A, create execution A. create deployment B, ensure function B. Activate deployment A, ensure execution A. Cleanup
+    }
 }
