@@ -117,7 +117,7 @@ class StatsUsageDump extends Action
             $project = new Document($stats['project'] ?? []);
 
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-            $receivedAt = $stats['receivedAt'] ?? 'NONE';
+            $receivedAt = $stats['receivedAt'] ?? null;
             if ($numberOfKeys === 0) {
                 continue;
             }
@@ -145,7 +145,7 @@ class StatsUsageDump extends Action
                         $time = null;
 
                         if ($period !== 'inf') {
-                            $time = $receivedAt !== 'NONE' ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+                            $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
                         }
                         $id = \md5("{$time}_{$period}_{$key}");
 
@@ -204,7 +204,7 @@ class StatsUsageDump extends Action
             $time = null;
 
             if ($period !== 'inf') {
-                $time = $receivedAt !== 'NONE' ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+                $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
             }
             $id = \md5("{$time}_{$period}_{$key}");
 
