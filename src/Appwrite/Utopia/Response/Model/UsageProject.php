@@ -197,6 +197,18 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('imageTransformationsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'An array of aggregated number of image transformations.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('imageTransformations', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of image transformations.',
+                'default' => 0,
+                'example' => 0,
+            ])
         ;
     }
 
