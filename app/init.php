@@ -1206,57 +1206,43 @@ App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
 App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('clients', function ($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => ID::custom('platforms'),
-        'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
-        'hostname' => $request->getHostname(),
-    ], Document::SET_TYPE_APPEND);
 
+App::setResource('hostnames', function ($console, $project) {
+    // Database configured platforms
+    $platforms = [
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', [])
+    ];
+
+    $platforms = array_filter($platforms, fn ($node) => in_array([
+        Origin::CLIENT_TYPE_WEB,
+        Origin::CLIENT_TYPE_FLUTTER_WEB,
+    ], $node['type']));
+    $platforms = array_filter($platforms, fn ($node) => !empty($node['hostname']));
+
+    // Environment variable configured hostnames
     $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $hostnames = array_map(fn ($hostname) => trim($hostname), $hostnames);
     $validator = new Hostname();
-    foreach ($hostnames as $hostname) {
-        $hostname = trim($hostname);
-        if (!$validator->isValid($hostname)) {
-            continue;
-        }
-        $console->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
-            'name' => $hostname,
-            'hostname' => $hostname,
-        ], Document::SET_TYPE_APPEND);
+    $hostnames = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
+
+    // Combine hostnames and platforms
+    return \array_unique([
+        ...array_map(fn ($node) => $node['hostname'], $platforms),
+        ...$hostnames
+    ]);
+}, ['console', 'project']);
+
+App::setResource('schemes', function ($project) {
+    // `exp` is allowed for all hostnames, for expo development
+    $schemes = ['exp'];
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $schemes[] = 'appwrite-callback-' . $project->getId();
     }
 
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
-    }
-
-    return \array_unique($clients);
-}, ['request', 'console', 'project']);
+    return $schemes;
+}, ['project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
