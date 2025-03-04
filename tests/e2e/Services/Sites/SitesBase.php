@@ -359,4 +359,16 @@ trait SitesBase
 
         return $response;
     }
+
+    protected function updateFunctionDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $site = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId
+        ]);
+
+        return $site;
+    }
 }

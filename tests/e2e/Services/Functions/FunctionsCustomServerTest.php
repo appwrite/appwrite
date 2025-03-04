@@ -1992,6 +1992,58 @@ class FunctionsCustomServerTest extends Scope
 
     public function testUpdateDeploymentStatus(): void
     {
-        // TODO: Create function, create deployment A, create execution A. create deployment B, ensure function B. Activate deployment A, ensure execution A. Cleanup
+
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'php-8.0',
+            'name' => 'Re-activate Test',
+            'entrypoint' => 'index.php',
+        ]);
+        $this->assertNotEmpty($functionId);
+
+        $deploymentId1 = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('php-cookie'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $execution = $this->createExecution($functionId, [
+            'headers' => [ 'cookie' => 'cookieName=cookieValue' ]
+        ]);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
+
+        $deploymentId2 = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId2);
+
+        $execution = $this->createExecution($functionId);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertStringContainsString('UNICODE_TEST', $execution['body']['responseBody']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId2, $function['body']['deployment']);
+
+        $function = $this->updateFunctionDeployment($functionId, $deploymentId1);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['deployment']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['deployment']);
+
+        $execution = $this->createExecution($functionId, [
+            'headers' => [ 'cookie' => 'cookieName=cookieValue' ]
+        ]);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
+
+        $this->cleanupFunction($functionId);
     }
 }

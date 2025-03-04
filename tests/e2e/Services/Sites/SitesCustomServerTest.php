@@ -1750,6 +1750,59 @@ class SitesCustomServerTest extends Scope
 
     public function testUpdateDeploymentStatus(): void
     {
-        // TODO: Create site, create deployment A, ensure site A. create dpeloyment B, ensure site B. Activate deploymnt A, ensure site A. Cleanup
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'ssr-22',
+            'framework' => 'other',
+            'name' => 'Activate test Site',
+            'siteId' => ID::unique()
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId1 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        // TODO: Ensure response from static
+
+        $deploymentId2 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-spa'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId2);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        // TODO: Ensure response from static-spa
+
+        $function = $this->getSite($siteId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
+
+        $function = $this->updateFunctionDeployment($siteId, $deploymentId1);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
+
+        $function = $this->getSite($siteId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        // TODO: Ensure response from static
+
+        $this->cleanupSite($siteId);
     }
 }

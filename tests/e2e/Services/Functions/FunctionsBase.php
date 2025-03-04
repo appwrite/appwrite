@@ -324,4 +324,16 @@ trait FunctionsBase
 
         return $response;
     }
+
+    protected function updateFunctionDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId
+        ]);
+
+        return $function;
+    }
 }
