@@ -21,7 +21,7 @@ class Audits extends Action
     protected const BATCH_SIZE_PRODUCTION = 5_000;
     protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
-    protected int $lastTriggeredTime = 0;
+    private int $lastTriggeredTime = 0;
 
     protected array $logs = [];
 
