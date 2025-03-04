@@ -23,7 +23,7 @@ class Audits extends Action
 
     private int $lastTriggeredTime = 0;
 
-    protected array $logs = [];
+    private array $logs = [];
 
     protected function getBatchSize(): int
     {
