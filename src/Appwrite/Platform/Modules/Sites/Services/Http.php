@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Sites\Services;
 
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Create as CreateBuild;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Download\Get as DownloadBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Update as UpdateBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Delete as DeleteDeployment;
@@ -58,7 +57,6 @@ class Http extends Service
         $this->addAction(UpdateDeployment::getName(), new UpdateDeployment());
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
-        $this->addAction(DownloadBuild::getName(), new DownloadBuild());
         $this->addAction(CreateBuild::getName(), new CreateBuild());
         $this->addAction(UpdateBuild::getName(), new UpdateBuild());
 
