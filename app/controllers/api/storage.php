@@ -6,7 +6,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -939,8 +938,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('dbForProject')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->inject('queueForStatsUsage')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1068,14 +1066,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        $queueForStatsUsage
-            ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1);
-
-        $transformedAt = $file->getAttribute('transformedAt', '');
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-            $file->setAttribute('transformedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' .  $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+        //Do not update transformedAt if it's a console user
+        if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            $transformedAt = $file->getAttribute('transformedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                $file->setAttribute('transformedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+            }
         }
 
         $response
