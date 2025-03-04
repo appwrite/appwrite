@@ -360,7 +360,7 @@ trait SitesBase
         return $response;
     }
 
-    protected function updateFunctionDeployment(string $siteId, string $deploymentId): mixed
+    protected function updateSiteDeployment(string $siteId, string $deploymentId): mixed
     {
         $site = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployment', array_merge([
             'content-type' => 'application/json',

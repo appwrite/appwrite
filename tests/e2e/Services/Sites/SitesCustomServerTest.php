@@ -1754,12 +1754,15 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'ssr-22',
             'framework' => 'other',
             'name' => 'Activate test Site',
-            'siteId' => ID::unique()
+            'siteId' => ID::unique(),
+            'adapter' => 'static',
         ]);
         $this->assertNotEmpty($siteId);
 
         $domain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($domain);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
 
         $deploymentId1 = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
@@ -1767,11 +1770,9 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId1);
 
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        // TODO: Ensure response from static
+        $this->assertStringContainsString('Hello Appwrite', $response['body']);
 
         $deploymentId2 = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-spa'),
@@ -1779,17 +1780,15 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId2);
 
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        // TODO: Ensure response from static-spa
+        $this->assertStringContainsString('Index page', $response['body']);
 
         $function = $this->getSite($siteId);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
 
-        $function = $this->updateFunctionDeployment($siteId, $deploymentId1);
+        $function = $this->updateSiteDeployment($siteId, $deploymentId1);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
 
@@ -1797,11 +1796,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
 
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        // TODO: Ensure response from static
+        $this->assertStringContainsString('Hello Appwrite', $response['body']);
 
         $this->cleanupSite($siteId);
     }
