@@ -699,14 +699,11 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             }
 
             $frameworks = Config::getParam('frameworks');
-            $frameworkDetail = '';
-            foreach ($frameworks as $key => $config) {
-                if ($config['key'] === $framework) {
-                    $frameworkDetail = $key;
-                    break;
-                }
+            $frameworkKey = 'other';
+            if (\in_array($framework, array_keys($frameworks), true)) {
+                $frameworkKey = $framework;
             }
-            $detection->setAttribute('framework', $frameworkDetail);
+            $detection->setAttribute('framework', $frameworkKey);
         } else {
             $detection = new Document([
                 'runtime' => '',
@@ -747,14 +744,18 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
 
             if (!empty($runtime)) {
                 $runtimes = Config::getParam('runtimes');
-                $runtimeDetail = '';
-                foreach ($runtimes as $key => $config) {
-                    if ($config['key'] === $runtime) {
-                        $runtimeDetail = $key;
-                        break;
+                $versionedRuntime = '';
+                foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                    if ($runtimeConfig['key'] === $runtime) {
+                        $versionedRuntime = $runtimeKey;
                     }
                 }
-                $detection->setAttribute('runtime', $runtimeDetail);
+
+                if (empty($versionedRuntime)) {
+                    throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
+                }
+
+                $detection->setAttribute('runtime', $versionedRuntime);
             } else {
                 throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
             }
@@ -851,14 +852,11 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     }
 
                     $frameworks = Config::getParam('frameworks');
-                    $frameworkDetail = '';
-                    foreach ($frameworks as $key => $config) {
-                        if ($config['key'] === $framework) {
-                            $frameworkDetail = $key;
-                            break;
-                        }
+                    $frameworkKey = '';
+                    if (\in_array($framework, array_keys($frameworks), true)) {
+                        $frameworkKey = $framework;
                     }
-                    $repo['framework'] = !empty($frameworkDetail) ? $frameworkDetail : 'other';
+                    $repo['framework'] = !empty($frameworkKey) ? $frameworkKey : 'other';
                 } else {
                     try {
                         $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
@@ -894,14 +892,14 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                         if (!empty($runtime)) {
                             $runtimes = Config::getParam('runtimes');
-                            $runtimeDetail = '';
-                            foreach ($runtimes as $key => $config) {
-                                if ($config['key'] === $runtime) {
-                                    $runtimeDetail = $key;
-                                    break;
+                            $versionedRuntime = '';
+                            foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                                if ($runtimeConfig['key'] === $runtime) {
+                                    $versionedRuntime = $runtimeKey;
                                 }
                             }
-                            $repo['runtime'] = $runtimeDetail;
+
+                            $repo['runtime'] = $versionedRuntime;
                         }
                     } catch (Throwable $error) {
                         $repo['runtime'] = "";
