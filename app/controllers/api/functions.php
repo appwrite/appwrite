@@ -1915,7 +1915,17 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        // Cache keys for frequently accessed documents
+        static $functionCache = [];
+        static $deploymentCache = [];
+        static $buildCache = [];
+        
+        // Get function document with caching
+        $cacheKey = $functionId;
+        if (!isset($functionCache[$cacheKey])) {
+            $functionCache[$cacheKey] = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        }
+        $function = $functionCache[$cacheKey];
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -1934,7 +1944,13 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        // Get deployment document with caching
+        $deploymentId = $function->getAttribute('deployment', '');
+        $deploymentCacheKey = $deploymentId;
+        if (!isset($deploymentCache[$deploymentCacheKey])) {
+            $deploymentCache[$deploymentCacheKey] = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+        }
+        $deployment = $deploymentCache[$deploymentCacheKey];
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -1945,7 +1961,12 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         /** Check if build has completed */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $buildId = $deployment->getAttribute('buildId', '');
+        $buildCacheKey = $buildId;
+        if (!isset($buildCache[$buildCacheKey])) {
+            $buildCache[$buildCacheKey] = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+        }
+        $build = $buildCache[$buildCacheKey];
         if ($build->isEmpty()) {
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
