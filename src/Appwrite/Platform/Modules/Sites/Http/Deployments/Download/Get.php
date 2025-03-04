@@ -31,6 +31,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/download')
+            ->httpAlias('/v1/sites/:functionId/deployments/:deploymentId/build/download', [ 'type' => 'output' ])
             ->desc('Download deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
@@ -52,7 +53,7 @@ class Get extends Action
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
-            ->param('type', '', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".')
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
