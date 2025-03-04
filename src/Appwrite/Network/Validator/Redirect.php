@@ -1,6 +1,8 @@
 <?php
+
 namespace Appwrite\Network\Validator;
-use Utopia\Validator;
+
+use Utopia\Validator\Host;
 
 /**
  * Redirect
@@ -9,7 +11,7 @@ use Utopia\Validator;
  *
  * @package Utopia\Validator
  */
-class Redirect extends Validator
+class Redirect extends Host
 {
     protected $hostnames = [];
     protected $schemes = [];
@@ -46,22 +48,19 @@ class Redirect extends Validator
      */
     public function isValid($value): bool
     {
-        // Try parsing the URL
         $parsed = \parse_url($value);
 
-        // Check hostname if it exists
         $hostname = $parsed['host'] ?? '';
         if (!empty($hostname) && \in_array($hostname, $this->hostnames)) {
-            return true;
+            return $this->isValid($value);
         }
 
-        // Check scheme if it exists
         $scheme = $parsed['scheme'] ?? '';
         if (!empty($scheme) && \in_array($scheme, $this->schemes)) {
             return true;
         }
 
-        // For URLs that parse_url couldn't handle, try extracting scheme with regex
+        // `parse_url` couldn't handle the URL, try extracting scheme with regex
         if (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches)) {
             $scheme = $matches[1];
             if (\in_array($scheme, $this->schemes)) {

@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Redirect;
