@@ -1231,7 +1231,7 @@ App::setResource('hostnames', function (Request $request, Document $console, Doc
         ...array_map(fn ($node) => $node['hostname'], $platforms),
         ...$hostnames
     ]);
-}, ['console', 'project']);
+}, ['request','console', 'project']);
 
 App::setResource('schemes', function (Document $project) {
     // `exp` is allowed for all hostnames, for expo development
