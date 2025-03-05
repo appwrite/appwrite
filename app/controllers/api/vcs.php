@@ -224,7 +224,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitHash' => $providerCommitHash,
                 'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
                 'providerCommitAuthor' => $providerCommitAuthor,
-                'providerCommitMessage' => mb_strimwidth($providerCommitMessage, 0, 252, '...'),
+                'providerCommitMessage' => mb_strimwidth($providerCommitMessage, 0, 255, '...'),
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
@@ -1028,7 +1028,7 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
                 $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
-                $providerCommitMessage = mb_strimwidth($parsedPayload["headCommitMessage"] ?? '', 0, 252, '...');
+                $providerCommitMessage = mb_strimwidth($parsedPayload["headCommitMessage"] ?? '', 0, 255, '...');
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
@@ -1090,7 +1090,7 @@ App::post('/v1/vcs/github/events')
 
                     $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
-                    $providerCommitMessage = mb_strimwidth($commitDetails["commitMessage"] ?? '', 0, 252, '...');
+                    $providerCommitMessage = mb_strimwidth($commitDetails["commitMessage"] ?? '', 0, 255, '...');
 
                     $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
