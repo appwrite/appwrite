@@ -1789,7 +1789,7 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
-    
+
     public function testUpdateDeploymentStatus(): void
     {
         $siteId = $this->setupSite([

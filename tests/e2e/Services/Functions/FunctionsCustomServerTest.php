@@ -2029,7 +2029,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
-    
+
     public function testUpdateDeploymentStatus(): void
     {
 
