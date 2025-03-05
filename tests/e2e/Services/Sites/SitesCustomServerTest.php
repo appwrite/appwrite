@@ -767,11 +767,7 @@ class SitesCustomServerTest extends Scope
          */
         $dateValidator = new DatetimeValidator();
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
+        $response = $this->updateSiteDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));

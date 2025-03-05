@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -17,7 +18,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Action
+class Update extends Base
 {
     use HTTP;
 
@@ -110,39 +111,5 @@ class Update extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
-    }
-
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
-    {
-        $limit = 100;
-        $cursor = null;
-
-        do {
-            $queries = \array_merge([
-                Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getInternalId()])
-            ], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $results = $database->find('rules', $queries);
-
-            $total = \count($results);
-            if ($total > 0) {
-                $cursor = $results[$total - 1];
-            }
-
-            if ($total < $limit) {
-                $cursor = null;
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-            }
-        } while (!\is_null($cursor));
     }
 }
