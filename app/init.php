@@ -1207,13 +1207,12 @@ App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
 
-App::setResource('hostnames', function ($console, $project) {
+App::setResource('hostnames', function (Request $request, Document $console, Document $project) {
     // Database configured platforms
     $platforms = [
         ...$console->getAttribute('platforms', []),
         ...$project->getAttribute('platforms', [])
     ];
-
     $platforms = array_filter($platforms, fn ($platform) => in_array($platform['type'], [
         Origin::CLIENT_TYPE_WEB,
         Origin::CLIENT_TYPE_FLUTTER_WEB,
@@ -1226,14 +1225,15 @@ App::setResource('hostnames', function ($console, $project) {
     $validator = new Hostname();
     $hostnames = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
 
-    // Combine hostnames and platforms
+    // Combine request hostname, environment hostnames, and platforms
     return \array_unique([
+        $request->getHostname(),
         ...array_map(fn ($node) => $node['hostname'], $platforms),
         ...$hostnames
     ]);
 }, ['console', 'project']);
 
-App::setResource('schemes', function ($project) {
+App::setResource('schemes', function (Document $project) {
     // `exp` is allowed for all hostnames, for expo development
     $schemes = ['exp'];
 
