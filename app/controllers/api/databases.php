@@ -4265,18 +4265,18 @@ App::get('/v1/databases/usage')
         }
         $response->dynamic(new Document([
             'range' => $range,
-            'databasesTotal'   => $usage[$metrics[0]]['total'],
-            'collectionsTotal' => $usage[$metrics[1]]['total'],
-            'documentsTotal'   => $usage[$metrics[2]]['total'],
-            'storageTotal'   => $usage[$metrics[3]]['total'],
-            'databasesReadsTotal' => $usage[$metrics[4]]['total'],
-            'databasesWritesTotal' => $usage[$metrics[5]]['total'],
-            'databases'   => $usage[$metrics[0]]['data'],
-            'collections' => $usage[$metrics[1]]['data'],
-            'documents'   => $usage[$metrics[2]]['data'],
-            'storage'   => $usage[$metrics[3]]['data'],
-            'databasesReads' => $usage[$metrics[4]]['data'],
-            'databasesWrites' => $usage[$metrics[5]]['data'],
+            'databasesTotal'   => $usage[$logsDBMetrics[0]]['total'],
+            'collectionsTotal' => $usage[$logsDBMetrics[1]]['total'],
+            'documentsTotal'   => $usage[$logsDBMetrics[2]]['total'],
+            'storageTotal'   => $usage[$logsDBMetrics[3]]['total'],
+            'databasesReadsTotal' => $usage[$metrics[0]]['total'],
+            'databasesWritesTotal' => $usage[$metrics[1]]['total'],
+            'databases'   => $usage[$logsDBMetrics[0]]['data'],
+            'collections' => $usage[$logsDBMetrics[1]]['data'],
+            'documents'   => $usage[$logsDBMetrics[2]]['data'],
+            'storage'   => $usage[$logsDBMetrics[3]]['data'],
+            'databasesReads' => $usage[$metrics[0]]['data'],
+            'databasesWrites' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -4397,16 +4397,16 @@ App::get('/v1/databases/:databaseId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'collectionsTotal'   => $usage[$metrics[0]]['total'],
-            'documentsTotal'   => $usage[$metrics[1]]['total'],
-            'storageTotal'   => $usage[$metrics[2]]['total'],
-            'databaseReadsTotal' => $usage[$metrics[3]]['total'],
-            'databaseWritesTotal' => $usage[$metrics[4]]['total'],
-            'collections'   => $usage[$metrics[0]]['data'],
-            'documents'   => $usage[$metrics[1]]['data'],
-            'storage'   => $usage[$metrics[2]]['data'],
-            'databaseReads'   => $usage[$metrics[3]]['data'],
-            'databaseWrites'   => $usage[$metrics[4]]['data'],
+            'collectionsTotal'   => $usage[$logsDBMetrics[0]]['total'],
+            'documentsTotal'   => $usage[$logsDBMetrics[1]]['total'],
+            'storageTotal'   => $usage[$logsDBMetrics[2]]['total'],
+            'databaseReadsTotal' => $usage[$metrics[0]]['total'],
+            'databaseWritesTotal' => $usage[$metrics[1]]['total'],
+            'collections'   => $usage[$logsDBMetrics[0]]['data'],
+            'documents'   => $usage[$logsDBMetrics[1]]['data'],
+            'storage'   => $usage[$logsDBMetrics[2]]['data'],
+            'databaseReads'   => $usage[$metrics[0]]['data'],
+            'databaseWrites'   => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
