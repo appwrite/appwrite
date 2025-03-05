@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -28,7 +29,6 @@ class Update extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/sites/:siteId/deployment')
-            ->httpAlias('/v1/sites/:siteId/deployments/:deploymentId')
             ->desc('Update site\'s deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
@@ -52,6 +52,7 @@ class Update extends Action
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -59,7 +60,7 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $siteId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -86,10 +87,51 @@ class Update extends Action
             'deploymentId' => $deployment->getId(),
         ])));
 
+        $this->listRules($project, [
+            Query::equal("automation", ["site=" . $site->getId()]),
+        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+            $rule = $rule->setAttribute('value', $deployment->getId());
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        });
+
         $queueForEvents
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($site, Response::MODEL_SITE);
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }

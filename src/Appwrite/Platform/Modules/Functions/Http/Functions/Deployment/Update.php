@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -54,6 +55,7 @@ class Update extends Action
             ))
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -61,7 +63,7 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $functionId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
     {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -96,10 +98,51 @@ class Update extends Action
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
+        $this->listRules($project, [
+            Query::equal("automation", ["function=" . $function->getId()]),
+        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+            $rule = $rule->setAttribute('value', $deployment->getId());
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        });
+
         $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }
