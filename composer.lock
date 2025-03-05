@@ -709,16 +709,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.29.3",
+            "version": "v4.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "ab5077c2cfdd1f415f42d11fdbdf903ba8e3d9b7"
+                "reference": "e1d66682f6836aa87820400f0aa07d9eb566feb6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ab5077c2cfdd1f415f42d11fdbdf903ba8e3d9b7",
-                "reference": "ab5077c2cfdd1f415f42d11fdbdf903ba8e3d9b7",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/e1d66682f6836aa87820400f0aa07d9eb566feb6",
+                "reference": "e1d66682f6836aa87820400f0aa07d9eb566feb6",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +747,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.3"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.30.0"
             },
-            "time": "2025-01-08T21:00:13+00:00"
+            "time": "2025-03-04T22:54:49+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -3910,12 +3910,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "5771262c147b5bc5cb1e2a7942abc929c1e09b0d"
+                "reference": "1d31f755348f78004f870693b4f072e600da2e5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/5771262c147b5bc5cb1e2a7942abc929c1e09b0d",
-                "reference": "5771262c147b5bc5cb1e2a7942abc929c1e09b0d",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/1d31f755348f78004f870693b4f072e600da2e5a",
+                "reference": "1d31f755348f78004f870693b4f072e600da2e5a",
                 "shasum": ""
             },
             "require": {
@@ -3949,7 +3949,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/fix-alias-params"
             },
-            "time": "2025-03-04T20:30:12+00:00"
+            "time": "2025-03-04T22:31:03+00:00"
         },
         {
             "name": "utopia-php/image",
