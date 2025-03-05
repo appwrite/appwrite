@@ -1028,7 +1028,7 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
                 $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
-                $providerCommitMessage = mb_strimwidth($parsedPayload["headCommitMessage"] ?? '', 0, 255, '...');
+                $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
@@ -1090,7 +1090,7 @@ App::post('/v1/vcs/github/events')
 
                     $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
-                    $providerCommitMessage = mb_strimwidth($commitDetails["commitMessage"] ?? '', 0, 255, '...');
+                    $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
                     $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
