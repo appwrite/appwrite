@@ -47,6 +47,7 @@ class Update extends Base
             ->desc('Update site')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')

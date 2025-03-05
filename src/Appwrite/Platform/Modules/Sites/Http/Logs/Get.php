@@ -30,6 +30,7 @@ class Get extends Base
             ->desc('Get log')
             ->groups(['api', 'sites'])
             ->label('scope', 'log.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getLog',

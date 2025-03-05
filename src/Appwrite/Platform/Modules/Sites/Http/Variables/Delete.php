@@ -31,7 +31,7 @@ class Delete extends Base
             ->desc('Delete variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
-            ->label('resourceType', 'sites')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(

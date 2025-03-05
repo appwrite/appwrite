@@ -34,6 +34,7 @@ class Delete extends Action
             ->desc('Delete deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
