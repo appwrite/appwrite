@@ -32,6 +32,7 @@ class Update extends Action
             ->desc('Update site\'s deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')

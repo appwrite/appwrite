@@ -33,6 +33,7 @@ class Delete extends Base
             ->desc('Delete site')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].delete')
             ->label('audits.event', 'site.delete')
             ->label('audits.resource', 'site/{request.siteId}')

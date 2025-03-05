@@ -37,6 +37,7 @@ class Create extends Base
             ->desc('Create variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
