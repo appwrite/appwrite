@@ -4177,16 +4177,45 @@ App::get('/v1/databases/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
+        $logsDBMetrics = [
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
             METRIC_DATABASES_STORAGE,
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result =  $dbForLogs->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $metrics = [
             METRIC_DATABASES_OPERATIONS_READS,
             METRIC_DATABASES_OPERATIONS_WRITES,
         ];
@@ -4273,7 +4302,8 @@ App::get('/v1/databases/:databaseId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -4284,10 +4314,39 @@ App::get('/v1/databases/:databaseId/usage')
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
+
+        $logsDBMetrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result =  $dbForLogs->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
         ];
@@ -4375,7 +4434,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
@@ -4392,9 +4452,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForLogs, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $result =  $dbForLogs->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -4402,7 +4462,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $dbForLogs->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
