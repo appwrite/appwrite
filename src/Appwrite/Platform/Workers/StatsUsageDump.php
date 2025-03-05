@@ -48,6 +48,7 @@ class StatsUsageDump extends Action
         METRIC_BUILDS => true,
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
+        METRIC_DATABASES_STORAGE => true,
     ];
 
     /**
@@ -63,6 +64,7 @@ class StatsUsageDump extends Action
         '.deployments.storage',
         '.builds',
         '.builds.storage',
+        '.databases.storage'
     ];
 
     /**
