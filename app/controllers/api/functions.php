@@ -701,7 +701,7 @@ App::get('/v1/functions/:functionId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
+        foreach ([...$logsDBMetrics,...$metrics] as $metric) {
             $usage[$metric]['total'] =  $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
@@ -834,7 +834,7 @@ App::get('/v1/functions/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
+        foreach ([...$logsDBMetrics,...$metrics] as $metric) {
             $usage[$metric]['total'] =  $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
