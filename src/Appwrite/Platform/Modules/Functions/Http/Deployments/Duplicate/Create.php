@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Builds;
+namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
@@ -22,16 +22,17 @@ class Create extends Action
 
     public static function getName()
     {
-        return 'createDeploymentBuild';
+        return 'createDuplicateDeployment';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/build')
+            ->setHttpPath('/v1/functions/:functionId/deployments/duplicate')
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build')
             ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-            ->desc('Rebuild deployment')
+            ->desc('Create duplicate deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
@@ -40,7 +41,7 @@ class Create extends Action
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
-                name: 'createBuild',
+                name: 'createDuplicateDeployment',
                 description: <<<EOT
                 Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Builds;
+namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
@@ -25,15 +25,15 @@ class Create extends Action
 
     public static function getName()
     {
-        return 'createDeploymentBuild';
+        return 'createDuplicateDeployment';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/build')
-            ->desc('Rebuild deployment')
+            ->setHttpPath('/v1/sites/:siteId/deployments/duplicate')
+            ->desc('Create duplicate deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
@@ -41,7 +41,7 @@ class Create extends Action
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
-                name: 'createDeploymentBuild',
+                name: 'createDuplicateDeployment',
                 description: <<<EOT
                 Create a new build for an existing site deployment. This endpoint allows you to rebuild a deployment with the updated site configuration, including its commands and output directory if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,
