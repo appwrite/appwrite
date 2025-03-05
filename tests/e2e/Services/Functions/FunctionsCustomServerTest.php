@@ -1989,4 +1989,44 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testDuplicateDeployment(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Duplicate Deployment Test',
+            'entrypoint' => 'index.js',
+            'commands' => ''
+        ]);
+        $this->assertNotEmpty($functionId);
+
+        $deploymentId1 = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $execution = $this->createExecution($functionId);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['responseBody']);
+
+        $site = $this->updateFunction($functionId, [
+            'runtime' => 'node-18.0',
+            'name' => 'Duplicate Deployment Test',
+            'entrypoint' => 'index.js',
+            'commands' => 'rm index.js && mv maintenance.js index.js'
+        ]);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertStringContainsString('maintenance.js', $site['body']['commands']);
+
+        $deploymentId2 = $this->setupDuplicateDeployment($functionId, $deploymentId1);
+        $this->assertNotEmpty($deploymentId2);
+
+        $execution = $this->createExecution($functionId);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Maintenance', $execution['body']['responseBody']);
+
+        $this->cleanupFunction($functionId);
+    }
 }

@@ -1747,4 +1747,50 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testDuplicateDeployment(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'ssr-22',
+            'framework' => 'other',
+            'name' => 'Duplicate deployment Site',
+            'adapter' => 'static',
+            'fallbackFile' => '404.html',
+            'siteId' => ID::unique()
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deploymentId1 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-spa'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+        $this->assertStringContainsString("Customized 404 page", $response['body']);
+
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'buildRuntime' => 'ssr-22',
+            'framework' => 'other',
+            'name' => 'Duplicate deployment Site',
+            'adapter' => 'static',
+            'fallbackFile' => 'index.html',
+        ]);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('index.html', $site['body']['fallbackFile']);
+
+        $deploymentId2 = $this->setupDuplicateDeployment($siteId, $deploymentId1);
+        $this->assertNotEmpty($deploymentId2);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+        $this->assertStringContainsString("Index page", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
 }

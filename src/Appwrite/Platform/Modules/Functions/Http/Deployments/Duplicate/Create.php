@@ -48,8 +48,8 @@ class Create extends Action
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_NOCONTENT,
-                        model: Response::MODEL_NONE,
+                        code: Response::STATUS_CODE_ACCEPTED,
+                        model: Response::MODEL_DEPLOYMENT,
                     )
                 ]
             ))
@@ -108,6 +108,8 @@ class Create extends Action
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->noContent();
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }
 }

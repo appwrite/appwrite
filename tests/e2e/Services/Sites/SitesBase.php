@@ -244,6 +244,39 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
+    {
+        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        return $deploymentId;
+    }
+
+    protected function createDuplicateDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId,
+        ]);
+
+        return $deployment;
+    }
+
     protected function createTemplateDeployment(string $siteId, mixed $params = []): mixed
     {
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', array_merge([
