@@ -1200,9 +1200,6 @@ App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
 App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
-    return new Usage($publisher);
-}, ['publisher']);
 App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
