@@ -206,7 +206,7 @@ class UsageProject extends Model
             ])
             ->addRule('imageTransformationsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'An array of aggregated number of image transformations.',
+                'description' => 'Total aggregated number of image transformations.',
                 'default' => 0,
                 'example' => 0,
             ])
