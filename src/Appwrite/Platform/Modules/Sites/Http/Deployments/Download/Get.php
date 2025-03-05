@@ -31,7 +31,6 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/download')
-            ->httpAlias('/v1/sites/:functionId/deployments/:deploymentId/build/download', [ 'type' => 'output' ])
             ->desc('Download deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')

@@ -1177,7 +1177,7 @@ class Builds extends Action
         }
     }
 
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
     {
         $limit = 100;
         $cursor = null;

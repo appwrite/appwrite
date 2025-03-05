@@ -1,9 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
+namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,21 +18,22 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Action
+class Update extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'updateDeployment';
+        return 'updateFunctionDeployment';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId')
-            ->desc('Update deployment')
+            ->setHttpPath('/v1/functions/:functionId/deployment')
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId')
+            ->desc('Update function\'s deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
@@ -39,7 +42,7 @@ class Update extends Action
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
-                name: 'updateDeployment',
+                name: 'updateFunctionDeployment',
                 description: <<<EOT
                 Update the function active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your function.
                 EOT,
@@ -53,6 +56,7 @@ class Update extends Action
             ))
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -60,7 +64,7 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $functionId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
     {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -94,6 +98,13 @@ class Update extends Action
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+
+        $this->listRules($project, [
+            Query::equal("automation", ["function=" . $function->getId()]),
+        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+            $rule = $rule->setAttribute('value', $deployment->getId());
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        });
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

@@ -1,9 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
+namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -14,21 +16,21 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Action
+class Update extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'updateDeployment';
+        return 'updateSiteDeployment';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId')
-            ->desc('Update deployment')
+            ->setHttpPath('/v1/sites/:siteId/deployment')
+            ->desc('Update site\'s deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
@@ -37,7 +39,7 @@ class Update extends Action
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
-                name: 'updateDeployment',
+                name: 'updateSiteDeployment',
                 description: <<<EOT
                 Update the site active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your site.
                 EOT,
@@ -51,6 +53,7 @@ class Update extends Action
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -58,7 +61,7 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $siteId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -84,6 +87,13 @@ class Update extends Action
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
         ])));
+
+        $this->listRules($project, [
+            Query::equal("automation", ["site=" . $site->getId()]),
+        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+            $rule = $rule->setAttribute('value', $deployment->getId());
+            $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        });
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

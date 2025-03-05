@@ -9,7 +9,6 @@ use Appwrite\Platform\Modules\Sites\Http\Deployments\Download\Get as DownloadDep
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Get as GetDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Template\Create as CreateTemplateDeployment;
-use Appwrite\Platform\Modules\Sites\Http\Deployments\Update as UpdateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Sites\Http\Frameworks\XList as ListFrameworks;
@@ -18,6 +17,7 @@ use Appwrite\Platform\Modules\Sites\Http\Logs\Get as GetLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\XList as ListLogs;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Create as CreateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Delete as DeleteSite;
+use Appwrite\Platform\Modules\Sites\Http\Sites\Deployment\Update as UpdateSiteDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Get as GetSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Update as UpdateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\XList as ListSites;
@@ -54,7 +54,7 @@ class Http extends Service
         $this->addAction(CreateVcsDeployment::getName(), new CreateVcsDeployment());
         $this->addAction(GetDeployment::getName(), new GetDeployment());
         $this->addAction(ListDeployments::getName(), new ListDeployments());
-        $this->addAction(UpdateDeployment::getName(), new UpdateDeployment());
+        $this->addAction(UpdateSiteDeployment::getName(), new UpdateSiteDeployment());
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());

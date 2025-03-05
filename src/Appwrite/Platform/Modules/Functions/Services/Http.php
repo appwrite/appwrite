@@ -9,7 +9,6 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Download\Get as Downloa
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Get as GetDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as CreateTemplateDeployment;
-use Appwrite\Platform\Modules\Functions\Http\Deployments\Update as UpdateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecution;
@@ -18,6 +17,7 @@ use Appwrite\Platform\Modules\Functions\Http\Executions\Get as GetExecution;
 use Appwrite\Platform\Modules\Functions\Http\Executions\XList as ListExecutions;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Delete as DeleteFunction;
+use Appwrite\Platform\Modules\Functions\Http\Functions\Deployment\Update as UpdateFunctionDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Get as GetFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
@@ -56,7 +56,7 @@ class Http extends Service
         // Deployments
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());
         $this->addAction(GetDeployment::getName(), new GetDeployment());
-        $this->addAction(UpdateDeployment::getName(), new UpdateDeployment());
+        $this->addAction(UpdateFunctionDeployment::getName(), new UpdateFunctionDeployment());
         $this->addAction(ListDeployments::getName(), new ListDeployments());
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());
