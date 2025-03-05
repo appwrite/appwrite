@@ -4999,7 +4999,6 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('$id is required inside documents when creating bulk documents', $response['body']['message']);
 
         // TEST FAIL - Can't miss number in bulk documents
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([

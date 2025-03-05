@@ -52,7 +52,6 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -3176,23 +3175,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForStatsUsage')
     ->inject('project')
     ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Document $project) {
-        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+        $data = \is_string($data)
+            ? \json_decode($data, true)
+            : $data;
+
         $isBulk = true;
 
         if (empty($data) && empty($documents)) {
             throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
-
         if (!empty($data) && !empty($documents)) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'You can only send one of the following parameters: data, documents');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, documents');
         }
-
         if (!empty($data) && empty($documentId)) {
             throw new Exception(Exception::DOCUMENT_MISSING_DATA, 'Document ID is required when creating a single document');
         }
-
         if (!empty($documents) && !empty($documentId)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, set $id in each document');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, set "$id" in each document instead');
+        }
+        if (!empty($documents) && !empty($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple documents, set "$permissions" in each document instead');
         }
 
         if (!empty($data)) {
@@ -3200,7 +3202,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $documents = [$data];
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument(
+            'databases',
+            $databaseId
+        ));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3222,7 +3227,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ];
 
         $setPermissions = function (Document $document, ?array $permissions) use ($user, $allowedPermissions, $isAPIKey, $isPrivilegedUser, $isBulk) {
-            // Map aggregate permissions to into the set of individual permissions they represent.
             if ($isBulk) {
                 $permissions = $document['$permissions'] ?? null;
             }
@@ -3368,12 +3372,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }, $documents);
 
         try {
-            $dbForProject->createDocuments('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documents);
+            $dbForProject->createDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $documents,
+                APP_LIMIT_DATABASE_BATCH
+            );
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
-        } catch (DuplicateException $e) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -3426,27 +3434,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->addHeader('X-Debug-Operations', $operations);
 
         if ($isBulk) {
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic(new Document([
-                    'total' => count($documents),
-                    'documents' => $documents
-                ]), Response::MODEL_DOCUMENT_LIST);
+            $response->dynamic(new Document([
+                'total' => count($documents),
+                'documents' => $documents
+            ]), Response::MODEL_DOCUMENT_LIST);
         } else {
             $queueForEvents
                 ->setParam('documentId', $document->getId())
                 ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($documents[0], Response::MODEL_DOCUMENT);
+            $response->dynamic(
+                $documents[0],
+                Response::MODEL_DOCUMENT
+            );
         }
 
-        $queueForStatsUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -4157,7 +4164,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
@@ -4190,6 +4201,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!\is_null($permissions)) {
             $data['$permissions'] = $permissions;
         }
+
         $partialDocument = new Document($data);
 
         $documents = $dbForProject->withRequestTimestamp(
@@ -4197,7 +4209,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             fn () => $dbForProject->updateDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $partialDocument,
-                $queries
+                $queries,
+                APP_LIMIT_DATABASE_BATCH
             )
         );
 
@@ -4368,7 +4381,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
@@ -4403,9 +4416,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Usage $queueForUsage, Document $project) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Document $project) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4421,18 +4434,22 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
             return $dbForProject->deleteDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $queries,
-                intval(System::getEnv('_APP_DATABASE_BATCH_SIZE', 10_000))
+                APP_LIMIT_DATABASE_BATCH
             );
         });
 
         // DB Storage Calculation
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database): bool {

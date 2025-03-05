@@ -30,7 +30,7 @@
         }
     },
     "require": {
-        "php": ">=8.0.0",
+        "php": ">=8.3.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -97,6 +97,10 @@
     "config": {
         "platform": {
             "php": "8.3"
+        },
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }
