@@ -296,7 +296,7 @@ class UsageTest extends Scope
         }
 
         // stats-resources runs every 5s in test env
-        sleep(self::WAIT);
+        sleep(self::WAIT + 5);
 
         return array_merge($data, [
             'bucketId' => $bucketId,
