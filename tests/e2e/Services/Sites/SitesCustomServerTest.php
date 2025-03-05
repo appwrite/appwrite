@@ -1657,7 +1657,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($deploymentId);
 
-        $response = $this->getDeploymentDownload($siteId, $deploymentId);
+        $response = $this->getDeploymentDownload($siteId, $deploymentId, 'source');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
@@ -1665,7 +1665,7 @@ class SitesCustomServerTest extends Scope
 
         $deploymentMd5 = \md5($response['body']);
 
-        $response = $this->getBuildDownload($siteId, $deploymentId);
+        $response = $this->getDeploymentDownload($siteId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);

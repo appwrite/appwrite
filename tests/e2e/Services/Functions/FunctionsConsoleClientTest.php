@@ -517,7 +517,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertNotEmpty($deploymentId);
 
-        $response = $this->getDeploymentDownload($functionId, $deploymentId);
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
@@ -525,7 +525,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentMd5 = \md5($response['body']);
 
-        $response = $this->getBuildDownload($functionId, $deploymentId);
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);

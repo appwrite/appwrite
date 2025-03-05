@@ -740,6 +740,7 @@ class Builds extends Action
                     }
 
                     $client = new FetchClient();
+                    $client->setTimeout(\intval($resource->getAttribute('timeout', '15')));
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
                     $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
