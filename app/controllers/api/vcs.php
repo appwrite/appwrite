@@ -858,52 +858,47 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     }
                     $repo['framework'] = !empty($frameworkKey) ? $frameworkKey : 'other';
                 } else {
-                    try {
-                        $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+                    $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
 
-                        $strategies = [
-                            new Strategy(Strategy::FILEMATCH),
-                            new Strategy(Strategy::LANGUAGES),
-                            new Strategy(Strategy::EXTENSION),
-                        ];
+                    $strategies = [
+                        new Strategy(Strategy::FILEMATCH),
+                        new Strategy(Strategy::LANGUAGES),
+                        new Strategy(Strategy::EXTENSION),
+                    ];
 
-                        foreach ($strategies as $strategy) {
-                            $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packagerName);
-                            $runtimeDetector
-                                ->addOption(new Node())
-                                ->addOption(new Bun())
-                                ->addOption(new Deno())
-                                ->addOption(new PHP())
-                                ->addOption(new Python())
-                                ->addOption(new Dart())
-                                ->addOption(new Swift())
-                                ->addOption(new Ruby())
-                                ->addOption(new Java())
-                                ->addOption(new CPP())
-                                ->addOption(new Dotnet());
+                    foreach ($strategies as $strategy) {
+                        $runtimeDetector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packagerName);
+                        $runtimeDetector
+                            ->addOption(new Node())
+                            ->addOption(new Bun())
+                            ->addOption(new Deno())
+                            ->addOption(new PHP())
+                            ->addOption(new Python())
+                            ->addOption(new Dart())
+                            ->addOption(new Swift())
+                            ->addOption(new Ruby())
+                            ->addOption(new Java())
+                            ->addOption(new CPP())
+                            ->addOption(new Dotnet());
 
-                            $detectedRuntime = $runtimeDetector->detect();
+                        $detectedRuntime = $runtimeDetector->detect();
 
-                            if ($detectedRuntime) {
-                                $runtime = $detectedRuntime->getName();
-                                break;
+                        if ($detectedRuntime) {
+                            $runtime = $detectedRuntime->getName();
+                            break;
+                        }
+                    }
+
+                    if (!empty($runtime)) {
+                        $runtimes = Config::getParam('runtimes');
+                        $versionedRuntime = '';
+                        foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                            if ($runtimeConfig['key'] === $runtime) {
+                                $versionedRuntime = $runtimeKey;
                             }
                         }
 
-                        if (!empty($runtime)) {
-                            $runtimes = Config::getParam('runtimes');
-                            $versionedRuntime = '';
-                            foreach ($runtimes as $runtimeKey => $runtimeConfig) {
-                                if ($runtimeConfig['key'] === $runtime) {
-                                    $versionedRuntime = $runtimeKey;
-                                }
-                            }
-
-                            $repo['runtime'] = $versionedRuntime;
-                        }
-                    } catch (Throwable $error) {
-                        $repo['runtime'] = "";
-                        throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED, "Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                        $repo['runtime'] = $versionedRuntime ?? '';
                     }
                 }
                 return $repo;
