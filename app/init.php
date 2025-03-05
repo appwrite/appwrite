@@ -1561,6 +1561,10 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+App::setResource('dbForLogs', function (Document $project, callable $getLogsDB) {
+    return call_user_func($getLogsDB, $project);
+}, ['project', 'getLogsDB']);
+
 App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
     return function (?Document $project = null) use ($pools, $cache, $database) {
