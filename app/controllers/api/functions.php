@@ -620,7 +620,8 @@ App::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -631,11 +632,38 @@ App::get('/v1/functions/:functionId/usage')
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
+        $logsDBMetrics = [
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE),
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result =  $dbForLogs->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
         $metrics = [
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
-            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
@@ -689,24 +717,24 @@ App::get('/v1/functions/:functionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'deploymentsTotal' => $usage[$metrics[0]]['total'],
-            'deploymentsStorageTotal' => $usage[$metrics[1]]['total'],
-            'buildsTotal' => $usage[$metrics[2]]['total'],
-            'buildsStorageTotal' => $usage[$metrics[3]]['total'],
-            'buildsTimeTotal' => $usage[$metrics[4]]['total'],
-            'executionsTotal' => $usage[$metrics[5]]['total'],
-            'executionsTimeTotal' => $usage[$metrics[6]]['total'],
-            'deployments' => $usage[$metrics[0]]['data'],
-            'deploymentsStorage' => $usage[$metrics[1]]['data'],
+            'deploymentsTotal' => $usage[$logsDBMetrics[0]]['total'],
+            'deploymentsStorageTotal' => $usage[$logsDBMetrics[1]]['total'],
+            'buildsTotal' => $usage[$logsDBMetrics[2]]['total'],
+            'buildsStorageTotal' => $usage[$logsDBMetrics[3]]['total'],
+            'buildsTimeTotal' => $usage[$metrics[0]]['total'],
+            'executionsTotal' => $usage[$metrics[1]]['total'],
+            'executionsTimeTotal' => $usage[$metrics[2]]['total'],
+            'deployments' => $usage[$logsDBMetrics[0]]['data'],
+            'deploymentsStorage' => $usage[$logsDBMetrics[1]]['data'],
             'builds' => $usage[$metrics[2]]['data'],
             'buildsStorage' => $usage[$metrics[3]]['data'],
-            'buildsTime' => $usage[$metrics[4]]['data'],
-            'executions' => $usage[$metrics[5]]['data'],
-            'executionsTime' => $usage[$metrics[6]]['data'],
-            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
-            'buildsMbSeconds' => $usage[$metrics[7]]['data'],
-            'executionsMbSeconds' => $usage[$metrics[8]]['data'],
-            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
+            'buildsTime' => $usage[$metrics[0]]['data'],
+            'executions' => $usage[$metrics[1]]['data'],
+            'executionsTime' => $usage[$metrics[2]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[3]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[3]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[4]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[4]]['total']
         ]), Response::MODEL_USAGE_FUNCTION);
     });
 
@@ -730,17 +758,45 @@ App::get('/v1/functions/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
+        $logsDBMetrics = [
             METRIC_FUNCTIONS,
             METRIC_DEPLOYMENTS,
             METRIC_DEPLOYMENTS_STORAGE,
             METRIC_BUILDS,
             METRIC_BUILDS_STORAGE,
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result =  $dbForLogs->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+        $metrics = [
             METRIC_BUILDS_COMPUTE,
             METRIC_EXECUTIONS,
             METRIC_EXECUTIONS_COMPUTE,
@@ -793,26 +849,26 @@ App::get('/v1/functions/usage')
         }
         $response->dynamic(new Document([
             'range' => $range,
-            'functionsTotal' => $usage[$metrics[0]]['total'],
-            'deploymentsTotal' => $usage[$metrics[1]]['total'],
-            'deploymentsStorageTotal' => $usage[$metrics[2]]['total'],
-            'buildsTotal' => $usage[$metrics[3]]['total'],
-            'buildsStorageTotal' => $usage[$metrics[4]]['total'],
-            'buildsTimeTotal' => $usage[$metrics[5]]['total'],
-            'executionsTotal' => $usage[$metrics[6]]['total'],
-            'executionsTimeTotal' => $usage[$metrics[7]]['total'],
-            'functions' => $usage[$metrics[0]]['data'],
-            'deployments' => $usage[$metrics[1]]['data'],
-            'deploymentsStorage' => $usage[$metrics[2]]['data'],
-            'builds' => $usage[$metrics[3]]['data'],
-            'buildsStorage' => $usage[$metrics[4]]['data'],
-            'buildsTime' => $usage[$metrics[5]]['data'],
-            'executions' => $usage[$metrics[6]]['data'],
-            'executionsTime' => $usage[$metrics[7]]['data'],
-            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
-            'buildsMbSeconds' => $usage[$metrics[8]]['data'],
-            'executionsMbSeconds' => $usage[$metrics[9]]['data'],
-            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
+            'functionsTotal' => $usage[$logsDBMetrics[0]]['total'],
+            'deploymentsTotal' => $usage[$logsDBMetrics[1]]['total'],
+            'deploymentsStorageTotal' => $usage[$logsDBMetrics[2]]['total'],
+            'buildsTotal' => $usage[$logsDBMetrics[3]]['total'],
+            'buildsStorageTotal' => $usage[$logsDBMetrics[4]]['total'],
+            'buildsTimeTotal' => $usage[$metrics[0]]['total'],
+            'executionsTotal' => $usage[$metrics[1]]['total'],
+            'executionsTimeTotal' => $usage[$metrics[2]]['total'],
+            'functions' => $usage[$logsDBMetrics[0]]['data'],
+            'deployments' => $usage[$logsDBMetrics[1]]['data'],
+            'deploymentsStorage' => $usage[$logsDBMetrics[2]]['data'],
+            'builds' => $usage[$logsDBMetrics[3]]['data'],
+            'buildsStorage' => $usage[$logsDBMetrics[4]]['data'],
+            'buildsTime' => $usage[$metrics[0]]['data'],
+            'executions' => $usage[$metrics[1]]['data'],
+            'executionsTime' => $usage[$metrics[2]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[3]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[3]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[4]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[4]]['total'],
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
