@@ -7978,7 +7978,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update all documents that match your queries, If none are submitted then all documents are updated. Using the patch method you can pass only specific fields that will get updated.",
+                "description": "Update all documents that match your queries, if no queries are submitted then all documents are updated. You can pass only specific fields to be updated.",
                 "responses": {
                     "200": {
                         "description": "Documents List",
@@ -8052,14 +8052,6 @@
                                         "type": "object",
                                         "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
                                         "x-example": "{}"
-                                    },
-                                    "permissions": {
-                                        "type": "array",
-                                        "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read(\"any\")\"]",
-                                        "items": {
-                                            "type": "string"
-                                        }
                                     },
                                     "queries": {
                                         "type": "array",
