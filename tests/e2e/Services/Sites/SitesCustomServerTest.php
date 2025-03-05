@@ -324,6 +324,40 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testRenderingDetectionSSR(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'buildRuntime' => 'ssr-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**

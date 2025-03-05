@@ -26,8 +26,8 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Detector\Detection\Rendering\SSG;
 use Utopia\Detector\Detection\Rendering\SSR;
+use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
@@ -38,6 +38,8 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
+
+use function PHPUnit\Framework\isEmpty;
 
 class Builds extends Action
 {
@@ -708,27 +710,30 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            $listFilesCommand = "cd /usr/local/build/" . $resource->getAttribute('outputDirectory') . " && find . -name 'node_modules' -prune -o -type f -print";
-            $response = $executor->executeCommand(
-                deploymentId: $deployment->getId(),
-                projectId: $project->getId(),
-                command: $listFilesCommand,
-                timeout: 60
-            );
+            if ($resource->getCollection() === 'sites' && isEmpty($resource->getAttribute('adapter'))) {
+                $listFilesCommand = "cd /usr/local/build/" . $resource->getAttribute('outputDirectory') . " && find . -name 'node_modules' -prune -o -type f -print";
+                $commandExecutionResponse = $executor->executeCommand(
+                    deploymentId: $deployment->getId(),
+                    projectId: $project->getId(),
+                    command: $listFilesCommand,
+                    timeout: 60
+                );
 
-            $files = array_map('trim', array_filter(explode("\n", $response['output'])));
+                $files = array_map('trim', array_filter(explode("\n", $commandExecutionResponse['output'])));
 
-            $detector = new Rendering($files, $resource->getAttribute('framework'));
-            $detector
-                ->addOption(new SSR())
-                ->addOption(new SSG());
-            $detectedRenderingStrategy = $detector->detect();
+                $detector = new Rendering($files, $resource->getAttribute('framework'));
+                $detector
+                    ->addOption(new SSR())
+                    ->addOption(new XStatic());
+                $detectedRenderingStrategy = $detector->detect();
 
-            $renderingStrategy = $detectedRenderingStrategy->getName();
-            $fallbackFile = $detectedRenderingStrategy->getFallbackFile();
+                $renderingStrategy = $detectedRenderingStrategy->getName();
+                $fallbackFile = $detectedRenderingStrategy->getFallbackFile() ?: '';
 
-            $resource->setAttribute('adapter', $renderingStrategy);
-            $resource->setAttribute('fallbackFile', $fallbackFile);
+                $resource->setAttribute('adapter', $renderingStrategy);
+                $resource->setAttribute('fallbackFile', $fallbackFile);
+                $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+            }
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
