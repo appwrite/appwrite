@@ -295,6 +295,9 @@ class UsageTest extends Scope
             }
         }
 
+        // stats-resources runs every 5s in test env
+        sleep(self::WAIT);
+
         return array_merge($data, [
             'bucketId' => $bucketId,
             'bucketsTotal' => $bucketsTotal,
@@ -514,6 +517,7 @@ class UsageTest extends Scope
             }
         }
 
+        sleep(self::WAIT);
         return array_merge($data, [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
@@ -647,6 +651,8 @@ class UsageTest extends Scope
                 'required' => true,
             ]
         );
+
+        sleep(self::WAIT);
 
         return [
             'databaseId' => $databaseId,
