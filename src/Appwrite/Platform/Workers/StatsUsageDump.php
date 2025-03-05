@@ -79,6 +79,8 @@ class StatsUsageDump extends Action
             try {
                 /** @var \Utopia\Database\Database $dbForProject */
                 $dbForProject = $getProjectDB($project);
+                $documents = [];
+                $documentsClone = [];
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
                         continue;
@@ -100,25 +102,33 @@ class StatsUsageDump extends Action
                             'value' => $value,
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
+                        $documents[] = $document;
 
                         $documentClone = new Document($document->getArrayCopy());
-
-                        $dbForProject->createOrUpdateDocumentsWithIncrease(
-                            'stats',
-                            'value',
-                            [$document]
-                        );
-
-                        $this->writeToLogsDB($project, $documentClone);
+                        $documentsClone[] = $documentClone;
                     }
                 }
+
+                $dbForProject->createOrUpdateDocumentsWithIncrease(
+                    'stats',
+                    'value',
+                    $documents
+                );
+                $this->writeToLogsDB($project, $documentsClone);
             } catch (\Exception $e) {
                 console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
     }
 
-    protected function writeToLogsDB(Document $project, Document $document): void
+    /**
+     * Write to logs DB
+     *
+     * @param Document $project
+     * @param array<Document> $documents
+     * @return void
+     */
+    protected function writeToLogsDB(Document $project, array $documents): void
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
             Console::log('Dual Writing is disabled. Skipping...');
@@ -132,7 +142,7 @@ class StatsUsageDump extends Action
             $dbForLogs->createOrUpdateDocumentsWithIncrease(
                 'stats',
                 'value',
-                [$document]
+                $documents
             );
             Console::success('Usage logs pushed to Logs DB');
         } catch (\Throwable $th) {
