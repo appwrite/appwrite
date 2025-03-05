@@ -51,7 +51,6 @@ App::get('/v1/project/usage')
         $lastDay = (new DateTime($endDate))->format($format);
 
         $metricsFromLogsDB = [
-            METRIC_EXECUTIONS => true,
             METRIC_DOCUMENTS => true,
             METRIC_DATABASES => true,
             METRIC_BUCKETS => true,
