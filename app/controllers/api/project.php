@@ -42,15 +42,25 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('getLogsDB')
+    ->inject('dbForLogs')
     ->inject('smsRates')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Document $project, Database $dbForProject, callable $getLogsDB, array $smsRates) {
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Document $project, Database $dbForProject, Database $dbForLogs, array $smsRates) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
         $lastDay = (new DateTime($endDate))->format($format);
 
-        $dbForLogs = call_user_func($getLogsDB, $project);
+        $metricsFromLogsDB = [
+            METRIC_EXECUTIONS => true,
+            METRIC_DOCUMENTS => true,
+            METRIC_DATABASES => true,
+            METRIC_BUCKETS => true,
+            METRIC_FILES_STORAGE => true,
+            METRIC_DATABASES_STORAGE => true,
+            METRIC_DEPLOYMENTS_STORAGE => true,
+            METRIC_BUILDS_STORAGE => true,
+            METRIC_FILES_IMAGES_TRANSFORMED => true,
+        ];
 
         $metrics = [
             'total' => [
@@ -99,9 +109,9 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $metricsFromLogsDB, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
-                $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
+                $db = array_key_exists($metric, $metricsFromLogsDB) ? $dbForLogs : $dbForProject;
 
                 $result = $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -111,7 +121,7 @@ App::get('/v1/project/usage')
             }
 
             foreach ($metrics['period'] as $metric) {
-                $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
+                $db = array_key_exists($metric, $metricsFromLogsDB) ? $dbForLogs : $dbForProject;
 
                 $results = $db->find('stats', [
                     Query::equal('metric', [$metric]),
