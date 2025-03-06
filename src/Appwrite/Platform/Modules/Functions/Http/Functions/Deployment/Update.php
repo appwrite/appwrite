@@ -68,7 +68,6 @@ class Update extends Base
     {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -78,11 +77,7 @@ class Update extends Base
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($deployment->getAttribute('status') !== 'ready') {
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
