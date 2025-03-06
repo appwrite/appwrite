@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Build;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -156,7 +158,13 @@ class Create extends Base
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
         }
 
-        if ($deployment->getAttribute('status') !== 'ready') {
+        /** Check if build has completed */
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
@@ -377,7 +385,7 @@ class Create extends Base
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,

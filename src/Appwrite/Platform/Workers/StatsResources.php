@@ -268,13 +268,15 @@ class StatsResources extends Action
     protected function countForFunctions(Database $dbForProject, Database $dbForLogs, string $region)
     {
         $deploymentsStorage = $dbForProject->sum('deployments', 'size');
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize');
+        $buildsStorage = $dbForProject->sum('builds', 'size');
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
         $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
 
         $deployments = $dbForProject->count('deployments');
+        $builds = $dbForProject->count('builds');
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $deployments);
-        $this->createStatsDocuments($region, METRIC_BUILDS, $deployments);
+        $this->createStatsDocuments($region, METRIC_BUILDS, $builds);
+
 
         $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $dbForLogs, $region) {
             $functionDeploymentsStorage = $dbForProject->sum('deployments', 'size', [
@@ -300,8 +302,9 @@ class StatsResources extends Action
             $this->foreachDocument($dbForProject, 'deployments', [
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ], function (Document $deployment) use (&$functionBuildsStorage): void {
-                $functionBuildsStorage += $deployment->getAttribute('buildSize', 0);
+            ], function (Document $deployment) use ($dbForProject, &$functionBuildsStorage): void {
+                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+                $functionBuildsStorage += $build->getAttribute('size', 0);
             });
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
