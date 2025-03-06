@@ -188,28 +188,21 @@ class Migrations extends Action
     }
 
     /**
-     * @throws \Utopia\Database\Exception
-     * @throws Authorization
-     * @throws Conflict
-     * @throws Restricted
-     * @throws Structure
-     */
-    protected function removeAPIKey(Document $apiKey): void
-    {
-        $this->dbForPlatform->deleteDocument('keys', $apiKey->getId());
-    }
-
-    /**
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
      * @throws Exception
      */
     protected function generateAPIKey(Document $project): string
     {
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
+            'disabledMetrics' => [
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+            ],
             'scopes' => [
                 'users.read',
                 'users.write',
@@ -222,9 +215,7 @@ class Migrations extends Action
                 'functions.read',
                 'functions.write',
                 'databases.read',
-                'databases.write',
                 'collections.read',
-                'collections.write',
                 'documents.read',
                 'documents.write',
                 'tokens.read',

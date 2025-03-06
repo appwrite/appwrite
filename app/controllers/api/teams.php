@@ -8,7 +8,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
@@ -466,15 +466,15 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
         $url = htmlentities($url);
         if (empty($url)) {
-            if (!$isAPIKey && !$isPrivilegedUser) {
+            if (!$isAppUser && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
             }
         }
@@ -482,8 +482,6 @@ App::post('/v1/teams/:teamId/memberships')
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
@@ -590,9 +588,8 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
+        $secret = Auth::tokenGenerator();
         if ($membership->isEmpty()) {
-            $secret = Auth::tokenGenerator();
-
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -620,7 +617,8 @@ App::post('/v1/teams/:teamId/memberships')
                 $dbForProject->createDocument('memberships', $membership);
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        } else {
+        } elseif ($membership->getAttribute('confirm') === false) {
+            $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {
@@ -631,14 +629,15 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        } else {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
-
 
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
@@ -759,11 +758,11 @@ App::post('/v1/teams/:teamId/memberships')
                         $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
-                            $queueForUsage
+                            $queueForStatsUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
                     }
-                    $queueForUsage
+                    $queueForStatsUsage
                         ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();

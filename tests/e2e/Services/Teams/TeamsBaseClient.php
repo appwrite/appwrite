@@ -223,10 +223,8 @@ trait TeamsBaseClient
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
-
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
+        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
+        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
 
         /**
          * Test with UserId
@@ -290,6 +288,8 @@ trait TeamsBaseClient
         $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
+        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
 
         // test for resending invitation
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
@@ -303,6 +303,11 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmail();
+        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
+        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
+        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
         /**
          * Test for FAILURE

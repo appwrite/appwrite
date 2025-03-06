@@ -7,6 +7,7 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
+use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -505,7 +506,8 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION
+            Audit::COLLECTION,
+            AbuseDatabase::COLLECTION,
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -928,64 +930,38 @@ class Deletes extends Action
     }
 
     /**
-     * @param Document $document to be deleted
-     * @param Database $database to delete it from
-     * @param callable|null $callback to perform after document is deleted
-     * @return void
-     */
-    private function deleteById(Document $document, Database $database, callable $callback = null): void
-    {
-        if ($database->deleteDocument($document->getCollection(), $document->getId())) {
-            Console::success('Deleted document "' . $document->getId() . '" successfully');
-
-            if (is_callable($callback)) {
-                $callback($document);
-            }
-        } else {
-            Console::error('Failed to delete document: ' . $document->getId());
-        }
-    }
-
-    /**
      * @param string $collection collectionID
      * @param array $queries
      * @param Database $database
-     * @param callable|null $callback
+     * @param ?callable $callback
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
-    {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
+    protected function deleteByGroup(
+        string $collection,
+        array $queries,
+        Database $database,
+        ?callable $callback = null
+    ): void {
+        $start = \microtime(true);
 
-        $executionStart = \microtime(true);
+        try {
+            $documents = $database->deleteDocuments($collection, $queries);
+        } catch (\Throwable $th) {
+            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            return;
+        }
 
-        while ($sum === $limit) {
-            $chunk++;
-
-            try {
-                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
-            } catch (DatabaseException $e) {
-                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
-                return;
-            }
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
-
-            foreach ($results as $document) {
-                $this->deleteById($document, $database, $callback);
-                $count++;
+        if (\is_callable($callback)) {
+            foreach ($documents as $document) {
+                $callback($document);
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
+        $count = \count($documents);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**
@@ -999,25 +975,23 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $results = [];
+        $limit = 1000;
         $sum = $limit;
         $cursor = null;
 
-        $executionStart = \microtime(true);
+        $start = \microtime(true);
 
         while ($sum === $limit) {
-            $chunk++;
 
-            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
-            if ($cursor instanceof Document) {
-                $mergedQueries[] = Query::cursorAfter($cursor);
+            $queries = \array_merge([Query::limit($limit)], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
             }
 
-            $results = $database->find($collection, $mergedQueries);
+            $results = $database->find($collection, $queries);
 
-            $sum = count($results);
+            $sum = \count($results);
 
             if ($sum > 0) {
                 $cursor = $results[$sum - 1];
@@ -1032,9 +1006,9 @@ class Deletes extends Action
             }
         }
 
-        $executionEnd = \microtime(true);
+        $end = \microtime(true);
 
-        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Listed {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
     /**
