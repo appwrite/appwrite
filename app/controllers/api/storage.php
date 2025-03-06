@@ -1799,12 +1799,9 @@ App::get('/v1/storage/usage')
         $total = [];
         Authorization::skip(function () use ($dbForLogs, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
-                $result =  $dbForLogs->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForLogs->getDocument('stats', '_inf_' . $metric);
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForLogs->find('stats', [
@@ -1892,12 +1889,9 @@ App::get('/v1/storage/:bucketId/usage')
 
         Authorization::skip(function () use ($dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForLogs->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForLogs->getDocument('stats', '_inf_' . $metric);
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForLogs->find('stats', [
