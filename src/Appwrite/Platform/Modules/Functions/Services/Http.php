@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Functions\Services;
 
-use Appwrite\Platform\Modules\Functions\Http\Deployments\Builds\Update as UpdateBuild;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Delete as DeleteDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Download\Get as DownloadDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Get as GetDeployment;
+use Appwrite\Platform\Modules\Functions\Http\Deployments\Status\Update as UpdateDeploymentStatus;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as CreateTemplateDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
@@ -63,7 +63,7 @@ class Http extends Service
         $this->addAction(CreateVcsDeployment::getName(), new CreateVcsDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
         $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
-        $this->addAction(UpdateBuild::getName(), new UpdateBuild());
+        $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
 
         // Executions
         $this->addAction(CreateExecution::getName(), new CreateExecution());

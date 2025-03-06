@@ -404,4 +404,14 @@ trait SitesBase
 
         return $site;
     }
+
+    protected function cancelDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
 }

@@ -708,14 +708,9 @@ class SitesCustomServerTest extends Scope
             $this->assertEquals('building', $deployment['body']['status']);
         }, 100000, 250);
 
-        // Cancel the deployment
-        $cancel = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/build', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $cancel['headers']['status-code']);
-        $this->assertEquals('canceled', $cancel['body']['status']);
+        $deployment = $this->cancelDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
 
         /**
          * Build worker still runs the build.

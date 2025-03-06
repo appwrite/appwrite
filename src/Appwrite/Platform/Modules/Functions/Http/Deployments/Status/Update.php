@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Builds;
+namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -25,24 +25,26 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateDeploymentBuild';
+        return 'updateDeploymentStatus';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/build')
-            ->desc('Cancel deployment')
-            ->groups(['api', 'sites'])
-            ->label('scope', 'sites.write')
+            ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/status')
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build')
+            ->desc('Update deployment status')
+            ->groups(['api', 'functions'])
+            ->label('scope', 'functions.write')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.update')
-            ->label('audits.resource', 'site/{request.siteId}')
+            ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
-                namespace: 'sites',
-                name: 'updateDeploymentBuild',
+                namespace: 'functions',
+                name: 'updateDeploymentStatus',
                 description: <<<EOT
-                Cancel an ongoing site deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.
+                Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.
                 EOT,
                 auth: [AuthType::KEY],
                 responses: [
@@ -52,7 +54,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('dbForProject')
@@ -61,12 +63,12 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents)
+    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents)
     {
-        $site = $dbForProject->getDocument('sites', $siteId);
+        $function = $dbForProject->getDocument('functions', $functionId);
 
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -87,7 +89,7 @@ class Update extends Action
                 'deploymentId' => $deployment->getId(),
                 'status' => 'canceled',
                 'path' => '',
-                'runtime' => $site->getAttribute('framework'),
+                'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => '',
                 'logs' => '',
@@ -127,7 +129,7 @@ class Update extends Action
         }
 
         $queueForEvents
-            ->setParam('siteId', $site->getId())
+            ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($build, Response::MODEL_BUILD);
