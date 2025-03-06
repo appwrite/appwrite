@@ -80,12 +80,7 @@ class Get extends Action
 
         switch ($type) {
             case 'output':
-                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
-                if ($build->isEmpty()) {
-                    throw new Exception(Exception::BUILD_NOT_FOUND);
-                }
-
-                $path = $build->getAttribute('path', '');
+                $path = $deployment->getAttribute('buildPath', '');
                 $device = $deviceForBuilds;
                 break;
             case 'source':

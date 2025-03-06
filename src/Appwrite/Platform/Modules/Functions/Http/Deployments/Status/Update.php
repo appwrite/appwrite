@@ -13,8 +13,6 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -50,7 +48,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_BUILD,
+                        model: Response::MODEL_DEPLOYMENT,
                     )
                 ]
             ))
@@ -77,46 +75,19 @@ class Update extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-
-        if ($build->isEmpty()) {
-            $buildId = ID::unique();
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => DateTime::now(),
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'canceled',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => '',
-                'logs' => '',
-                'duration' => 0,
-                'size' => 0
-            ]));
-
-            $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-        } else {
-            if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
-                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
-            }
-
-            $startTime = new \DateTime($build->getAttribute('startTime'));
-            $endTime = new \DateTime('now');
-            $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
-
-            $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttributes([
-                'endTime' => DateTime::now(),
-                'duration' => $duration,
-                'status' => 'canceled'
-            ]));
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+            throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
+        $startTime = new \DateTime($deployment->getAttribute('startTime'));
+        $endTime = new \DateTime('now');
+        $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
+            'endTime' => DateTime::now(),
+            'duration' => $duration,
+            'status' => 'canceled'
+        ]));
 
         try {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
@@ -132,6 +103,6 @@ class Update extends Action
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->dynamic($build, Response::MODEL_BUILD);
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }
 }
