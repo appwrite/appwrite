@@ -10,6 +10,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -42,6 +43,7 @@ use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
+use Utopia\Platform\Service;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
@@ -1184,3 +1186,6 @@ foreach (Config::getParam('services', []) as $service) {
 if (!empty(Method::getErrors())) {
     throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
 }
+
+$platform = new Appwrite();
+$platform->init(Service::TYPE_HTTP);

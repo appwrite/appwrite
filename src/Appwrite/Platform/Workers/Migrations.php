@@ -217,7 +217,10 @@ class Migrations extends Action
                 'databases.read',
                 'collections.read',
                 'documents.read',
-            ],
+                'documents.write',
+                'tokens.read',
+                'tokens.write',
+            ]
         ]);
 
         return API_KEY_DYNAMIC . '_' . $apiKey;

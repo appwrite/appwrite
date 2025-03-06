@@ -130,4 +130,10 @@ return [ // List of publicly visible scopes
     'assistant.read' => [
         'description' => 'Access to read the Assistant service',
     ],
+    'tokens.read' => [
+        'description' => 'Access to read your project\'s tokens',
+    ],
+    'tokens.write' => [
+        'description' => 'Access to create, update, and delete your project\'s tokens',
+    ],
 ];

@@ -388,9 +388,10 @@ App::init()
     ->inject('queueForStatsUsage')
     ->inject('dbForProject')
     ->inject('timelimit')
+    ->inject('resourceToken')
     ->inject('mode')
     ->inject('apiKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, string $mode, ?Key $apiKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -536,6 +537,10 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
+                    $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') == $bucket->getInternalId();
+                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
@@ -543,18 +548,21 @@ App::init()
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
-
-                    if (!$fileSecurity && !$valid) {
+                    if (!$fileSecurity && !$valid && !$isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && !$valid) {
+                    if ($fileSecurity && !$valid && !$isToken) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
                         $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                    }
+
+                    if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     if ($file->isEmpty()) {
