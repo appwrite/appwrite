@@ -35,22 +35,22 @@ class Origin extends Host
      *
      * @return string
      */
-     public function getDescription(): string
-     {
-         $messages = [];
+    public function getDescription(): string
+    {
+        $messages = [];
 
-         if (!empty($this->hostnames)) {
-             $messages[] = 'URL host must be one of added Web platforms: ' . \implode(', ', $this->hostnames);
-         }
+        if (!empty($this->hostnames)) {
+            $messages[] = 'URL host must be one of added Web platforms: ' . \implode(', ', $this->hostnames);
+        }
 
-         if (!empty($this->schemes)) {
-             $messages[] = 'URL scheme must be one of: ' . \implode(', ', $this->schemes);
-         }
+        if (!empty($this->schemes)) {
+            $messages[] = 'URL scheme must be one of: ' . \implode(', ', $this->schemes);
+        }
 
-         return empty($messages)
-             ? 'URL host and scheme constraints not configured'
-             : \implode(' or ', $messages);
-     }
+        return empty($messages)
+            ? 'URL host and scheme constraints not configured'
+            : \implode(' or ', $messages);
+    }
 
     /**
      * Is valid
