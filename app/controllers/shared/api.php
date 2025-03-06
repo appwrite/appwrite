@@ -92,8 +92,15 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
 
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
     $value = 1;
+
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
+    }
+
+    if ($event === Database::EVENT_DOCUMENTS_DELETE) {
+        $value = -1 * $document->getAttribute('modified', 0);
+    } elseif ($event === Database::EVENT_DOCUMENTS_CREATE) {
+        $value = $document->getAttribute('modified', 0);
     }
 
     switch (true) {
@@ -508,6 +515,8 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $project,
                 $document,

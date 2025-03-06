@@ -85,13 +85,19 @@ App::post('/v1/account/create')
 
 ```php
 App::post('/v1/account/jwt')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createJWT')
-    ->label('sdk.description', '/docs/references/account/create-jwt.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->label('sdk', new Method(
+        namespace: 'account',
+        name: 'createJWT',
+        description: '/docs/references/account/create-jwt.md',
+        auth: [],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ],
+        responseType: ResponseType::JSON,
+    ))
 ```
 
 #### Cache

@@ -130,10 +130,8 @@ class Swagger2 extends Format
 
             $additionalMethods = null;
             if (is_array($sdk)) {
-                $mainSdk = array_shift($sdk);
                 $additionalMethods = $sdk;
-
-                $sdk = $mainSdk;
+                $sdk = $sdk[0];
             }
 
             $consumes = [$sdk->getRequestType()];
@@ -203,15 +201,17 @@ class Swagger2 extends Format
             }
 
             if (!empty($additionalMethods)) {
-                $temp['x-appwrite']['additional-methods'] = [];
+                $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $method) {
                     /** @var \Appwrite\SDK\Method $method */
+                    $desc = $method->getDescriptionFilePath();
+
                     $additionalMethod = [
                         'name' => $method->getMethodName(),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
-                        'description' => $method->getDescription(),
+                        'description' => ($desc) ? \file_get_contents($desc) : '',
                     ];
 
                     foreach ($method->getParameters() as $name => $param) {
@@ -224,13 +224,20 @@ class Swagger2 extends Format
 
                     foreach ($method->getResponses() as $response) {
                         /** @var \Appwrite\SDK\Response $response */
-                        $additionalMethod['responses'][] = [
-                            'code' => $response->getCode(),
-                            'model' => '#/definitions/' . $response->getModel()
-                        ];
+                        if (\is_array($response->getModel())) {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                            ];
+                        } else {
+                            $additionalMethod['responses'][] = [
+                                'code' => $response->getCode(),
+                                'model' => '#/definitions/' . $response->getModel()
+                            ];
+                        }
                     }
 
-                    $temp['x-appwrite']['additional-methods'][] = $additionalMethod;
+                    $temp['x-appwrite']['methods'][] = $additionalMethod;
                 }
             }
 
