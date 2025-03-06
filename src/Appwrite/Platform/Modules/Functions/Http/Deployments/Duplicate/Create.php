@@ -91,12 +91,17 @@ class Create extends Action
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$internalId' => '',
             '$id' => $deploymentId,
-            'buildId' => '',
-            'buildInternalId' => '',
             'path' => $destination,
             'entrypoint' => $function->getAttribute('entrypoint'),
             'commands' => $function->getAttribute('commands', ''),
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+            'startTime' => null,
+            'endTime' => null,
+            'buildTime' => null,
+            'buildSize' => null,
+            'status' => 'processing',
+            'buildPath' => '',
+            'buildLogs' => '',
         ]));
 
         $queueForBuilds

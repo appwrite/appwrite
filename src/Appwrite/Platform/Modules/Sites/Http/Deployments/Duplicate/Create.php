@@ -93,14 +93,20 @@ class Create extends Action
             '$internalId' => '',
             '$id' => $deploymentId,
             'buildId' => '',
-            'buildInternalId' => '',
             'path' => $destination,
             'buildCommand' => $site->getAttribute('buildCommand', ''),
             'installCommand' => $site->getAttribute('installCommand', ''),
             'outputDirectory' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
-            'screenshotDark' => ''
+            'screenshotDark' => '',
+            'startTime' => null,
+            'endTime' => null,
+            'buildTime' => null,
+            'buildSize' => null,
+            'status' => 'processing',
+            'buildPath' => '',
+            'buildLogs' => '',
         ]));
 
         // Preview deployments for sites

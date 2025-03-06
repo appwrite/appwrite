@@ -196,7 +196,6 @@ class Builds extends Action
 
         $deployment->setAttribute('startTime', $startTime);
         $deployment->setAttribute('status', 'processing');
-        $deployment->setAttribute('runtime', $resource->getAttribute('runtime'));
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
         $source = $deployment->getAttribute('path', '');
