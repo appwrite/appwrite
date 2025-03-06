@@ -40,7 +40,7 @@ class Origin extends Host
         $messages = [];
 
         if (!empty($this->hostnames)) {
-            $messages[] = 'URL host must be one of added Web platforms: ' . \implode(', ', $this->hostnames);
+            $messages[] = 'URL host must be one of: ' . \implode(', ', $this->hostnames);
         }
 
         if (!empty($this->schemes)) {
