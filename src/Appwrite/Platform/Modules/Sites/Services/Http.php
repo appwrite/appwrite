@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Sites\Services;
 
-use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Create as CreateBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Builds\Update as UpdateBuild;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Create as CreateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Delete as DeleteDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Download\Get as DownloadDeployment;
+use Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate\Create as CreateDuplicateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Get as GetDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Template\Create as CreateTemplateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs\Create as CreateVcsDeployment;
@@ -57,7 +57,7 @@ class Http extends Service
         $this->addAction(UpdateSiteDeployment::getName(), new UpdateSiteDeployment());
         $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
         $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
-        $this->addAction(CreateBuild::getName(), new CreateBuild());
+        $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
         $this->addAction(UpdateBuild::getName(), new UpdateBuild());
 
         // Logs

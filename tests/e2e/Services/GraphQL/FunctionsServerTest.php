@@ -186,8 +186,8 @@ class FunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsNotArray($response['body']);
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['data']);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testGetFunctions(): array
