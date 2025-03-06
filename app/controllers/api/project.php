@@ -112,11 +112,8 @@ App::get('/v1/project/usage')
             foreach ($metrics['total'] as $metric) {
                 $db = array_key_exists($metric, $metricsFromLogsDB) ? $dbForLogs : $dbForProject;
 
-                $result = $db->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-                $total[$metric] = $result['value'] ?? 0;
+                $result = $db->getDocument('stats', md5('_inf_' . $metric));
+                $total[$metric] = $result->getAttribute('value', 0);
             }
 
             foreach ($metrics['period'] as $metric) {
@@ -158,15 +155,13 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('functions'));
 
@@ -174,15 +169,12 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('functions'));
 
@@ -190,15 +182,12 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('functions'));
 
@@ -206,15 +195,12 @@ App::get('/v1/project/usage')
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('buckets'));
 
@@ -223,15 +209,12 @@ App::get('/v1/project/usage')
             $name = $database->getAttribute('name');
             $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
 
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('databases'));
 
@@ -239,16 +222,10 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
-            $deploymentValue = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$deploymentMetric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $deploymentValue  = $dbForProject->getDocument('stats', md5('_inf_' . $deploymentMetric));
 
             $buildMetric = str_replace(['{functionInternalId}'], [$function->getInternalId()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
-            $buildValue = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$buildMetric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $buildValue = $dbForProject->getDocument('stats', md5('_inf_' . $buildMetric));
 
             $value = ($buildValue['value'] ?? 0) + ($deploymentValue['value'] ?? 0);
 
@@ -263,15 +240,11 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
-
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('functions'));
 
@@ -279,15 +252,12 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
+            $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
             return [
                 'resourceId' => $id,
                 'name' => $name,
-                'value' => $value['value'] ?? 0,
+                'value' => $result->getAttribute('value', 0),
             ];
         }, $dbForProject->find('functions'));
 
