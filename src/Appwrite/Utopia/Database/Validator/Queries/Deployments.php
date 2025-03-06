@@ -6,12 +6,14 @@ class Deployments extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'size',
-        'buildId',
+        'status',
         'activate',
         'entrypoint',
         'commands',
         'type',
-        'size'
+        'size',
+        'buildSize',
+        'buildTime'
     ];
 
     /**

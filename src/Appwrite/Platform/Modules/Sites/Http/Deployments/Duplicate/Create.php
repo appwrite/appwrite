@@ -92,7 +92,6 @@ class Create extends Action
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$internalId' => '',
             '$id' => $deploymentId,
-            'buildId' => '',
             'path' => $destination,
             'buildCommand' => $site->getAttribute('buildCommand', ''),
             'installCommand' => $site->getAttribute('installCommand', ''),
