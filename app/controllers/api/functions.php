@@ -641,8 +641,8 @@ App::get('/v1/functions/:functionId/usage')
 
         Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
             foreach ($logsDBMetrics as $metric) {
-                $result = $dbForLogs->getDocument('stats', '_inf_' . $metric);
-                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
+                $stats[$metric]['total'] = $result->getAttribute('value', 0);
 
                 $limit = $days['limit'];
                 $period = $days['period'];
@@ -670,7 +670,7 @@ App::get('/v1/functions/:functionId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result = $dbForProject->getDocument('stats', '_inf_' . $metric);
+                $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
 
                 $limit = $days['limit'];
@@ -768,7 +768,7 @@ App::get('/v1/functions/usage')
 
         Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
             foreach ($logsDBMetrics as $metric) {
-                $result = $dbForLogs->getDocument('stats', '_inf_' . $metric);
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
 
                 $limit = $days['limit'];
@@ -797,7 +797,7 @@ App::get('/v1/functions/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result = $dbForProject->getDocument('stats', '_inf_' . $metric);
+                $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
 
                 $limit = $days['limit'];
