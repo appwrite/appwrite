@@ -85,9 +85,10 @@ class Origin extends Host
     private function parseUrl($value): array
     {
         $parsed = \parse_url($value);
+        $matches = [];
 
         $parsed['scheme'] = $parsed['scheme'] ??
-            preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches) ? $matches[1] : null;
+            (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches) ? $matches[1] : null);
 
         return $parsed;
     }
