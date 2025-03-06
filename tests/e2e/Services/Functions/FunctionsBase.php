@@ -379,4 +379,14 @@ trait FunctionsBase
 
         return $function;
     }
+
+    protected function cancelDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
 }
