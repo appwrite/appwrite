@@ -2,144 +2,96 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator;
-use Utopia\Validator\Hostname;
+use Utopia\Validator\Host;
 
-class Origin extends Validator
+/**
+ * Origin
+ *
+ * Validate that a URI is allowed as a origin
+ *
+ * @package Utopia\Validator
+ */
+class Origin extends Host
 {
-    public const CLIENT_TYPE_UNKNOWN = 'unknown';
-    public const CLIENT_TYPE_WEB = 'web';
-    public const CLIENT_TYPE_FLUTTER_IOS = 'flutter-ios';
-    public const CLIENT_TYPE_FLUTTER_ANDROID = 'flutter-android';
-    public const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
-    public const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
-    public const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
-    public const CLIENT_TYPE_FLUTTER_WEB = 'flutter-web';
-    public const CLIENT_TYPE_APPLE_IOS = 'apple-ios';
-    public const CLIENT_TYPE_APPLE_MACOS = 'apple-macos';
-    public const CLIENT_TYPE_APPLE_WATCHOS = 'apple-watchos';
-    public const CLIENT_TYPE_APPLE_TVOS = 'apple-tvos';
-    public const CLIENT_TYPE_ANDROID = 'android';
-    public const CLIENT_TYPE_UNITY = 'unity';
-    public const CLIENT_TYPE_REACT_NATIVE_IOS = 'react-native-ios';
-    public const CLIENT_TYPE_REACT_NATIVE_ANDROID = 'react-native-android';
-
-
-    public const SCHEME_TYPE_HTTP = 'http';
-    public const SCHEME_TYPE_HTTPS = 'https';
-    public const SCHEME_TYPE_IOS = 'appwrite-ios';
-    public const SCHEME_TYPE_MACOS = 'appwrite-macos';
-    public const SCHEME_TYPE_WATCHOS = 'appwrite-watchos';
-    public const SCHEME_TYPE_TVOS = 'appwrite-tvos';
-    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
-    public const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
-    public const SCHEME_TYPE_LINUX = 'appwrite-linux';
+    protected $hostnames = [];
+    protected $schemes = [];
 
     /**
-     * @var array
+     * @param array $hostnames
+     * @param array $schemes
      */
-    protected $platforms = [
-        self::SCHEME_TYPE_HTTP => 'Web',
-        self::SCHEME_TYPE_HTTPS => 'Web',
-        self::SCHEME_TYPE_IOS => 'iOS',
-        self::SCHEME_TYPE_MACOS => 'macOS',
-        self::SCHEME_TYPE_WATCHOS => 'watchOS',
-        self::SCHEME_TYPE_TVOS => 'tvOS',
-        self::SCHEME_TYPE_ANDROID => 'Android',
-        self::SCHEME_TYPE_WINDOWS => 'Windows',
-        self::SCHEME_TYPE_LINUX => 'Linux',
-    ];
-
-    /**
-     * @var array
-     */
-    protected $clients = [
-    ];
-
-    /**
-     * @var string
-     */
-    protected $client = self::CLIENT_TYPE_UNKNOWN;
-
-    /**
-     * @var string
-     */
-    protected $host = '';
-
-    /**
-     * @param string $target
-     */
-    public function __construct($platforms)
+    public function __construct(array $hostnames = [], array $schemes = [])
     {
-        foreach ($platforms as $platform) {
-            $type = (isset($platform['type'])) ? $platform['type'] : '';
+        $this->hostnames = $hostnames;
+        $this->schemes = $schemes;
 
-            switch ($type) {
-                case self::CLIENT_TYPE_WEB:
-                case self::CLIENT_TYPE_FLUTTER_WEB:
-                    $this->clients[] = (isset($platform['hostname'])) ? $platform['hostname'] : '';
-                    break;
-
-                case self::CLIENT_TYPE_FLUTTER_IOS:
-                case self::CLIENT_TYPE_FLUTTER_ANDROID:
-                case self::CLIENT_TYPE_FLUTTER_MACOS:
-                case self::CLIENT_TYPE_FLUTTER_WINDOWS:
-                case self::CLIENT_TYPE_FLUTTER_LINUX:
-                case self::CLIENT_TYPE_ANDROID:
-                case self::CLIENT_TYPE_APPLE_IOS:
-                case self::CLIENT_TYPE_APPLE_MACOS:
-                case self::CLIENT_TYPE_APPLE_WATCHOS:
-                case self::CLIENT_TYPE_APPLE_TVOS:
-                case self::CLIENT_TYPE_REACT_NATIVE_IOS:
-                case self::CLIENT_TYPE_REACT_NATIVE_ANDROID:
-                    $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
-                    break;
-
-                default:
-                    # code...
-                    break;
-            }
-        }
-    }
-
-    public function getDescription(): string
-    {
-        if (!\array_key_exists($this->client, $this->platforms)) {
-            return 'Unsupported platform';
-        }
-
-        return 'Invalid Origin. Register your new client (' . $this->host . ') as a new '
-            . $this->platforms[$this->client] . ' platform on your project console dashboard';
+        parent::__construct($hostnames);
     }
 
     /**
-     * Check if Origin has been allowed
-     *  for access to the API
+     * Get Description
      *
-     * @param mixed $origin
+     * Returns validator description
      *
+     * @return string
+     */
+     public function getDescription(): string
+     {
+         $messages = [];
+
+         if (!empty($this->hostnames)) {
+             $messages[] = 'URL host must be one of added Web platforms: ' . \implode(', ', $this->hostnames);
+         }
+
+         if (!empty($this->schemes)) {
+             $messages[] = 'URL scheme must be one of: ' . \implode(', ', $this->schemes);
+         }
+
+         return empty($messages)
+             ? 'URL host and scheme constraints not configured'
+             : \implode(' or ', $messages);
+     }
+
+    /**
+     * Is valid
+     *
+     * Validation will pass when $value matches the given hostnames or schemes.
+     *
+     * @param  mixed $value
      * @return bool
      */
-    public function isValid($origin): bool
+    public function isValid($value): bool
     {
-        if (!is_string($origin)) {
+        if (empty($value)) {
             return false;
         }
+        $parsed = $this->parseUrl($value);
 
-        $scheme = \parse_url($origin, PHP_URL_SCHEME);
-        $host = \parse_url($origin, PHP_URL_HOST);
-
-        $this->host = $host;
-        $this->client = $scheme;
-
-        if (empty($host)) {
+        if (!empty($parsed['scheme']) && \in_array($parsed['scheme'], $this->schemes)) {
             return true;
         }
 
-        $validator = new Hostname($this->clients);
+        if (!in_array($parsed['scheme'], ['http', 'https'])) {
+            return false;
+        }
 
-        return $validator->isValid($host);
+        if (!empty($parsed['host']) && \in_array($parsed['host'], $this->hostnames)) {
+            return parent::isValid($value);
+        }
+
+        return false;
     }
+
+    private function parseUrl($value): array
+    {
+        $parsed = \parse_url($value);
+
+        $parsed['scheme'] = $parsed['scheme'] ??
+            preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches) ? $matches[1] : null;
+
+        return $parsed;
+    }
+
 
     /**
      * Is array

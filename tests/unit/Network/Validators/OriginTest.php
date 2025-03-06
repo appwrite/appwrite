@@ -4,72 +4,99 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Helpers\ID;
 
 class OriginTest extends TestCase
 {
-    public function testValues(): void
+    public function testHostnameValidation(): void
     {
-        $validator = new Origin([
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Production',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Development',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'appwrite.test',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'localhost',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Flutter',
-                'type' => Origin::CLIENT_TYPE_FLUTTER_WEB,
-                'hostname' => 'appwrite.flutter',
-            ],
-        ]);
+        $validator = new Origin(
+            ['appwrite.io', 'localhost', 'example.com'], // allowed hostnames
+        );
 
-        $this->assertEquals($validator->isValid('https://localhost'), true);
-        $this->assertEquals($validator->isValid('http://localhost'), true);
-        $this->assertEquals($validator->isValid('http://localhost:80'), true);
+        // Valid hostnames
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io'));
+        $this->assertEquals(true, $validator->isValid('http://appwrite.io'));
+        $this->assertEquals(true, $validator->isValid('http://appwrite.io:80'));
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback'));
+        $this->assertEquals(true, $validator->isValid('https://localhost'));
+        $this->assertEquals(true, $validator->isValid('http://localhost:3000'));
+        $this->assertEquals(true, $validator->isValid('http://localhost/v1/mock/tests/general/oauth2/success'));
+        $this->assertEquals(true, $validator->isValid('https://example.com/auth/callback?token=123'));
 
-        $this->assertEquals($validator->isValid('https://appwrite.io'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.io'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.io:80'), true);
+        // Invalid hostnames
+        $this->assertEquals(false, $validator->isValid('https://unauthorized.com'));
+        $this->assertEquals(false, $validator->isValid('http://subdomain.appwrite.io')); // subdomain not in allowed list
+        $this->assertEquals(false, $validator->isValid('https://app-write.io')); // hyphenated variant not in allowed list
+        $this->assertEquals(false, $validator->isValid('ftp://appwrite.io')); // valid hostname but not http/https
+    }
 
-        $this->assertEquals($validator->isValid('https://appwrite.test'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.test'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.test:80'), true);
+    public function testSchemeValidation(): void
+    {
+        $validator = new Origin(
+            schemes: ['appwrite-ios', 'exp', 'exps'] // allowed schemes
+        );
 
-        $this->assertEquals($validator->isValid('https://appwrite.flutter'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.flutter'), true);
-        $this->assertEquals($validator->isValid('http://appwrite.flutter:80'), true);
+        // Valid schemes
+        $this->assertEquals(true, $validator->isValid('appwrite-ios://'));
+        $this->assertEquals(true, $validator->isValid('appwrite-ios://callback'));
+        $this->assertEquals(true, $validator->isValid('appwrite-ios://com.company.appname/auth/callback'));
+        $this->assertEquals(true, $validator->isValid('exp://'));
+        $this->assertEquals(true, $validator->isValid('exp://192.168.0.1:19000'));
+        $this->assertEquals(true, $validator->isValid('exp://exp.host/@username/app-slug'));
+        $this->assertEquals(true, $validator->isValid('exps://exp.host/@username/app-slug'));
 
-        $this->assertEquals($validator->isValid('https://example.com'), false);
-        $this->assertEquals($validator->isValid('http://example.com'), false);
-        $this->assertEquals($validator->isValid('http://example.com:80'), false);
+        // Invalid schemes
+        $this->assertEquals(false, $validator->isValid('https://appwrite.io')); // valid URL but scheme not in list
+        $this->assertEquals(false, $validator->isValid('http://localhost'));    // valid URL but scheme not in list
+        $this->assertEquals(false, $validator->isValid('appwrite-android://com.company.appname')); // scheme not in list
+        $this->assertEquals(false, $validator->isValid('exp-invalid://exp.host')); // similar but not matching scheme
+    }
 
-        $this->assertEquals($validator->isValid('appwrite-ios://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new iOS platform on your project console dashboard');
+    public function testCombinedValidation(): void
+    {
+        $validator = new Origin(
+            ['appwrite.io', 'localhost'], // allowed hostnames
+            ['appwrite-ios', 'exp'] // allowed schemes
+        );
 
-        $this->assertEquals($validator->isValid('appwrite-android://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Android platform on your project console dashboard');
+        // Valid hostnames
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io'));
+        $this->assertEquals(true, $validator->isValid('http://localhost:3000'));
 
-        $this->assertEquals($validator->isValid('appwrite-macos://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new macOS platform on your project console dashboard');
+        // Valid schemes
+        $this->assertEquals(true, $validator->isValid('appwrite-ios://callback'));
+        $this->assertEquals(true, $validator->isValid('exp://192.168.0.1:19000'));
 
-        $this->assertEquals($validator->isValid('appwrite-linux://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Linux platform on your project console dashboard');
+        // Invalid entries (neither hostname nor scheme match)
+        $this->assertEquals(false, $validator->isValid('https://example.com'));
+        $this->assertEquals(false, $validator->isValid('appwrite-android://com.company.appname'));
+    }
 
-        $this->assertEquals($validator->isValid('appwrite-windows://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard');
+    public function testEdgeCases(): void
+    {
+        $validator = new Origin(
+            ['appwrite.io', 'empty.host'],
+            ['exp', 'appwrite-ios']
+        );
+
+        // Empty values
+        $this->assertEquals(false, $validator->isValid(''));
+        $this->assertEquals(false, $validator->isValid(null));
+
+        // Malformed URLs
+        $this->assertEquals(false, $validator->isValid('not-a-url'));
+        $this->assertEquals(false, $validator->isValid('http://')); // HTTP missing hostname
+        $this->assertEquals(false, $validator->isValid('://hostname')); // Missing scheme
+
+        // URLs with empty hostnames but valid schemes
+        $this->assertEquals(true, $validator->isValid('exp://')); // This should be valid as 'exp' is an allowed scheme
+        $this->assertEquals(true, $validator->isValid('exp:///'));
+
+        // URLs with query parameters and fragments
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback?token=abc123&session=xyz#fragment'));
+        $this->assertEquals(true, $validator->isValid('exp://exp.host/@user/app?release-channel=default&token=123'));
+
+        // URL encoded characters
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io/callback?redirect_uri=https%3A%2F%2Fexample.com'));
     }
 }

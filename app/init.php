@@ -41,7 +41,7 @@ use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Client;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
@@ -1214,8 +1214,8 @@ App::setResource('hostnames', function (Request $request, Document $console, Doc
         ...$project->getAttribute('platforms', [])
     ];
     $platforms = array_filter($platforms, fn ($platform) => in_array($platform['type'], [
-        Origin::CLIENT_TYPE_WEB,
-        Origin::CLIENT_TYPE_FLUTTER_WEB,
+        Client::TYPE_WEB,
+        Client::TYPE_FLUTTER_WEB,
     ]));
     $platforms = array_filter($platforms, fn ($platform) => !empty($platform['hostname']));
 
@@ -1404,7 +1404,7 @@ App::setResource('console', function () {
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => Origin::CLIENT_TYPE_WEB,
+                'type' => Client::TYPE_WEB,
                 'hostname' => 'localhost',
             ], // Current host is added on app init
         ],

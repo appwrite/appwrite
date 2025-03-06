@@ -9,7 +9,7 @@ use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Client;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -1741,7 +1741,7 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Client::TYPE_WEB, Client::TYPE_FLUTTER_WEB, Client::TYPE_FLUTTER_IOS, Client::TYPE_FLUTTER_ANDROID, Client::TYPE_FLUTTER_LINUX, Client::TYPE_FLUTTER_MACOS, Client::TYPE_FLUTTER_WINDOWS, Client::TYPE_APPLE_IOS, Client::TYPE_APPLE_MACOS,  Client::TYPE_APPLE_WATCHOS, Client::TYPE_APPLE_TVOS, Client::TYPE_ANDROID, Client::TYPE_UNITY, Client::TYPE_REACT_NATIVE_IOS, Client::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
