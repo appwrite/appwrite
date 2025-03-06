@@ -62,7 +62,7 @@ class StatsResources extends Action
             Authorization::disable();
             Authorization::setDefaultStatus(false);
 
-            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('3 hours'));
+            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**
              * For each project that were accessed in last 24 hours
              */
