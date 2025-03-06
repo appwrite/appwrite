@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a8eca1d41fc10c9ed8629a1735e2482",
+    "content-hash": "71622d147e04860529ddba9e230035b8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3364,16 +3364,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-chore-update-database",
+            "version": "0.52.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "acf5711f72f9509ebf2a933fc513e5dc3763ecbd"
+                "reference": "a0d6421e7e5baa3ac02755496dca9fdeaa814b93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/acf5711f72f9509ebf2a933fc513e5dc3763ecbd",
-                "reference": "acf5711f72f9509ebf2a933fc513e5dc3763ecbd",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/a0d6421e7e5baa3ac02755496dca9fdeaa814b93",
+                "reference": "a0d6421e7e5baa3ac02755496dca9fdeaa814b93",
                 "shasum": ""
             },
             "require": {
@@ -3409,9 +3409,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/chore-update-database"
+                "source": "https://github.com/utopia-php/abuse/tree/0.52.0"
             },
-            "time": "2025-03-06T03:37:06+00:00"
+            "time": "2025-03-06T03:48:29+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3461,16 +3461,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-chore-update-database",
+            "version": "0.55.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "ac5a1502d425c19e23577bd65c68ef97b11207e9"
+                "reference": "9f8cfe5fa5d5011b8dbf93b710236dfa91dc5518"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ac5a1502d425c19e23577bd65c68ef97b11207e9",
-                "reference": "ac5a1502d425c19e23577bd65c68ef97b11207e9",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/9f8cfe5fa5d5011b8dbf93b710236dfa91dc5518",
+                "reference": "9f8cfe5fa5d5011b8dbf93b710236dfa91dc5518",
                 "shasum": ""
             },
             "require": {
@@ -3502,9 +3502,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/chore-update-database"
+                "source": "https://github.com/utopia-php/audit/tree/0.55.0"
             },
-            "time": "2025-03-06T03:15:21+00:00"
+            "time": "2025-03-06T03:47:47+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -8398,25 +8398,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/abuse",
-            "version": "dev-chore-update-database",
-            "alias": "0.51.0",
-            "alias_normalized": "0.51.0.0"
-        },
-        {
-            "package": "utopia-php/audit",
-            "version": "dev-chore-update-database",
-            "alias": "0.54.0",
-            "alias_normalized": "0.54.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
