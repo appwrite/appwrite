@@ -197,7 +197,6 @@ class Builds extends Action
         $deployment->setAttribute('startTime', $startTime);
         $deployment->setAttribute('status', 'processing');
         $deployment->setAttribute('runtime', $resource->getAttribute('runtime'));
-        $deployment->setAttribute('sourceType', \strtolower($deviceForFunctions->getType()));
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
         $source = $deployment->getAttribute('path', '');
@@ -625,7 +624,7 @@ class Builds extends Action
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    $currentLogs = $deployment->getAttribute('logs', '');
+                                    $currentLogs = $deployment->getAttribute('buildLogs', '');
 
                                     $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
@@ -640,7 +639,7 @@ class Builds extends Action
                                         $currentLogs .= $streamParts[1];
                                     }
 
-                                    $deployment = $deployment->setAttribute('logs', $currentLogs);
+                                    $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
                                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                                     /**
@@ -690,7 +689,7 @@ class Builds extends Action
             /** Update the build document */
             $deployment->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $deployment->setAttribute('endTime', $endTime);
-            $deployment->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment->setAttribute('buildTime', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
@@ -699,7 +698,7 @@ class Builds extends Action
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
-            $deployment->setAttribute('logs', $logs);
+            $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
@@ -891,9 +890,9 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('endTime', $endTime);
-            $deployment->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment->setAttribute('buildTime', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('logs', "[31m" . $th->getMessage());
+            $deployment->setAttribute('buildLogs', "[31m" . $th->getMessage());
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
@@ -961,28 +960,28 @@ class Builds extends Action
             case 'ready':
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('duration', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildTime', 0) * 1000)
                     ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildTime', 0) * 1000);
                 break;
             case 'failed':
                 $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('duration', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildTime', 0) * 1000)
                     ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('duration', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('buildTime', 0) * 1000);
                 break;
         }
 
         $queue
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('duration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildTime', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildTime', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
             ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('duration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildTime', 0) * 1000)
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildTime', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }

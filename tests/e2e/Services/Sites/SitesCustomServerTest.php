@@ -709,6 +709,9 @@ class SitesCustomServerTest extends Scope
         }, 100000, 250);
 
         $deployment = $this->cancelDeployment($siteId, $deploymentId);
+        \var_dump($siteId);
+        \var_dump($deploymentId);
+        \var_dump($deployment);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals('canceled', $deployment['body']['status']);
 

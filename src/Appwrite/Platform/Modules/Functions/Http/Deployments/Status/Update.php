@@ -85,7 +85,7 @@ class Update extends Action
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
             'endTime' => DateTime::now(),
-            'duration' => $duration,
+            'buildTime' => $duration,
             'status' => 'canceled'
         ]));
 
