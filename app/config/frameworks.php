@@ -21,7 +21,7 @@ return [
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -47,7 +47,7 @@ return [
     'react' => [
         'key' => 'react',
         'name' => 'React',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'static' => [
@@ -65,7 +65,7 @@ return [
     'nuxt' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -91,7 +91,7 @@ return [
     'vue' => [
         'key' => 'vue',
         'name' => 'Vue.js',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'static' => [
@@ -109,7 +109,7 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -135,7 +135,7 @@ return [
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -161,7 +161,7 @@ return [
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'ssr' => [
@@ -204,7 +204,7 @@ return [
     'other' => [
         'key' => 'other',
         'name' => 'Other',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
             'static' => [
