@@ -976,7 +976,7 @@ class Deletes extends Action
     private function deleteDeploymentFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();
-        $deploymentPath = $deployment->getAttribute('path', '');
+        $deploymentPath = $deployment->getAttribute('sourcePath', '');
 
         if (empty($deploymentPath)) {
             Console::info("No deployment files for deployment " . $deploymentId);

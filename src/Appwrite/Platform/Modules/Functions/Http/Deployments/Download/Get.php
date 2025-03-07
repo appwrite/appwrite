@@ -85,7 +85,7 @@ class Get extends Action
                 $device = $deviceForBuilds;
                 break;
             case 'source':
-                $path = $deployment->getAttribute('path', '');
+                $path = $deployment->getAttribute('sourcePath', '');
                 $device = $deviceForFunctions;
                 break;
         }
