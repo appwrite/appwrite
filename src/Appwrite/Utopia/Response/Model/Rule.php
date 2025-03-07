@@ -52,6 +52,12 @@ class Rule extends Model
                 'default' => '',
                 'example' => 301,
             ])
+            ->addRule('deploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of deployment. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
             ->addRule('deploymentResourceType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
@@ -60,9 +66,9 @@ class Rule extends Model
             ])
             ->addRule('deploymentResourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of deployment. Used if type is "deployment"',
+                'description' => 'ID deployment\'s resource. Used if type is "deployment"',
                 'default' => '',
-                'example' => 'function',
+                'example' => 'n3u9feiwmf',
             ])
             ->addRule('deploymentVcsProviderBranch', [
                 'type' => self::TYPE_STRING,

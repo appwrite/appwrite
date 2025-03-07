@@ -68,14 +68,15 @@ trait ProxyBase
         return $rule;
     }
 
-    protected function createRedirectRule(string $domain, string $target): mixed
+    protected function createRedirectRule(string $domain, string $url, int $statusCode): mixed
     {
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'domain' => $domain,
-            'target' => $target,
+            'url' => $url,
+            'statusCode' => $statusCode,
         ]);
 
         return $rule;
@@ -114,9 +115,9 @@ trait ProxyBase
         return $rule['body']['$id'];
     }
 
-    protected function setupRedirectRule(string $domain, string $target): string
+    protected function setupRedirectRule(string $domain, string $url, int $statusCode): string
     {
-        $rule = $this->createRedirectRule($domain, $target);
+        $rule = $this->createRedirectRule($domain, $url, $statusCode);
 
         $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
 

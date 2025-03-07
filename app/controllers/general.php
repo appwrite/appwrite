@@ -524,13 +524,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $utopia->getRoute()?->label('error', '');
         return false;
     } elseif ($type === 'redirect') {
-        $path = ($swooleRequest->server['request_uri'] ?? '/');
+        $url = $rule->getAttribute('redirectUrl', '');
+
         $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
-            $path .= '?' . $query;
+            $url .= '?' . $query;
         }
-
-        $url = 'https://' . $rule->getAttribute('redirectUrl', '') . $path;
 
         $response->redirect($url, \intval($rule->getAttribute('redirectStatusCode', 301)));
         return true;
