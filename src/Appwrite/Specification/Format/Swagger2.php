@@ -173,13 +173,16 @@ class Swagger2 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
+            $desc = $desc ?? '';
+            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($method),
                 'consumes' => [],
                 'produces' => [],
                 'tags' => [$namespace],
-                'description' => ($desc) ? \file_get_contents($desc) : '',
+                'description' => $descContents,
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
