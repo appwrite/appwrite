@@ -108,7 +108,7 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $site->getAttribute('deployment', ''));
+        $deployment = $dbForProject->getDocument('deployments', $site->getAttribute('deploymentId', ''));
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
