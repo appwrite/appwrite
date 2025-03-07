@@ -183,7 +183,7 @@ class Deletes extends Action
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],

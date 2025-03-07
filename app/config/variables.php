@@ -8,6 +8,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_REGION',
+                'description' => 'Set your server running geo region. By default, the var is set to \'fra\'.',
+                'introduction' => '',
+                'default' => 'fra',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_ENV',
                 'description' => 'Set your server running environment. By default, the var is set to \'development\'. When deploying to production, change it to: \'production\'.',
                 'introduction' => '',
