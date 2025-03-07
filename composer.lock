@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6883b3e81cfb0c5355997def668d5df2",
+    "content-hash": "3b6171de8c624cfbcd723f1cc76a9560",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.17.0",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797"
+                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9a9e20d1f5c28caf539ad4cb52164dc283f99797",
-                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/f1ddcc567325659ad79506bc9684a4fc2009dc42",
+                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.17.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.18.0"
             },
-            "time": "2025-01-10T13:36:30+00:00"
+            "time": "2025-03-07T14:30:31+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -1366,16 +1366,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.2.0",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "243d9657c44a06f740cf384f486afe954c2b725f"
+                "reference": "b7580440b7481a98da97aceabeb46e1b276c8747"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/243d9657c44a06f740cf384f486afe954c2b725f",
-                "reference": "243d9657c44a06f740cf384f486afe954c2b725f",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/b7580440b7481a98da97aceabeb46e1b276c8747",
+                "reference": "b7580440b7481a98da97aceabeb46e1b276c8747",
                 "shasum": ""
             },
             "require": {
@@ -1426,7 +1426,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-01-08T23:50:03+00:00"
+            "time": "2025-03-06T23:21:56+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -3906,16 +3906,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.18",
+            "version": "0.33.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "00b3743264973a7e6e7bfef0c61ecb15b855036b"
+                "reference": "64c7b7bb8a8595ffe875fa8d4b7705684dbf46c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/00b3743264973a7e6e7bfef0c61ecb15b855036b",
-                "reference": "00b3743264973a7e6e7bfef0c61ecb15b855036b",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/64c7b7bb8a8595ffe875fa8d4b7705684dbf46c0",
+                "reference": "64c7b7bb8a8595ffe875fa8d4b7705684dbf46c0",
                 "shasum": ""
             },
             "require": {
@@ -3947,9 +3947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.18"
+                "source": "https://github.com/utopia-php/http/tree/0.33.19"
             },
-            "time": "2025-03-06T08:30:11+00:00"
+            "time": "2025-03-06T11:37:49+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4594,22 +4594,24 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.9",
+            "version": "0.18.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "1cf455404e8700b3093fd73d74a38d41cdced90c"
+                "reference": "76f31158f4251abb207f7a9b16f7cb0bfdb3b39e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/1cf455404e8700b3093fd73d74a38d41cdced90c",
-                "reference": "1cf455404e8700b3093fd73d74a38d41cdced90c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/76f31158f4251abb207f7a9b16f7cb0bfdb3b39e",
+                "reference": "76f31158f4251abb207f7a9b16f7cb0bfdb3b39e",
                 "shasum": ""
             },
             "require": {
                 "ext-brotli": "*",
+                "ext-curl": "*",
                 "ext-fileinfo": "*",
                 "ext-lz4": "*",
+                "ext-simplexml": "*",
                 "ext-snappy": "*",
                 "ext-xz": "*",
                 "ext-zlib": "*",
@@ -4643,9 +4645,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.9"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.10"
             },
-            "time": "2025-02-11T13:10:40+00:00"
+            "time": "2025-03-03T10:47:54+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5038,16 +5040,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.1",
+            "version": "0.40.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837"
+                "reference": "56f09482d9e2f223911277ab887f197402708049"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/df180676b6fbde7832ae1495af3e2f3e8f700837",
-                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/56f09482d9e2f223911277ab887f197402708049",
+                "reference": "56f09482d9e2f223911277ab887f197402708049",
                 "shasum": ""
             },
             "require": {
@@ -5083,9 +5085,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.2"
             },
-            "time": "2025-02-26T07:07:10+00:00"
+            "time": "2025-03-06T16:31:03+00:00"
         },
         {
             "name": "doctrine/annotations",
