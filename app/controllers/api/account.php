@@ -3322,7 +3322,7 @@ App::post('/v1/account/recovery')
     });
 
 App::put('/v1/account/recovery')
-    ->desc('Create password recovery (confirmation)')
+    ->desc('Update password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
     ->label('event', 'users.[userId].recovery.[tokenId].update')
@@ -3584,7 +3584,7 @@ App::post('/v1/account/verification')
     });
 
 App::put('/v1/account/verification')
-    ->desc('Create email verification (confirmation)')
+    ->desc('Update email verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -3807,7 +3807,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Update phone verification (confirmation)')
+    ->desc('Update phone verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -4498,7 +4498,7 @@ App::post('/v1/account/mfa/challenge')
     });
 
 App::put('/v1/account/mfa/challenge')
-    ->desc('Create MFA challenge (confirmation)')
+    ->desc('Update MFA challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
