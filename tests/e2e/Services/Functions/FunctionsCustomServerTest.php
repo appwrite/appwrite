@@ -832,7 +832,7 @@ class FunctionsCustomServerTest extends Scope
         $deployment = $this->getDeployment($data['functionId'], $data['deploymentId']);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertGreaterThan(0, $deployment['body']['buildTime']);
+        $this->assertGreaterThan(0, $deployment['body']['buildDuration']);
         $this->assertNotEmpty($deployment['body']['status']);
         $this->assertNotEmpty($deployment['body']['buildLogs']);
         $this->assertArrayHasKey('size', $deployment['body']);

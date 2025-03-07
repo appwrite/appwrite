@@ -194,11 +194,11 @@ class Builds extends Action
 
         $deploymentId = $deployment->getId();
 
-        $deployment->setAttribute('startTime', $startTime);
+        $deployment->setAttribute('buildStartAt', $startTime);
         $deployment->setAttribute('status', 'processing');
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-        $source = $deployment->getAttribute('path', '');
+        $source = $deployment->getAttribute('sourcePath', '');
         $installationId = $deployment->getAttribute('installationId', '');
         $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
         $providerCommitHash = $deployment->getAttribute('providerCommitHash', '');
@@ -267,8 +267,8 @@ class Builds extends Action
 
                     $directorySize = $device->getFileSize($source);
                     $deployment
-                        ->setAttribute('path', $source)
-                        ->setAttribute('size', $directorySize);
+                        ->setAttribute('sourcePath', $source)
+                        ->setAttribute('sourceSize', $directorySize);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             } elseif ($isVcsEnabled) {
@@ -427,8 +427,8 @@ class Builds extends Action
                 $directorySize = $device->getFileSize($source);
 
                 $deployment
-                    ->setAttribute('path', $source)
-                    ->setAttribute('size', $directorySize);
+                    ->setAttribute('sourcePath', $source)
+                    ->setAttribute('sourceSize', $directorySize);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
@@ -686,9 +686,9 @@ class Builds extends Action
             }
 
             /** Update the build document */
-            $deployment->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
-            $deployment->setAttribute('endTime', $endTime);
-            $deployment->setAttribute('buildTime', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment->setAttribute('buildStartAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
+            $deployment->setAttribute('buildEndAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
@@ -888,8 +888,8 @@ class Builds extends Action
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
-            $deployment->setAttribute('endTime', $endTime);
-            $deployment->setAttribute('buildTime', \intval(\ceil($durationEnd - $durationStart)));
+            $deployment->setAttribute('buildEndAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
             $deployment->setAttribute('buildLogs', "[31m" . $th->getMessage());
 
@@ -959,28 +959,28 @@ class Builds extends Action
             case 'ready':
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildTime', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildTime', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildTime', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('buildTime', 0) * 1000);
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
         $queue
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildTime', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildTime', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
             ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildTime', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildTime', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
@@ -1012,7 +1012,7 @@ class Builds extends Action
     protected function getCommand(Document $resource, Document $deployment): string
     {
         if ($resource->getCollection() === 'functions') {
-            return $deployment->getAttribute('commands', '');
+            return $deployment->getAttribute('buildCommands', '');
         } elseif ($resource->getCollection() === 'sites') {
             $commands = [];
 
@@ -1033,8 +1033,7 @@ class Builds extends Action
             }
 
             $commands[] = $envCommand;
-            $commands[] = $deployment->getAttribute('installCommand', '');
-            $commands[] = $deployment->getAttribute('buildCommand', '');
+            $commands[] = $deployment->getAttribute('buildCommands', '');
             $commands[] = $bundleCommand;
 
             $commands = array_filter($commands, fn ($command) => !empty($command));

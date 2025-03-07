@@ -77,13 +77,13 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('startTime'));
+        $startTime = new \DateTime($deployment->getAttribute('buildStartAt'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
-            'endTime' => DateTime::now(),
-            'buildTime' => $duration,
+            'buildEndAt' => DateTime::now(),
+            'buildDuration' => $duration,
             'status' => 'canceled'
         ]));
 

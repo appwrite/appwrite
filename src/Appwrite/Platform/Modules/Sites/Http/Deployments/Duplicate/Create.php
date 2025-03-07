@@ -88,20 +88,27 @@ class Create extends Action
         $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForSites->transfer($path, $destination, $deviceForSites);
 
+        $commands = [];
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+
         $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$internalId' => '',
             '$id' => $deploymentId,
-            'path' => $destination,
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'sourcePath' => $destination,
+            'buildCommands' => \implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
             'screenshotDark' => '',
-            'startTime' => null,
-            'endTime' => null,
-            'buildTime' => null,
+            'buildStartAt' => null,
+            'buildEndAt' => null,
+            'buildDuration' => null,
             'buildSize' => null,
             'status' => 'processing',
             'buildPath' => '',

@@ -121,6 +121,14 @@ class Create extends Base
             return;
         }
 
+        $commands = [];
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -132,9 +140,8 @@ class Create extends Base
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getInternalId(),
             'resourceType' => 'sites',
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'buildCommands' => \implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'type' => 'manual',
             'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,

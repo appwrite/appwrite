@@ -1205,18 +1205,7 @@ return [
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('commands'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'filters' => [],
-            ],
-            [
-                'array' => false,
-                '$id' => ID::custom('buildCommand'),
+                '$id' => ID::custom('buildCommands'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1227,7 +1216,7 @@ return [
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('installCommand'),
+                '$id' => ID::custom('buildOutput'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1237,18 +1226,7 @@ return [
                 'filters' => [],
             ],
             [
-                'array' => false,
-                '$id' => ID::custom('outputDirectory'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('path'),
+                '$id' => ID::custom('sourcePath'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1441,7 +1419,7 @@ return [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('size'),
+                '$id' => ID::custom('sourceSize'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1452,7 +1430,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('metadata'),
+                '$id' => ID::custom('sourceMetadata'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
@@ -1463,7 +1441,7 @@ return [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('chunksTotal'),
+                '$id' => ID::custom('sourceChunksTotal'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1474,7 +1452,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('chunksUploaded'),
+                '$id' => ID::custom('sourceChunksUploaded'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1529,7 +1507,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('startTime'),
+                '$id' => ID::custom('buildStartAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -1540,7 +1518,7 @@ return [
                 'filters' => ['datetime'],
             ],
             [
-                '$id' => ID::custom('endTime'),
+                '$id' => ID::custom('buildEndAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -1551,7 +1529,7 @@ return [
                 'filters' => ['datetime'],
             ],
             [
-                '$id' => ID::custom('buildTime'),
+                '$id' => ID::custom('buildDuration'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
