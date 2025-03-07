@@ -120,7 +120,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;
     }
-    
+
     $type = $rule->getAttribute('type', '');
 
     if ($type === 'deployment') {
