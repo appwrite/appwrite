@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Functions;
+namespace Appwrite\Compute;
 
 class Specification
 {

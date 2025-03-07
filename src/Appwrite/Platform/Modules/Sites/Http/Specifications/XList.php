@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Specifications;
+namespace Appwrite\Platform\Modules\Sites\Http\Specifications;
 
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -26,16 +26,16 @@ class XList extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/functions/specifications')
-            ->groups(['api', 'functions'])
+            ->setHttpPath('/v1/sites/specifications')
+            ->groups(['api', 'sites'])
             ->desc('List specifications')
-            ->label('scope', 'functions.read')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
+            ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 name: 'listSpecifications',
                 description: <<<EOT
-                List allowed function specifications for this instance.
+                List allowed site specifications for this instance.
                 EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
