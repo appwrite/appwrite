@@ -124,7 +124,6 @@ class Create extends Action
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'api',
-            'value' => '',
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
         ]);

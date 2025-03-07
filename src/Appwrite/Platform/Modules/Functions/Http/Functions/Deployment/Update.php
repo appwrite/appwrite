@@ -100,9 +100,14 @@ class Update extends Base
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $this->listRules($project, [
-            Query::equal("automation", ["function=" . $function->getId()]),
+            Query::equal("type", ["deployment"]),
+            Query::equal("deploymentResourceType", ["function"]),
+            Query::equal("deploymentResourceInternalId", [$function->getInternalId()]),
+            Query::equal("deploymentUpdatePolicy", ["active"]),
         ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-            $rule = $rule->setAttribute('value', $deployment->getId());
+            $rule = $rule
+                ->setAttribute('deploymentId', $deployment->getId())
+                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
         });
 

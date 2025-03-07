@@ -89,9 +89,14 @@ class Update extends Base
         ])));
 
         $this->listRules($project, [
-            Query::equal("automation", ["site=" . $site->getId()]),
+            Query::equal("type", ["deployment"]),
+            Query::equal("deploymentResourceType", ["site"]),
+            Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),
+            Query::equal("deploymentUpdatePolicy", ["active"]),
         ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-            $rule = $rule->setAttribute('value', $deployment->getId());
+            $rule = $rule
+                ->setAttribute('deploymentId', $deployment->getId())
+                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
         });
 

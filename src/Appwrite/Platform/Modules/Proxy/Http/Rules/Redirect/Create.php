@@ -20,6 +20,8 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
@@ -59,7 +61,8 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('target', null, new ValidatorDomain(), 'Target domain (hostname) of redirection')
+            ->param('url', null, new URL(), 'Target URL of redirection')
+            ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
             ->inject('response')
             ->inject('project')
             ->inject('queueForCertificates')
@@ -68,7 +71,7 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $domain, string $target, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $domain, string $url, int $statusCode, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
     {
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -90,12 +93,6 @@ class Create extends Action
             $domain = new Domain($domain);
         } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
-        }
-
-        try {
-            $target = new Domain($target);
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Target may not start with http:// or https://.');
         }
 
         // Apex domain prevention due to CNAME limitations
@@ -127,7 +124,8 @@ class Create extends Action
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'redirect',
-            'value' => $target->get(),
+            'redirectUrl' => $url,
+            'redirectStatusCode' => $statusCode,
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
         ]);
