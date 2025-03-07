@@ -1784,8 +1784,8 @@ App::get('/v1/storage/usage')
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $range, Response $response, Database $dbForLogs) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -1797,17 +1797,14 @@ App::get('/v1/storage/usage')
         ];
 
         $total = [];
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForLogs, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $dbForLogs->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -1873,10 +1870,8 @@ App::get('/v1/storage/:bucketId/usage')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('getLogsDB')
-    ->action(function (string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, callable $getLogsDB) {
-
-        $dbForLogs = call_user_func($getLogsDB, $project);
+    ->inject('dbForLogs')
+    ->action(function (string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, Database $dbForLogs) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -1892,21 +1887,14 @@ App::get('/v1/storage/:bucketId/usage')
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $db = ($metric === str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
-                    ? $dbForLogs
-                    : $dbForProject;
-
-                $result =  $db->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $db->find('stats', [
+                $results = $dbForLogs->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),

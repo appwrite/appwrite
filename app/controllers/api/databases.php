@@ -534,7 +534,6 @@ App::post('/v1/databases')
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());
-        $queueForStatsUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -829,9 +828,6 @@ App::delete('/v1/databases/:databaseId')
         $queueForEvents
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, Response::MODEL_DATABASE));
-
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_STORAGE, 1); // Global, deletion forces full recalculation
 
         $response->noContent();
     });
@@ -2732,9 +2728,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model));
 
-        $queueForStatsUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$db->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-
         $response->noContent();
     });
 
@@ -3356,8 +3349,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 
@@ -4141,8 +4133,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
 
         $response->addHeader('X-Debug-Operations', 1);
 
@@ -4186,28 +4177,51 @@ App::get('/v1/databases/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
+        $logsDBMetrics = [
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
             METRIC_DATABASES_STORAGE,
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
+                $stats[$metric]['total'] = $result->getAttribute('value', 0);
+
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $metrics = [
             METRIC_DATABASES_OPERATIONS_READS,
             METRIC_DATABASES_OPERATIONS_WRITES,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForProject->getDocument('stats', md5('_inf_'. $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -4230,7 +4244,7 @@ App::get('/v1/databases/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
+        foreach ([...$logsDBMetrics,...$metrics] as $metric) {
             $usage[$metric]['total'] =  $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
@@ -4245,18 +4259,18 @@ App::get('/v1/databases/usage')
         }
         $response->dynamic(new Document([
             'range' => $range,
-            'databasesTotal'   => $usage[$metrics[0]]['total'],
-            'collectionsTotal' => $usage[$metrics[1]]['total'],
-            'documentsTotal'   => $usage[$metrics[2]]['total'],
-            'storageTotal'   => $usage[$metrics[3]]['total'],
-            'databasesReadsTotal' => $usage[$metrics[4]]['total'],
-            'databasesWritesTotal' => $usage[$metrics[5]]['total'],
-            'databases'   => $usage[$metrics[0]]['data'],
-            'collections' => $usage[$metrics[1]]['data'],
-            'documents'   => $usage[$metrics[2]]['data'],
-            'storage'   => $usage[$metrics[3]]['data'],
-            'databasesReads' => $usage[$metrics[4]]['data'],
-            'databasesWrites' => $usage[$metrics[5]]['data'],
+            'databasesTotal'   => $usage[$logsDBMetrics[0]]['total'],
+            'collectionsTotal' => $usage[$logsDBMetrics[1]]['total'],
+            'documentsTotal'   => $usage[$logsDBMetrics[2]]['total'],
+            'storageTotal'   => $usage[$logsDBMetrics[3]]['total'],
+            'databasesReadsTotal' => $usage[$metrics[0]]['total'],
+            'databasesWritesTotal' => $usage[$metrics[1]]['total'],
+            'databases'   => $usage[$logsDBMetrics[0]]['data'],
+            'collections' => $usage[$logsDBMetrics[1]]['data'],
+            'documents'   => $usage[$logsDBMetrics[2]]['data'],
+            'storage'   => $usage[$logsDBMetrics[3]]['data'],
+            'databasesReads' => $usage[$metrics[0]]['data'],
+            'databasesWrites' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -4282,7 +4296,8 @@ App::get('/v1/databases/:databaseId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -4293,20 +4308,43 @@ App::get('/v1/databases/:databaseId/usage')
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
+
+        $logsDBMetrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
+        ];
+
+        Authorization::skip(function () use ($dbForLogs, $days, $logsDBMetrics, &$stats) {
+            foreach ($logsDBMetrics as $metric) {
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
+                $stats[$metric]['total'] = $result->getAttribute('value', 0);
+
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForLogs->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
+                $result = $dbForProject->getDocument('stats', md5('_inf_' . $metric));
 
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
@@ -4331,7 +4369,7 @@ App::get('/v1/databases/:databaseId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
+        foreach ([...$logsDBMetrics,...$metrics] as $metric) {
             $usage[$metric]['total'] =  $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
@@ -4347,16 +4385,16 @@ App::get('/v1/databases/:databaseId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'collectionsTotal'   => $usage[$metrics[0]]['total'],
-            'documentsTotal'   => $usage[$metrics[1]]['total'],
-            'storageTotal'   => $usage[$metrics[2]]['total'],
-            'databaseReadsTotal' => $usage[$metrics[3]]['total'],
-            'databaseWritesTotal' => $usage[$metrics[4]]['total'],
-            'collections'   => $usage[$metrics[0]]['data'],
-            'documents'   => $usage[$metrics[1]]['data'],
-            'storage'   => $usage[$metrics[2]]['data'],
-            'databaseReads'   => $usage[$metrics[3]]['data'],
-            'databaseWrites'   => $usage[$metrics[4]]['data'],
+            'collectionsTotal'   => $usage[$logsDBMetrics[0]]['total'],
+            'documentsTotal'   => $usage[$logsDBMetrics[1]]['total'],
+            'storageTotal'   => $usage[$logsDBMetrics[2]]['total'],
+            'databaseReadsTotal' => $usage[$metrics[0]]['total'],
+            'databaseWritesTotal' => $usage[$metrics[1]]['total'],
+            'collections'   => $usage[$logsDBMetrics[0]]['data'],
+            'documents'   => $usage[$logsDBMetrics[1]]['data'],
+            'storage'   => $usage[$logsDBMetrics[2]]['data'],
+            'databaseReads'   => $usage[$metrics[0]]['data'],
+            'databaseWrites'   => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
@@ -4384,7 +4422,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
+    ->inject('dbForLogs')
+    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject, Database $dbForLogs) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
@@ -4401,17 +4440,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForLogs, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
+                $result = $dbForLogs->getDocument('stats', md5('_inf_' . $metric));
                 $stats[$metric]['total'] = $result['value'] ?? 0;
+
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $dbForLogs->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
