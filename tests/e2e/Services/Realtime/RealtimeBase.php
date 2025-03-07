@@ -1,27 +1,17 @@
 <?php
-
 namespace Tests\E2E\Services\Realtime;
-
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
-
 trait RealtimeBase
 {
     private function getWebsocket(
         array $channels = [],
         array $headers = [],
-        string $projectId = null
+        ?string $projectId = null
     ): WebSocketClient {
         if (is_null($projectId)) {
             $projectId = $this->getProject()['$id'];
         }
-
-        $headers = array_merge(
-            [
-                "Origin" => "appwrite.test",
-            ],
-            $headers
-        );
 
         $query = [
             "project" => $projectId,
@@ -49,9 +39,8 @@ trait RealtimeBase
 
     public function testConnectionFailureMissingChannels(): void
     {
-        $client = $this->getWebsocket();
+        $client = $this->getWebsocket([]);
         $payload = json_decode($client->receive(), true);
-
         $this->assertArrayHasKey("type", $payload);
         $this->assertArrayHasKey("data", $payload);
         $this->assertEquals("error", $payload["type"]);
@@ -64,16 +53,8 @@ trait RealtimeBase
 
     public function testConnectionFailureUnknownProject(): void
     {
-        $client = new WebSocketClient(
-            "ws://appwrite-traefik/v1/realtime?project=123",
-            [
-                "headers" => [
-                    "Origin" => "appwrite.test",
-                ],
-            ]
-        );
+        $client = $this->getWebsocket(projectId: '123');
         $payload = json_decode($client->receive(), true);
-
         $this->assertArrayHasKey("type", $payload);
         $this->assertArrayHasKey("data", $payload);
         $this->assertEquals("error", $payload["type"]);
