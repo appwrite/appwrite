@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
-use Appwrite\Functions\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -21,6 +21,41 @@ class FunctionsCustomServerTest extends Scope
     use FunctionsBase;
     use ProjectCustom;
     use SideServer;
+
+    public function testListSpecs(): void
+    {
+        $specifications = $this->listSpecifications();
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+        $this->assertArrayHasKey(0, $specifications['body']['specifications']);
+        $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Specs function',
+            'runtime' => 'php-8.0',
+            'specification' => $specifications['body']['specifications'][0]['slug']
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+
+        $function = $this->getFunction($function['body']['$id']);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+
+        $this->cleanupFunction($function['body']['$id']);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Specs function',
+            'runtime' => 'php-8.0',
+            'specification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $function['headers']['status-code']);
+    }
 
     public function testCreateFunction(): array
     {
@@ -2006,14 +2041,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['responseBody']);
 
-        $site = $this->updateFunction($functionId, [
+        $function = $this->updateFunction($functionId, [
             'runtime' => 'node-18.0',
             'name' => 'Duplicate Deployment Test',
             'entrypoint' => 'index.js',
             'commands' => 'rm index.js && mv maintenance.js index.js'
         ]);
-        $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertStringContainsString('maintenance.js', $site['body']['commands']);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertStringContainsString('maintenance.js', $function['body']['commands']);
 
         $deploymentId2 = $this->setupDuplicateDeployment($functionId, $deploymentId1);
         $this->assertNotEmpty($deploymentId2);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Compute;
+namespace Appwrite\Platform\Modules\Compute;
 
 class Specification
 {

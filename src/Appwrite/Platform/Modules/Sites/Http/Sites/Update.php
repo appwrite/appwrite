@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Compute\Validator\Specification;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;

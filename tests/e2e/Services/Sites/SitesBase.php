@@ -414,4 +414,13 @@ trait SitesBase
 
         return $deployment;
     }
+
+    protected function listSpecifications(): mixed
+    {
+        $specifications = $this->client->call(Client::METHOD_GET, '/sites/specifications', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $specifications;
+    }
 }

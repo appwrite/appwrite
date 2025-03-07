@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Compute\Validator;
+namespace Appwrite\Platform\Modules\Compute\Validator;
 
 use Utopia\Validator;
 

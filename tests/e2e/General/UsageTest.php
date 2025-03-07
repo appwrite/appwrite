@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\General;
 
-use Appwrite\Functions\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;

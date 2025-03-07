@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Sites;
 
-use Appwrite\Sites\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -19,6 +19,43 @@ class SitesCustomServerTest extends Scope
     use SitesBase;
     use ProjectCustom;
     use SideServer;
+
+    public function testListSpecs(): void
+    {
+        $specifications = $this->listSpecifications();
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+        $this->assertArrayHasKey(0, $specifications['body']['specifications']);
+        $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Specs site',
+            'siteId' => ID::unique(),
+            'specification' => $specifications['body']['specifications'][0]['slug']
+        ]);
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+
+        $site = $this->getSite($site['body']['$id']);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+
+        $this->cleanupSite($site['body']['$id']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Specs site',
+            'siteId' => ID::unique(),
+            'specification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $site['headers']['status-code']);
+    }
 
     public function testCreateSite(): void
     {
