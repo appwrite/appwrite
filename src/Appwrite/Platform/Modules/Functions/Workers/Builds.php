@@ -841,11 +841,11 @@ class Builds extends Action
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $this->listRules($project, [
-                        Query::equal("projectInternalId", [$project->getInternalId()]),
-                        Query::equal("type", ["deployment"]),
-                        Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
-                        Query::equal('deploymentResourceType', ['function']),
-                        Query::equal("deploymentUpdatePolicy", ['active']),
+                            Query::equal("projectInternalId", [$project->getInternalId()]),
+                            Query::equal("type", ["deployment"]),
+                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal('deploymentResourceType', ['function']),
+                            Query::equal("deploymentUpdatePolicy", ['active']),
                         ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
