@@ -276,7 +276,7 @@ class FunctionsCustomClientTest extends Scope
          */
         // List all templates
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
-            'content-type' => 'application/json',
+            'content-type' => 'application/json'
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $templates['headers']['status-code']);

@@ -110,7 +110,8 @@ class FunctionsConsoleClientTest extends Scope
             $data['functionId'],
             [
                 'key' => 'APP_TEST',
-                'value' => 'TESTINGVALUE'
+                'value' => 'TESTINGVALUE',
+                'secret' => false
             ]
         );
 
@@ -131,6 +132,7 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals('APP_TEST_1', $variable['body']['key']);
         $this->assertEmpty($variable['body']['value']);
+        $this->assertTrue($variable['body']['secret']);
 
         $secretVariableId = $variable['body']['$id'];
 
@@ -142,7 +144,8 @@ class FunctionsConsoleClientTest extends Scope
             $data['functionId'],
             [
                 'key' => 'APP_TEST',
-                'value' => 'ANOTHERTESTINGVALUE'
+                'value' => 'ANOTHERTESTINGVALUE',
+                'secret' => false
             ]
         );
 
@@ -320,6 +323,41 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals("APP_TEST_UPDATE_2", $variable['body']['key']);
         $this->assertEquals("TESTINGVALUEUPDATED", $variable['body']['value']);
 
+        // convert non-secret variable to secret
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE_2',
+            'secret' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("APP_TEST_UPDATE_2", $response['body']['key']);
+        $this->assertEmpty($response['body']['value']);
+        $this->assertTrue($response['body']['secret']);
+
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertEquals("APP_TEST_UPDATE_2", $variable['body']['key']);
+        $this->assertEmpty($variable['body']['value']);
+        $this->assertTrue($variable['body']['secret']);
+
+        // convert secret variable to non-secret
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE',
+            'secret' => false
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
@@ -409,5 +447,94 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
+    }
+
+    public function testVariableE2E(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Variable E2E Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any']
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertFalse($function['body']['logging']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        // create variable
+        $variable = $this->createVariable($functionId, [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'a_secret_value',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('CUSTOM_VARIABLE', $variable['body']['key']);
+        $this->assertEquals('', $variable['body']['value']);
+        $this->assertEquals(true, $variable['body']['secret']);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.js',
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $execution = $this->createExecution($functionId);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']['logs']);
+        $this->assertEmpty($execution['body']['errors']);
+        $body = json_decode($execution['body']['responseBody']);
+        $this->assertEquals('a_secret_value', $body->CUSTOM_VARIABLE);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionDownload(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Download Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any']
+        ]);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.js',
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $deploymentMd5 = \md5($response['body']);
+
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertGreaterThan(0, $response['headers']['content-length']);
+        $this->assertGreaterThan(0, \strlen($response['body']));
+
+        $buildMd5 = \md5($response['body']);
+
+        $this->assertNotEquals($deploymentMd5, $buildMd5);
+
+        $this->cleanupFunction($functionId);
     }
 }

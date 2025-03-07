@@ -8,9 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -32,6 +29,7 @@ class Get extends Action
             ->desc('Get deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getDeployment',
@@ -49,13 +47,11 @@ class Get extends Action
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
-            ->inject('project')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform)
+    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -79,16 +75,6 @@ class Get extends Action
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
         $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
-
-        $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-            Query::equal("projectInternalId", [$project->getInternalId()]),
-            Query::equal("resourceType", ["deployment"]),
-            Query::equal("resourceInternalId", [$deployment->getInternalId()])
-        ]));
-
-        if (!empty($rule)) {
-            $deployment->setAttribute('domain', $rule->getAttribute('domain', ''));
-        }
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }

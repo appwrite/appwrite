@@ -66,6 +66,15 @@ class ConsoleVariables extends Model
                     'default' => '',
                     'example' => 'enabled',
                 ]
+            )
+            ->addRule(
+                '_APP_DOMAINS_NAMESERVERS',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Comma-separated list of nameservers.',
+                    'default' => '',
+                    'example' => 'ns1.example.com,ns2.example.com',
+                ]
             );
     }
 

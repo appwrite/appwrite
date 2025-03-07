@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
+use Appwrite\Query;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,7 +20,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github)
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -37,7 +38,12 @@ class Base extends Action
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
-        $providerBranch = $function->getAttribute('providerBranch', 'main');
+
+        // TODO: Support tag and commit in future
+        if ($referenceType === 'branch') {
+            $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
+        }
+
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
         $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
@@ -83,7 +89,7 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'activate' => true,
+            'activate' => $activate,
         ]));
 
         $queueForBuilds
@@ -91,9 +97,11 @@ class Base extends Action
             ->setResource($function)
             ->setDeployment($deployment)
             ->setTemplate($template);
+
+        return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github)
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -111,7 +119,11 @@ class Base extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $providerBranch = $site->getAttribute('providerBranch', 'main');
+        // TODO: Support tag and commit in future
+        if ($referenceType === 'branch') {
+            $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
+        }
+
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
         $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
@@ -158,27 +170,23 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $site->getAttribute('providerRootDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
-            'activate' => true,
+            'activate' => $activate,
         ]));
 
-        // Preview deployments for sites
-        $projectId = $project->getId();
-
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+        $domain = ID::unique() . "." . $sitesDomain;
         $ruleId = md5($domain);
-
-        $rule = Authorization::skip(
+        Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
-                'resourceType' => 'deployment',
-                'resourceId' => $deploymentId,
-                'resourceInternalId' => $deployment->getInternalId(),
+                'type' => 'deployment',
+                'value' => $deployment->getId(),
                 'status' => 'verified',
                 'certificateId' => '',
+                'search' => implode(' ', [$ruleId, $domain]),
             ]))
         );
 
@@ -187,5 +195,41 @@ class Base extends Action
             ->setResource($site)
             ->setDeployment($deployment)
             ->setTemplate($template);
+
+        return $deployment;
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }

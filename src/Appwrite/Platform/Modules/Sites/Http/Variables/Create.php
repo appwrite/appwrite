@@ -37,6 +37,7 @@ class Create extends Base
             ->desc('Create variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
@@ -56,14 +57,13 @@ class Create extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-            ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+            ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform)
+    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 

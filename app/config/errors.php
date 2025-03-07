@@ -356,7 +356,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
+        'description' => 'The team invitation secret is invalid. Please request a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -372,6 +372,13 @@ return [
     Exception::TEAM_ALREADY_EXISTS => [
         'name' => Exception::TEAM_ALREADY_EXISTS,
         'description' => 'Team with requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
+
+    /** Console */
+    Exception::RESOURCE_ALREADY_EXISTS => [
+        'name' => Exception::RESOURCE_ALREADY_EXISTS,
+        'description' => 'Resource with the requested ID already exists. Please choose a different ID and try again.',
         'code' => 409,
     ],
 
@@ -867,6 +874,11 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::VARIABLE_CANNOT_UNSET_SECRET => [
+        'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,

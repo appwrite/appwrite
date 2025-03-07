@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -36,6 +35,7 @@ class XList extends Action
             ->desc('List deployments')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listDeployments',
@@ -54,13 +54,11 @@ class XList extends Action
             ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
-            ->inject('project')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform)
+    public function action(string $siteId, array $queries, string $search, Response $response, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -119,16 +117,6 @@ class XList extends Action
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
             $result->setAttribute('buildSize', $build->getAttribute('size', 0));
             $result->setAttribute('size', $result->getAttribute('size', 0));
-
-            $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
-                Query::equal("projectInternalId", [$project->getInternalId()]),
-                Query::equal("resourceType", ["deployment"]),
-                Query::equal("resourceInternalId", [$result->getInternalId()])
-            ]));
-
-            if (!empty($rule)) {
-                $result->setAttribute('domain', $rule->getAttribute('domain', ''));
-            }
         }
 
         $response->dynamic(new Document([

@@ -113,6 +113,18 @@ abstract class Format
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
         switch ($service) {
+            case 'console':
+                switch ($method) {
+                    case 'getResource':
+                        switch ($param) {
+                            case 'type':
+                                return 'ConsoleResourceType';
+                            case 'value':
+                                return 'ConsoleResourceValue';
+                        }
+                        break;
+                }
+                break;
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
@@ -198,8 +210,24 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'functions':
+                switch ($method) {
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
+                }
+                break;
             case 'sites':
                 switch ($method) {
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
                     case 'getUsage':
                     case 'listUsage':
                         switch ($param) {

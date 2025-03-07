@@ -47,6 +47,7 @@ class Update extends Base
             ->desc('Update site')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')
@@ -73,7 +74,7 @@ class Update extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
-            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Usuallly allows: static, ssr', true)
+            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
@@ -244,7 +245,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

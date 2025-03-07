@@ -34,17 +34,24 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])
-            ->addRule('resourceType', [
+            ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action definition for the rule. Possible values are "api", "function", or "redirect"',
+                'description' => 'Action definition for the rule. Possible values are "api", "deployment", or "redirect"',
                 'default' => '',
-                'example' => 'function',
+                'example' => 'deployment',
             ])
-            ->addRule('resourceId', [
+            ->addRule('value', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of resource for the action type. If resourceType is "api" or "url", it is empty. If resourceType is "function", it is ID of the function.',
+                'description' => 'Detail specification for the type. If type is "api", this is empty. If type is "redirect", this is URL. If type is "deployment", this is deployment ID.',
                 'default' => '',
-                'example' => 'myAwesomeFunction',
+                'example' => '67a9cf1a00150ee93abd',
+            ])
+            ->addRule('automation', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Action that results in a rule update. If VCS branch, value can be of syntax "branch=[name]"',
+                'array' => false,
+                'default' => '',
+                'example' => 'branch=dev',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,

@@ -76,6 +76,18 @@ class Deployment extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('screenshotLight', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot with light theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('screenshotDark', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot with dark theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The deployment status. Possible values are "processing", "building", "waiting", "ready", and "failed".',
@@ -93,12 +105,6 @@ class Deployment extends Model
                 'description' => 'The current build time in seconds.',
                 'default' => 0,
                 'example' => 128,
-            ])
-            ->addRule('domain', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Preview domain.',
-                'default' => '',
-                'example' => 'deploy1-project1.appwrite.site',
             ])
             ->addRule('providerRepositoryName', [
                 'type' => self::TYPE_STRING,

@@ -27,11 +27,22 @@ class Event
     public const SITES_QUEUE_NAME = 'v1-sites';
     public const SITES_CLASS_NAME = 'SitesV1';
 
+    /** remove */
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
     public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
     public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+    /** /remove */
+
+    public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
+    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
+
+    public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
+    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
+
+    public const STATS_USAGE_DUMP_QUEUE_NAME = 'v1-stats-usage-dump';
+    public const STATS_USAGE_DUMP_CLASS_NAME = 'StatsUsageDumpV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
