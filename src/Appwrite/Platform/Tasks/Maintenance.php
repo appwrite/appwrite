@@ -52,7 +52,6 @@ class Maintenance extends Action
                     ->setProject($project)
                     ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                     ->trigger();
-
             });
 
             $this->notifyDeleteConnections($queueForDeletes);
