@@ -1220,26 +1220,22 @@ App::setResource('hostnames', function (Request $request, Document $console, Doc
     $platforms = array_filter($platforms, fn ($platform) => !empty($platform['hostname']));
 
     // Environment variable configured hostnames
-    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
-    $hostnames = array_map(fn ($hostname) => trim($hostname), $hostnames);
+    $configured = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $configured = array_map(fn ($hostname) => trim($hostname), $hostnames);
     $validator = new Hostname();
-    $hostnames = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
+    $configured = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
 
     // Combine request hostname, environment hostnames, and platforms
-    return \array_unique([
+    $hostnames = \array_unique([
         $request->getHostname(),
         ...array_map(fn ($node) => $node['hostname'], $platforms),
-        ...$hostnames
+        ...$configured
     ]);
 }, ['request','console', 'project']);
 
 App::setResource('schemes', function (Document $project) {
     // `exp` is allowed for all hostnames, for expo development
-    $schemes = ['exp'];
 
-    if (!$project->isEmpty() && $project->getId() !== 'console') {
-        $schemes[] = 'appwrite-callback-' . $project->getId();
-    }
 
     return $schemes;
 }, ['project']);

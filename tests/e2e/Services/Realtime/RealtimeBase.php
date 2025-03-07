@@ -1,7 +1,10 @@
 <?php
+
 namespace Tests\E2E\Services\Realtime;
+
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
+
 trait RealtimeBase
 {
     private function getWebsocket(
