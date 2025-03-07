@@ -130,6 +130,7 @@ App::post('/v1/proxy/rules')
             'resourceId' => $resourceId,
             'resourceInternalId' => $resourceInternalId,
             'certificateId' => '',
+            'region' => $project->getAttribute('region')
         ]);
 
         $status = 'created';
