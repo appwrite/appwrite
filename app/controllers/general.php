@@ -491,13 +491,12 @@ App::init()
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->inject('console')
     ->inject('project')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
-    ->inject('clients')
+    ->inject('hostnames')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -505,7 +504,7 @@ App::init()
     ->inject('queueForFunctions')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $hostnames, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname) {
         /*
         * Appwrite Router
         */
@@ -621,7 +620,7 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
-        $validator = new Hostname($clients);
+        $validator = new Hostname($hostnames);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
         }
@@ -712,10 +711,11 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin($hostnames);
 
         if (
-            !$originValidator->isValid($origin)
+            !empty($origin)
+            && !$originValidator->isValid($origin)
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
