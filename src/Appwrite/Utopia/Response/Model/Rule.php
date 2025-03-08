@@ -40,6 +40,12 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'deployment',
             ])
+            ->addRule('trigger', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Defines how the rule was created. Possible values are "manual" or "deployment"',
+                'default' => '',
+                'example' => 'manual',
+            ])
             ->addRule('redirectUrl', [
                 'type' => self::TYPE_STRING,
                 'description' => 'URL to redirect to. Used if type is "redirect"',

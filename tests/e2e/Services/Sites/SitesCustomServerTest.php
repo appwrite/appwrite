@@ -1453,37 +1453,35 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = $this->setupSiteDomain($siteId);
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $oldDeploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($oldDeploymentDomain);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
             'activate' => 'true'
         ]);
-
         $this->assertNotEmpty($deploymentId);
 
-        $domain = $this->getSiteDomain($siteId);
-        $previewDomain = $this->getDeploymentDomain($deploymentId);
-
-        $this->assertNotEmpty($domain);
-        $this->assertNotEmpty($previewDomain);
+        $newDeploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($newDeploymentDomain);
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
-
+        $proxyClient->setEndpoint('http://' . $newDeploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
         $this->assertStringNotContainsString("Preview by", $response['body']);
-
         $contentLength = $response['headers']['content-length'];
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $previewDomain);
-
+        $proxyClient->setEndpoint('http://' . $oldDeploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
         $this->assertStringContainsString("Preview by", $response['body']);

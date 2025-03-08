@@ -834,13 +834,13 @@ class Builds extends Action
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
-                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
                         $resource->setAttribute('deployment', $deployment->getId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
@@ -848,6 +848,7 @@ class Builds extends Action
                             Query::equal("type", ["deployment"]),
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['function']),
+                            Query::equal('trigger', ['manual']),
                         ];
 
                         if (empty($oldDeploymentInternalId)) {
@@ -867,6 +868,7 @@ class Builds extends Action
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
 
                         $queries = [
@@ -874,6 +876,7 @@ class Builds extends Action
                             Query::equal("type", ["deployment"]),
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['site']),
+                            Query::equal('trigger', ['manual']),
                         ];
 
                         if (empty($oldDeploymentInternalId)) {

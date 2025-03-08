@@ -22,6 +22,7 @@ class ProxyCustomServerTest extends Scope
 
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
         $this->assertArrayHasKey('$id', $rule['body']);
         $this->assertArrayHasKey('domain', $rule['body']);
         $this->assertArrayHasKey('type', $rule['body']);
@@ -231,6 +232,18 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Contact page', $response['body']);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::equal('trigger', ['deployment'])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThan(0, $rules['body']['total']);
+
         $this->cleanupRule($ruleId);
 
         $this->cleanupSite($siteId);
@@ -261,7 +274,7 @@ class ProxyCustomServerTest extends Scope
         });
     }
 
-    public function testCreatSiteBranchRule(): void
+    public function testCreateSiteBranchRule(): void
     {
         $domain = \uniqid() . '-site-branch.custom.localhost';
 
@@ -281,7 +294,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($ruleId);
     }
 
-    public function testCreatFunctionBranchRule(): void
+    public function testCreateFunctionBranchRule(): void
     {
         $domain = \uniqid() . '-function-branch.custom.localhost';
 
@@ -299,6 +312,8 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $rule['headers']['status-code']);
 
         $this->cleanupRule($ruleId);
+
+        $this->cleanupFunction($functionId);
     }
 
     public function testUpdateRule(): void
@@ -346,6 +361,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
         $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
         $this->assertArrayHasKey('$id', $rule['body']);
         $this->assertArrayHasKey('domain', $rule['body']);
         $this->assertArrayHasKey('type', $rule['body']);
@@ -385,6 +401,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertCount(1, $rules['body']['rules']);
         $this->assertEquals($rule1Domain, $rules['body']['rules'][0]['domain']);
 
+        $this->assertEquals('manual', $rules['body']['rules'][0]['trigger']);
         $this->assertArrayHasKey('$id', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('domain', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('type', $rules['body']['rules'][0]);
