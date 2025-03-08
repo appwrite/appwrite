@@ -214,6 +214,12 @@ abstract class Format
                                 return 'DeploymentDownloadType';
                         }
                         break;
+                    case 'createVcsDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDeploymentType';
+                        }
+                        break;
                 }
                 break;
             case 'sites':
@@ -229,6 +235,23 @@ abstract class Format
                         switch ($param) {
                             case 'range':
                                 return 'SiteUsageRange';
+                        }
+                        break;
+                    case 'createVcsDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDeploymentType';
+                        }
+                        break;
+                }
+                break;
+            case 'sites':
+                switch ($method) {
+                    case 'createRepositoryDetection':
+                    case 'listRepositories':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDetectionType';
                         }
                         break;
                 }

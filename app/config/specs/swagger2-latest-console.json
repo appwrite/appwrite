@@ -10693,7 +10693,7 @@
                                     "enum": [
                                         "branch"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "VCSDeploymentType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
@@ -26601,7 +26601,7 @@
                                     "enum": [
                                         "branch"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "VCSDeploymentType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
