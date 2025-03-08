@@ -20,6 +20,10 @@ class Key
         protected string $name,
         protected bool $expired = false,
         protected array $disabledMetrics = [],
+        protected bool $hostnameOverride = false,
+        protected bool $bannerDisabled = false,
+        protected bool $projectCheckDisabled = false,
+        protected bool $previewAuthDisabled = false,
     ) {
     }
 
@@ -56,6 +60,28 @@ class Key
     public function getDisabledMetrics(): array
     {
         return $this->disabledMetrics;
+    }
+
+
+    public function getHostnameOverride(): bool
+    {
+        return $this->hostnameOverride;
+    }
+
+
+    public function isBannerDisabled(): bool
+    {
+        return $this->bannerDisabled;
+    }
+
+    public function isPreviewAuthDisabled(): bool
+    {
+        return $this->previewAuthDisabled;
+    }
+
+    public function isProjectCheckDisabled(): bool
+    {
+        return $this->projectCheckDisabled;
     }
 
     /**
@@ -109,9 +135,13 @@ class Key
                 $name = $payload['name'] ?? 'Dynamic Key';
                 $projectId = $payload['projectId'] ?? '';
                 $disabledMetrics = $payload['disabledMetrics'] ?? [];
+                $hostnameOverride = $payload['hostnameOverride'] ?? false;
+                $bannerDisabled = $payload['bannerDisabled'] ?? false;
+                $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
+                $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
-                if ($projectId !== $project->getId()) {
+                if (!$projectCheckDisabled && $projectId !== $project->getId()) {
                     return $guestKey;
                 }
 
@@ -122,7 +152,11 @@ class Key
                     $scopes,
                     $name,
                     $expired,
-                    $disabledMetrics
+                    $disabledMetrics,
+                    $hostnameOverride,
+                    $bannerDisabled,
+                    $projectCheckDisabled,
+                    $previewAuthDisabled
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

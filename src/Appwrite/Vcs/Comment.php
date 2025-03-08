@@ -27,19 +27,22 @@ class Comment
         return \count($this->builds) === 0;
     }
 
-    public function addBuild(Document $project, Document $function, string $buildStatus, string $deploymentId, array $action): void
+    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl, string $previewQrCode): void
     {
         // Unique index
-        $id = $project->getId() . '_' . $function->getId();
+        $id = $project->getId() . '_' . $resource->getId();
 
         $this->builds[$id] = [
             'projectName' => $project->getAttribute('name'),
             'projectId' => $project->getId(),
-            'functionName' => $function->getAttribute('name'),
-            'functionId' => $function->getId(),
+            'resourceName' => $resource->getAttribute('name'),
+            'resourceId' => $resource->getId(),
+            'resourceType' => $resourceType,
             'buildStatus' => $buildStatus,
             'deploymentId' => $deploymentId,
             'action' => $action,
+            'previewQrCode' => $previewQrCode,
+            'previewUrl' => $previewUrl,
         ];
     }
 
@@ -55,68 +58,108 @@ class Comment
             if (!\array_key_exists($build['projectId'], $projects)) {
                 $projects[$build['projectId']] = [
                     'name' => $build['projectName'],
-                    'functions' => []
+                    'function' => [],
+                    'site' => []
                 ];
             }
 
-            $projects[$build['projectId']]['functions'][$build['functionId']] = [
-                'name' => $build['functionName'],
-                'status' => $build['buildStatus'],
-                'deploymentId' => $build['deploymentId'],
-                'action' => $build['action'],
-            ];
+            if ($build['resourceType'] === 'site') {
+                $projects[$build['projectId']]['site'][$build['resourceId']] = [
+                    'name' => $build['resourceName'],
+                    'status' => $build['buildStatus'],
+                    'deploymentId' => $build['deploymentId'],
+                    'action' => $build['action'],
+                    'previewUrl' => $build['previewUrl'],
+                    'previewQrCode' => $build['previewQrCode']
+                ];
+            } elseif ($build['resourceType'] === 'function') {
+                $projects[$build['projectId']]['function'][$build['resourceId']] = [
+                    'name' => $build['resourceName'],
+                    'status' => $build['buildStatus'],
+                    'deploymentId' => $build['deploymentId'],
+                    'action' => $build['action'],
+                ];
+            }
         }
 
         foreach ($projects as $projectId => $project) {
-            $text .= "**{$project['name']}** `{$projectId}`\n\n";
-            $text .= "| Function | ID | Status | Action |\n";
-            $text .= "| :- | :-  | :-  | :- |\n";
-
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
 
-            foreach ($project['functions'] as $functionId => $function) {
-                if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
-                    $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
-                } elseif ($function['status'] === 'ready') {
-                    $text .= "**Your function has been successfully deployed.**\n\n";
-                } else {
-                    $text .= "**Your function deployment has failed. Please check the logs for more details and retry.**\n\n";
+            $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+
+            if (\count($project['site']) > 0) {
+
+                $text .= "| Site | ID | Status | Previews | Action |\n";
+                $text .= "| :- | :-  | :-  | :-  | :- |\n";
+
+                foreach ($project['site'] as $siteId => $site) {
+                    $generateImage = function (string $status) use ($protocol, $hostname) {
+                        $extention = $status === 'building' ? 'gif' : 'png';
+                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
+                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+
+                        return $imageUrl;
+                    };
+
+                    $status = match ($site['status']) {
+                        'waiting' => $generateImage('waiting') . ' Waiting to build',
+                        'processing' => $generateImage('processing') . ' Processing',
+                        'building' => $generateImage('building') . ' Building',
+                        'ready' => $generateImage('ready') . ' Ready',
+                        'failed' => $generateImage('failed') . ' Failed',
+                    };
+
+                    if ($site['action']['type'] === 'logs') {
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployment-' . $site['deploymentId'] . ')';
+                    } else {
+                        $action = '[Authorize](' . $site['action']['url'] . ')';
+                    }
+
+                    $previews = '[Preview URL](' . $site['previewUrl'] . ') [QR Code](' . $site['previewQrCode'] . ')';
+
+                    $text .= "| {$site['name']} | `{$siteId}` | {$status} | {$previews} | {$action} |\n";
                 }
 
-                $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+                $text .= "\n\n";
+            }
+
+            if (\count($project['function']) > 0) {
+
                 $text .= "| Function | ID | Status | Action |\n";
                 $text .= "| :- | :-  | :-  | :- |\n";
 
-                $generateImage = function (string $status) use ($protocol, $hostname) {
-                    $extention = $status === 'building' ? 'gif' : 'png';
-                    $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
-                    $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+                foreach ($project['function'] as $functionId => $function) {
+                    $generateImage = function (string $status) use ($protocol, $hostname) {
+                        $extention = $status === 'building' ? 'gif' : 'png';
+                        $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
+                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+                        return $imageUrl;
+                    };
 
-                    return $imageUrl;
-                };
+                    $status = match ($function['status']) {
+                        'waiting' => $generateImage('waiting') . ' Waiting to build',
+                        'processing' => $generateImage('processing') . ' Processing',
+                        'building' => $generateImage('building') . ' Building',
+                        'ready' => $generateImage('ready') . ' Ready',
+                        'failed' => $generateImage('failed') . ' Failed',
+                    };
 
-                $status = match ($function['status']) {
-                    'waiting' => $generateImage('waiting') . ' Waiting to build',
-                    'processing' => $generateImage('processing') . ' Processing',
-                    'building' => $generateImage('building') . ' Building',
-                    'ready' => $generateImage('ready') . ' Ready',
-                    'failed' => $generateImage('failed') . ' Failed',
-                };
+                    if ($function['action']['type'] === 'logs') {
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                    } else {
+                        $action = '[Authorize](' . $function['action']['url'] . ')';
+                    }
 
-                if ($function['action']['type'] === 'logs') {
-                    $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
-                } else {
-                    $action = '[Authorize](' . $function['action']['url'] . ')';
+                    $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$action} |\n";
                 }
 
-                $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$action} |\n";
+                $text .= "\n\n";
             }
 
-            $text .= "\n\n";
         }
-        $functionUrl = $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId;
-        $text .= "Only deployments on the production branch are activated automatically. If you'd like to activate this deployment, navigate to [your deployments]($functionUrl). Learn more about Appwrite [Function deployments](https://appwrite.io/docs/functions).\n\n";
+
+        $text .= "Only deployments on the production branch are activated automatically. Learn more about Appwrite [Functions](https://appwrite.io/docs/functions) and [Sites](https://appwrite.io/docs/sites).\n\n";
 
         $tip = $this->tips[array_rand($this->tips)];
         $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";

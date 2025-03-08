@@ -5,13 +5,12 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Deployments extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'size',
-        'buildId',
+        'buildSize',
+        'sourceSize',
+        'buildDuration',
+        'status',
         'activate',
-        'entrypoint',
-        'commands',
         'type',
-        'size'
     ];
 
     /**

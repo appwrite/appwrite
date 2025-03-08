@@ -163,6 +163,28 @@ Other containes should be named the same as their service, for example `redis` s
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
 
+## Modules
+
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesnt contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+
+### HTTP Endpoints
+
+Every endpoint file follows below structure, making it consistent with HTTP REST endpoint path:
+
+```
+src/Appwrite/Platform/Modules/[service]/Http/[resource]/[action].php
+```
+
+Tips and tricks:
+
+1. If endpoint doesn't have resource, use service name as resource name too
+> Example: `Modules/Sites/Http/Sites/Get.php`
+
+2. If there are multiple resources, use then all in folder structure
+> Example: `Modules/Sites/Http/Deployments/Builds/Create.php`
+
+3. Action can only be `Get`, `Create`, `Update`, `Delete` or `XList`
+
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures.

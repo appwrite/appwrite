@@ -104,6 +104,11 @@ class Auth
     public static $cookieName = 'a_session';
 
     /**
+     * @var string
+     */
+    public static $cookieNamePreview = 'a_jwt_console';
+
+    /**
      * User Unique ID.
      *
      * @var string
