@@ -2068,6 +2068,14 @@ class SitesCustomServerTest extends Scope
 
         $domain = $this->getDeploymentDomain($deploymentId);
         $this->assertNotEmpty($domain);
+
+        // Create second deployment to make first one a preview
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
