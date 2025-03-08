@@ -158,7 +158,17 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $protocol = $request->getProtocol();
 
-        // Ensure preview authorization
+        /**
+            Ensure preview authorization
+            - Authorization is skippable for tests, and build screenshot
+            - If cookie is not sent by client -> not authorized
+            - If JWT in cookie is invalid or expired -> not authorized
+            - If user is blocked or removed -> not authorized
+            - If user's session is removed or expired -> not authorized
+            - If user is not member of team of this deployment -> not authorized
+            - If not authorized, redirect to Console redirect UI
+            - If authorized, continue as if auth was not required
+        */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
