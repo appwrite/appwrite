@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Sites;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Sites\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -1482,8 +1483,18 @@ class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $previewDomain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
 
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $apiKey = $jwtObj->encode([
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
         $this->assertStringContainsString("Preview by", $response['body']);
@@ -1836,6 +1847,167 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Hello Appwrite', $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testPreviewDomain(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Authorized preview site',
+            'siteId' => ID::unique(),
+            'adapter' => 'static',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($domain);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+        $this->assertStringContainsString('projectId=' . $this->getProject()['$id'], $response['headers']['location']);
+        $this->assertStringContainsString('origin=', $response['headers']['location']);
+        $this->assertStringContainsString('path=%2Fcontact', $response['headers']['location']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ]), [
+            'email' => $this->getRoot()['email'],
+            'password' => 'password'
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['cookies']['a_session_console']);
+        $this->assertNotEmpty($session['body']['$id']);
+        $cookie = 'a_session_console=' . $session['cookies']['a_session_console'];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]), []);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => '/contact'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey('set-cookie', $response['headers']);
+        $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('httponly', $response['headers']['set-cookie']);
+        $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
+        $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
+        $this->assertNotEmpty($response['cookies']['a_jwt_console']);
+        $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Contact page", $response['body']);
+        $this->assertStringContainsString("Preview by", $response['body']);
+
+        // Failure: Session missing (old bad, new ok)
+        $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]), []);
+        $this->assertEquals(204, $session['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+
+        // Failure: User missing
+        $cookie = 'a_session_console=' .$this->getRoot()['session'];
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]), []);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Contact page", $response['body']);
+        $this->assertStringContainsString("Preview by", $response['body']);
+
+        $user = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]), []);
+        $this->assertEquals(200, $user['headers']['status-code']);
+        $this->assertFalse($user['body']['status']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
+
+        // Failure: Membership missing
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'newuser@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => 'newuser@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['cookies']['a_session_console']);
+        $cookie = 'a_session_console=' . $session['cookies']['a_session_console'];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]), []);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
 
         $this->cleanupSite($siteId);
     }

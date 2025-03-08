@@ -174,46 +174,54 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             return true;
         }
 
-        // Preview authorization (validate)
-        if ($type === 'deployment') {
+        // Ensure preview authorization
+        $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
+        if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
-            $ok = true;
+            $authorized = false;
 
-            if (empty($cookie)) {
-                $ok = false;
-            } else {
+            // Security checks to mark authorized true
+            if (!empty($cookie)) {
                 $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
                 $payload = [];
                 try {
                     $payload = $jwt->decode($cookie);
                 } catch (JWTException $error) {
-                    $ok = false;
+                    // Authorized remains false
                 }
 
-                $jwtUserId = $payload['userId'] ?? '';
-                if (empty($jwtUserId)) {
-                    $ok = false;
-                } else {
-                    $user = $dbForPlatform->getDocument('users', $jwtUserId);
-                    if ($user->isEmpty()) {
-                        $ok = false;
+                $userExists = false;
+                $userId = $payload['userId'] ?? '';
+                if (!empty($userId)) {
+                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    if (!$user->isEmpty() && $user->getAttribute('status', false)) {
+                        $userExists = true;
                     }
                 }
 
+                $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (empty($jwtSessionId)) {
-                    $ok = false;
-                } else {
-                    if (empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                        $ok = false;
+                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                    $sessionExists = true;
+                }
+
+                $membershipExists = false;
+                $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                if (!$project->isEmpty()) {
+                    $teamId = $project->getAttribute('teamId', '');
+                    $membership = $user->find('teamId', $teamId, 'memberships');
+                    if (!empty($membership)) {
+                        $membershipExists = true;
                     }
                 }
 
-                // TODO: Ensure user has access to projectId
+                if ($userExists && $sessionExists && $membershipExists) {
+                    $authorized = true;
+                }
             }
 
-            if ($ok === false) {
+            if (!$authorized) {
                 $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_DOMAIN');
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

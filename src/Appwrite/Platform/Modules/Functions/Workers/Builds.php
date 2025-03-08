@@ -762,7 +762,8 @@ class Builds extends Action
                     $apiKey = $jwtObj->encode([
                         'hostnameOverride' => true,
                         'bannerDisabled' => true,
-                        'projectCheckDisabled' => true
+                        'projectCheckDisabled' => true,
+                        'previewAuthDisabled' => true,
                     ]);
 
                     // TODO: @Meldiron if becomes too slow, do concurrently
