@@ -797,15 +797,15 @@ class Deletes extends Action
         /**
          * Delete builds
          */
-         Console::info("Deleting builds for site " . $siteId);
-         foreach ($deploymentInternalIds as $deploymentInternalId) {
-             $this->deleteByGroup('builds', [
-                 Query::equal('deploymentInternalId', [$deploymentInternalId])
-             ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
-                 $this->deleteBuildFiles($deviceForBuilds, $document);
-             });
+        Console::info("Deleting builds for site " . $siteId);
+        foreach ($deploymentInternalIds as $deploymentInternalId) {
+            $this->deleteByGroup('builds', [
+                Query::equal('deploymentInternalId', [$deploymentInternalId])
+            ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
+                $this->deleteBuildFiles($deviceForBuilds, $document);
+            });
         }
-        
+
         /**
          * Delete rules for all deployments of the site
          */
