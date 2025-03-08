@@ -635,7 +635,7 @@ class SitesCustomServerTest extends Scope
         $lastDeployment = $deployments['body']['deployments'][0];
 
         $this->assertNotEmpty($lastDeployment['$id']);
-        $this->assertEquals(0, $lastDeployment['size']);
+        $this->assertEquals(0, $lastDeployment['sourceSize']);
 
         $deploymentId = $lastDeployment['$id'];
 
@@ -849,7 +849,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($deployments['body']['total'], 2);
         $this->assertIsArray($deployments['body']['deployments']);
         $this->assertCount(2, $deployments['body']['deployments']);
-        $this->assertArrayHasKey('size', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
 
         $deployments = $this->listDeployments($siteId, [
@@ -910,7 +910,7 @@ class SitesCustomServerTest extends Scope
             $siteId,
             [
                 'queries' => [
-                    Query::greaterThan('size', 10000)->toString(),
+                    Query::greaterThan('sourceSize', 10000)->toString(),
                 ],
             ]
         );
@@ -922,7 +922,7 @@ class SitesCustomServerTest extends Scope
             $siteId,
             [
                 'queries' => [
-                    Query::greaterThan('size', 0)->toString(),
+                    Query::greaterThan('sourceSize', 0)->toString(),
                 ],
             ]
         );
@@ -934,7 +934,7 @@ class SitesCustomServerTest extends Scope
             $siteId,
             [
                 'queries' => [
-                    Query::greaterThan('size', -100)->toString(),
+                    Query::greaterThan('sourceSize', -100)->toString(),
                 ],
             ]
         );
@@ -955,16 +955,16 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
         $this->assertNotEmpty($deployments['body']['deployments'][0]['$id']);
-        $this->assertNotEmpty($deployments['body']['deployments'][0]['size']);
+        $this->assertNotEmpty($deployments['body']['deployments'][0]['sourceSize']);
 
         $deploymentId = $deployments['body']['deployments'][0]['$id'];
-        $deploymentSize = $deployments['body']['deployments'][0]['size'];
+        $deploymentSize = $deployments['body']['deployments'][0]['sourceSize'];
 
         $deployments = $this->listDeployments(
             $siteId,
             [
                 'queries' => [
-                    Query::equal('size', [$deploymentSize])->toString(),
+                    Query::equal('sourceSize', [$deploymentSize])->toString(),
                 ],
             ]
         );
@@ -981,7 +981,7 @@ class SitesCustomServerTest extends Scope
 
         if (!empty($matchingDeployment)) {
             $deployment = reset($matchingDeployment);
-            $this->assertEquals($deploymentSize, $deployment['size']);
+            $this->assertEquals($deploymentSize, $deployment['sourceSize']);
         }
 
         $this->cleanupDeployment($siteId, $deploymentIdActive);
@@ -1023,10 +1023,10 @@ class SitesCustomServerTest extends Scope
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertGreaterThan(0, $deployment['body']['buildTime']);
+        $this->assertGreaterThan(0, $deployment['body']['buildDuration']);
         $this->assertNotEmpty($deployment['body']['status']);
         $this->assertNotEmpty($deployment['body']['buildLogs']);
-        $this->assertArrayHasKey('size', $deployment['body']);
+        $this->assertArrayHasKey('sourceSize', $deployment['body']);
         $this->assertArrayHasKey('buildSize', $deployment['body']);
 
         /**

@@ -130,7 +130,7 @@ class Create extends Base
             'resourceInternalId' => $function->getInternalId(),
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
-            'commands' => $function->getAttribute('commands', ''),
+            'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'manual',
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
             'activate' => $activate,

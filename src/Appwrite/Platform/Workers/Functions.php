@@ -346,19 +346,7 @@ class Functions extends Action
             return;
         }
 
-        $buildId = $deployment->getAttribute('buildId', '');
-
-        $log->addTag('buildId', $buildId);
-
-        /** Check if build has exists */
-        $build = $dbForProject->getDocument('builds', $buildId);
-        if ($build->isEmpty()) {
-            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return;
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
@@ -513,7 +501,7 @@ class Functions extends Action
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('buildPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,

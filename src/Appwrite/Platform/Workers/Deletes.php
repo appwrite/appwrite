@@ -784,9 +784,10 @@ class Deletes extends Action
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId])
-        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $deploymentIds[] = $document->getId();
+            $this->deleteBuildFiles($deviceForBuilds, $document);
             $this->deleteDeploymentFiles($deviceForSites, $document);
             $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
             $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
@@ -803,18 +804,6 @@ class Deletes extends Action
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
                 $this->deleteRule($dbForPlatform, $document, $certificates);
-            });
-        }
-
-        /**
-         * Delete builds
-         */
-        Console::info("Deleting builds for site " . $siteId);
-        foreach ($deploymentInternalIds as $deploymentInternalId) {
-            $this->deleteByGroup('builds', [
-                Query::equal('deploymentInternalId', [$deploymentInternalId])
-            ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
-                $this->deleteBuildFiles($deviceForBuilds, $document);
             });
         }
 
@@ -881,24 +870,12 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId])
-        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
+            $this->deleteBuildFiles($deviceForBuilds, $document);
             $this->deleteDeploymentRules($dbForPlatform, $document, $project, $certificates);
         });
-
-        /**
-         * Delete builds
-         */
-        Console::info("Deleting builds for function " . $functionId);
-
-        foreach ($deploymentInternalIds as $deploymentInternalId) {
-            $this->deleteByGroup('builds', [
-                Query::equal('deploymentInternalId', [$deploymentInternalId])
-            ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
-                $this->deleteBuildFiles($deviceForBuilds, $document);
-            });
-        }
 
         /**
          * Delete Executions
@@ -999,7 +976,7 @@ class Deletes extends Action
     private function deleteDeploymentFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();
-        $deploymentPath = $deployment->getAttribute('path', '');
+        $deploymentPath = $deployment->getAttribute('sourcePath', '');
 
         if (empty($deploymentPath)) {
             Console::info("No deployment files for deployment " . $deploymentId);
@@ -1028,13 +1005,13 @@ class Deletes extends Action
      * @param Document $build
      * @return void
      */
-    private function deleteBuildFiles(Device $device, Document $build): void
+    private function deleteBuildFiles(Device $device, Document $deployment): void
     {
-        $buildId = $build->getId();
-        $buildPath = $build->getAttribute('path', '');
+        $deploymentId = $deployment->getId();
+        $buildPath = $deployment->getAttribute('buildPath', '');
 
         if (empty($buildPath)) {
-            Console::info("No build files for build " . $buildId);
+            Console::info("No build files for deployment " . $deploymentId);
             return;
         }
 
@@ -1085,15 +1062,9 @@ class Deletes extends Action
         $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
 
         /**
-         * Delete builds
+         * Delete deployment build
          */
-        Console::info("Deleting builds for deployment " . $deploymentId);
-
-        $this->deleteByGroup('builds', [
-            Query::equal('deploymentInternalId', [$deploymentInternalId])
-        ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
-            $this->deleteBuildFiles($deviceForBuilds, $document);
-        });
+        $this->deleteBuildFiles($deviceForBuilds, $document);
 
         /**
          * Delete rules associated with the deployment

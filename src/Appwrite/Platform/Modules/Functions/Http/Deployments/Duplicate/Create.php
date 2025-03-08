@@ -77,7 +77,7 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $path = $deployment->getAttribute('path');
+        $path = $deployment->getAttribute('sourcePath');
         if (empty($path) || !$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
@@ -91,12 +91,17 @@ class Create extends Action
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$internalId' => '',
             '$id' => $deploymentId,
-            'buildId' => '',
-            'buildInternalId' => '',
-            'path' => $destination,
+            'sourcePath' => $destination,
             'entrypoint' => $function->getAttribute('entrypoint'),
-            'commands' => $function->getAttribute('commands', ''),
+            'buildCommands' => $function->getAttribute('commands', ''),
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+            'buildStartAt' => null,
+            'buildEndAt' => null,
+            'buildDuration' => null,
+            'buildSize' => null,
+            'status' => 'processing',
+            'buildPath' => '',
+            'buildLogs' => '',
         ]));
 
         $queueForBuilds

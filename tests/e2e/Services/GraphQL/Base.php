@@ -1568,7 +1568,7 @@ trait Base
                         _id
                         buildId
                         entrypoint
-                        size
+                        buildSize
                         status
                         buildLogs
                     }

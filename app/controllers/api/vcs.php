@@ -196,6 +196,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
             }
 
+            $commands = [];
+            if (!empty($resource->getAttribute('buildCommand', ''))) {
+                $commands[] = $resource->getAttribute('buildCommand', '');
+            }
+            if (!empty($resource->getAttribute('installCommand', ''))) {
+                $commands[] = $resource->getAttribute('installCommand', '');
+            }
+            if (!empty($resource->getAttribute('commands', ''))) {
+                $commands[] = $resource->getAttribute('commands', '');
+            }
+
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
@@ -207,10 +218,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'resourceInternalId' => $resourceInternalId,
                 'resourceType' => $resourceCollection,
                 'entrypoint' => $resource->getAttribute('entrypoint', ''),
-                'commands' => $resource->getAttribute('commands', ''),
-                'installCommand' => $resource->getAttribute('installCommand', ''),
-                'buildCommand' => $resource->getAttribute('buildCommand', ''),
-                'outputDirectory' => $resource->getAttribute('outputDirectory', ''),
+                'buildCommands' => \implode(' && ', $commands),
+                'buildOutput' => $resource->getAttribute('outputDirectory', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,

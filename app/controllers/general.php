@@ -191,13 +191,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
-        /** Check if build has completed */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-        if ($build->isEmpty()) {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($deployment->getAttribute('status') !== 'ready') {
             throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
         }
 
@@ -388,7 +382,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 variables: $vars,
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('buildPath', ''),
                 entrypoint: $entrypoint,
                 version: $version,
                 path: $path,
