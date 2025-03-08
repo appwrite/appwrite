@@ -76,12 +76,6 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'function',
             ])
-            ->addRule('deploymentUpdatePolicy', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Describes when to update deployment ID of this rule. Can be "active" or "branch". Used if type is "deployment"',
-                'default' => '',
-                'example' => 'function',
-            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',

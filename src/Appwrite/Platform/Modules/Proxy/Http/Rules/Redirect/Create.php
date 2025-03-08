@@ -124,6 +124,7 @@ class Create extends Action
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'redirect',
+            'trigger' => 'manual',
             'redirectUrl' => $url,
             'redirectStatusCode' => $statusCode,
             'certificateId' => '',

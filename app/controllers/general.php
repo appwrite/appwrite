@@ -147,7 +147,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
-        $isPreview = $type === 'function' ? false : ($rule->getAttribute('deploymentUpdatePolicy', '') !== 'active');
+        $isPreview = $type === 'function' ? false : ($rule->getAttribute('deploymentId', '') !== $resource->getAttribute('deploymentId', ''));
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');

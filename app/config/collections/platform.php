@@ -1024,6 +1024,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('trigger'), // 'manual', 'deployment', '' (empty)
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('redirectUrl'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1112,17 +1123,6 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('deploymentUpdatePolicy'), // 'active' or 'branch'
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 32,
-                'signed' => true,
-                'required' => false,
-                'default' => '',
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1193,6 +1193,13 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => '_key_trigger',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['trigger'],
+                'lengths' => [32],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_deploymentResourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentResourceType'],
@@ -1232,13 +1239,6 @@ return [
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentVcsProviderBranch'],
                 'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_deploymentUpdatePolicy',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['deploymentUpdatePolicy'],
-                'lengths' => [32],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],

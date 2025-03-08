@@ -31,7 +31,6 @@ class ProxyCustomServerTest extends Scope
         $this->assertArrayHasKey('deploymentId', $rule['body']);
         $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
-        $this->assertArrayHasKey('deploymentUpdatePolicy', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
 
@@ -278,7 +277,6 @@ class ProxyCustomServerTest extends Scope
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals('branch', $rule['body']['deploymentUpdatePolicy']);
 
         $this->cleanupRule($ruleId);
     }
@@ -299,7 +297,6 @@ class ProxyCustomServerTest extends Scope
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals('branch', $rule['body']['deploymentUpdatePolicy']);
 
         $this->cleanupRule($ruleId);
     }
@@ -358,7 +355,6 @@ class ProxyCustomServerTest extends Scope
         $this->assertArrayHasKey('deploymentId', $rule['body']);
         $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
-        $this->assertArrayHasKey('deploymentUpdatePolicy', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
 
@@ -398,7 +394,6 @@ class ProxyCustomServerTest extends Scope
         $this->assertArrayHasKey('deploymentId', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('deploymentResourceId', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
-        $this->assertArrayHasKey('deploymentUpdatePolicy', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
 

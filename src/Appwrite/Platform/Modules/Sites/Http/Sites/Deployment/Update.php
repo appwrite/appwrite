@@ -83,17 +83,26 @@ class Update extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
+        $oldDeploymentInternalId = $site->getAttribute('deploymentInternalId', '');
+
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
         ])));
 
-        $this->listRules($project, [
+        $queries = [
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["site"]),
             Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),
-            Query::equal("deploymentUpdatePolicy", ["active"]),
-        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+        ];
+
+        if (empty($oldDeploymentInternalId)) {
+            $queries[] =  Query::equal("deploymentInternalId", [""]);
+        } else {
+            $queries[] =  Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
+        }
+
+        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());

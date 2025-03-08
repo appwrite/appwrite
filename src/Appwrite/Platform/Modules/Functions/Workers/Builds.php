@@ -21,6 +21,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -837,16 +838,25 @@ class Builds extends Action
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
+                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
+
                         $resource->setAttribute('deployment', $deployment->getId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
-                        $this->listRules($project, [
+                        $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),
                             Query::equal("type", ["deployment"]),
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['function']),
-                            Query::equal("deploymentUpdatePolicy", ['active']),
-                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        ];
+
+                        if (empty($oldDeploymentInternalId)) {
+                            $queries[] =  Query::equal("deploymentInternalId", [""]);
+                        } else {
+                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
+                        }
+
+                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
@@ -854,16 +864,25 @@ class Builds extends Action
                         });
                         break;
                     case 'sites':
+                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
+
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
 
-                        $this->listRules($project, [
+                        $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),
                             Query::equal("type", ["deployment"]),
                             Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                             Query::equal('deploymentResourceType', ['site']),
-                            Query::equal("deploymentUpdatePolicy", ['active']),
-                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        ];
+
+                        if (empty($oldDeploymentInternalId)) {
+                            $queries[] =  Query::equal("deploymentInternalId", [""]);
+                        } else {
+                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
+                        }
+
+                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
@@ -878,13 +897,43 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
+                    $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+
+                    try {
+                        $dbForPlatform->createDocument('rules', new Document([
+                            '$id' => $ruleId,
+                            'projectId' => $project->getId(),
+                            'projectInternalId' => $project->getInternalId(),
+                            'domain' => $domain,
+                            'type' => 'deployment',
+                            'trigger' => 'deployment',
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getInternalId(),
+                            'deploymentResourceType' => 'site',
+                            'deploymentResourceId' => $deployment->getId(),
+                            'deploymentResourceInternalId' => $deployment->getInternalId(),
+                            'deploymentVcsProviderBranch' => $branchName,
+                            'status' => 'verified',
+                            'certificateId' => '',
+                            'search' => implode(' ', [$ruleId, $domain]),
+                        ]));
+                    } catch (Duplicate $err) {
+                        $rule = $dbForPlatform->getDocument('rules', $ruleId);
+                        $rule = $rule
+                            ->setAttribute('deploymentId', $deployment->getId())
+                            ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                    }
+
                     $this->listRules($project, [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
                         Query::equal('deploymentResourceType', ['site']),
-                        Query::equal("deploymentUpdatePolicy", ['branch']),
-                        Query::equal("_key_deploymentVcsProviderBranch", [$branchName]),
+                        Query::equal("deploymentVcsProviderBranch", [$branchName]),
+                        Query::equal("trigger", ['manual']),
                     ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
                         $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())

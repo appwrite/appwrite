@@ -7,11 +7,11 @@ class Rules extends Base
     public const ALLOWED_ATTRIBUTES = [
         'domain',
         'type',
+        'trigger',
         'deploymentResourceType',
         'deploymentResourceId',
         'deploymentId',
-        'deploymentVcsProviderBranch',
-        'deploymentUpdatePolicy'
+        'deploymentVcsProviderBranch'
     ];
 
     /**

@@ -344,7 +344,7 @@ trait SitesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('deploymentResourceId', [$siteId])->toString(),
-                Query::equal('deploymentUpdatePolicy', ['active'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
@@ -368,7 +368,7 @@ trait SitesBase
             'queries' => [
                 Query::equal('deploymentId', [$deploymentId])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
-                Query::equal('deploymentUpdatePolicy', [''])->toString(),
+                Query::equal('trigger', ['deployment'])->toString(),
             ],
         ]);
 

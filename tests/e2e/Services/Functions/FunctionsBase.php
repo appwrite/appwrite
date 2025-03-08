@@ -309,7 +309,7 @@ trait FunctionsBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('deploymentResourceId', [$functionId])->toString(),
-                Query::equal('deploymentUpdatePolicy', ['active'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
             ],
         ]);

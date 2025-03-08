@@ -117,6 +117,7 @@ class Create extends Action
                 'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
                 'type' => 'deployment',
+                'trigger' => 'deployment',
                 'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
                 'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
                 'deploymentResourceType' => 'site',
