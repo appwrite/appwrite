@@ -64,7 +64,7 @@ class SitesCustomServerTest extends Scope
          */
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -112,7 +112,7 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'buildRuntime' => 'node-22',
             'outputDirectory' => './',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
         ]);
 
         $this->assertNotEmpty($siteId);
@@ -178,7 +178,7 @@ class SitesCustomServerTest extends Scope
     {
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -531,7 +531,7 @@ class SitesCustomServerTest extends Scope
          */
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -611,7 +611,7 @@ class SitesCustomServerTest extends Scope
          */
         $siteId2 = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site 2',
             'outputDirectory' => './',
@@ -667,7 +667,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -700,7 +700,7 @@ class SitesCustomServerTest extends Scope
     {
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -717,7 +717,7 @@ class SitesCustomServerTest extends Scope
 
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site Updated',
             'outputDirectory' => './',
@@ -818,7 +818,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -879,7 +879,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -931,7 +931,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -976,7 +976,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1155,7 +1155,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1206,7 +1206,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1223,7 +1223,7 @@ class SitesCustomServerTest extends Scope
         // Change the function specs
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1240,7 +1240,7 @@ class SitesCustomServerTest extends Scope
         // Change the specs to 1vcpu 512mb
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1260,7 +1260,7 @@ class SitesCustomServerTest extends Scope
 
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1280,7 +1280,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1324,7 +1324,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
@@ -1830,7 +1830,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'fallbackFile' => null,
+            'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
             'adapter' => 'static',

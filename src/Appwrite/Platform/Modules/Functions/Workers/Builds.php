@@ -39,8 +39,6 @@ use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-use function PHPUnit\Framework\isEmpty;
-
 class Builds extends Action
 {
     public static function getName(): string
@@ -710,7 +708,7 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites' && isEmpty($resource->getAttribute('adapter'))) {
+            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter'))) {
                 $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory')) . " && find . -name 'node_modules' -prune -o -type f -print";
                 $command = $executor->createCommand(
                     deploymentId: $deployment->getId(),
