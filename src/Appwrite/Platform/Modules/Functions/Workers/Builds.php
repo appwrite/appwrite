@@ -709,6 +709,7 @@ class Builds extends Action
             }
 
             if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter'))) {
+                // TODO: Refactor with structured command in future, using utopia library (CLI)
                 $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory')) . " && find . -name 'node_modules' -prune -o -type f -print";
                 $command = $executor->createCommand(
                     deploymentId: $deployment->getId(),

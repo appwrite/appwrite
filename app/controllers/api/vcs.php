@@ -865,8 +865,8 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     ];
 
                     foreach ($strategies as $strategy) {
-                        $redector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
-                        $redector
+                        $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        $detector
                             ->addOption(new Node())
                             ->addOption(new Bun())
                             ->addOption(new Deno())
@@ -879,7 +879,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                             ->addOption(new CPP())
                             ->addOption(new Dotnet());
 
-                        $runtime = $redector->detect();
+                        $runtime = $detector->detect();
 
                         if (!\is_null($runtime)) {
                             $runtime = $runtime->getName();
