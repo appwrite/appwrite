@@ -34,7 +34,7 @@ class Screenshot extends Action
         $template = \array_shift($allowedTemplates);
 
         if (empty($template)) {
-            throw new \Exception("Template {$templateId} not found. Find correct ID in app/config/site-templates.php");
+            throw new \Exception("Template {$templateId} not found. Find correct ID in app/config/templates/site.php");
         }
 
         Console::info("Found: " . $template['name']);

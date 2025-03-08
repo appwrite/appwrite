@@ -26,6 +26,9 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Detector\Detection\Rendering\SSR;
+use Utopia\Detector\Detection\Rendering\XStatic;
+use Utopia\Detector\Detector\Rendering;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -588,7 +591,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove: true,
+                            remove: false,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -684,6 +687,34 @@ class Builds extends Action
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
+
+            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter'))) {
+                // TODO: Refactor with structured command in future, using utopia library (CLI)
+                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory')) . " && find . -name 'node_modules' -prune -o -type f -print";
+                $command = $executor->createCommand(
+                    deploymentId: $deployment->getId(),
+                    projectId: $project->getId(),
+                    command: $listFilesCommand,
+                    timeout: 15
+                );
+
+                $files = \explode("\n", $command['output']); // Parse output
+                $files = \array_filter($files); // Remove empty
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
+
+                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
+                $detector
+                    ->addOption(new SSR())
+                    ->addOption(new XStatic());
+                $detection = $detector->detect();
+
+                $resource->setAttribute('adapter', $detection->getName());
+                $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+            }
+
+            $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
 
             /** Update the build document */
             $deployment->setAttribute('buildStartAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
@@ -1022,15 +1053,9 @@ class Builds extends Action
 
             $envCommand = '';
             $bundleCommand = '';
-
             if (!is_null($framework)) {
-                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
-                if (!is_null($adapter) && isset($adapter['envCommand'])) {
-                    $envCommand = $adapter['envCommand'];
-                }
-                if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
-                    $bundleCommand = $adapter['bundleCommand'];
-                }
+                $envCommand = $framework['envCommand'] ?? '';
+                $bundleCommand = $framework['bundleCommand'] ?? '';
             }
 
             $commands[] = $envCommand;

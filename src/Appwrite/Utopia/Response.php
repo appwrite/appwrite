@@ -37,7 +37,8 @@ use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Detection;
+use Appwrite\Utopia\Response\Model\DetectionFramework;
+use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -82,6 +83,8 @@ use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
+use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
+use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
@@ -246,9 +249,14 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
     public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
-    public const MODEL_DETECTION = 'detection';
+    public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
 
@@ -372,7 +380,8 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
-            ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
+            ->setModel(new BaseList('Framework Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST, 'frameworkProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK))
+            ->setModel(new BaseList('Runtime Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST, 'runtimeProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_RUNTIME))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
             ->setModel(new BaseList('Frameworks List', self::MODEL_FRAMEWORK_LIST, 'frameworks', self::MODEL_FRAMEWORK))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
@@ -449,7 +458,10 @@ class Response extends SwooleResponse
             ->setModel(new TemplateVariable())
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
-            ->setModel(new Detection())
+            ->setModel(new ProviderRepositoryFramework())
+            ->setModel(new ProviderRepositoryRuntime())
+            ->setModel(new DetectionFramework())
+            ->setModel(new DetectionRuntime())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())

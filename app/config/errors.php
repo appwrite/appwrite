@@ -527,7 +527,7 @@ return [
         'code' => 404,
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
-        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
@@ -540,6 +540,11 @@ return [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::FUNCTION_RUNTIME_NOT_DETECTED => [
+        'name' => Exception::FUNCTION_RUNTIME_NOT_DETECTED,
+        'description' => 'Function runtime could not be detected.',
+        'code' => 400,
     ],
 
     /** Sites */

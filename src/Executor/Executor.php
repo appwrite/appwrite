@@ -135,9 +135,9 @@ class Executor
      * @param string $projectId
      * @param string $deploymentId
      */
-    public function deleteRuntime(string $projectId, string $deploymentId)
+    public function deleteRuntime(string $projectId, string $deploymentId, string $suffix = '')
     {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId" . $suffix;
         $route = "/runtimes/$runtimeId";
 
         $response = $this->call(self::METHOD_DELETE, $route, [
@@ -245,6 +245,31 @@ class Executor
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
+
+        return $response['body'];
+    }
+
+    public function createCommand(
+        string $deploymentId,
+        string $projectId,
+        string $command,
+        int $timeout
+    ) {
+        $runtimeId = "$projectId-$deploymentId-build";
+        $route = "/runtimes/$runtimeId/commands";
+
+        $params = [
+            'command' => $command,
+            'timeout' => $timeout
+        ];
+
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
 
         return $response['body'];
     }
