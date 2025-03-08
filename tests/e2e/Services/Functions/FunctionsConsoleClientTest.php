@@ -58,7 +58,7 @@ class FunctionsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $usage = $this->getFunctionUsage($data['functionId'], [
+        $usage = $this->getUsage($data['functionId'], [
             'range' => '24h'
         ]);
         $this->assertEquals(200, $usage['headers']['status-code']);
@@ -87,12 +87,12 @@ class FunctionsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $usage = $this->getFunctionUsage($data['functionId'], [
+        $usage = $this->getUsage($data['functionId'], [
             'range' => '232h'
         ]);
         $this->assertEquals(400, $usage['headers']['status-code']);
 
-        $usage = $this->getFunctionUsage('randomFunctionId', [
+        $usage = $this->getUsage('randomFunctionId', [
             'range' => '24h'
         ]);
         $this->assertEquals(404, $usage['headers']['status-code']);

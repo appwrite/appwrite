@@ -196,7 +196,7 @@ abstract class Format
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getFunctionUsage':
+                    case 'listUsage':
                         switch ($param) {
                             case 'range':
                                 return 'FunctionUsageRange';
@@ -208,10 +208,6 @@ abstract class Format
                                 return 'ExecutionMethod';
                         }
                         break;
-                }
-                break;
-            case 'functions':
-                switch ($method) {
                     case 'getDeploymentDownload':
                         switch ($param) {
                             case 'type':
@@ -419,10 +415,16 @@ abstract class Format
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
+            case 'proxy':
+                switch ($method) {
+                    case 'createRedirectRule':
+                        return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
+                }
+                break;
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getFunctionUsage':
+                    case 'listUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
@@ -430,7 +432,7 @@ abstract class Format
             case 'sites':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getSiteUsage':
+                    case 'listUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }

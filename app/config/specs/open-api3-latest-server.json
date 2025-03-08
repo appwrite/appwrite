@@ -9615,7 +9615,7 @@
                                 "source",
                                 "output"
                             ],
-                            "x-enum-name": null,
+                            "x-enum-name": "DeploymentDownloadType",
                             "x-enum-keys": [],
                             "default": "source"
                         },

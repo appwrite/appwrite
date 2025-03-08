@@ -24,7 +24,7 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getSiteUsage';
+        return 'getUsage';
     }
 
     public function __construct()

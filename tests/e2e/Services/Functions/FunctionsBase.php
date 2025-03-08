@@ -241,7 +241,7 @@ trait FunctionsBase
         return $deployment;
     }
 
-    protected function getFunctionUsage(string $functionId, mixed $params): mixed
+    protected function getUsage(string $functionId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
             'content-type' => 'application/json',

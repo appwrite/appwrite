@@ -1705,7 +1705,7 @@ class FunctionsCustomServerTest extends Scope
         sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $this->assertEventually(function () use ($functionId) {
-            $response = $this->getFunctionUsage($functionId, [
+            $response = $this->getUsage($functionId, [
                 'range' => '24h'
             ]);
 

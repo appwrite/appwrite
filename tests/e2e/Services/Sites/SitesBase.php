@@ -287,7 +287,7 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getSiteUsage(string $siteId, mixed $params): mixed
+    protected function getUsage(string $siteId, mixed $params): mixed
     {
         $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
             'content-type' => 'application/json',

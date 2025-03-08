@@ -9813,8 +9813,12 @@
                             "30d",
                             "90d"
                         ],
-                        "x-enum-name": null,
-                        "x-enum-keys": [],
+                        "x-enum-name": "FunctionUsageRange",
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }
@@ -10920,7 +10924,7 @@
                             "source",
                             "output"
                         ],
-                        "x-enum-name": null,
+                        "x-enum-name": "DeploymentDownloadType",
                         "x-enum-keys": [],
                         "default": "source",
                         "in": "query"
@@ -24803,7 +24807,12 @@
                                         "308"
                                     ],
                                     "x-enum-name": null,
-                                    "x-enum-keys": []
+                                    "x-enum-keys": [
+                                        "Moved Permanently 301",
+                                        "Found 302",
+                                        "Temporary Redirect 307",
+                                        "Permanent Redirect 308"
+                                    ]
                                 }
                             },
                             "required": [
@@ -25707,7 +25716,11 @@
                             "90d"
                         ],
                         "x-enum-name": "SiteUsageRange",
-                        "x-enum-keys": [],
+                        "x-enum-keys": [
+                            "Twenty Four Hours",
+                            "Thirty Days",
+                            "Ninety Days"
+                        ],
                         "default": "30d",
                         "in": "query"
                     }
