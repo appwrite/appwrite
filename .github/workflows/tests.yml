@@ -11,6 +11,30 @@ env:
 on: [ pull_request ]
 
 jobs:
+  check_database_changes:
+    name: Check if utopia-php/database changed
+    runs-on: ubuntu-latest
+    outputs:
+      database_changed: ${{ steps.check.outputs.database_changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }}
+
+      - name: Check for utopia-php/database changes
+        id: check
+        run: |
+          if git diff origin/${{ github.event.pull_request.base.ref }} HEAD -- composer.lock | grep -q '"name": "utopia-php/database"'; then
+            echo "Database version changed, going to run all mode tests."
+            echo "database_changed=true" >> "$GITHUB_ENV"
+            echo "database_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "database_changed=false" >> "$GITHUB_ENV"
+            echo "database_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   setup:
     name: Setup & Build Appwrite Image
     runs-on: ubuntu-latest
@@ -44,6 +68,64 @@ jobs:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
 
+  unit_test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Logs
+        run: docker compose logs appwrite
+
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
+
+      - name: Environment Variables
+        run: docker compose exec -T appwrite vars
+
+      - name: Run Unit Tests
+        run: docker compose exec appwrite test /usr/src/code/tests/unit
+
+  e2e_general_test:
+    name: E2E General Test
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Run General Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
+
   e2e_service_test:
     name: E2E Service Test
     runs-on: ubuntu-latest
@@ -52,7 +134,26 @@ jobs:
       fail-fast: false
       matrix:
         service: [
-          Sites
+          Account,
+          Avatars,
+          Console,
+          Databases,
+          Functions,
+          FunctionsSchedule,
+          GraphQL,
+          Health,
+          Locale,
+          Projects,
+          Realtime,
+          Sites,
+          Proxy,
+          Storage,
+          Teams,
+          Users,
+          Webhooks,
+          VCS,
+          Messaging,
+          Migrations
         ]
     steps:
       - name: Checkout repository
@@ -85,6 +186,167 @@ jobs:
           export _APP_DATABASE_SHARED_TABLES=
           export _APP_DATABASE_SHARED_TABLES_V1=
 
-          docker compose exec -T -e _APP_DATABASE_SHARED_TABLES -e _APP_DATABASE_SHARED_TABLES_V1 appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug || true
-          
-          docker compose logs appwrite-worker-builds
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug
+
+  e2e_shared_mode_test:
+    name: E2E Shared Mode Service Test
+    runs-on: ubuntu-latest
+    needs: [ setup, check_database_changes ]
+    if: needs.check_database_changes.outputs.database_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          [
+            Account,
+            Avatars,
+            Console,
+            Databases,
+            Functions,
+            FunctionsSchedule,
+            GraphQL,
+            Health,
+            Locale,
+            Projects,
+            Realtime,
+            Sites,
+            Proxy,
+            Storage,
+            Teams,
+            Users,
+            Webhooks,
+            VCS,
+            Messaging,
+            Migrations
+          ]
+        tables-mode: [
+          'Shared V1',
+          'Shared V2',
+        ]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 30
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
+        run: |
+          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+            echo "Using shared tables V1"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+            echo "Using shared tables V2"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=
+          fi
+      
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug
+
+  benchmarking:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    needs: setup
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+      - name: Load and Start Appwrite
+        run: |
+          sed -i 's/traefik/localhost/g' .env 
+          docker load --input /tmp/${{ env.IMAGE }}.tar          
+          docker compose up -d
+          sleep 10
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+      - name: Benchmark PR
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark.json
+      - name: Cleaning
+        run: docker compose down -v
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+      - name: Benchmark Latest
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark-latest.json
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
+          echo "| --- | --- | --- | "  >> benchmark.txt
+          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+      - name: Find Comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+      - name: Comment on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: benchmark.txt
+          edit-mode: replace
