@@ -6,8 +6,8 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -89,9 +89,9 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
+            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
                 $plan,
-                Config::getParam('runtime-specifications', []),
+                Config::getParam('specifications', []),
                 App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
                 App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
@@ -205,8 +205,6 @@ class Update extends Base
         ) {
             $live = false;
         }
-
-        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
 
         // Enforce Cold Start if spec limits change.
         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
