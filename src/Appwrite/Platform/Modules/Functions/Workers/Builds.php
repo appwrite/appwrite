@@ -671,11 +671,16 @@ class Builds extends Action
                     }
                 }),
             ]);
+            
+            \var_dump("Finish");
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
             }
+            
+            \var_dump("Problem");
+            \var_dump($err);
 
             if ($err) {
                 throw $err;
@@ -686,33 +691,48 @@ class Builds extends Action
 
             $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
+                \var_dump("Limit issue");
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter'))) {
+            \var_dump($resource->getCollection() === 'sites');
+            \var_dump($resource->getAttribute('adapter', ''));
+            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter', ''))) {
+                \var_dump($resource->getAttribute('outputDirectory', './'));
+                \var_dump(\escapeshellarg($resource->getAttribute('outputDirectory', './')));
                 // TODO: Refactor with structured command in future, using utopia library (CLI)
-                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory')) . " && find . -name 'node_modules' -prune -o -type f -print";
+                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
                 $command = $executor->createCommand(
                     deploymentId: $deployment->getId(),
                     projectId: $project->getId(),
                     command: $listFilesCommand,
                     timeout: 15
                 );
-
+                
+                \var_dump($command);
+                
                 $files = \explode("\n", $command['output']); // Parse output
                 $files = \array_filter($files); // Remove empty
                 $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
                 $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
+                
+                \var_dump($files);
 
                 $detector = new Rendering($files, $resource->getAttribute('framework', ''));
                 $detector
                     ->addOption(new SSR())
                     ->addOption(new XStatic());
                 $detection = $detector->detect();
-
+                
+                \var_dump($detection->getName());
+                \var_dump($detection->getFallbackFile());
+                
                 $resource->setAttribute('adapter', $detection->getName());
                 $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                 $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                
+                \var_dump("Updated");
+                \var_dump($resource->getAttribute('fallbackFile', ''));
             }
 
             $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
