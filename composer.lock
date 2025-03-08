@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "34ca1e0386c2325732532c6978cd93fb",
+    "content-hash": "093587189a16826d640cab3e6ca5f251",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3760,16 +3760,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "dev-feat-pseudocode-draft2",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "e843ff2c85ed55e2cbe7e29f11583903fe002774"
+                "reference": "ddeee9c3e702ae10b3eb53cafe5210a0c4896c94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/e843ff2c85ed55e2cbe7e29f11583903fe002774",
-                "reference": "e843ff2c85ed55e2cbe7e29f11583903fe002774",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/ddeee9c3e702ae10b3eb53cafe5210a0c4896c94",
+                "reference": "ddeee9c3e702ae10b3eb53cafe5210a0c4896c94",
                 "shasum": ""
             },
             "require": {
@@ -3786,25 +3786,7 @@
                     "Utopia\\Detector\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Detector/"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3816,10 +3798,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/detector/tree/feat-pseudocode-draft2",
-                "issues": "https://github.com/utopia-php/detector/issues"
+                "issues": "https://github.com/utopia-php/detector/issues",
+                "source": "https://github.com/utopia-php/detector/tree/0.1.0"
             },
-            "time": "2025-03-08T15:32:38+00:00"
+            "time": "2025-03-08T16:04:33+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8856,18 +8838,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/detector",
-            "version": "dev-feat-pseudocode-draft2",
-            "alias": "0.1.99",
-            "alias_normalized": "0.1.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/detector": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
