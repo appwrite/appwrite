@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Sites\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 
 return [
     Specification::S_05VCPU_512MB => [

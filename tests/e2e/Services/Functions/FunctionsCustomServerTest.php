@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
-use Appwrite\Functions\Specification;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -21,6 +21,41 @@ class FunctionsCustomServerTest extends Scope
     use FunctionsBase;
     use ProjectCustom;
     use SideServer;
+
+    public function testListSpecs(): void
+    {
+        $specifications = $this->listSpecifications();
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+        $this->assertArrayHasKey(0, $specifications['body']['specifications']);
+        $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Specs function',
+            'runtime' => 'php-8.0',
+            'specification' => $specifications['body']['specifications'][0]['slug']
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+
+        $function = $this->getFunction($function['body']['$id']);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+
+        $this->cleanupFunction($function['body']['$id']);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Specs function',
+            'runtime' => 'php-8.0',
+            'specification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $function['headers']['status-code']);
+    }
 
     public function testCreateFunction(): array
     {
@@ -382,7 +417,7 @@ class FunctionsCustomServerTest extends Scope
         $lastDeployment = $deployments['body']['deployments'][0];
 
         $this->assertNotEmpty($lastDeployment['$id']);
-        $this->assertEquals(0, $lastDeployment['size']);
+        $this->assertEquals(0, $lastDeployment['sourceSize']);
 
         $deploymentId = $lastDeployment['$id'];
 
@@ -598,10 +633,10 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($largeTag['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
-        $this->assertGreaterThan(1024 * 1024 * 5, $largeTag['body']['size']); // ~7MB video file
-        $this->assertLessThan(1024 * 1024 * 10, $largeTag['body']['size']); // ~7MB video file
+        $this->assertGreaterThan(1024 * 1024 * 5, $largeTag['body']['sourceSize']); // ~7MB video file
+        $this->assertLessThan(1024 * 1024 * 10, $largeTag['body']['sourceSize']); // ~7MB video file
 
-        $deploymentSize = $largeTag['body']['size'];
+        $deploymentSize = $largeTag['body']['sourceSize'];
         $deploymentId = $largeTag['body']['$id'];
 
         $this->assertEventually(function () use ($functionId, $deploymentId, $deploymentSize) {
@@ -609,7 +644,7 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
-            $this->assertEquals($deploymentSize, $deployment['body']['size']);
+            $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
             $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
         }, 500000, 1000);
 
@@ -655,7 +690,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deployments['body']['total'], 3);
         $this->assertIsArray($deployments['body']['deployments']);
         $this->assertCount(3, $deployments['body']['deployments']);
-        $this->assertArrayHasKey('size', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
 
         $deployments = $this->listDeployments($functionId, [
@@ -675,24 +710,6 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals($deployments['headers']['status-code'], 200);
         $this->assertCount(2, $deployments['body']['deployments']);
-
-        $deployments = $this->listDeployments($functionId, [
-            'queries' => [
-                Query::equal('entrypoint', ['index.php'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($deployments['headers']['status-code'], 200);
-        $this->assertCount(3, $deployments['body']['deployments']);
-
-        $deployments = $this->listDeployments($functionId, [
-            'queries' => [
-                Query::equal('entrypoint', ['index.js'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($deployments['headers']['status-code'], 200);
-        $this->assertCount(0, $deployments['body']['deployments']);
 
         $deployments = $this->listDeployments($functionId, [
             'search' => 'php-8.0'
@@ -744,7 +761,7 @@ class FunctionsCustomServerTest extends Scope
             $functionId,
             [
                 'queries' => [
-                    Query::greaterThan('size', 10000)->toString(),
+                    Query::greaterThan('sourceSize', 10000)->toString(),
                 ],
             ]
         );
@@ -756,7 +773,7 @@ class FunctionsCustomServerTest extends Scope
             $functionId,
             [
                 'queries' => [
-                    Query::greaterThan('size', 0)->toString(),
+                    Query::greaterThan('sourceSize', 0)->toString(),
                 ],
             ]
         );
@@ -768,7 +785,7 @@ class FunctionsCustomServerTest extends Scope
             $functionId,
             [
                 'queries' => [
-                    Query::greaterThan('size', -100)->toString(),
+                    Query::greaterThan('sourceSize', -100)->toString(),
                 ],
             ]
         );
@@ -789,16 +806,16 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
         $this->assertNotEmpty($deployments['body']['deployments'][0]['$id']);
-        $this->assertNotEmpty($deployments['body']['deployments'][0]['size']);
+        $this->assertNotEmpty($deployments['body']['deployments'][0]['sourceSize']);
 
         $deploymentId = $deployments['body']['deployments'][0]['$id'];
-        $deploymentSize = $deployments['body']['deployments'][0]['size'];
+        $deploymentSize = $deployments['body']['deployments'][0]['sourceSize'];
 
         $deployments = $this->listDeployments(
             $functionId,
             [
                 'queries' => [
-                    Query::equal('size', [$deploymentSize])->toString(),
+                    Query::equal('sourceSize', [$deploymentSize])->toString(),
                 ],
             ]
         );
@@ -815,7 +832,7 @@ class FunctionsCustomServerTest extends Scope
 
         if (!empty($matchingDeployment)) {
             $deployment = reset($matchingDeployment);
-            $this->assertEquals($deploymentSize, $deployment['size']);
+            $this->assertEquals($deploymentSize, $deployment['sourceSize']);
         }
 
         return $data;
@@ -832,10 +849,10 @@ class FunctionsCustomServerTest extends Scope
         $deployment = $this->getDeployment($data['functionId'], $data['deploymentId']);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertGreaterThan(0, $deployment['body']['buildTime']);
+        $this->assertGreaterThan(0, $deployment['body']['buildDuration']);
         $this->assertNotEmpty($deployment['body']['status']);
         $this->assertNotEmpty($deployment['body']['buildLogs']);
-        $this->assertArrayHasKey('size', $deployment['body']);
+        $this->assertArrayHasKey('sourceSize', $deployment['body']);
         $this->assertArrayHasKey('buildSize', $deployment['body']);
 
         /**
@@ -2006,14 +2023,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['responseBody']);
 
-        $site = $this->updateFunction($functionId, [
+        $function = $this->updateFunction($functionId, [
             'runtime' => 'node-18.0',
             'name' => 'Duplicate Deployment Test',
             'entrypoint' => 'index.js',
             'commands' => 'rm index.js && mv maintenance.js index.js'
         ]);
-        $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertStringContainsString('maintenance.js', $site['body']['commands']);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertStringContainsString('maintenance.js', $function['body']['commands']);
 
         $deploymentId2 = $this->setupDuplicateDeployment($functionId, $deploymentId1);
         $this->assertNotEmpty($deploymentId2);

@@ -173,8 +173,8 @@ class Create extends Action
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
-            $chunks = $deployment->getAttribute('chunksTotal', 1);
-            $metadata = $deployment->getAttribute('metadata', []);
+            $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+            $metadata = $deployment->getAttribute('sourceMetadata', []);
             if ($chunk === -1) {
                 $chunk = $chunks;
             }
@@ -187,6 +187,14 @@ class Create extends Action
         }
 
         $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
+
+        $commands = [];
+        if (!empty($installCommand)) {
+            $commands[] = $installCommand;
+        }
+        if (!empty($buildCommand)) {
+            $commands[] = $buildCommand;
+        }
 
         if ($chunksUploaded === $chunks) {
             if ($activate) {
@@ -216,15 +224,13 @@ class Create extends Action
                     'resourceInternalId' => $site->getInternalId(),
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
-                    'buildInternalId' => '',
-                    'installCommand' => $installCommand,
-                    'buildCommand' => $buildCommand,
-                    'outputDirectory' => $outputDirectory,
-                    'path' => $path,
-                    'size' => $fileSize,
+                    'buildCommands' => \implode(' && ', $commands),
+                    'buildOutput' => $outputDirectory,
+                    'sourcePath' => $path,
+                    'sourceSize' => $fileSize,
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
-                    'metadata' => $metadata,
+                    'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
 
@@ -253,7 +259,7 @@ class Create extends Action
                     ]))
                 );
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
             }
 
             // Start the build
@@ -273,17 +279,15 @@ class Create extends Action
                     'resourceInternalId' => $site->getInternalId(),
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
-                    'buildInternalId' => '',
-                    'installCommand' => $installCommand,
-                    'buildCommand' => $buildCommand,
-                    'outputDirectory' => $outputDirectory,
-                    'path' => $path,
-                    'size' => $fileSize,
-                    'chunksTotal' => $chunks,
-                    'chunksUploaded' => $chunksUploaded,
+                    'buildCommands' => \implode(' && ', $commands),
+                    'buildOutput' => $outputDirectory,
+                    'sourcePath' => $path,
+                    'sourceSize' => $fileSize,
+                    'sourceChunksTotal' => $chunks,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
-                    'metadata' => $metadata,
+                    'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
 
@@ -305,7 +309,7 @@ class Create extends Action
                     ]))
                 );
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
 

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Certificate;
@@ -155,6 +156,80 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $path .= '?' . $query;
         }
 
+        $protocol = $request->getProtocol();
+
+        /**
+            Ensure preview authorization
+            - Authorization is skippable for tests, and build screenshot
+            - If cookie is not sent by client -> not authorized
+            - If JWT in cookie is invalid or expired -> not authorized
+            - If user is blocked or removed -> not authorized
+            - If user's session is removed or expired -> not authorized
+            - If user is not member of team of this deployment -> not authorized
+            - If not authorized, redirect to Console redirect UI
+            - If authorized, continue as if auth was not required
+        */
+        $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
+        if ($isPreview && $requirePreview) {
+            $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
+            $authorized = false;
+
+            // Security checks to mark authorized true
+            if (!empty($cookie)) {
+                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+                $payload = [];
+                try {
+                    $payload = $jwt->decode($cookie);
+                } catch (JWTException $error) {
+                    // Authorized remains false
+                }
+
+                $userExists = false;
+                $userId = $payload['userId'] ?? '';
+                if (!empty($userId)) {
+                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    if (!$user->isEmpty() && $user->getAttribute('status', false)) {
+                        $userExists = true;
+                    }
+                }
+
+                $sessionExists = false;
+                $jwtSessionId = $payload['sessionId'] ?? '';
+                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                    $sessionExists = true;
+                }
+
+                $membershipExists = false;
+                $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                if (!$project->isEmpty()) {
+                    $teamId = $project->getAttribute('teamId', '');
+                    $membership = $user->find('teamId', $teamId, 'memberships');
+                    if (!empty($membership)) {
+                        $membershipExists = true;
+                    }
+                }
+
+                if ($userExists && $sessionExists && $membershipExists) {
+                    $authorized = true;
+                }
+            }
+
+            if (!$authorized) {
+                $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . "://" . System::getEnv('_APP_DOMAIN');
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($url . '/console/auth/preview?'
+                        . \http_build_query([
+                            'projectId' => $projectId,
+                            'origin' => $protocol . '://' . $host,
+                            'path' => $path
+                        ]));
+                return true;
+            }
+        }
+
         $body = $swooleRequest->getContent() ?? '';
         $method = $swooleRequest->server['request_method'];
 
@@ -174,7 +249,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = match ($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
@@ -191,13 +266,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
-        /** Check if build has completed */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-        if ($build->isEmpty()) {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($deployment->getAttribute('status') !== 'ready') {
             throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
         }
 
@@ -388,7 +457,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 variables: $vars,
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('buildPath', ''),
                 entrypoint: $entrypoint,
                 version: $version,
                 path: $path,
@@ -1275,6 +1344,34 @@ App::get('/v1/ping')
             ->setPayload($response->output($project, Response::MODEL_PROJECT));
 
         $response->text('Pong!');
+    });
+
+// Preview authorization
+App::get('/_appwrite/authorize')
+    ->inject('request')
+    ->inject('response')
+    ->inject('previewHostname')
+    ->action(function (Request $request, Response $response, string $previewHostname) {
+
+        $host = $request->getHostname() ?? '';
+        if (!empty($previewHostname)) {
+            $host = $previewHostname;
+        }
+
+        $referrer = $request->getReferer();
+        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+
+        $jwt = $request->getParam('jwt', '');
+        $path = $request->getParam('path', '');
+
+        $duration = 60 * 60 * 24; // 1 day in seconds
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+        $response
+            ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($protocol . '://' . $host . $path);
     });
 
 App::wildcard()

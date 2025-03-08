@@ -78,7 +78,7 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $path = $deployment->getAttribute('path');
+        $path = $deployment->getAttribute('sourcePath');
         if (empty($path) || !$deviceForSites->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
@@ -88,19 +88,31 @@ class Create extends Action
         $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForSites->transfer($path, $destination, $deviceForSites);
 
+        $commands = [];
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+
         $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$internalId' => '',
             '$id' => $deploymentId,
-            'buildId' => '',
-            'buildInternalId' => '',
-            'path' => $destination,
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'sourcePath' => $destination,
+            'buildCommands' => \implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
-            'screenshotDark' => ''
+            'screenshotDark' => '',
+            'buildStartAt' => null,
+            'buildEndAt' => null,
+            'buildDuration' => null,
+            'buildSize' => null,
+            'status' => 'processing',
+            'buildPath' => '',
+            'buildLogs' => '',
         ]));
 
         // Preview deployments for sites

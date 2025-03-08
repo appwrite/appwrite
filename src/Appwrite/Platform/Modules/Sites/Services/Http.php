@@ -21,6 +21,7 @@ use Appwrite\Platform\Modules\Sites\Http\Sites\Deployment\Update as UpdateSiteDe
 use Appwrite\Platform\Modules\Sites\Http\Sites\Get as GetSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Update as UpdateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\XList as ListSites;
+use Appwrite\Platform\Modules\Sites\Http\Specifications\XList as ListSpecifications;
 use Appwrite\Platform\Modules\Sites\Http\Templates\Get as GetTemplate;
 use Appwrite\Platform\Modules\Sites\Http\Templates\XList as ListTemplates;
 use Appwrite\Platform\Modules\Sites\Http\Usage\Get as GetUsage;
@@ -79,5 +80,7 @@ class Http extends Service
         // Usage
         $this->addAction(ListUsage::getName(), new ListUsage());
         $this->addAction(GetUsage::getName(), new GetUsage());
+
+        $this->addAction(ListSpecifications::getName(), new ListSpecifications());
     }
 }

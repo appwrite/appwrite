@@ -174,8 +174,8 @@ class Create extends Action
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
-            $chunks = $deployment->getAttribute('chunksTotal', 1);
-            $metadata = $deployment->getAttribute('metadata', []);
+            $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+            $metadata = $deployment->getAttribute('sourceMetadata', []);
             if ($chunk === -1) {
                 $chunk = $chunks;
             }
@@ -217,18 +217,17 @@ class Create extends Action
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
-                    'commands' => $commands,
-                    'path' => $path,
-                    'size' => $fileSize,
+                    'buildCommands' => $commands,
+                    'sourcePath' => $path,
+                    'sourceSize' => $fileSize,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
-                    'metadata' => $metadata,
+                    'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
             }
 
             // Start the build
@@ -248,20 +247,19 @@ class Create extends Action
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
-                    'commands' => $commands,
-                    'path' => $path,
-                    'size' => $fileSize,
-                    'chunksTotal' => $chunks,
-                    'chunksUploaded' => $chunksUploaded,
+                    'buildCommands' => $commands,
+                    'sourcePath' => $path,
+                    'sourceSize' => $fileSize,
+                    'sourceChunksTotal' => $chunks,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
-                    'metadata' => $metadata,
+                    'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
 

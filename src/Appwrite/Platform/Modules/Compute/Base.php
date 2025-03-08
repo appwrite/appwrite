@@ -70,7 +70,7 @@ class Base extends Action
             'resourceInternalId' => $function->getInternalId(),
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
-            'commands' => $function->getAttribute('commands', ''),
+            'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
@@ -139,6 +139,14 @@ class Base extends Action
             }
         }
 
+        $commands = [];
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
             '$permissions' => [
@@ -149,9 +157,8 @@ class Base extends Action
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getInternalId(),
             'resourceType' => 'sites',
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'buildCommands' => implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),

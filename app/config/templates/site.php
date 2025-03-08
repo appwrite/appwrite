@@ -27,7 +27,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './build',
         'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'NEXTJS' => [
         'key' => 'nextjs',
@@ -37,7 +37,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './.next',
         'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'NUXT' => [
         'key' => 'nuxt',
@@ -47,7 +47,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './.output',
         'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'REMIX' => [
         'key' => 'remix',
@@ -57,7 +57,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './build',
         'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'ASTRO' => [
         'key' => 'astro',
@@ -67,7 +67,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'FLUTTER' => [
         'key' => 'flutter',
@@ -77,7 +77,7 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './build/web',
         'buildRuntime' => 'flutter-3.24',
         'adapter' => 'static',
-        'fallbackFile' => null,
+        'fallbackFile' => '',
     ],
     'OTHER' => [
         'key' => 'other',

@@ -83,8 +83,8 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
         }
 
-        if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
+        if (!empty($deployment->getAttribute('sourcePath', ''))) {
+            if (!($deviceForFunctions->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
