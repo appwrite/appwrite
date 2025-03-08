@@ -158,22 +158,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $protocol = $request->getProtocol();
 
-        // Preview authorization (configure)
-        if (\str_starts_with($path, '/_appwrite/authorize')) {
-            $jwt = $request->getParam('jwt', '');
-            $path = $request->getParam('path', '');
-
-            $duration = 60 * 60 * 24; // 1 day in seconds
-            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-            $response
-                ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
-                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                ->addHeader('Pragma', 'no-cache')
-                ->redirect($protocol . '://' . $host . $path);
-            return true;
-        }
-
         // Ensure preview authorization
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
@@ -1357,6 +1341,34 @@ App::get('/v1/ping')
             ->setPayload($response->output($project, Response::MODEL_PROJECT));
 
         $response->text('Pong!');
+    });
+
+// Preview authorization
+App::get('/_appwrite/authorize')
+    ->inject('request')
+    ->inject('response')
+    ->inject('previewHostname')
+    ->action(function (Request $request, Response $response, string $previewHostname) {
+
+        $host = $request->getHostname() ?? '';
+        if (!empty($previewHostname)) {
+            $host = $previewHostname;
+        }
+
+        $referrer = $request->getReferer();
+        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+
+        $jwt = $request->getParam('jwt', '');
+        $path = $request->getParam('path', '');
+
+        $duration = 60 * 60 * 24; // 1 day in seconds
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+        $response
+            ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($protocol . '://' . $host . $path);
     });
 
 App::wildcard()
