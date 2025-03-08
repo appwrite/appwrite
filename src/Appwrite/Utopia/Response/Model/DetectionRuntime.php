@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class RuntimeDetection extends Model
+class DetectionRuntime extends Model
 {
     public function __construct()
     {
@@ -37,7 +37,7 @@ class RuntimeDetection extends Model
      */
     public function getName(): string
     {
-        return 'RuntimeDetection';
+        return 'DetectionRuntime';
     }
 
     /**
@@ -47,6 +47,6 @@ class RuntimeDetection extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_RUNTIME_DETECTION;
+        return Response::MODEL_DETECTION_RUNTIME;
     }
 }

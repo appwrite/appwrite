@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class RuntimeProviderRepository extends ProviderRepository
+class ProviderRepositoryRuntime extends ProviderRepository
 {
     public function __construct()
     {
@@ -12,9 +12,9 @@ class RuntimeProviderRepository extends ProviderRepository
 
         $this->addRule('runtime', [
             'type' => self::TYPE_STRING,
-            'description' => 'Auto-detected runtime suggestion. Empty if getting response of getRuntime().',
+            'description' => 'Auto-detected runtime. Empty if type is not "runtime".',
             'default' => '',
-            'example' => 'node',
+            'example' => 'node-22',
         ]);
     }
 
@@ -25,7 +25,7 @@ class RuntimeProviderRepository extends ProviderRepository
      */
     public function getName(): string
     {
-        return 'RuntimeProviderRepository';
+        return 'ProviderRepositoryRuntime';
     }
 
     /**
@@ -35,6 +35,6 @@ class RuntimeProviderRepository extends ProviderRepository
      */
     public function getType(): string
     {
-        return Response::MODEL_RUNTIME_PROVIDER_REPOSITORY;
+        return Response::MODEL_PROVIDER_REPOSITORY_RUNTIME;
     }
 }

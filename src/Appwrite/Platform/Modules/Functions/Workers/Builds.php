@@ -610,7 +610,7 @@ class Builds extends Action
                             memory: $memory,
                             timeout: $timeout,
                             remove: false,
-                            entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
+                            entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
@@ -711,29 +711,31 @@ class Builds extends Action
             }
 
             if ($resource->getCollection() === 'sites' && isEmpty($resource->getAttribute('adapter'))) {
-                $listFilesCommand = "cd /usr/local/build/" . $resource->getAttribute('outputDirectory') . " && find . -name 'node_modules' -prune -o -type f -print";
-                $commandExecutionResponse = $executor->executeCommand(
+                $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory')) . " && find . -name 'node_modules' -prune -o -type f -print";
+                $command = $executor->createCommand(
                     deploymentId: $deployment->getId(),
                     projectId: $project->getId(),
                     command: $listFilesCommand,
-                    timeout: 60
+                    timeout: 15
                 );
 
-                $files = array_map('trim', array_filter(explode("\n", $commandExecutionResponse['output'])));
+                $files = \explode("\n", $command['output']); // Parse output
+                $files = \array_filter($files); // Remove empty
+                $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
+                $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
 
-                $detector = new Rendering($files, $resource->getAttribute('framework'));
+                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
                 $detector
                     ->addOption(new SSR())
                     ->addOption(new XStatic());
-                $detectedRenderingStrategy = $detector->detect();
+                $detection = $detector->detect();
 
-                $renderingStrategy = $detectedRenderingStrategy->getName();
-                $fallbackFile = $detectedRenderingStrategy->getFallbackFile() ?: '';
-
-                $resource->setAttribute('adapter', $renderingStrategy);
-                $resource->setAttribute('fallbackFile', $fallbackFile);
+                $resource->setAttribute('adapter', $detection->getName());
+                $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                 $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
             }
+
+            $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
@@ -1072,15 +1074,9 @@ class Builds extends Action
 
             $envCommand = '';
             $bundleCommand = '';
-
             if (!is_null($framework)) {
-                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
-                if (!is_null($adapter) && isset($adapter['envCommand'])) {
-                    $envCommand = $adapter['envCommand'];
-                }
-                if (!is_null($adapter) && isset($adapter['bundleCommand'])) {
-                    $bundleCommand = $adapter['bundleCommand'];
-                }
+                $envCommand = $framework['envCommand'] ?? '';
+                $bundleCommand = $framework['bundleCommand'] ?? '';
             }
 
             $commands[] = $envCommand;

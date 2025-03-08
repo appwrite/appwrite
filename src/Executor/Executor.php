@@ -135,9 +135,9 @@ class Executor
      * @param string $projectId
      * @param string $deploymentId
      */
-    public function deleteRuntime(string $projectId, string $deploymentId)
+    public function deleteRuntime(string $projectId, string $deploymentId, string $suffix = '')
     {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId" . $suffix;
         $route = "/runtimes/$runtimeId";
 
         $response = $this->call(self::METHOD_DELETE, $route, [
@@ -249,7 +249,7 @@ class Executor
         return $response['body'];
     }
 
-    public function executeCommand(
+    public function createCommand(
         string $deploymentId,
         string $projectId,
         string $command,

@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class FrameworkDetection extends Model
+class DetectionFramework extends Model
 {
     public function __construct()
     {
@@ -43,7 +43,7 @@ class FrameworkDetection extends Model
      */
     public function getName(): string
     {
-        return 'FrameworkDetection';
+        return 'DetectionFramework';
     }
 
     /**
@@ -53,6 +53,6 @@ class FrameworkDetection extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_FRAMEWORK_DETECTION;
+        return Response::MODEL_DETECTION_FRAMEWORK;
     }
 }

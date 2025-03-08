@@ -154,7 +154,7 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $framework = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId/frameworks', array_merge([
+        $framework = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
             'content-type' => 'application/json',
         ], $this->getHeaders()), [
@@ -164,8 +164,6 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(404, $framework['headers']['status-code']);
     }
-
-    // TODO: Change search to provideScenarios
 
     /**
      * @depends testGitHubAuthorize
@@ -248,7 +246,6 @@ class VCSConsoleClientTest extends Scope
          * Test for SUCCESS
          */
 
-        //runtimes
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -262,28 +259,39 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositories['body']['runtimeProviderRepositories'][0]['provider'], 'github');
         $this->assertEquals($repositories['body']['runtimeProviderRepositories'][0]['runtime'], 'node-22');
 
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][1]['name'], 'templates-for-functions');
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][1]['runtime'], '');
-
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][2]['name'], 'function1.4');
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][2]['runtime'], 'node-22');
-
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][3]['name'], 'appwrite');
-        $this->assertEquals($repositories['body']['runtimeProviderRepositories'][3]['runtime'], 'php-8.3');
+        $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'function1.4',
+            'type' => 'runtime'
+        ]);
+        $this->assertEquals(200, $searchedRepositories['headers']['status-code']);
+        $this->assertEquals($searchedRepositories['body']['total'], 1);
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'function1.4');
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'node-2');
 
         $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'rub',
+            'search' => 'appwrite',
             'type' => 'runtime'
         ]);
+        $this->assertEquals(200, $searchedRepositories['headers']['status-code']);
+        $this->assertEquals($searchedRepositories['body']['total'], 1);
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'appwrite');
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'php-8.3');
 
+        $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'ruby-starter',
+            'type' => 'runtime'
+        ]);
         $this->assertEquals(200, $searchedRepositories['headers']['status-code']);
         $this->assertEquals($searchedRepositories['body']['total'], 1);
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'ruby-starter');
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'ruby-3.3');
 
-        // frameworks
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -292,20 +300,23 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $repositories['headers']['status-code']);
         $this->assertEquals($repositories['body']['total'], 4);
-
         $this->assertEquals($repositories['body']['frameworkProviderRepositories'][0]['name'], 'starter-for-svelte');
         $this->assertEquals($repositories['body']['frameworkProviderRepositories'][0]['organization'], 'appwrite-test');
         $this->assertEquals($repositories['body']['frameworkProviderRepositories'][0]['provider'], 'github');
         $this->assertEquals($repositories['body']['frameworkProviderRepositories'][0]['framework'], 'sveltekit');
 
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][1]['name'], 'templates-for-functions');
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][1]['framework'], 'other');
+        $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'appwrite',
+            'type' => 'runtime'
+        ]);
+        $this->assertEquals(200, $searchedRepositories['headers']['status-code']);
+        $this->assertEquals($searchedRepositories['body']['total'], 1);
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'appwrite');
+        $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'other');
 
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][2]['name'], 'function1.4');
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][2]['framework'], 'other');
-
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][3]['name'], 'appwrite');
-        $this->assertEquals($repositories['body']['frameworkProviderRepositories'][3]['framework'], 'other');
+        // TODO: If you are about to add another check, rewrite this to @provideScenarios
 
         /**
          * Test for FAILURE

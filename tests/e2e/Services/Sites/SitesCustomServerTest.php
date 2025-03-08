@@ -362,36 +362,164 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testRenderingDetectionSSR(): void
+    public function testAdapterDetectionAstroSSR(): void
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
-            'name' => 'Astro site',
+            'name' => 'Astro SSR site',
             'framework' => 'astro',
-            'buildRuntime' => 'ssr-22',
+            'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
             'installCommand' => 'npm install',
         ]);
-
         $this->assertNotEmpty($siteId);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+
         $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('astro'),
             'activate' => 'true'
         ]);
-
         $this->assertNotEmpty($deploymentId);
 
-        $domain = $this->getSiteDomain($siteId);
+        $site = $this->getSite($siteId);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
-
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testAdapterDetectionAstroStatic(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro static site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro-static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testAdapterDetectionStatic(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => '',
+            'buildCommand' => '',
+            'installCommand' => '',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testAdapterDetectionStaticSPA(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => '',
+            'buildCommand' => '',
+            'installCommand' => '',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertArrayHasKey('fallbackFile', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/something');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', $response['body']);
 
         $this->cleanupSite($siteId);
     }

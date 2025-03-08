@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class FrameworkProviderRepository extends ProviderRepository
+class ProviderRepositoryFramework extends ProviderRepository
 {
     public function __construct()
     {
@@ -12,7 +12,7 @@ class FrameworkProviderRepository extends ProviderRepository
 
         $this->addRule('framework', [
             'type' => self::TYPE_STRING,
-            'description' => 'Auto-detected framework suggestion. Empty if getting response of getFramework().',
+            'description' => 'Auto-detected framework. Empty if type is not "framework".',
             'default' => '',
             'example' => 'nextjs',
         ]);
@@ -25,7 +25,7 @@ class FrameworkProviderRepository extends ProviderRepository
      */
     public function getName(): string
     {
-        return 'FrameworkProviderRepository';
+        return 'ProviderRepositoryFramework';
     }
 
     /**
@@ -35,6 +35,6 @@ class FrameworkProviderRepository extends ProviderRepository
      */
     public function getType(): string
     {
-        return Response::MODEL_FRAMEWORK_PROVIDER_REPOSITORY;
+        return Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK;
     }
 }
