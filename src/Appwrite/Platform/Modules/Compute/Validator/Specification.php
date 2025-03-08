@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Functions\Validator;
+namespace Appwrite\Platform\Modules\Compute\Validator;
 
 use Utopia\Validator;
 
-class RuntimeSpecification extends Validator
+class Specification extends Validator
 {
     private array $plan;
 
@@ -35,8 +35,8 @@ class RuntimeSpecification extends Validator
 
         foreach ($this->specifications as $size => $values) {
             if ($values['cpus'] <= $this->maxCpus && $values['memory'] <= $this->maxMemory) {
-                if (!empty($this->plan) && array_key_exists('runtimeSpecifications', $this->plan)) {
-                    if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
+                if (!empty($this->plan) && array_key_exists('specifications', $this->plan)) {
+                    if (!\in_array($size, $this->plan['specifications'])) {
                         continue;
                     }
                 }

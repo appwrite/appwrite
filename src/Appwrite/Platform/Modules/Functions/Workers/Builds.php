@@ -172,7 +172,7 @@ class Builds extends Action
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
