@@ -23,6 +23,7 @@ class Key
         protected bool $hostnameOverride = false,
         protected bool $bannerDisabled = false,
         protected bool $projectCheckDisabled = false,
+        protected bool $previewAuthDisabled = false,
     ) {
     }
 
@@ -71,6 +72,11 @@ class Key
     public function isBannerDisabled(): bool
     {
         return $this->bannerDisabled;
+    }
+
+    public function isPreviewAuthDisabled(): bool
+    {
+        return $this->previewAuthDisabled;
     }
 
     public function isProjectCheckDisabled(): bool
@@ -132,6 +138,7 @@ class Key
                 $hostnameOverride = $payload['hostnameOverride'] ?? false;
                 $bannerDisabled = $payload['bannerDisabled'] ?? false;
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
+                $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
@@ -148,7 +155,8 @@ class Key
                     $disabledMetrics,
                     $hostnameOverride,
                     $bannerDisabled,
-                    $projectCheckDisabled
+                    $projectCheckDisabled,
+                    $previewAuthDisabled
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(
