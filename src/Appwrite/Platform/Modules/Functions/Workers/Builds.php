@@ -21,6 +21,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -743,7 +744,7 @@ class Builds extends Action
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getInternalId()]),
                         Query::equal("type", ["deployment"]),
-                        Query::equal("value", [$deployment->getId()])
+                        Query::equal('deploymentInternalId', [$deployment->getInternalId()]),
                     ]));
 
                     if ($rule->isEmpty()) {
@@ -845,56 +846,117 @@ class Builds extends Action
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
-                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $resource->setAttribute('live', true);
                 switch ($resource->getCollection()) {
                     case 'functions':
+                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
+
                         $resource->setAttribute('deployment', $deployment->getId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
-                        $this->listRules($project, [
-                            Query::equal("automation", ["function=" . $resource->getId()]),
-                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-                            $rule = $rule->setAttribute('value', $deployment->getId());
+                        $queries = [
+                            Query::equal("projectInternalId", [$project->getInternalId()]),
+                            Query::equal("type", ["deployment"]),
+                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal('deploymentResourceType', ['function']),
+                            Query::equal('trigger', ['manual']),
+                        ];
+
+                        if (empty($oldDeploymentInternalId)) {
+                            $queries[] =  Query::equal("deploymentInternalId", [""]);
+                        } else {
+                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
+                        }
+
+                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule
+                                ->setAttribute('deploymentId', $deployment->getId())
+                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         });
                         break;
                     case 'sites':
+                        $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
+
                         $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
 
-                        $this->listRules($project, [
-                            Query::equal("automation", ["site=" . $resource->getId()]),
-                        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-                            $rule = $rule->setAttribute('value', $deployment->getId());
+                        $queries = [
+                            Query::equal("projectInternalId", [$project->getInternalId()]),
+                            Query::equal("type", ["deployment"]),
+                            Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                            Query::equal('deploymentResourceType', ['site']),
+                            Query::equal('trigger', ['manual']),
+                        ];
+
+                        if (empty($oldDeploymentInternalId)) {
+                            $queries[] =  Query::equal("deploymentInternalId", [""]);
+                        } else {
+                            $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
+                        }
+
+                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                            $rule = $rule
+                                ->setAttribute('deploymentId', $deployment->getId())
+                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
                             $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
                         });
 
-                        // VCS branch
-                        $branchName = $deployment->getAttribute('providerBranch');
-                        if (!empty($branchName)) {
-                            $this->listRules($project, [
-                                Query::equal("automation", ["branch=" . $branchName]),
-                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-                                $rule = $rule->setAttribute('value', $deployment->getId());
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                            });
-                        }
-
-                        // VCS commit
-                        $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                        if (!empty($commitHash)) {
-                            $this->listRules($project, [
-                                Query::equal("automation", ["commit=" . $commitHash]),
-                            ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
-                                $rule = $rule->setAttribute('value', $deployment->getId());
-                                $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-                            });
-                        }
                         break;
                 }
             }
 
+            if ($resource->getCollection() === 'sites') {
+                // VCS branch
+                $branchName = $deployment->getAttribute('providerBranch');
+                if (!empty($branchName)) {
+                    $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                    $domain = "branch-{$branchName}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+
+                    try {
+                        $dbForPlatform->createDocument('rules', new Document([
+                            '$id' => $ruleId,
+                            'projectId' => $project->getId(),
+                            'projectInternalId' => $project->getInternalId(),
+                            'domain' => $domain,
+                            'type' => 'deployment',
+                            'trigger' => 'deployment',
+                            'deploymentId' => $deployment->getId(),
+                            'deploymentInternalId' => $deployment->getInternalId(),
+                            'deploymentResourceType' => 'site',
+                            'deploymentResourceId' => $deployment->getId(),
+                            'deploymentResourceInternalId' => $deployment->getInternalId(),
+                            'deploymentVcsProviderBranch' => $branchName,
+                            'status' => 'verified',
+                            'certificateId' => '',
+                            'search' => implode(' ', [$ruleId, $domain]),
+                        ]));
+                    } catch (Duplicate $err) {
+                        $rule = $dbForPlatform->getDocument('rules', $ruleId);
+                        $rule = $rule
+                            ->setAttribute('deploymentId', $deployment->getId())
+                            ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                    }
+
+                    $this->listRules($project, [
+                        Query::equal("projectInternalId", [$project->getInternalId()]),
+                        Query::equal("type", ["deployment"]),
+                        Query::equal("deploymentResourceInternalId", [$resource->getInternalId()]),
+                        Query::equal('deploymentResourceType', ['site']),
+                        Query::equal("deploymentVcsProviderBranch", [$branchName]),
+                        Query::equal("trigger", ['manual']),
+                    ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        $rule = $rule
+                                ->setAttribute('deploymentId', $deployment->getId())
+                                ->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+                    });
+                }
+            }
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -1155,7 +1217,7 @@ class Builds extends Action
                 $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                     Query::equal("projectInternalId", [$project->getInternalId()]),
                     Query::equal("type", ["deployment"]),
-                    Query::equal("value", [$deployment->getId()])
+                    Query::equal("deploymentInternalId", [$deployment->getInternalId()]),
                 ]));
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';

@@ -22,11 +22,16 @@ class ProxyCustomServerTest extends Scope
 
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
         $this->assertArrayHasKey('$id', $rule['body']);
+        $this->assertArrayHasKey('domain', $rule['body']);
         $this->assertArrayHasKey('type', $rule['body']);
-        $this->assertArrayHasKey('value', $rule['body']);
-        $this->assertArrayHasKey('automation', $rule['body']);
-        $this->assertArrayHasKey('status', $rule['body']);
+        $this->assertArrayHasKey('redirectUrl', $rule['body']);
+        $this->assertArrayHasKey('redirectStatusCode', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceType', $rule['body']);
+        $this->assertArrayHasKey('deploymentId', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
 
@@ -117,12 +122,32 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $ruleId = $this->setupRedirectRule($domain, 'jsonplaceholder.typicode.com');
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301);
         $this->assertNotEmpty($ruleId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['id']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['id']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
+
+        $domain = \uniqid() . '-redirect-307.custom.localhost';
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307);
+        $this->assertNotEmpty($ruleId);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(307, $response['headers']['status-code']);
+        $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
         $this->cleanupRule($ruleId);
     }
@@ -161,7 +186,8 @@ class ProxyCustomServerTest extends Scope
                 'queries' => [
                     Query::limit(1)->toString(),
                     Query::equal('type', ['deployment'])->toString(),
-                    Query::equal('automation', ['function=' . $functionId])->toString()
+                    Query::equal('deploymentResourceType', ['function'])->toString(),
+                    Query::equal('deploymentResourceId', [$functionId])->toString(),
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
@@ -172,7 +198,7 @@ class ProxyCustomServerTest extends Scope
                 'queries' => [
                     Query::limit(1)->toString(),
                     Query::equal('type', ['deployment'])->toString(),
-                    Query::equal('value', [$deploymentId])->toString()
+                    Query::equal('deploymentId', [$deploymentId])->toString()
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
@@ -206,6 +232,18 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Contact page', $response['body']);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::equal('trigger', ['deployment'])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThan(0, $rules['body']['total']);
+
         $this->cleanupRule($ruleId);
 
         $this->cleanupSite($siteId);
@@ -215,7 +253,8 @@ class ProxyCustomServerTest extends Scope
                 'queries' => [
                     Query::limit(1)->toString(),
                     Query::equal('type', ['deployment'])->toString(),
-                    Query::equal('automation', ['site=' . $siteId])->toString()
+                    Query::equal('deploymentResourceType', ['site'])->toString(),
+                    Query::equal('deploymentResourceId', [$siteId])->toString(),
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
@@ -226,7 +265,7 @@ class ProxyCustomServerTest extends Scope
                 'queries' => [
                     Query::limit(1)->toString(),
                     Query::equal('type', ['deployment'])->toString(),
-                    Query::equal('value', [$deploymentId])->toString()
+                    Query::equal('deploymentId', [$deploymentId])->toString()
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
@@ -235,7 +274,7 @@ class ProxyCustomServerTest extends Scope
         });
     }
 
-    public function testCreatSiteBranchRule(): void
+    public function testCreateSiteBranchRule(): void
     {
         $domain = \uniqid() . '-site-branch.custom.localhost';
 
@@ -251,12 +290,11 @@ class ProxyCustomServerTest extends Scope
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals('branch=dev', $rule['body']['automation']);
 
         $this->cleanupRule($ruleId);
     }
 
-    public function testCreatFunctionBranchRule(): void
+    public function testCreateFunctionBranchRule(): void
     {
         $domain = \uniqid() . '-function-branch.custom.localhost';
 
@@ -272,9 +310,10 @@ class ProxyCustomServerTest extends Scope
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals('branch=dev', $rule['body']['automation']);
 
         $this->cleanupRule($ruleId);
+
+        $this->cleanupFunction($functionId);
     }
 
     public function testUpdateRule(): void
@@ -322,11 +361,16 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
         $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
         $this->assertArrayHasKey('$id', $rule['body']);
+        $this->assertArrayHasKey('domain', $rule['body']);
         $this->assertArrayHasKey('type', $rule['body']);
-        $this->assertArrayHasKey('value', $rule['body']);
-        $this->assertArrayHasKey('automation', $rule['body']);
-        $this->assertArrayHasKey('status', $rule['body']);
+        $this->assertArrayHasKey('redirectUrl', $rule['body']);
+        $this->assertArrayHasKey('redirectStatusCode', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceType', $rule['body']);
+        $this->assertArrayHasKey('deploymentId', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
 
@@ -356,11 +400,17 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(1, $rules['body']['total']);
         $this->assertCount(1, $rules['body']['rules']);
         $this->assertEquals($rule1Domain, $rules['body']['rules'][0]['domain']);
+
+        $this->assertEquals('manual', $rules['body']['rules'][0]['trigger']);
         $this->assertArrayHasKey('$id', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('domain', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('type', $rules['body']['rules'][0]);
-        $this->assertArrayHasKey('value', $rules['body']['rules'][0]);
-        $this->assertArrayHasKey('automation', $rules['body']['rules'][0]);
-        $this->assertArrayHasKey('status', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('redirectUrl', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('redirectStatusCode', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentResourceType', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentId', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentResourceId', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
 

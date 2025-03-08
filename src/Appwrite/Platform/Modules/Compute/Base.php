@@ -182,15 +182,24 @@ class Base extends Action
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
-        $ruleId = md5($domain);
+
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+
         Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
+                'trigger' => 'deployment',
                 'type' => 'deployment',
-                'value' => $deployment->getId(),
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentResourceType' => 'site',
+                'deploymentResourceId' => $site->getId(),
+                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentVcsProviderBranch' => $providerBranch,
                 'status' => 'verified',
                 'certificateId' => '',
                 'search' => implode(' ', [$ruleId, $domain]),

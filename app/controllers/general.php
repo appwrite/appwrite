@@ -136,7 +136,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('value')));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
@@ -148,7 +148,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
-        $isPreview = $type === 'function' ? false : (!\str_starts_with($rule->getAttribute('automation', ''), 'site='));
+        $isPreview = $type === 'function' ? false : ($rule->getAttribute('deploymentId', '') !== $resource->getAttribute('deploymentId', ''));
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');
@@ -593,15 +593,14 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $utopia->getRoute()?->label('error', '');
         return false;
     } elseif ($type === 'redirect') {
-        $path = ($swooleRequest->server['request_uri'] ?? '/');
+        $url = $rule->getAttribute('redirectUrl', '');
+
         $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
-            $path .= '?' . $query;
+            $url .= '?' . $query;
         }
 
-        $url = 'https://' . $rule->getAttribute('value', '') . $path;
-
-        $response->redirect($url);
+        $response->redirect($url, \intval($rule->getAttribute('redirectStatusCode', 301)));
         return true;
     } else {
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);

@@ -236,7 +236,10 @@ class Create extends Action
 
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
-                $ruleId = md5($domain);
+
+                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+
                 Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -244,7 +247,12 @@ class Create extends Action
                         'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
                         'type' => 'deployment',
-                        'value' => $deployment->getId(),
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+                        'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getInternalId(),
                         'status' => 'verified',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
@@ -293,6 +301,7 @@ class Create extends Action
                         'projectInternalId' => $project->getInternalId(),
                         'domain' => $domain,
                         'type' => 'deployment',
+                        'trigger' => 'deployment',
                         'value' => $deployment->getId(),
                         'status' => 'verified',
                         'certificateId' => '',

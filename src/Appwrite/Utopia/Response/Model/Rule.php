@@ -40,18 +40,47 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'deployment',
             ])
-            ->addRule('value', [
+            ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Detail specification for the type. If type is "api", this is empty. If type is "redirect", this is URL. If type is "deployment", this is deployment ID.',
+                'description' => 'Defines how the rule was created. Possible values are "manual" or "deployment"',
                 'default' => '',
-                'example' => '67a9cf1a00150ee93abd',
+                'example' => 'manual',
             ])
-            ->addRule('automation', [
+            ->addRule('redirectUrl', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action that results in a rule update. If VCS branch, value can be of syntax "branch=[name]"',
-                'array' => false,
+                'description' => 'URL to redirect to. Used if type is "redirect"',
                 'default' => '',
-                'example' => 'branch=dev',
+                'example' => 'https://appwrite.io/docs',
+            ])
+            ->addRule('redirectStatusCode', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Status code to apply during redirect. Used if type is "redirect"',
+                'default' => '',
+                'example' => 301,
+            ])
+            ->addRule('deploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of deployment. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
+            ->addRule('deploymentResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
+                'default' => '',
+                'example' => 'function',
+            ])
+            ->addRule('deploymentResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID deployment\'s resource. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
+            ->addRule('deploymentVcsProviderBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of Git branch that updates rule. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'function',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,

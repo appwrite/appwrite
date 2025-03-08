@@ -343,7 +343,8 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('automation', ['site=' . $siteId])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
             ],
         ]);
@@ -365,9 +366,9 @@ trait SitesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('value', [$deploymentId])->toString(),
+                Query::equal('deploymentId', [$deploymentId])->toString(),
                 Query::equal('type', ['deployment'])->toString(),
-                Query::equal('automation', [''])->toString(),
+                Query::equal('trigger', ['deployment'])->toString(),
             ],
         ]);
 
