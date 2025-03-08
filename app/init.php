@@ -36,13 +36,13 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
-use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
@@ -389,8 +389,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
-Config::load('framework-specifications', __DIR__ . '/config/frameworks/specifications.php');
+Config::load('specifications', __DIR__ . '/config/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 Config::load('site-templates', __DIR__ . '/config/site-templates.php');
 
@@ -1976,6 +1975,7 @@ App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
             return $host;
         }
     }
+
 
     return '';
 }, ['request', 'apiKey']);

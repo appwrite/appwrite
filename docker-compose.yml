@@ -953,7 +953,7 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.0
+    image: appwrite/browser:0.2.1
     networks:
       - appwrite
 
@@ -962,7 +962,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.7
+    image: openruntimes/executor:0.7.8
     restart: unless-stopped
     networks:
       - appwrite

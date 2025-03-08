@@ -177,7 +177,7 @@ class Builds extends Action
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
@@ -770,6 +770,7 @@ class Builds extends Action
                     }
 
                     $client = new FetchClient();
+                    $client->setTimeout(\intval($resource->getAttribute('timeout', '15')));
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
                     $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
@@ -1206,7 +1207,7 @@ class Builds extends Action
         }
     }
 
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback = null): void
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
     {
         $limit = 100;
         $cursor = null;

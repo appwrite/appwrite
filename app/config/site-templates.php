@@ -25,7 +25,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
@@ -35,7 +35,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './.next',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
@@ -45,7 +45,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './.output',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
@@ -55,7 +55,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
@@ -65,7 +65,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './dist',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
@@ -84,7 +84,7 @@ const TEMPLATE_FRAMEWORKS = [
         'name' => 'Other',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'static',
         'fallbackFile' => 'index.html',
     ],
@@ -93,7 +93,7 @@ const TEMPLATE_FRAMEWORKS = [
         'name' => 'React',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'static',
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
@@ -103,7 +103,7 @@ const TEMPLATE_FRAMEWORKS = [
         'name' => 'Vue.js',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
-        'buildRuntime' => 'ssr-22',
+        'buildRuntime' => 'node-22',
         'adapter' => 'static',
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
@@ -121,7 +121,8 @@ return [
         'key' => 'template-for-onelink',
         'name' => 'Onelink template',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/template-for-onelink.png',
+        'screenshotDark' => $url . '/images/sites/templates/template-for-onelink-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-onelink-light.png',
         'frameworks' => [
             getFramework('NUXT', [
                 'providerRootDirectory' => './onelink',
@@ -140,7 +141,8 @@ return [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-svelte.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-svelte-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-svelte-light.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './',
@@ -181,7 +183,8 @@ return [
         'key' => 'starter-for-react',
         'name' => 'React starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-react.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-react-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-react-light.png',
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './',
@@ -222,7 +225,8 @@ return [
         'key' => 'starter-for-vue',
         'name' => 'Vue starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-vue.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-vue-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-vue-light.png',
         'frameworks' => [
             getFramework('VUE', [
                 'providerRootDirectory' => './',
@@ -263,7 +267,8 @@ return [
         'key' => 'starter-for-react-native',
         'name' => 'React Native starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-react-native.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './',
@@ -305,7 +310,8 @@ return [
         'key' => 'starter-for-nextjs',
         'name' => 'Next.js starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-nextjs.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-nextjs-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-nextjs-light.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
@@ -346,7 +352,8 @@ return [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/starter-for-nuxt.png',
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-nuxt-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-nuxt-light.png',
         'frameworks' => [
             getFramework('NUXT', [
                 'providerRootDirectory' => './',
@@ -387,7 +394,8 @@ return [
         'key' => 'template-for-event',
         'name' => 'Event template',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/template-for-event.png',
+        'screenshotDark' => $url . '/images/sites/templates/template-for-event-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-event-light.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
@@ -422,7 +430,8 @@ return [
         'key' => 'template-for-portfolio',
         'name' => 'Portfolio template',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/template-for-portfolio.png',
+        'screenshotDark' => $url . '/images/sites/templates/template-for-portfolio-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-portfolio-light.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
@@ -438,7 +447,8 @@ return [
         'key' => 'template-for-store',
         'name' => 'Store template',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/template-for-store.png',
+        'screenshotDark' => $url . '/images/sites/templates/template-for-store-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-store-light.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './',
@@ -479,7 +489,8 @@ return [
         'key' => 'template-for-blog',
         'name' => 'Blog template',
         'useCases' => ['starter'],
-        'demoImage' => $url . '/console/images/sites/templates/template-for-blog.png',
+        'screenshotDark' => $url . '/images/sites/templates/template-for-blog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-blog-light.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './',
@@ -495,7 +506,8 @@ return [
         'key' => 'astro-starter',
         'name' => 'Astro starter',
         'useCases' => ['starter'],
-        'demoImage' => '',
+        'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
         'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
@@ -511,7 +523,8 @@ return [
         'key' => 'remix-starter',
         'name' => 'Remix starter',
         'useCases' => ['starter'],
-        'demoImage' => '',
+        'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
@@ -527,7 +540,8 @@ return [
         'key' => 'flutter-starter',
         'name' => 'Flutter starter',
         'useCases' => ['starter'],
-        'demoImage' => '',
+        'screenshotDark' => $url . '/images/sites/templates/flutter-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/flutter-starter-light.png',
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './flutter/starter',
@@ -543,6 +557,8 @@ return [
         'key' => 'nextjs-starter',
         'name' => 'Next.js starter website',
         'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/nextjs-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/nextjs-starter-light.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './nextjs/starter',
@@ -558,6 +574,8 @@ return [
         'key' => 'nuxt-starter',
         'name' => 'Nuxt starter website',
         'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/nuxt-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/nuxt-starter-light.png',
         'frameworks' => [
             getFramework('NUXT', [
                 'providerRootDirectory' => './nuxt/starter',
@@ -573,6 +591,8 @@ return [
         'key' => 'sveltekit-starter',
         'name' => 'SvelteKit starter website',
         'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/sveltekit-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/sveltekit-starter-light.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './sveltekit/starter',

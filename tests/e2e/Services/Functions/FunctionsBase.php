@@ -87,6 +87,16 @@ trait FunctionsBase
         return $function;
     }
 
+    protected function updateFunction(string $functionId, mixed $params): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $function;
+    }
+
     protected function createVariable(string $functionId, mixed $params): mixed
     {
         $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
@@ -313,23 +323,79 @@ trait FunctionsBase
         return $domain;
     }
 
-    protected function getDeploymentDownload(string $functionId, string $deploymentId): mixed
+    protected function getDeploymentDownload(string $functionId, string $deploymentId, string $type): mixed
     {
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'type' => $type
+        ]);
 
         return $response;
     }
 
-    protected function getBuildDownload(string $functionId, string $deploymentId): mixed
+    protected function setupDuplicateDeployment(string $functionId, string $deploymentId): string
     {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/build/download', array_merge([
+        $deployment = $this->createDuplicateDeployment($functionId, $deploymentId);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $function = $this->getFunction($functionId);
+            $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        return $deploymentId;
+    }
+
+    protected function createDuplicateDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId,
+        ]);
+
+        return $deployment;
+    }
+
+    protected function updateFunctionDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId
+        ]);
 
-        return $response;
+        return $function;
+    }
+
+    protected function cancelDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
+
+    protected function listSpecifications(): mixed
+    {
+        $specifications = $this->client->call(Client::METHOD_GET, '/functions/specifications', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $specifications;
     }
 }

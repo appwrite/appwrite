@@ -208,12 +208,14 @@ trait SitesBase
         return $deployments;
     }
 
-    protected function listLogs(string $siteId, mixed $params = []): mixed
+    protected function listLogs(string $siteId, array $queries = []): mixed
     {
         $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
+        ], $this->getHeaders()), [
+            'queries' => $queries
+        ]);
 
         return $logs;
     }
@@ -238,6 +240,39 @@ trait SitesBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
+    protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
+    {
+        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        return $deploymentId;
+    }
+
+    protected function createDuplicateDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId,
+        ]);
 
         return $deployment;
     }
@@ -346,23 +381,46 @@ trait SitesBase
         return $domain;
     }
 
-    protected function getDeploymentDownload(string $siteId, string $deploymentId): mixed
+    protected function getDeploymentDownload(string $siteId, string $deploymentId, string $type): mixed
     {
         $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'type' => $type,
+        ]);
 
         return $response;
     }
 
-    protected function getBuildDownload(string $siteId, string $deploymentId): mixed
+    protected function updateSiteDeployment(string $siteId, string $deploymentId): mixed
     {
-        $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/build/download', array_merge([
+        $site = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId
+        ]);
 
-        return $response;
+        return $site;
+    }
+
+    protected function cancelDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
+
+    protected function listSpecifications(): mixed
+    {
+        $specifications = $this->client->call(Client::METHOD_GET, '/sites/specifications', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $specifications;
     }
 }

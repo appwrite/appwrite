@@ -210,8 +210,24 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'functions':
+                switch ($method) {
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
+                }
+                break;
             case 'sites':
                 switch ($method) {
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
                     case 'getUsage':
                     case 'listUsage':
                         switch ($param) {

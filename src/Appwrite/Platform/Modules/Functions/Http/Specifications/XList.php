@@ -19,7 +19,7 @@ class XList extends Base
 
     public static function getName()
     {
-        return 'listFunctionsSpecifications';
+        return 'listSpecifications';
     }
 
     public function __construct()
@@ -28,7 +28,7 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/specifications')
             ->groups(['api', 'functions'])
-            ->desc('List available function runtime specifications')
+            ->desc('List specifications')
             ->label('scope', 'functions.read')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
@@ -52,25 +52,25 @@ class XList extends Base
 
     public function action(Response $response, array $plan)
     {
-        $allRuntimeSpecs = Config::getParam('runtime-specifications', []);
+        $allSpecs = Config::getParam('specifications', []);
 
-        $runtimeSpecs = [];
-        foreach ($allRuntimeSpecs as $spec) {
+        $specs = [];
+        foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
 
-            if (array_key_exists('runtimeSpecifications', $plan)) {
-                $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
+            if (array_key_exists('specifications', $plan)) {
+                $spec['enabled'] = in_array($spec['slug'], $plan['specifications']);
             }
 
             // Only add specs that are within the limits set by environment variables
             if ($spec['cpus'] <= System::getEnv('_APP_COMPUTE_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_COMPUTE_MEMORY', 512)) {
-                $runtimeSpecs[] = $spec;
+                $specs[] = $spec;
             }
         }
 
         $response->dynamic(new Document([
-            'specifications' => $runtimeSpecs,
-            'total' => count($runtimeSpecs)
+            'specifications' => $specs,
+            'total' => count($specs)
         ]), Response::MODEL_SPECIFICATION_LIST);
     }
 }
