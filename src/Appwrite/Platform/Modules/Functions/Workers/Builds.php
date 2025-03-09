@@ -399,7 +399,7 @@ class Builds extends Action
                     );
                 }
 
-                $tmpPath = '/tmp/builds/' . $deployment;
+                $tmpPath = '/tmp/builds/' . $deploymentId;
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
 
