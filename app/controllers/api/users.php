@@ -28,6 +28,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Auth\Hash;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -53,12 +54,20 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Hashes\Bcrypt;
+use Utopia\Auth\Hashes\MD5;
+use Utopia\Auth\Hashes\PHPass;
+use Utopia\Auth\Hashes\Scrypt;
+use Utopia\Auth\Hashes\ScryptModified;
+use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
+function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
     $plaintextPassword = $password;
-    $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
     if (!empty($email)) {
@@ -92,7 +101,18 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
-        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
+        $hashedPassword = null;
+
+        if (!empty($password)) {
+            if ($hash instanceof Plaintext) { // Password was never hashed, hash it with the default hash
+                $defaultHash = new ProofsPassword();
+                $hashedPassword = $defaultHash->hash($password);
+                $hash = $defaultHash->getHash();
+            } else {
+                $hashedPassword = $password;
+            }
+        }
+
         $user = new Document([
             '$id' => $userId,
             '$permissions' => [
@@ -106,11 +126,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phoneVerification' => false,
             'status' => true,
             'labels' => [],
-            'password' => $password,
-            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
-            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
-            'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
+            'password' => $hashedPassword,
+            'passwordHistory' => is_null($hashedPassword) || $passwordHistory === 0 ? [] : [$hashedPassword],
+            'passwordUpdate' => (!empty($hashedPassword)) ? DateTime::now() : null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
             'registration' => DateTime::now(),
             'reset' => false,
             'name' => $name,
@@ -121,7 +141,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'search' => implode(' ', [$userId, $email, $phone, $name]),
         ]);
 
-        if ($hash === 'plaintext') {
+        if ($hash instanceof Plaintext) {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
@@ -211,7 +231,9 @@ App::post('/v1/users')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
+        $plaintext = new Plaintext();
+
+        $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -244,7 +266,10 @@ App::post('/v1/users/bcrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $bcrypt = new Bcrypt();
+        $bcrypt->setCost(8); // Default cost
+
+        $user = createUser($bcrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -278,7 +303,9 @@ App::post('/v1/users/md5')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $md5 = new MD5();
+
+        $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -312,7 +339,13 @@ App::post('/v1/users/argon2')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $argon2 = new Argon2();
+        $argon2
+            ->setMemoryCost(2048)
+            ->setTimeCost(4)
+            ->setThreads(3);
+
+        $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -347,13 +380,12 @@ App::post('/v1/users/sha')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $options = '{}';
-
+        $sha = new Sha();
         if (!empty($passwordVersion)) {
-            $options = '{"version":"' . $passwordVersion . '"}';
+            $sha->setVersion($passwordVersion);
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -387,7 +419,9 @@ App::post('/v1/users/phpass')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $phpass = new PHPass();
+
+        $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -426,15 +460,15 @@ App::post('/v1/users/scrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $options = [
-            'salt' => $passwordSalt,
-            'costCpu' => $passwordCpu,
-            'costMemory' => $passwordMemory,
-            'costParallel' => $passwordParallel,
-            'length' => $passwordLength
-        ];
+        $scrypt = new Scrypt();
+        $scrypt
+            ->setSalt($passwordSalt)
+            ->setCpuCost($passwordCpu)
+            ->setMemoryCost($passwordMemory)
+            ->setParallelCost($passwordParallel)
+            ->setLength($passwordLength);
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -471,7 +505,13 @@ App::post('/v1/users/scrypt-modified')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $scryptModified = new ScryptModified();
+        $scryptModified
+            ->setSalt($passwordSalt)
+            ->setSaltSeparator($passwordSaltSeparator)
+            ->setSignerKey($passwordSignerKey);
+
+        $user = createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1012,7 +1052,6 @@ App::get('/v1/users/identities')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
@@ -1269,7 +1308,13 @@ App::patch('/v1/users/:userId/password')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        // Create Argon2 hasher with default settings
+        $hasher = new Argon2();
+        $hasher->setMemoryCost(65536);
+        $hasher->setTimeCost(4);
+        $hasher->setThreads(3);
+
+        $newPassword = $hasher->hash($password);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $user->getAttribute('passwordHistory', []);
@@ -1287,8 +1332,12 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
             ->setAttribute('passwordUpdate', DateTime::now())
-            ->setAttribute('hash', Auth::DEFAULT_ALGO)
-            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+            ->setAttribute('hash', 'argon2')
+            ->setAttribute('hashOptions', [
+                'memoryCost' => 65536,
+                'timeCost' => 4,
+                'threads' => 3
+            ]);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -2466,3 +2515,4 @@ App::get('/v1/users/usage')
             'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });
+
