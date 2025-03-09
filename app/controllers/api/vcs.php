@@ -209,11 +209,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $commands = [];
-            if (!empty($resource->getAttribute('buildCommand', ''))) {
-                $commands[] = $resource->getAttribute('buildCommand', '');
-            }
             if (!empty($resource->getAttribute('installCommand', ''))) {
                 $commands[] = $resource->getAttribute('installCommand', '');
+            }
+            if (!empty($resource->getAttribute('buildCommand', ''))) {
+                $commands[] = $resource->getAttribute('buildCommand', '');
             }
             if (!empty($resource->getAttribute('commands', ''))) {
                 $commands[] = $resource->getAttribute('commands', '');

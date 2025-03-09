@@ -89,11 +89,12 @@ class Create extends Action
         $deviceForSites->transfer($path, $destination, $deviceForSites);
 
         $commands = [];
-        if (!empty($site->getAttribute('buildCommand', ''))) {
-            $commands[] = $site->getAttribute('buildCommand', '');
-        }
+
         if (!empty($site->getAttribute('installCommand', ''))) {
             $commands[] = $site->getAttribute('installCommand', '');
+        }
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
         }
 
         $deployment->removeAttribute('$internalId');
