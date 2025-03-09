@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getDeployment',
@@ -67,13 +68,6 @@ class Get extends Action
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
-
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-        $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
-        $deployment->setAttribute('buildLogs', $build->getAttribute('logs', ''));
-        $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
-        $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
-        $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }

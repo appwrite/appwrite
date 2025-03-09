@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
+use Appwrite\Query;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -69,7 +70,7 @@ class Base extends Action
             'resourceInternalId' => $function->getInternalId(),
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
-            'commands' => $function->getAttribute('commands', ''),
+            'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
@@ -138,6 +139,14 @@ class Base extends Action
             }
         }
 
+        $commands = [];
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
             '$permissions' => [
@@ -148,9 +157,8 @@ class Base extends Action
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getInternalId(),
             'resourceType' => 'sites',
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'buildCommands' => implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
@@ -174,15 +182,24 @@ class Base extends Action
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
-        $ruleId = md5($domain);
+
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+
         Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
+                'trigger' => 'deployment',
                 'type' => 'deployment',
-                'value' => $deployment->getId(),
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentResourceType' => 'site',
+                'deploymentResourceId' => $site->getId(),
+                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentVcsProviderBranch' => $providerBranch,
                 'status' => 'verified',
                 'certificateId' => '',
                 'search' => implode(' ', [$ruleId, $domain]),
@@ -196,5 +213,39 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
+    }
+
+    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
+    {
+        $limit = 100;
+        $cursor = null;
+
+        do {
+            $queries = \array_merge([
+                Query::limit($limit),
+                Query::equal("projectInternalId", [$project->getInternalId()])
+            ], $queries);
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find('rules', $queries);
+
+            $total = \count($results);
+            if ($total > 0) {
+                $cursor = $results[$total - 1];
+            }
+
+            if ($total < $limit) {
+                $cursor = null;
+            }
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+        } while (!\is_null($cursor));
     }
 }

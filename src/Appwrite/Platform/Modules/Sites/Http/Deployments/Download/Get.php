@@ -15,6 +15,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Swoole\Request;
+use Utopia\Validator\WhiteList;
 
 class Get extends Action
 {
@@ -33,6 +34,7 @@ class Get extends Action
             ->desc('Download deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'getDeploymentDownload',
@@ -51,14 +53,16 @@ class Get extends Action
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
             ->inject('deviceForSites')
+            ->inject('deviceForBuilds')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForSites)
+    public function action(string $siteId, string $deploymentId, string $type, Response $response, Request $request, Database $dbForProject, Device $deviceForSites, Device $deviceForBuilds)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -74,18 +78,28 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $path = $deployment->getAttribute('path', '');
-        if (!$deviceForSites->exists($path)) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        switch ($type) {
+            case 'output':
+                $path = $deployment->getAttribute('buildPath', '');
+                $device = $deviceForBuilds;
+                break;
+            case 'source':
+                $path = $deployment->getAttribute('sourcePath', '');
+                $device = $deviceForSites;
+                break;
+        }
+
+        if (!$device->exists($path)) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
         $response
             ->setContentType('application/gzip')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
-        $size = $deviceForSites->getFileSize($path);
+        $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -107,13 +121,13 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceForSites->read($path, $start, ($end - $start + 1)));
+            $response->send($device->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForSites->read(
+                    $device->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -122,7 +136,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForSites->read($path));
+            $response->send($device->read($path));
         }
     }
 }

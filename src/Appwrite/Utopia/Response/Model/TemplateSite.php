@@ -28,11 +28,17 @@ class TemplateSite extends Model
                 'default' => '',
                 'example' => 'https://nextjs-starter.appwrite.network/',
             ])
-            ->addRule('demoImage', [
+            ->addRule('screenshotDark', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File URL with preview screenshot.',
+                'description' => 'File URL with preview screenshot in dark theme preference.',
                 'default' => '',
-                'example' => 'https://cloud.appwrite.io/console/images/sites/templates/nextjs-starter.png',
+                'example' => 'https://cloud.appwrite.io/images/sites/templates/template-for-blog-dark.png',
+            ])
+            ->addRule('screenshotLight', [
+                'type' => self::TYPE_STRING,
+                'description' => 'File URL with preview screenshot in light theme preference.',
+                'default' => '',
+                'example' => 'https://cloud.appwrite.io/images/sites/templates/template-for-blog-light.png',
             ])
             ->addRule('useCases', [
                 'type' => self::TYPE_STRING,

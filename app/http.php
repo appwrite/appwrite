@@ -29,6 +29,8 @@ use Utopia\Pools\Group;
 use Utopia\Swoole\Files;
 use Utopia\System\System;
 
+Files::load(__DIR__.'/../public');
+
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
 $domains = new Table(1_000_000); // 1 million rows

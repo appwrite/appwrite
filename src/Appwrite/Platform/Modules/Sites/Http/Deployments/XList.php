@@ -35,6 +35,7 @@ class XList extends Action
             ->desc('List deployments')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
                 name: 'listDeployments',
@@ -108,15 +109,6 @@ class XList extends Action
 
         $results = $dbForProject->find('deployments', $queries);
         $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
-
-        foreach ($results as $result) {
-            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
-            $result->setAttribute('status', $build->getAttribute('status', 'processing'));
-            $result->setAttribute('buildLogs', $build->getAttribute('logs', ''));
-            $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
-            $result->setAttribute('buildSize', $build->getAttribute('size', 0));
-            $result->setAttribute('size', $result->getAttribute('size', 0));
-        }
 
         $response->dynamic(new Document([
             'deployments' => $results,

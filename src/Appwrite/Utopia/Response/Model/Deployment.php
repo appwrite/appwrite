@@ -52,7 +52,7 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'index.js',
             ])
-            ->addRule('size', [
+            ->addRule('sourceSize', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The code size in bytes.',
                 'default' => 0,
@@ -100,7 +100,7 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'Compiling source files...',
             ])
-            ->addRule('buildTime', [
+            ->addRule('buildDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The current build time in seconds.',
                 'default' => 0,

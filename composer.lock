@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e4697fc3967676a20b4891042adb391a",
+    "content-hash": "093587189a16826d640cab3e6ca5f251",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.17.0",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797"
+                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9a9e20d1f5c28caf539ad4cb52164dc283f99797",
-                "reference": "9a9e20d1f5c28caf539ad4cb52164dc283f99797",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/f1ddcc567325659ad79506bc9684a4fc2009dc42",
+                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.17.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.18.0"
             },
-            "time": "2025-01-10T13:36:30+00:00"
+            "time": "2025-03-07T14:30:31+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -3812,6 +3812,51 @@
                 "source": "https://github.com/utopia-php/database/tree/0.59.0"
             },
             "time": "2025-02-12T08:08:29+00:00"
+        },
+        {
+            "name": "utopia-php/detector",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/detector.git",
+                "reference": "5dcabbfcf99731f3a37d86b7cb1e93c968baf64b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/5dcabbfcf99731f3a37d86b7cb1e93c968baf64b",
+                "reference": "5dcabbfcf99731f3a37d86b7cb1e93c968baf64b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Detector\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for fast and reliable environment identification.",
+            "keywords": [
+                "detector",
+                "framework",
+                "php",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/detector/issues",
+                "source": "https://github.com/utopia-php/detector/tree/0.1.1"
+            },
+            "time": "2025-03-08T22:25:49+00:00"
         },
         {
             "name": "utopia-php/domains",

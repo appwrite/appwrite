@@ -34,6 +34,7 @@ class Delete extends Action
             ->desc('Delete deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
@@ -82,8 +83,8 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
         }
 
-        if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceForSites->delete($deployment->getAttribute('path', '')))) {
+        if (!empty($deployment->getAttribute('sourcePath', ''))) {
+            if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }

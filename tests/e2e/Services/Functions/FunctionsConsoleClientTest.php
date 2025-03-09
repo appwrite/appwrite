@@ -58,7 +58,7 @@ class FunctionsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $usage = $this->getFunctionUsage($data['functionId'], [
+        $usage = $this->getUsage($data['functionId'], [
             'range' => '24h'
         ]);
         $this->assertEquals(200, $usage['headers']['status-code']);
@@ -87,12 +87,12 @@ class FunctionsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $usage = $this->getFunctionUsage($data['functionId'], [
+        $usage = $this->getUsage($data['functionId'], [
             'range' => '232h'
         ]);
         $this->assertEquals(400, $usage['headers']['status-code']);
 
-        $usage = $this->getFunctionUsage('randomFunctionId', [
+        $usage = $this->getUsage('randomFunctionId', [
             'range' => '24h'
         ]);
         $this->assertEquals(404, $usage['headers']['status-code']);
@@ -517,7 +517,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertNotEmpty($deploymentId);
 
-        $response = $this->getDeploymentDownload($functionId, $deploymentId);
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
@@ -525,7 +525,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $deploymentMd5 = \md5($response['body']);
 
-        $response = $this->getBuildDownload($functionId, $deploymentId);
+        $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('application/gzip', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);

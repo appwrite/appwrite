@@ -108,6 +108,8 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
+        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deployment', ''));
+
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
 
@@ -130,10 +132,14 @@ class Create extends Action
             'domain' => $domain->get(),
             'status' => $status,
             'type' => 'deployment',
-            'value' => $function->getAttribute('deployment', ''),
+            'trigger' => 'manual',
+            'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+            'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+            'deploymentResourceType' => 'function',
+            'deploymentResourceId' => $function->getId(),
+            'deploymentResourceInternalId' => $function->getInternalId(),
+            'deploymentVcsProviderBranch' => $branch,
             'certificateId' => '',
-            'automation' => 'function=' . $function->getId(),
-            'automation' => !empty($branch) ? ('branch=' . $branch) : ('function=' . $function->getId()),
             'search' => implode(' ', [$ruleId, $domain->get(), $branch]),
         ]);
 

@@ -42,6 +42,7 @@ class Create extends Base
             ->desc('Create deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
@@ -120,6 +121,14 @@ class Create extends Base
             return;
         }
 
+        $commands = [];
+        if (!empty($site->getAttribute('installCommand', ''))) {
+            $commands[] = $site->getAttribute('installCommand', '');
+        }
+        if (!empty($site->getAttribute('buildCommand', ''))) {
+            $commands[] = $site->getAttribute('buildCommand', '');
+        }
+
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -131,9 +140,8 @@ class Create extends Base
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getInternalId(),
             'resourceType' => 'sites',
-            'installCommand' => $site->getAttribute('installCommand', ''),
-            'buildCommand' => $site->getAttribute('buildCommand', ''),
-            'outputDirectory' => $site->getAttribute('outputDirectory', ''),
+            'buildCommands' => \implode(' && ', $commands),
+            'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'type' => 'manual',
             'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,
@@ -141,7 +149,10 @@ class Create extends Base
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
-        $ruleId = md5($domain);
+
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+
         Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
@@ -149,7 +160,12 @@ class Create extends Base
                 'projectInternalId' => $project->getInternalId(),
                 'domain' => $domain,
                 'type' => 'deployment',
-                'value' => $deployment->getId(),
+                'trigger' => 'deployment',
+                'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
+                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                'deploymentResourceType' => 'site',
+                'deploymentResourceId' => $site->getId(),
+                'deploymentResourceInternalId' => $site->getInternalId(),
                 'status' => 'verified',
                 'certificateId' => '',
                 'search' => implode(' ', [$ruleId, $domain]),
