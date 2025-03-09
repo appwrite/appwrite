@@ -30,7 +30,7 @@ class Get extends Base
             ->setHttpPath('/v1/functions/templates/:templateId')
             ->desc('Get function template')
             ->groups(['api', 'functions'])
-            ->label('scope', 'functions.read')
+            ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',

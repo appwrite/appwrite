@@ -30,7 +30,7 @@ class Get extends Base
             ->setHttpPath('/v1/sites/templates/:templateId')
             ->desc('Get site template')
             ->groups(['api', 'sites'])
-            ->label('scope', 'sites.read')
+            ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',

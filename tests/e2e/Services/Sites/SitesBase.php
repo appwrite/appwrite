@@ -299,10 +299,10 @@ trait SitesBase
 
     protected function getTemplate(string $templateId)
     {
-        $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, array_merge([
+        $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]);
         return $template;
     }
 
