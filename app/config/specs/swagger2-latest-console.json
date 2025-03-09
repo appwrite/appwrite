@@ -33353,7 +33353,7 @@
                                         "runtime",
                                         "framework"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "VCSDetectionType",
                                     "x-enum-keys": []
                                 },
                                 "providerRootDirectory": {
@@ -33438,7 +33438,7 @@
                             "runtime",
                             "framework"
                         ],
-                        "x-enum-name": null,
+                        "x-enum-name": "VCSDetectionType",
                         "x-enum-keys": [],
                         "in": "query"
                     },

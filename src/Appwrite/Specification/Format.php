@@ -245,7 +245,7 @@ abstract class Format
                         break;
                 }
                 break;
-            case 'sites':
+            case 'vcs':
                 switch ($method) {
                     case 'createRepositoryDetection':
                     case 'listRepositories':
