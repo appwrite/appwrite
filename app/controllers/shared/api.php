@@ -202,18 +202,18 @@ App::init()
 
         /**
          * Handle user authentication and session validation.
-         * 
+         *
          * This function follows a series of steps to determine the appropriate user session
          * based on cookies, headers, and JWT tokens.
-         * 
+         *
          * Process:
-         * 
+         *
          * Project & Role Validation:
          * 1. Check if the project is empty. If so, throw an exception.
          * 2. Get the roles configuration.
          * 3. Determine the role for the user based on the user document.
          * 4. Get the scopes for the role.
-         * 
+         *
          * API Key Authentication:
          * 5. If there is an API key:
          *    - Verify no user session exists simultaneously
@@ -237,7 +237,7 @@ App::init()
          * 12. Validate MFA requirements:
          *     - Check if MFA is enabled
          *     - Verify email status
-         *     - Verify phone status  
+         *     - Verify phone status
          *     - Verify authenticator status
          * 13. Handle Multi-Factor Authentication:
          *     - Check remaining required factors
@@ -255,7 +255,7 @@ App::init()
 
         // Step 3: Determine role for user
         // TODO get scopes from the identity instead of the user roles config. The identity will containn the scopes the user authorized for the access token.
-        
+
         $role = $user->isEmpty()
             ? Role::guests()->toString()
             : Role::users()->toString();

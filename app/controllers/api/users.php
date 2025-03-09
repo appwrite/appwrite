@@ -29,6 +29,15 @@ use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
+use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Hashes\Bcrypt;
+use Utopia\Auth\Hashes\MD5;
+use Utopia\Auth\Hashes\PHPass;
+use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Hashes\Scrypt;
+use Utopia\Auth\Hashes\ScryptModified;
+use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -54,15 +63,6 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Auth\Hashes\Argon2;
-use Utopia\Auth\Hashes\Bcrypt;
-use Utopia\Auth\Hashes\MD5;
-use Utopia\Auth\Hashes\PHPass;
-use Utopia\Auth\Hashes\Scrypt;
-use Utopia\Auth\Hashes\ScryptModified;
-use Utopia\Auth\Hashes\Sha;
-use Utopia\Auth\Hashes\Plaintext;
-use Utopia\Auth\Proofs\Password as ProofsPassword;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
@@ -2515,4 +2515,3 @@ App::get('/v1/users/usage')
             'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });
-
