@@ -277,6 +277,7 @@ class FunctionsCustomClientTest extends Scope
         // List all templates
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $templates['headers']['status-code']);
@@ -297,6 +298,7 @@ class FunctionsCustomClientTest extends Scope
         // List templates with pagination
         $templatesOffset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
             'offset' => 2
@@ -308,6 +310,7 @@ class FunctionsCustomClientTest extends Scope
         // List templates with filters
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
             'runtimes' => ['bun-1.0', 'dart-2.16']
@@ -349,6 +352,7 @@ class FunctionsCustomClientTest extends Scope
         // List templates with invalid limit
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 5001,
             'offset' => 10,

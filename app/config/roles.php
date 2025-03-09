@@ -26,6 +26,7 @@ $member = [
     'subscribers.write',
     'subscribers.read',
     'assistant.read',
+    'rules.read'
 ];
 
 $admins = [
@@ -58,6 +59,10 @@ $admins = [
     'health.read',
     'functions.read',
     'functions.write',
+    'sites.read',
+    'sites.write',
+    'log.read',
+    'log.write',
     'execution.read',
     'execution.write',
     'rules.read',
