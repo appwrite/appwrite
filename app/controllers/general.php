@@ -202,7 +202,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
                 $membershipExists = false;
                 $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                if (!$project->isEmpty()) {
+                if (!$project->isEmpty() && isset($user)) {
                     $teamId = $project->getAttribute('teamId', '');
                     $membership = $user->find('teamId', $teamId, 'memberships');
                     if (!empty($membership)) {
