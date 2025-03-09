@@ -1379,6 +1379,17 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
 
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
+    if (!empty($project->getAttribute('region')) && $project->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
+        var_dump([
+            'x-projectId' => $projectId,
+            'projectId'       => $project->getId(),
+            'projectRegion'   => $project->getAttribute('region'),
+            '_APP_REGION'     => System::getEnv('_APP_REGION'),
+        ]);
+
+        throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+    }
+
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
@@ -1442,6 +1453,7 @@ App::setResource('console', function () {
             'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
         ],
+        'region' =>  System::getEnv('_APP_REGION', 'default')
     ]);
 }, []);
 

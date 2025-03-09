@@ -72,11 +72,19 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     if ($route->isEmpty()) {
-        if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+
+        $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+        $appDomainFunctions =  System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+
+        if (!empty($appDomainFunctionsFallback) && \str_ends_with($host, $appDomainFunctionsFallback)) {
+            $appDomainFunctions =  $appDomainFunctionsFallback;
+        }
+
+        if ($host === $appDomainFunctions) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
 
-        if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+        if (\str_ends_with($host, $appDomainFunctions)) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
         }
 
@@ -511,6 +519,8 @@ App::init()
         */
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
@@ -804,6 +814,7 @@ App::error()
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
+            Console::error('[Error] Trace: ' . $error->getTraceAsString());
         }
 
         switch ($class) {
