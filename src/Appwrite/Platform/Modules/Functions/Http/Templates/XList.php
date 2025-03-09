@@ -30,6 +30,7 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/templates')
             ->desc('List templates')
+            ->groups(['api', 'sites'])
             ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
