@@ -16,8 +16,6 @@ if (System::getEnv('_APP_ENV') === 'development') {
 
 $url = $protocol . '://' . $hostname;
 
-// TODO: @Meldiron Angular
-
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
         'key' => 'sveltekit',
