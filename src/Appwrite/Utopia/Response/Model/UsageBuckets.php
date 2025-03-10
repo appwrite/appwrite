@@ -42,6 +42,19 @@ class UsageBuckets extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('imageTransformations', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of files transformations per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('imageTransformationsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of files transformations.',
+                'default' => 0,
+                'example' => 0,
+            ])
         ;
     }
 

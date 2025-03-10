@@ -326,6 +326,8 @@ const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
 const METRIC_TOPICS = 'topics';
+const METRIC_TARGETS = 'targets';
+const METRIC_PROVIDER_TYPE_TARGETS = '{providerType}.targets';
 const METRIC_KEYS = 'keys';
 const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
 const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
@@ -1219,9 +1221,6 @@ App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
 App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
-    return new Usage($publisher);
-}, ['publisher']);
 App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
@@ -1287,6 +1286,25 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var string $mode */
+
+    /**
+     * Handles user authentication and session validation.
+     *
+     * This function follows a series of steps to determine the appropriate user session
+     * based on cookies, headers, and JWT tokens.
+     *
+     * Process:
+     * 1. Checks the cookie based on mode:
+     *    - If in admin mode, redirects to the console.
+     *    - Otherwise, retrieves the project ID from the cookie.
+     * 2. If no cookie is found, attempts to retrieve the fallback header `x-fallback-cookies`.
+     *    - If this method is used, returns the header: `X-Debug-Fallback: true`.
+     * 3. Fetches the user document from the appropriate database based on the mode.
+     * 4. If the user document is empty or the session key cannot be verified, sets an empty user document.
+     * 5. Regardless of the results from steps 1-4, attempts to fetch the JWT token.
+     * 6. If the JWT user has a valid session ID, updates the user variable with the user from `projectDB`,
+     *    overwriting the previous value.
+     */
 
     Authorization::setDefaultStatus(true);
 

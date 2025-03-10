@@ -53,8 +53,9 @@ trait MigrationsBase
         $this->assertNotEmpty($migration['body']);
         $this->assertNotEmpty($migration['body']['$id']);
 
-        $attempts = 0;
-        while ($attempts < 5) {
+        $migrationResult = [];
+
+        $this->assertEventually(function () use ($migration, &$migrationResult) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -66,25 +67,18 @@ trait MigrationsBase
             $this->assertNotEmpty($response['body']['$id']);
 
             if ($response['body']['status'] === 'failed') {
-                \var_dump($response);
-                $this->fail('Migration failed', json_encode($response['body'], JSON_PRETTY_PRINT));
+                $this->fail('Migration failed' . json_encode($response['body'], JSON_PRETTY_PRINT));
             }
 
             $this->assertNotEquals('failed', $response['body']['status']);
+            $this->assertEquals('completed', $response['body']['status']);
 
-            if ($response['body']['status'] === 'completed') {
-                return $response['body'];
-            }
+            $migrationResult = $response['body'];
 
-            if ($attempts === 4) {
-                $this->assertEquals('completed', $response['body']['status']);
-            }
+            return true;
+        });
 
-            $attempts++;
-            sleep(5);
-        }
-
-        return [];
+        return $migrationResult;
     }
 
     /**

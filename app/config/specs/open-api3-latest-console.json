@@ -11880,7 +11880,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
-                    "weight": 134,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11987,7 +11987,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
-                    "weight": 130,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12035,7 +12035,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
-                    "weight": 136,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12096,7 +12096,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
-                    "weight": 135,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12157,7 +12157,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
-                    "weight": 137,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12229,7 +12229,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
-                    "weight": 138,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12378,7 +12378,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
-                    "weight": 142,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12439,7 +12439,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
-                    "weight": 133,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12500,7 +12500,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
-                    "weight": 139,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12561,7 +12561,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
-                    "weight": 140,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12622,7 +12622,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
-                    "weight": 141,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12866,7 +12866,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
-                    "weight": 132,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13023,7 +13023,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
-                    "weight": 131,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -39681,6 +39681,20 @@
                             "$ref": "#\/components\/schemas\/metric"
                         },
                         "x-example": []
+                    },
+                    "imageTransformations": {
+                        "type": "array",
+                        "description": "Aggregated number of files transformations per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "imageTransformationsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of files transformations.",
+                        "x-example": 0,
+                        "format": "int32"
                     }
                 },
                 "required": [
@@ -39688,7 +39702,9 @@
                     "filesTotal",
                     "filesStorageTotal",
                     "files",
-                    "storage"
+                    "storage",
+                    "imageTransformations",
+                    "imageTransformationsTotal"
                 ]
             },
             "usageFunctions": {
@@ -40462,6 +40478,18 @@
                             "$ref": "#\/components\/schemas\/metric"
                         },
                         "x-example": []
+                    },
+                    "imageTransformationsTotal": {
+                        "type": "integer",
+                        "description": "An array of aggregated number of image transformations.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "imageTransformations": {
+                        "type": "integer",
+                        "description": "Total aggregated number of image transformations.",
+                        "x-example": 0,
+                        "format": "int32"
                     }
                 },
                 "required": [
@@ -40493,7 +40521,9 @@
                     "authPhoneEstimate",
                     "authPhoneCountryBreakdown",
                     "databasesReads",
-                    "databasesWrites"
+                    "databasesWrites",
+                    "imageTransformationsTotal",
+                    "imageTransformations"
                 ]
             },
             "headers": {

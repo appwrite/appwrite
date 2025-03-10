@@ -17,13 +17,20 @@ class StatsUsage extends Action
     private int $lastTriggeredTime = 0;
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
-    private const KEYS_THRESHOLD = 10000;
+    private const BATCH_SIZE_DEVELOPMENT = 1;
+    private const BATCH_SIZE_PRODUCTION = 10_000;
 
     public static function getName(): string
     {
         return 'stats-usage';
     }
 
+    private function getBatchSize(): int
+    {
+        return System::getEnv('_APP_ENV', 'development') === 'development'
+            ? self::BATCH_SIZE_DEVELOPMENT
+            : self::BATCH_SIZE_PRODUCTION;
+    }
     /**
      * @throws Exception
      */
@@ -86,7 +93,7 @@ class StatsUsage extends Action
 
         // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
-            $this->keys >= self::KEYS_THRESHOLD ||
+            $this->keys >= $this->getBatchSize() ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
             Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
