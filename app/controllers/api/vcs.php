@@ -712,10 +712,10 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             $framework = $detector->detect();
 
             if (!\is_null($framework)) {
-                $framework = $framework->getName();
                 $output->setAttribute('installCommand', $framework->getInstallCommand());
                 $output->setAttribute('buildCommand', $framework->getBuildCommand());
                 $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
+                $framework = $framework->getName();
             } else {
                 $framework = 'other';
                 $output->setAttribute('installCommand', '');
