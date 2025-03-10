@@ -375,6 +375,13 @@ return [
         'code' => 409,
     ],
 
+    /** Console */
+    Exception::RESOURCE_ALREADY_EXISTS => [
+        'name' => Exception::RESOURCE_ALREADY_EXISTS,
+        'description' => 'Resource with the requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
+
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
@@ -520,7 +527,7 @@ return [
         'code' => 404,
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
-        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
@@ -532,6 +539,28 @@ return [
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::FUNCTION_RUNTIME_NOT_DETECTED => [
+        'name' => Exception::FUNCTION_RUNTIME_NOT_DETECTED,
+        'description' => 'Function runtime could not be detected.',
+        'code' => 400,
+    ],
+
+    /** Sites */
+    Exception::SITE_NOT_FOUND => [
+        'name' => Exception::SITE_NOT_FOUND,
+        'description' => 'Site with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SITE_FRAMEWORK_UNSUPPORTED => [
+        'name' => Exception::SITE_FRAMEWORK_UNSUPPORTED,
+        'description' => 'The requested framework is either inactive or unsupported. Please check the value of the _APP_SITES_FRAMEWORKS environment variable.',
+        'code' => 404,
+    ],
+    Exception::SITE_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
+        'description' => 'Site Template with the requested ID could not be found.',
         'code' => 404,
     ],
 
@@ -575,6 +604,13 @@ return [
         'name' => Exception::EXECUTION_IN_PROGRESS,
         'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
         'code' => 400,
+    ],
+
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
+        'code' => 404,
     ],
 
     /** Databases */
@@ -843,6 +879,11 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::VARIABLE_CANNOT_UNSET_SECRET => [
+        'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
+        'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,

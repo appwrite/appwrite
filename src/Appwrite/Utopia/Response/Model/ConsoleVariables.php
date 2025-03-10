@@ -22,7 +22,7 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => '30000000',
             ])
-            ->addRule('_APP_FUNCTIONS_SIZE_LIMIT', [
+            ->addRule('_APP_COMPUTE_SIZE_LIMIT', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum file size allowed for deployment in bytes.',
                 'default' => '',
@@ -51,7 +51,31 @@ class ConsoleVariables extends Model
                 'description' => 'Defines if AI assistant is enabled.',
                 'default' => false,
                 'example' => true,
-            ]);
+            ])
+            ->addRule('_APP_DOMAIN_SITES', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A domain to use for site URLs.',
+                'default' => '',
+                'example' => 'sites.localhost',
+            ])
+            ->addRule(
+                '_APP_OPTIONS_FORCE_HTTPS',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Defines if HTTPS is enforced for all requests.',
+                    'default' => '',
+                    'example' => 'enabled',
+                ]
+            )
+            ->addRule(
+                '_APP_DOMAINS_NAMESERVERS',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Comma-separated list of nameservers.',
+                    'default' => '',
+                    'example' => 'ns1.example.com,ns2.example.com',
+                ]
+            );
     }
 
     /**
