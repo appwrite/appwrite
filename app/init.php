@@ -347,6 +347,7 @@ Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
+Config::load('console', __DIR__ . '/config/console.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
@@ -1408,45 +1409,7 @@ App::setResource('session', function (Document $user) {
 }, ['user']);
 
 App::setResource('console', function () {
-    return new Document([
-        '$id' => ID::custom('console'),
-        '$internalId' => ID::custom('console'),
-        'name' => 'Appwrite',
-        '$collection' => ID::custom('projects'),
-        'description' => 'Appwrite core engine',
-        'logo' => '',
-        'teamId' => null,
-        'webhooks' => [],
-        'keys' => [],
-        'platforms' => [
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'localhost',
-            ], // Current host is added on app init
-        ],
-        'legalName' => '',
-        'legalCountry' => '',
-        'legalState' => '',
-        'legalCity' => '',
-        'legalAddress' => '',
-        'legalTaxId' => '',
-        'auths' => [
-            'mockNumbers' => [],
-            'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
-            'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
-            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
-        ],
-        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'oAuthProviders' => [
-            'githubEnabled' => true,
-            'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
-        ],
-    ]);
+    return new Document(Config::getParam('console'));
 }, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
