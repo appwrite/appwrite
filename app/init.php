@@ -817,6 +817,10 @@ $register->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    if (empty($providerConfig)) {
+        return;
+    }
+
     try {
         $loggingProvider = new DSN($providerConfig ?? '');
 
