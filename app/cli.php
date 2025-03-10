@@ -2,11 +2,13 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
@@ -16,6 +18,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
@@ -98,6 +101,48 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
 
     return $dbForPlatform;
 }, ['pools', 'cache']);
+
+CLI::setResource('console', function () {
+    return new Document([
+        '$id' => ID::custom('console'),
+        '$internalId' => ID::custom('console'),
+        'name' => 'Appwrite',
+        '$collection' => ID::custom('projects'),
+        'description' => 'Appwrite core engine',
+        'logo' => '',
+        'teamId' => null,
+        'webhooks' => [],
+        'keys' => [],
+        'platforms' => [
+            [
+                '$collection' => ID::custom('platforms'),
+                'name' => 'Localhost',
+                'type' => Origin::CLIENT_TYPE_WEB,
+                'hostname' => 'localhost',
+            ], // Current host is added on app init
+        ],
+        'legalName' => '',
+        'legalCountry' => '',
+        'legalState' => '',
+        'legalCity' => '',
+        'legalAddress' => '',
+        'legalTaxId' => '',
+        'auths' => [
+            'mockNumbers' => [],
+            'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
+            'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
+        ],
+        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'oAuthProviders' => [
+            'githubEnabled' => true,
+            'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
+            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        ],
+    ]);
+}, []);
 
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
