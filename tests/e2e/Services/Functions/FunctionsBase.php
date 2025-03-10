@@ -256,7 +256,7 @@ trait FunctionsBase
         $template = $this->client->call(Client::METHOD_GET, '/functions/templates/' . $templateId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]));
 
         return $template;
     }
