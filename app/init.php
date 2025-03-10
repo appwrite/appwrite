@@ -326,6 +326,8 @@ const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
 const METRIC_TOPICS = 'topics';
+const METRIC_TARGETS = 'targets';
+const METRIC_PROVIDER_TYPE_TARGETS = '{providerType}.targets';
 const METRIC_KEYS = 'keys';
 const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
 const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
@@ -1218,9 +1220,6 @@ App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
 }, ['publisher']);
 App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
     return new Func($publisher);
-}, ['publisher']);
-App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
-    return new Usage($publisher);
 }, ['publisher']);
 App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
     return new Certificate($publisher);

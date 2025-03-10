@@ -602,7 +602,7 @@ App::init()
 
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
-                    $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -628,11 +628,13 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-
-                    $transformedAt = $file->getAttribute('transformedAt', '');
-                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-                        $file->setAttribute('transformedAt', DateTime::now());
-                        Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                    //Do not update transformedAt if it's a console user
+                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                        $transformedAt = $file->getAttribute('transformedAt', '');
+                        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                            $file->setAttribute('transformedAt', DateTime::now());
+                            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                        }
                     }
                 }
 

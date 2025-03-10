@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
@@ -44,15 +45,17 @@ class Functions extends Action
             ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
+            ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
+    public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -136,7 +139,9 @@ class Functions extends Action
                     $this->execute(
                         log: $log,
                         dbForProject: $dbForProject,
+                        queueForWebhooks: $queueForWebhooks,
                         queueForFunctions: $queueForFunctions,
+                        queueForRealtime: $queueForRealtime,
                         queueForStatsUsage: $queueForStatsUsage,
                         queueForEvents: $queueForEvents,
                         project: $project,
@@ -176,7 +181,9 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
+                    queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
@@ -198,7 +205,9 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
+                    queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
@@ -285,6 +294,7 @@ class Functions extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param StatsUsage $queueForStatsUsage
      * @param Event $queueForEvents
      * @param Document $project
@@ -308,7 +318,9 @@ class Functions extends Action
     private function execute(
         Log $log,
         Database $dbForProject,
+        Webhook $queueForWebhooks,
         Func $queueForFunctions,
+        Realtime $queueForRealtime,
         StatsUsage $queueForStatsUsage,
         Event $queueForEvents,
         Document $project,
@@ -554,20 +566,20 @@ class Functions extends Action
             ;
         }
 
-
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
-        /** Trigger Webhook */
         $executionModel = new Execution();
         $queueForEvents
-            ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-            ->setClass(Event::WEBHOOK_CLASS_NAME)
             ->setProject($project)
             ->setUser($user)
             ->setEvent('functions.[functionId].executions.[executionId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())))
+            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())));
+
+        /** Trigger Webhook */
+        $queueForWebhooks
+            ->from($queueForEvents)
             ->trigger();
 
         /** Trigger Functions */
@@ -604,6 +616,12 @@ class Functions extends Action
             channels: $target['channels'],
             roles: $target['roles']
         );
+
+        $queueForRealtime
+            ->from($queueForEvents)
+            ->setSubscribers(['console', $project->getId()])
+            ->trigger();
+
 
         if (!empty($error)) {
             throw new Exception($error, $errorCode);

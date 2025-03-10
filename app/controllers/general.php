@@ -906,8 +906,9 @@ App::options()
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
+    ->inject('project')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -930,6 +931,16 @@ App::options()
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
             ->noContent();
+
+        /** OPTIONS requests in utopia do not execute shutdown handlers, as a result we need to track the OPTIONS requests explicitly
+         * @see https://github.com/utopia-php/http/blob/0.33.16/src/App.php#L825-L855
+         */
+        $queueForStatsUsage
+            ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+            ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize())
+            ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
+            ->setProject($project)
+            ->trigger();
     });
 
 App::error()
@@ -1044,7 +1055,10 @@ App::error()
             }
         }
 
-        if ($publish && $project->getId() !== 'console') {
+        /**
+         * If its not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
+         */
+        if (!$publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
