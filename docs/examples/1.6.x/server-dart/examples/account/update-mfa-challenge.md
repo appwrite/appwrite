@@ -7,7 +7,7 @@ Client client = Client()
 
 Account account = Account(client);
 
- result = await account.updateMfaChallenge(
+Session result = await account.updateMfaChallenge(
     challengeId: '<CHALLENGE_ID>',
     otp: '<OTP>',
 );
