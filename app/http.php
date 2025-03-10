@@ -526,7 +526,7 @@ $http->on('Task', function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
                         continue;
                     }
                     $domains->set(md5($domain), ['value' => 1]);
