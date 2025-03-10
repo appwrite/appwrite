@@ -300,7 +300,6 @@ class Messaging extends Action
                             $errorTotal = \count($deliveryErrors);
                             $queueForStatsUsage
                                 ->setProject($project)
-                                ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
                                 ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
                                 ->addMetric(METRIC_MESSAGES_FAILED, $errorTotal)
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), ($deliveredTotal + $errorTotal))

@@ -269,7 +269,7 @@ class UsageTest extends Scope
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
 
-            $fileSize = $response['body']['sizeOriginal'];
+            $fileSize = $response['body']['sizeActual'];
 
             $storageTotal += $fileSize;
             $filesTotal += 1;
@@ -294,6 +294,9 @@ class UsageTest extends Scope
                 $storageTotal -=  $fileSize;
             }
         }
+
+        // stats-resources runs every 5s in test env
+        sleep(self::WAIT + 5);
 
         return array_merge($data, [
             'bucketId' => $bucketId,
@@ -514,6 +517,7 @@ class UsageTest extends Scope
             }
         }
 
+        sleep(self::WAIT);
         return array_merge($data, [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
@@ -647,6 +651,8 @@ class UsageTest extends Scope
                 'required' => true,
             ]
         );
+
+        sleep(self::WAIT);
 
         return [
             'databaseId' => $databaseId,
