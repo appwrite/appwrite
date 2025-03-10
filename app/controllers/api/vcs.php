@@ -705,9 +705,9 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 ->addOption(new Flutter())
                 ->addOption(new Nuxt())
                 ->addOption(new Astro())
-                ->addOption(new Remix())
                 ->addOption(new SvelteKit())
-                ->addOption(new NextJs());
+                ->addOption(new NextJs())
+                ->addOption(new Remix());
 
             $framework = $detector->detect();
 
@@ -863,9 +863,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         ->addOption(new Flutter())
                         ->addOption(new Nuxt())
                         ->addOption(new Astro())
-                        ->addOption(new Remix())
                         ->addOption(new SvelteKit())
-                        ->addOption(new NextJs());
+                        ->addOption(new NextJs())
+                        ->addOption(new Remix());
 
                     $detectedFramework = $frameworkDetector->detect();
 
