@@ -330,7 +330,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$resource->getId(), $executionId]),
         ]);
 
         if ($type === 'function') {

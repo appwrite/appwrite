@@ -98,8 +98,33 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, string $fallbackFile, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
-    {
+    public function action(
+        string $siteId,
+        string $name,
+        string $framework,
+        bool $enabled,
+        int $timeout,
+        string $installCommand,
+        string $buildCommand,
+        string $outputDirectory,
+        string $buildRuntime,
+        string $adapter,
+        string $fallbackFile,
+        string $installationId,
+        ?string $providerRepositoryId,
+        string $providerBranch,
+        bool $providerSilentMode,
+        string $providerRootDirectory,
+        string $specification,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        Database $dbForPlatform,
+        GitHub $github
+    ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
