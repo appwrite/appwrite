@@ -299,7 +299,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '6.2.0',
+                'version' => '9.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
