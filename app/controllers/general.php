@@ -859,11 +859,9 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+        $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+        if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
-            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
-            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
-
             try {
                 $loggingProvider = new DSN($providerConfig ?? '');
                 $providerName = $loggingProvider->getScheme();
