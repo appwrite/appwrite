@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.18.0",
+            "version": "0.18.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42"
+                "reference": "97b5d97ae2c0fc9a2a374769eadff024f95783aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/f1ddcc567325659ad79506bc9684a4fc2009dc42",
-                "reference": "f1ddcc567325659ad79506bc9684a4fc2009dc42",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/97b5d97ae2c0fc9a2a374769eadff024f95783aa",
+                "reference": "97b5d97ae2c0fc9a2a374769eadff024f95783aa",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.18.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.18.1"
             },
-            "time": "2025-03-07T14:30:31+00:00"
+            "time": "2025-03-11T14:05:46+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -5085,16 +5085,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.2",
+            "version": "0.40.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "56f09482d9e2f223911277ab887f197402708049"
+                "reference": "d8816209a07e7d64ef62dbcaf8ad4aa1262f58b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/56f09482d9e2f223911277ab887f197402708049",
-                "reference": "56f09482d9e2f223911277ab887f197402708049",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d8816209a07e7d64ef62dbcaf8ad4aa1262f58b9",
+                "reference": "d8816209a07e7d64ef62dbcaf8ad4aa1262f58b9",
                 "shasum": ""
             },
             "require": {
@@ -5130,9 +5130,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.6"
             },
-            "time": "2025-03-06T16:31:03+00:00"
+            "time": "2025-03-10T19:04:24+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5404,16 +5404,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.21.0",
+            "version": "v1.21.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425"
+                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/531fa0871fbde719c51b12afa3a443b8f4e4b425",
-                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/c44bffbb2334e90fba560933c45948fa4a3f3e86",
+                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86",
                 "shasum": ""
             },
             "require": {
@@ -5424,9 +5424,9 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.68.5",
-                "illuminate/view": "^11.42.0",
-                "larastan/larastan": "^3.0.4",
+                "friendsofphp/php-cs-fixer": "^3.70.2",
+                "illuminate/view": "^11.44.1",
+                "larastan/larastan": "^3.1.0",
                 "laravel-zero/framework": "^11.36.1",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3",
@@ -5466,7 +5466,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-02-18T03:18:57+00:00"
+            "time": "2025-03-11T03:22:21+00:00"
         },
         {
             "name": "matthiasmullie/minify",

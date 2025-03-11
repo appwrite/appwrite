@@ -119,7 +119,7 @@ class Func extends Model
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Version of Open Runtimes used for the function.',
-                'default' => 'v4',
+                'default' => 'v5',
                 'example' => 'v2',
             ])
             ->addRule('installationId', [

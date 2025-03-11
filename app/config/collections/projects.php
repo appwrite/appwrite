@@ -674,7 +674,7 @@ return [
                 'size' => 8,
                 'signed' => true,
                 'required' => false,
-                'default' => 'v4',
+                'default' => 'v5',
                 'array' => false,
                 'filters' => [],
             ],

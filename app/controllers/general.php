@@ -245,7 +245,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $version = match ($type) {
             'function' => $resource->getAttribute('version', 'v2'),
-            'site' => 'v4',
+            'site' => 'v5',
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
@@ -416,7 +416,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         try {
             $version = match ($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
-                'site' => 'v4',
+                'site' => 'v5',
             };
             $entrypoint = match ($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),

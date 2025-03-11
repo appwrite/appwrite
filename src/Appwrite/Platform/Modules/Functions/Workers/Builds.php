@@ -1102,7 +1102,7 @@ class Builds extends Action
     {
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
-            'sites' => 'v4',
+            'sites' => 'v5',
         };
     }
 
