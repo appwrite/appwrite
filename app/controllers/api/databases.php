@@ -598,12 +598,6 @@ App::get('/v1/databases')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        var_dump([
-          'projectId' => $project->getInternalId(),
-          'queries' =>  $queries,
-          'results' => $dbForProject->find('databases', $queries),
-        ]);
-
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
             'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
