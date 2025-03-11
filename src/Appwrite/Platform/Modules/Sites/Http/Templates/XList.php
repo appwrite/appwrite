@@ -61,7 +61,7 @@ class XList extends Base
 
         if (!empty($frameworks)) {
             $templates = \array_filter($templates, function ($template) use ($frameworks) {
-                return \count(\array_intersect($frameworks, \array_column($template['frameworks'], 'name'))) > 0;
+                return \count(\array_intersect($frameworks, \array_column($template['frameworks'], 'key'))) > 0;
             });
         }
 
