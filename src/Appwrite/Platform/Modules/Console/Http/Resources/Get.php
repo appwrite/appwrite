@@ -49,7 +49,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse-limit', 120)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('value', '', new Text(256), 'Resource value.')
