@@ -65,7 +65,7 @@ class Func extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
-            ->addRule('deployment', [
+            ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function\'s active deployment ID.',
                 'default' => '',

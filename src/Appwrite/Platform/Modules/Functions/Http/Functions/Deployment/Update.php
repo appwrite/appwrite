@@ -85,7 +85,7 @@ class Update extends Base
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
-            'deployment' => $deployment->getId(),
+            'deploymentId' => $deployment->getId(),
         ])));
 
         // Inform scheduler if function is still active
@@ -93,7 +93,7 @@ class Update extends Base
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queries = [

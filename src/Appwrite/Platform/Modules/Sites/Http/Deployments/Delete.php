@@ -89,7 +89,7 @@ class Delete extends Action
             }
         }
 
-        if ($site->getAttribute('deployment') === $deployment->getId()) { // Reset site deployment
+        if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
             $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
                 'deploymentId' => '',
                 'deploymentInternalId' => '',
