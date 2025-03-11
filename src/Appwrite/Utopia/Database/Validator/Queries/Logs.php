@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Logs extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
+        'status',
         'responseStatusCode',
         'duration',
         'requestMethod',

@@ -57,7 +57,7 @@ class XList extends Base
 
     public function action(array $frameworks, array $usecases, int $limit, int $offset, Response $response)
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('templates-site', []);
 
         if (!empty($frameworks)) {
             $templates = \array_filter($templates, function ($template) use ($frameworks) {

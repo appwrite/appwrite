@@ -97,6 +97,7 @@ class Update extends Base
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queries = [
+            Query::equal('trigger', 'manual'),
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["function"]),
             Query::equal("deploymentResourceInternalId", [$function->getInternalId()]),

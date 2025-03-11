@@ -1821,17 +1821,6 @@ return [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('search'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('scheduledAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
@@ -1872,13 +1861,6 @@ return [
                 'attributes' => ['resourceInternalId', 'resourceType', 'resourceId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_fulltext_search'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_trigger'),

@@ -249,7 +249,6 @@ class Create extends Base
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$functionId, $executionId]),
         ]);
 
         $queueForEvents

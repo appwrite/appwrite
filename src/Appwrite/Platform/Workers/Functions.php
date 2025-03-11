@@ -271,7 +271,6 @@ class Functions extends Action
             'errors' => $message,
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$function->getId(), $executionId]),
         ]);
 
         $execution = $dbForProject->createDocument('executions', $execution);
@@ -407,7 +406,6 @@ class Functions extends Action
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
             $execution = $dbForProject->createDocument('executions', $execution);
