@@ -1802,7 +1802,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['screenshotDark']);
 
         $screenshotId = $deployment['body']['screenshotLight'];
-        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge([
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -1814,7 +1814,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($screenshotHash);
 
         $screenshotId = $deployment['body']['screenshotDark'];
-        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin", array_merge([
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge([
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -1827,10 +1827,10 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
 
-        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin");
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
-        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console&mode=admin");
+        $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
         $this->cleanupSite($siteId);
