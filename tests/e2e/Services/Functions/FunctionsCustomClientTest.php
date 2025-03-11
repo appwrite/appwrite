@@ -74,8 +74,6 @@ class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-
-
     public function testCreateCustomExecution(): array
     {
         /**
