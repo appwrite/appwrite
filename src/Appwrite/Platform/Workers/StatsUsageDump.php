@@ -48,6 +48,7 @@ class StatsUsageDump extends Action
         METRIC_BUILDS => true,
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
+        METRIC_DATABASES_STORAGE => true,
     ];
 
     /**
@@ -63,6 +64,7 @@ class StatsUsageDump extends Action
         '.deployments.storage',
         '.builds',
         '.builds.storage',
+        '.databases.storage'
     ];
 
     /**
@@ -117,7 +119,7 @@ class StatsUsageDump extends Action
             $project = new Document($stats['project'] ?? []);
 
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-            $receivedAt = $stats['receivedAt'] ?? 'NONE';
+            $receivedAt = $stats['receivedAt'] ?? null;
             if ($numberOfKeys === 0) {
                 continue;
             }
@@ -134,7 +136,7 @@ class StatsUsageDump extends Action
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
                         try {
-                            $this->handleDatabaseStorage($key, $dbForProject, $project);
+                            $this->handleDatabaseStorage($key, $dbForProject, $project, $receivedAt);
                         } catch (\Exception $e) {
                             console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
                         }
@@ -142,7 +144,11 @@ class StatsUsageDump extends Action
                     }
 
                     foreach ($this->periods as $period => $format) {
-                        $time = 'inf' === $period ? null : date($format, time());
+                        $time = null;
+
+                        if ($period !== 'inf') {
+                            $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+                        }
                         $id = \md5("{$time}_{$period}_{$key}");
 
                         $document = new Document([
@@ -171,12 +177,12 @@ class StatsUsageDump extends Action
         }
     }
 
-    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project): void
+    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project, string $receivedAt): void
     {
         $data = explode('.', $key);
         $start = microtime(true);
 
-        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) {
+        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) use ($receivedAt) {
             $id = \md5("{$time}_{$period}_{$key}");
 
             $document = new Document([
@@ -197,7 +203,11 @@ class StatsUsageDump extends Action
         };
 
         foreach ($this->periods as $period => $format) {
-            $time = 'inf' === $period ? null : date($format, time());
+            $time = null;
+
+            if ($period !== 'inf') {
+                $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
+            }
             $id = \md5("{$time}_{$period}_{$key}");
 
             $value = 0;
@@ -320,7 +330,7 @@ class StatsUsageDump extends Action
 
     protected function writeToLogsDB(Document $project, Document $document): void
     {
-        if (!System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', false)) {
+        if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
             Console::log('Dual Writing is disabled. Skipping...');
             return;
         }
