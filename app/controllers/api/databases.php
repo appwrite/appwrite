@@ -563,7 +563,8 @@ App::get('/v1/databases')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->inject('project')
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Document $project) {
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
@@ -596,6 +597,12 @@ App::get('/v1/databases')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+
+        var_dump([
+          'projectId' => $project->getInternalId(),
+          'queries' =>  $queries,
+          'results' => $dbForProject->find('databases', $queries),
+        ]);
 
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
