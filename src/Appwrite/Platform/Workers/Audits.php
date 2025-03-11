@@ -102,7 +102,7 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => DateTime::formatTz(DateTime::now())
+            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
         if (isset($this->logs[$project->getInternalId()])) {
