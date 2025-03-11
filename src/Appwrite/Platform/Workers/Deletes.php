@@ -47,7 +47,7 @@ class Deletes extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->inject('timelimit')
+            ->inject('getLogsDB')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
@@ -57,8 +57,8 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
+                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $getLogsDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -66,7 +66,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -131,7 +131,7 @@ class Deletes extends Action
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
@@ -158,7 +158,7 @@ class Deletes extends Action
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
-                $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
             default:
@@ -412,14 +412,22 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUsageStats(Document $project, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
+    private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
         $dbForProject = $getProjectDB($project);
-        // Delete Usage stats
+        $dbForLogs = $getLogsDB($project);
+
+        // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::equal('period', ['1h']),
         ], $dbForProject);
+
+        // Delete Usage stats from logsDB
+        $this->deleteByGroup('stats', [
+            Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::equal('period', ['1h']),
+        ], $dbForLogs);
     }
 
     /**
@@ -851,7 +859,7 @@ class Deletes extends Action
             } else {
                 Console::error('Failed to delete deployment files: ' . $deploymentPath);
             }
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Console::error('Failed to delete deployment files: ' . $deploymentPath);
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -881,7 +889,7 @@ class Deletes extends Action
             } else {
                 Console::error('Failed to delete build files: ' . $buildPath);
             }
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Console::error('Failed to delete deployment files: ' . $buildPath);
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -947,7 +955,7 @@ class Deletes extends Action
 
         try {
             $documents = $database->deleteDocuments($collection, $queries);
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
             return;
         }
