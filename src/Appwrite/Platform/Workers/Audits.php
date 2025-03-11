@@ -7,7 +7,6 @@ use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
