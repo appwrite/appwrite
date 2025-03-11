@@ -57,7 +57,7 @@ class XList extends Base
 
     public function action(array $runtimes, array $usecases, int $limit, int $offset, Response $response)
     {
-        $templates = Config::getParam('function-templates', []);
+        $templates = Config::getParam('templates-function', []);
 
         if (!empty($runtimes)) {
             $templates = \array_filter($templates, function ($template) use ($runtimes) {

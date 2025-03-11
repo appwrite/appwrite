@@ -53,7 +53,7 @@ class Get extends Base
 
     public function action(string $templateId, Response $response)
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('templates-site', []);
 
         $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
             return $item['key'] === $templateId;

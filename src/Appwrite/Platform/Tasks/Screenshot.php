@@ -26,7 +26,7 @@ class Screenshot extends Action
 
     public function action(string $templateId): void
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('templates-site', []);
 
         $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
             return $item['key'] === $templateId;
