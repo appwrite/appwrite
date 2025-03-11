@@ -96,6 +96,16 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
     ],
+    'ANGULAR' => [
+        'key' => 'angular',
+        'name' => 'Angular',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist/angular/browser',
+        'fallbackFile' => 'index.html',
+    ],
     'VUE' => [
         'key' => 'vue',
         'name' => 'Vue.js',
@@ -172,6 +182,50 @@ return [
             ],
             [
                 'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-angular',
+        'name' => 'Angular starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-angular-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-angular-light.png',
+        'frameworks' => [
+            getFramework('ANGULAR', [
+                'providerRootDirectory' => './',
+                'outputDirectory' => './dist/angular-starter-kit-for-appwrite/browser',
+                'buildCommand' => 'sh prepare-env.sh && npm run build'
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-angular',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_NAME',
                 'description' => 'Your Appwrite project name',
                 'value' => '{projectName}',
                 'placeholder' => '{projectName}',
