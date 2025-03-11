@@ -136,6 +136,51 @@ return [
         'variables' => []
     ],
     [
+        'key' => 'starter-for-js',
+        'name' => 'JavaScript starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
+        'frameworks' => [
+            getFramework('OTHER', [
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'providerRootDirectory' => './',
+                'outputDirectory' => './dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-js',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
         'useCases' => ['starter'],

@@ -137,11 +137,11 @@ class Screenshot extends Action
             'name' => $template["name"],
             'framework' => $framework['key'],
             'adapter' => $framework['adapter'],
-            'buildCommand' => $framework['buildCommand'],
+            'buildCommand' => $framework['buildCommand'] ?? '',
             'buildRuntime' => $framework['buildRuntime'],
-            'fallbackFile' => $framework['fallbackFile'],
-            'installCommand' => $framework['installCommand'],
-            'outputDirectory' => $framework['outputDirectory'],
+            'fallbackFile' => $framework['fallbackFile'] ?? '',
+            'installCommand' => $framework['installCommand'] ?? '',
+            'outputDirectory' => $framework['outputDirectory'] ?? '',
             'providerRootDirectory' => $framework['providerRootDirectory'],
             'timeout' => 60
         ]);
@@ -279,7 +279,6 @@ class Screenshot extends Action
         foreach ($themes as $theme) {
             $file = $client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $theme['fileId'] . '/download', [
                 'x-appwrite-project' => 'console',
-                'x-appwrite-mode' => 'admin',
                 'cookie' => $cookieConsole
             ]);
 
