@@ -713,9 +713,9 @@ class Builds extends Action
                     ->addOption(new XStatic());
                 $detection = $detector->detect();
 
-                $adapter = $resource->getAttribute('adapter', null);
+                $adapter = $resource->getAttribute('adapter', '');
 
-                if ($adapter === null) {
+                if (empty($adapter)) {
                     $resource->setAttribute('adapter', $detection->getName());
                     $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                     $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
