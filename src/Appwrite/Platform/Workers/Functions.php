@@ -49,7 +49,7 @@ class Functions extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
+            ->callback([$this, 'action']);
     }
 
     public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
@@ -325,7 +325,7 @@ class Functions extends Action
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
-        $deploymentId = $function->getAttribute('deployment', '');
+        $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);

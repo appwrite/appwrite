@@ -83,7 +83,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('php-8.0', $function['body']['runtime']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
-        $this->assertEquals('', $function['body']['deployment']);
+        $this->assertEquals('', $function['body']['deploymentId']);
         $this->assertEquals([
             'buckets.*.create',
             'buckets.*.delete',
@@ -298,7 +298,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('Test1', $function['body']['name']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
-        $this->assertEquals('', $function['body']['deployment']);
+        $this->assertEquals('', $function['body']['deploymentId']);
         $this->assertEquals([
             'users.*.update.name',
             'users.*.update.email',
@@ -431,7 +431,7 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId, $function['body']['deployment']);
+        $this->assertEquals($deploymentId, $function['body']['deploymentId']);
 
         // Test starter code is used and that dynamic keys work
         $execution = $this->createExecution($functionId, [
@@ -531,8 +531,8 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentIdActive, $function['body']['deployment']);
-        $this->assertNotEquals($deploymentIdInactive, $function['body']['deployment']);
+        $this->assertEquals($deploymentIdActive, $function['body']['deploymentId']);
+        $this->assertNotEquals($deploymentIdInactive, $function['body']['deploymentId']);
 
         $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $deploymentIdInactive, array_merge([
             'content-type' => 'application/json',
@@ -670,7 +670,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
-        $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
+        $this->assertEquals($data['deploymentId'], $response['body']['deploymentId']);
 
         return $data;
     }
@@ -1268,7 +1268,7 @@ class FunctionsCustomServerTest extends Scope
         return [
             ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
             ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
-            // TODO: Re-enable; temporarly disabled due to OPR v4rc issues
+            // TODO: Re-enable; temporarly disabled due to OPR v5 issues
             // ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
             ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
             // Swift and Dart disabled on purpose, as it's very slow.
@@ -2079,15 +2079,15 @@ class FunctionsCustomServerTest extends Scope
 
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId2, $function['body']['deployment']);
+        $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
 
         $function = $this->updateFunctionDeployment($functionId, $deploymentId1);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId1, $function['body']['deployment']);
+        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
 
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId1, $function['body']['deployment']);
+        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
 
         $execution = $this->createExecution($functionId, [
             'headers' => [ 'cookie' => 'cookieName=cookieValue' ]

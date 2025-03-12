@@ -47,7 +47,7 @@ class Audits extends Action
             ->desc('Audits worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
+            ->callback([$this, 'action']);
 
         $this->lastTriggeredTime = time();
     }

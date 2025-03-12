@@ -569,7 +569,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('deployment'),
+                '$id' => ID::custom('deploymentId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -674,7 +674,7 @@ return [
                 'size' => 8,
                 'signed' => true,
                 'required' => false,
-                'default' => 'v4',
+                'default' => 'v5',
                 'array' => false,
                 'filters' => [],
             ],
@@ -788,9 +788,9 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_deployment'),
+                '$id' => ID::custom('_key_deploymentId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['deployment'],
+                'attributes' => ['deploymentId'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ]

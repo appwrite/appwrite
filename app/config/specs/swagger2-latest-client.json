@@ -4976,15 +4976,6 @@
                         },
                         "default": [],
                         "in": "query"
-                    },
-                    {
-                        "name": "search",
-                        "description": "Search term to filter your list results. Max length: 256 chars.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<SEARCH>",
-                        "default": "",
-                        "in": "query"
                     }
                 ]
             },

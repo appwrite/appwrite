@@ -67,8 +67,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForSites, $isResourceBlocked, $deviceForFiles, $log));
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -793,6 +792,13 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
+                        $config['sleep'] = 3000; // 3 seconds
+
+                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+                        if ($isDevelopment) {
+                            $config['timeout'] = 10000; // 10 seconds
+                        }
+
                         $response = $client->fetch(
                             url: 'http://appwrite-browser:3000/v1/screenshots',
                             method: 'POST',
@@ -860,7 +866,7 @@ class Builds extends Action
                     case 'functions':
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
-                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
@@ -980,7 +986,7 @@ class Builds extends Action
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
-                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
@@ -1108,7 +1114,7 @@ class Builds extends Action
     {
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
-            'sites' => 'v4',
+            'sites' => 'v5',
         };
     }
 

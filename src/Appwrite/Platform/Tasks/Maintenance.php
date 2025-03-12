@@ -26,7 +26,7 @@ class Maintenance extends Action
             ->inject('dbForPlatform')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback(fn (Database $dbForPlatform, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForPlatform, $queueForCertificates, $queueForDeletes));
+            ->callback([$this, 'action']);
     }
 
     public function action(Database $dbForPlatform, Certificate $queueForCertificates, Delete $queueForDeletes): void

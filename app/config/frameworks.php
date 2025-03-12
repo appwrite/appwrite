@@ -221,7 +221,7 @@ return [
     'flutter' => [
         'key' => 'flutter',
         'name' => 'Flutter',
-        'buildRuntime' => 'flutter-3.24',
+        'buildRuntime' => 'flutter-3.29',
         'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
         'adapters' => [
             'static' => [
@@ -232,6 +232,21 @@ return [
                 'startCommand' => 'sh helpers/server.sh',
             ],
         ],
+    ],
+    'vite' => [
+        'key' => 'vite',
+        'name' => 'Vite',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+            ],
+        ]
     ],
     'other' => [
         'key' => 'other',
