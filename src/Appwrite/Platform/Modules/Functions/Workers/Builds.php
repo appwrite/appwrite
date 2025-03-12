@@ -67,8 +67,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForSites, $isResourceBlocked, $deviceForFiles, $log));
+            ->callback([$this, 'action']);
     }
 
     /**

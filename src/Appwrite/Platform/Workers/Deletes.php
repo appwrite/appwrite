@@ -58,10 +58,7 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback(
-                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
-            );
+            ->callback([$this, 'action']);
     }
 
     /**
