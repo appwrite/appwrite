@@ -24723,6 +24723,7 @@
                                             "astro",
                                             "remix",
                                             "flutter",
+                                            "vite",
                                             "other"
                                         ],
                                         "x-enum-name": null,
@@ -25352,6 +25353,7 @@
                                             "astro",
                                             "remix",
                                             "flutter",
+                                            "vite",
                                             "other"
                                         ],
                                         "x-enum-name": null,

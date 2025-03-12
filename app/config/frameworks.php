@@ -233,6 +233,21 @@ return [
             ],
         ],
     ],
+    'vite' => [
+        'key' => 'vite',
+        'name' => 'Vite',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+            ],
+        ]
+    ],
     'other' => [
         'key' => 'other',
         'name' => 'Other',

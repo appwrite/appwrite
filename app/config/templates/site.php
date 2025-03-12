@@ -86,6 +86,15 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => 'index.html',
     ],
+    'VITE' => [
+        'key' => 'vite',
+        'name' => 'Vite',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+    ],
     'REACT' => [
         'key' => 'react',
         'name' => 'React',
@@ -195,11 +204,8 @@ return [
         'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
         'frameworks' => [
-            getFramework('OTHER', [
-                'installCommand' => 'npm install',
-                'buildCommand' => 'npm run build',
+            getFramework('VITE', [
                 'providerRootDirectory' => './',
-                'outputDirectory' => './dist',
             ]),
         ],
         'vcsProvider' => 'github',
