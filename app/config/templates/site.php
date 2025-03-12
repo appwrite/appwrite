@@ -154,6 +154,7 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
+                'buildCommand' => 'sh build.sh',
             ]),
         ],
         'vcsProvider' => 'github',
