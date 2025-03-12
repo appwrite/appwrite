@@ -74,7 +74,7 @@ class Executor
         $route = "/runtimes";
 
         // Remove after migration
-        if ($version == 'v3' || $version === 'v4') {
+        if ($version === 'v3' || $version === 'v4') {
             $version = 'v5';
         }
 
@@ -201,7 +201,7 @@ class Executor
         $route = '/runtimes/' . $runtimeId . '/executions';
 
         // Remove after migration
-        if ($version == 'v3' || $version === 'v4') {
+        if ($version === 'v3' || $version === 'v4') {
             $version = 'v5';
         }
 
