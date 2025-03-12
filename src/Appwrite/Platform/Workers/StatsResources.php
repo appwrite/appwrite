@@ -81,19 +81,8 @@ class StatsResources extends Action
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
         $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
-        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . $this->formatTime($executionTime) .'');
+        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . date('H:i:s.u', intval($executionTime)) .'');
     }
-
-    public function formatTime($microseconds)
-    {
-        $seconds = $microseconds / 1000000; // Convert microseconds to seconds
-        $hours = floor($seconds / 3600);
-        $minutes = floor(($seconds % 3600) / 60);
-        $remainingSeconds = $seconds % 60;
-
-        return sprintf('%02d:%02d:%06.3f', $hours, $minutes, $remainingSeconds);
-    }
-
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
     {
