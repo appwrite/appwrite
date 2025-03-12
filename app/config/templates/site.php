@@ -73,7 +73,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => '',
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
-        'buildRuntime' => 'flutter-3.24',
+        'buildRuntime' => 'flutter-3.29',
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
@@ -144,6 +144,49 @@ return [
         'providerOwner' => 'Meldiron',
         'providerVersion' => '0.1.*',
         'variables' => []
+    ],
+    [
+        'key' => 'starter-for-flutter',
+        'name' => 'Flutter starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-flutter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-flutter-light.png',
+        'frameworks' => [
+            getFramework('FLUTTER', [
+                'providerRootDirectory' => './',
+                'buildCommand' => 'sh build.sh',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-flutter',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'APPWRITE_PUBLIC_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
     ],
     [
         'key' => 'starter-for-js',

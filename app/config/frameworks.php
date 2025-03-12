@@ -221,7 +221,7 @@ return [
     'flutter' => [
         'key' => 'flutter',
         'name' => 'Flutter',
-        'buildRuntime' => 'flutter-3.24',
+        'buildRuntime' => 'flutter-3.29',
         'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
         'adapters' => [
             'static' => [

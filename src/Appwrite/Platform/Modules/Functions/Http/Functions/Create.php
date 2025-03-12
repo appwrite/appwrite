@@ -169,7 +169,7 @@ class Create extends Base
             'commands' => $commands,
             'scopes' => $scopes,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v4',
+            'version' => 'v5',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,

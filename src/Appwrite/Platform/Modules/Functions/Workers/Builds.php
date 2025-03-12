@@ -787,6 +787,13 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
+                        $config['sleep'] = 3000; // 3 seconds
+
+                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+                        if ($isDevelopment) {
+                            $config['timeout'] = 10000; // 10 seconds
+                        }
+
                         $response = $client->fetch(
                             url: 'http://appwrite-browser:3000/v1/screenshots',
                             method: 'POST',
@@ -1102,7 +1109,7 @@ class Builds extends Action
     {
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
-            'sites' => 'v4',
+            'sites' => 'v5',
         };
     }
 

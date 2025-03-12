@@ -6,4 +6,4 @@
 
 use Appwrite\Runtimes\Runtimes;
 
-return (new Runtimes('v4rc'))->getAll();
+return (new Runtimes('v5'))->getAll();
