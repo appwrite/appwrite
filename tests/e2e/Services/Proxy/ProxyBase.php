@@ -255,7 +255,7 @@ trait ProxyBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
-            $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         return ['functionId' => $functionId, 'deploymentId' => $deploymentId];

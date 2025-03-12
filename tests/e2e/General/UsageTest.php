@@ -930,7 +930,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));
-        $this->assertEquals($deploymentId, $response['body']['deployment']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
 
         $response = $this->client->call(
             Client::METHOD_POST,

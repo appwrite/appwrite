@@ -861,7 +861,7 @@ class Builds extends Action
                     case 'functions':
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
-                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
@@ -981,7 +981,7 @@ class Builds extends Action
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
-                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {

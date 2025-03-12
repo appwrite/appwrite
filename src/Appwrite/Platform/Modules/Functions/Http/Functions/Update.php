@@ -207,10 +207,10 @@ class Update extends Base
         }
 
         // Enforce Cold Start if spec limits change.
-        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
+        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
-                $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
+                $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
             } catch (\Throwable $th) {
                 // Don't throw if the deployment doesn't exist
                 if ($th->getCode() !== 404) {
@@ -254,7 +254,7 @@ class Update extends Base
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());

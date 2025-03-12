@@ -159,7 +159,7 @@ class Create extends Base
             'name' => $name,
             'runtime' => $runtime,
             'deploymentInternalId' => '',
-            'deployment' => '',
+            'deploymentId' => '',
             'events' => $events,
             'schedule' => $schedule,
             'scheduleInternalId' => '',

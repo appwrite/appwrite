@@ -89,9 +89,9 @@ class Delete extends Action
             }
         }
 
-        if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
+        if ($function->getAttribute('deploymentId') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                'deployment' => '',
+                'deploymentId' => '',
                 'deploymentInternalId' => '',
             ])));
         }
