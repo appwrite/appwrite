@@ -37,7 +37,7 @@ abstract class ScheduleBase extends Action
             ->inject('pools')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
+            ->callback([$this, 'action']);
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void

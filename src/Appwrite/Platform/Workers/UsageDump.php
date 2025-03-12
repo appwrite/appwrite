@@ -38,9 +38,7 @@ class UsageDump extends Action
         $this
             ->inject('message')
             ->inject('getProjectDB')
-            ->callback(function (Message $message, callable $getProjectDB) {
-                $this->action($message, $getProjectDB);
-            });
+            ->callback([$this, 'action']);
     }
 
     /**
