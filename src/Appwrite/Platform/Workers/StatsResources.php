@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
@@ -131,6 +132,49 @@ class StatsResources extends Action
             $functions = $dbForProject->count('functions');
 
             $messages = $dbForProject->count('messages');
+            $messagesSent = $dbForProject->count('messages', [
+                Query::equal('status', [MessageStatus::SENT])
+            ]);
+            $messagesFailed = $dbForProject->count('messages', [
+                Query::equal('status', [MessageStatus::FAILED])
+            ]);
+
+            $emailMessages = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
+            ]);
+            $pushMessages = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH])
+            ]);
+            $smsMessages = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS])
+            ]);
+
+            $emailMessagesSent = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                Query::equal('status', [MessageStatus::SENT])
+            ]);
+            $pushMessagesSent = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::equal('status', [MessageStatus::SENT])
+            ]);
+            $smsMessagesSent = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+                Query::equal('status', [MessageStatus::SENT])
+            ]);
+
+            $emailMessagesFailed = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                Query::equal('status', [MessageStatus::FAILED])
+            ]);
+            $pushMessagesFailed = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::equal('status', [MessageStatus::FAILED])
+            ]);
+            $smsMessagesFailed = $dbForProject->count('messages', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+                Query::equal('status', [MessageStatus::FAILED])
+            ]);
+
             $providers = $dbForProject->count('providers');
             $topics = $dbForProject->count('topics');
             $targets = $dbForProject->count('targets');
@@ -151,6 +195,17 @@ class StatsResources extends Action
                 METRIC_FUNCTIONS => $functions,
                 METRIC_TEAMS => $teams,
                 METRIC_MESSAGES => $messages,
+                METRIC_MESSAGES_SENT => $messagesSent,
+                METRIC_MESSAGES_FAILED => $messagesFailed,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_MESSAGES_PROVIDER_TYPE) => $emailMessages,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_MESSAGES_PROVIDER_TYPE) => $pushMessages,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_MESSAGES_PROVIDER_TYPE) => $smsMessages,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_MESSAGES_PROVIDER_TYPE_SENT) => $emailMessagesSent,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_MESSAGES_PROVIDER_TYPE_SENT) => $pushMessagesSent,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_MESSAGES_PROVIDER_TYPE_SENT) => $smsMessagesSent,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_MESSAGES_PROVIDER_TYPE_FAILED) => $emailMessagesFailed,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_MESSAGES_PROVIDER_TYPE_FAILED) => $pushMessagesFailed,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_MESSAGES_PROVIDER_TYPE_FAILED) => $smsMessagesFailed,
                 METRIC_MAU => $usersMAU,
                 METRIC_DAU => $usersDAU,
                 METRIC_WAU => $usersWAU,
