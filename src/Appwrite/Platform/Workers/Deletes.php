@@ -414,8 +414,11 @@ class Deletes extends Action
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
+        /** @var \Utopia\Database\Database $dbForProject*/
         $dbForProject = $getProjectDB($project);
-        $dbForLogs = $getLogsDB($project);
+
+        /** @var \Utopia\Database\Database $dbForLogs*/
+        $dbForLogs = call_user_func($getLogsDB, $project);
 
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
