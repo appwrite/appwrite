@@ -21,7 +21,7 @@ class Screenshot extends Action
         $this
             ->desc('Create Site template screenshot')
             ->param('templateId', '', new Text(128), 'Template ID.')
-            ->callback(fn (string $templateId) => $this->action($templateId));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $templateId): void

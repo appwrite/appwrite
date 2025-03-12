@@ -49,10 +49,7 @@ class Certificates extends Action
             ->inject('queueForFunctions')
             ->inject('log')
             ->inject('certificates')
-            ->callback(
-                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates) =>
-                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates)
-            );
+            ->callback([$this, 'action']);
     }
 
     /**

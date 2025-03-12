@@ -37,9 +37,7 @@ class Usage extends Action
         ->inject('project')
         ->inject('getProjectDB')
         ->inject('queueForUsageDump')
-        ->callback(function (Message $message, Document $project, callable $getProjectDB, UsageDump $queueForUsageDump) {
-            $this->action($message, $project, $getProjectDB, $queueForUsageDump);
-        });
+        ->callback([$this, 'action']);
 
         $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $this->lastTriggeredTime = time();
