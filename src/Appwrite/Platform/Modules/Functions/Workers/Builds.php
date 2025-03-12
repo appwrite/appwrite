@@ -718,7 +718,7 @@ class Builds extends Action
                     $resource->setAttribute('adapter', $detection->getName());
                     $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                     $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-                } elseif ($adapter !== $detection->getName()) {
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                     throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
             }
