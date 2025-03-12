@@ -417,20 +417,22 @@ class Deletes extends Action
         /** @var \Utopia\Database\Database $dbForProject*/
         $dbForProject = $getProjectDB($project);
 
-        /** @var \Utopia\Database\Database $dbForLogs*/
-        $dbForLogs = call_user_func($getLogsDB, $project);
-
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::equal('period', ['1h']),
         ], $dbForProject);
 
-        // Delete Usage stats from logsDB
-        $this->deleteByGroup('stats', [
-            Query::lessThan('time', $hourlyUsageRetentionDatetime),
-            Query::equal('period', ['1h']),
-        ], $dbForLogs);
+        if ($project->getId() !== 'console') {
+            /** @var \Utopia\Database\Database $dbForLogs*/
+            $dbForLogs = call_user_func($getLogsDB, $project);
+
+            // Delete Usage stats from logsDB
+            $this->deleteByGroup('stats', [
+                Query::lessThan('time', $hourlyUsageRetentionDatetime),
+                Query::equal('period', ['1h']),
+            ], $dbForLogs);
+        }
     }
 
     /**
