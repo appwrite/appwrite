@@ -691,7 +691,7 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter', ''))) {
+            if ($resource->getCollection() === 'sites') {
                 // TODO: Refactor with structured command in future, using utopia library (CLI)
                 $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
                 $command = $executor->createCommand(
@@ -712,9 +712,15 @@ class Builds extends Action
                     ->addOption(new XStatic());
                 $detection = $detector->detect();
 
-                $resource->setAttribute('adapter', $detection->getName());
-                $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                $adapter = $resource->getAttribute('adapter', '');
+
+                if (empty($adapter)) {
+                    $resource->setAttribute('adapter', $detection->getName());
+                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                }
             }
 
             $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
