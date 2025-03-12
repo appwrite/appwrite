@@ -4569,7 +4569,7 @@
                     "deprecated": false,
                     "demo": "console\/get-resource.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCheck if a resource ID is available.",
-                    "rate-limit": 10,
+                    "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "userId:{userId}, url:{url}",
                     "scope": "rules.read",
@@ -9231,7 +9231,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, runtime, deployment, schedule, scheduleNext, schedulePrevious, timeout, entrypoint, commands, installationId",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, runtime, deploymentId, schedule, scheduleNext, schedulePrevious, timeout, entrypoint, commands, installationId",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -9384,7 +9384,9 @@
                                         "bun-1.1",
                                         "go-1.23",
                                         "static-1",
-                                        "flutter-3.24"
+                                        "flutter-3.24",
+                                        "flutter-3.27",
+                                        "flutter-3.29"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -10018,7 +10020,9 @@
                                         "bun-1.1",
                                         "go-1.23",
                                         "static-1",
-                                        "flutter-3.24"
+                                        "flutter-3.24",
+                                        "flutter-3.27",
+                                        "flutter-3.29"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -11070,15 +11074,6 @@
                             "type": "string"
                         },
                         "default": [],
-                        "in": "query"
-                    },
-                    {
-                        "name": "search",
-                        "description": "Search term to filter your list results. Max length: 256 chars.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<SEARCH>",
-                        "default": "",
                         "in": "query"
                     }
                 ]
@@ -25219,8 +25214,10 @@
                                     "type": "string",
                                     "description": "Sites framework.",
                                     "default": null,
-                                    "x-example": "nextjs",
+                                    "x-example": "analog",
                                     "enum": [
+                                        "analog",
+                                        "angular",
                                         "nextjs",
                                         "react",
                                         "nuxt",
@@ -25330,7 +25327,9 @@
                                         "bun-1.1",
                                         "go-1.23",
                                         "static-1",
-                                        "flutter-3.24"
+                                        "flutter-3.24",
+                                        "flutter-3.27",
+                                        "flutter-3.29"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -25858,8 +25857,10 @@
                                     "type": "string",
                                     "description": "Sites framework.",
                                     "default": null,
-                                    "x-example": "nextjs",
+                                    "x-example": "analog",
                                     "enum": [
+                                        "analog",
+                                        "angular",
                                         "nextjs",
                                         "react",
                                         "nuxt",
@@ -25969,7 +25970,9 @@
                                         "bun-1.1",
                                         "go-1.23",
                                         "static-1",
-                                        "flutter-3.24"
+                                        "flutter-3.24",
+                                        "flutter-3.27",
+                                        "flutter-3.29"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -26975,15 +26978,6 @@
                             "type": "string"
                         },
                         "default": [],
-                        "in": "query"
-                    },
-                    {
-                        "name": "search",
-                        "description": "Search term to filter your list results. Max length: 256 chars.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<SEARCH>",
-                        "default": "",
                         "in": "query"
                     }
                 ]
@@ -37766,7 +37760,7 @@
                     "description": "Function execution and build runtime.",
                     "x-example": "python-3.8"
                 },
-                "deployment": {
+                "deploymentId": {
                     "type": "string",
                     "description": "Function's active deployment ID.",
                     "x-example": "5e5ea5c16897e"
@@ -37863,7 +37857,7 @@
                 "live",
                 "logging",
                 "runtime",
-                "deployment",
+                "deploymentId",
                 "scopes",
                 "vars",
                 "events",
