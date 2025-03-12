@@ -77,7 +77,21 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
+        $startTime = microtime(true);
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
+        $endTime = microtime(true);
+        $executionTime = $endTime - $startTime;
+        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . $this->formatTime($executionTime) .'');
+    }
+
+    public function formatTime($microseconds)
+    {
+        $seconds = $microseconds / 1000000; // Convert microseconds to seconds
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $remainingSeconds = $seconds % 60;
+
+        return sprintf('%02d:%02d:%06.3f', $hours, $minutes, $remainingSeconds);
     }
 
 
