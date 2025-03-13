@@ -31,7 +31,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
-            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', [ 'type' => 'output' ])
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', ['type' => 'output'])
             ->groups(['api', 'functions'])
             ->desc('Download deployment')
             ->label('scope', 'functions.read')
@@ -63,8 +63,16 @@ class Get extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, string $type, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions, Device $deviceForBuilds)
-    {
+    public function action(
+        string $functionId,
+        string $deploymentId,
+        string $type,
+        Response $response,
+        Request $request,
+        Database $dbForProject,
+        Device $deviceForFunctions,
+        Device $deviceForBuilds
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);

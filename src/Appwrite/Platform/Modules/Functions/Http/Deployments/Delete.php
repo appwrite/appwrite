@@ -63,8 +63,15 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForFunctions)
-    {
+    public function action(
+        string $functionId,
+        string $deploymentId,
+        Response $response,
+        Database $dbForProject,
+        DeleteEvent $queueForDeletes,
+        Event $queueForEvents,
+        Device $deviceForFunctions
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);

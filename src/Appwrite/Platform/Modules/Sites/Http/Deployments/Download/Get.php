@@ -62,8 +62,16 @@ class Get extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, string $type, Response $response, Request $request, Database $dbForProject, Device $deviceForSites, Device $deviceForBuilds)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        string $type,
+        Response $response,
+        Request $request,
+        Database $dbForProject,
+        Device $deviceForSites,
+        Device $deviceForBuilds
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);

@@ -55,8 +55,13 @@ class XList extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(array $frameworks, array $usecases, int $limit, int $offset, Response $response)
-    {
+    public function action(
+        array $frameworks,
+        array $usecases,
+        int $limit,
+        int $offset,
+        Response $response
+    ) {
         $templates = Config::getParam('templates-site', []);
 
         if (!empty($frameworks)) {

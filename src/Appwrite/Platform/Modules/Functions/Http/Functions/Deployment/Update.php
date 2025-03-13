@@ -64,8 +64,15 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
-    {
+    public function action(
+        string $functionId,
+        string $deploymentId,
+        Document $project,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Database $dbForPlatform
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 

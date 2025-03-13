@@ -60,8 +60,13 @@ class Delete extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents)
-    {
+    public function action(
+        string $siteId,
+        Response $response,
+        Database $dbForProject,
+        DeleteEvent $queueForDeletes,
+        Event $queueForEvents
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

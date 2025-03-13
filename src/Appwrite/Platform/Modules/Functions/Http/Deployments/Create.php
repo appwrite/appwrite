@@ -87,8 +87,21 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
-    {
+    public function action(
+        string $functionId,
+        ?string $entrypoint,
+        ?string $commands,
+        mixed $code,
+        mixed $activate,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Document $project,
+        Device $deviceForFunctions,
+        Device $deviceForLocal,
+        Build $queueForBuilds
+    ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
         $function = $dbForProject->getDocument('functions', $functionId);

@@ -96,8 +96,25 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb)
-    {
+    public function action(
+        string $functionId,
+        string $body,
+        mixed $async,
+        string $path,
+        string $method,
+        mixed $headers,
+        ?string $scheduledAt,
+        Response $response,
+        Request $request,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $user,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage,
+        Func $queueForFunctions,
+        Reader $geodb
+    ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {

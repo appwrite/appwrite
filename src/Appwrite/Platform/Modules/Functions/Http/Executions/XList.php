@@ -59,8 +59,12 @@ class XList extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, array $queries, Response $response, Database $dbForProject)
-    {
+    public function action(
+        string $functionId,
+        array $queries,
+        Response $response,
+        Database $dbForProject
+    ) {
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
