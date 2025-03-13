@@ -737,10 +737,12 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $audit = new Audit($dbForProject);
 
         try {
-            $audit->cleanup($auditRetention);
+            $this->deleteByGroup(Audit::COLLECTION, [
+                Query::lessThan('time', $auditRetention),
+                Query::orderDesc('time'),
+            ], $dbForProject);
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
@@ -948,7 +950,7 @@ class Deletes extends Action
      * @param Database $database
      * @param ?callable $callback
      * @return void
-     * @throws Exception
+     * @throws DatabaseException
      */
     protected function deleteByGroup(
         string $collection,
