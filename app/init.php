@@ -326,6 +326,8 @@ const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
 const METRIC_TOPICS = 'topics';
+const METRIC_TARGETS = 'targets';
+const METRIC_PROVIDER_TYPE_TARGETS = '{providerType}.targets';
 const METRIC_KEYS = 'keys';
 const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.builds';
 const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
@@ -364,6 +366,7 @@ Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
+Config::load('console', __DIR__ . '/config/console.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('frameworks', __DIR__ . '/config/frameworks.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
@@ -836,6 +839,10 @@ $register->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    if (empty($providerConfig)) {
+        return;
+    }
+
     try {
         $loggingProvider = new DSN($providerConfig ?? '');
 
@@ -1219,9 +1226,6 @@ App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
 App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-App::setResource('queueForUsage', function (Queue\Publisher $publisher) {
-    return new Usage($publisher);
-}, ['publisher']);
 App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
@@ -1426,45 +1430,7 @@ App::setResource('session', function (Document $user) {
 }, ['user']);
 
 App::setResource('console', function () {
-    return new Document([
-        '$id' => ID::custom('console'),
-        '$internalId' => ID::custom('console'),
-        'name' => 'Appwrite',
-        '$collection' => ID::custom('projects'),
-        'description' => 'Appwrite core engine',
-        'logo' => '',
-        'teamId' => null,
-        'webhooks' => [],
-        'keys' => [],
-        'platforms' => [
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => Origin::CLIENT_TYPE_WEB,
-                'hostname' => 'localhost',
-            ], // Current host is added on app init
-        ],
-        'legalName' => '',
-        'legalCountry' => '',
-        'legalState' => '',
-        'legalCity' => '',
-        'legalAddress' => '',
-        'legalTaxId' => '',
-        'auths' => [
-            'mockNumbers' => [],
-            'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
-            'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
-            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
-        ],
-        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'oAuthProviders' => [
-            'githubEnabled' => true,
-            'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
-        ],
-    ]);
+    return new Document(Config::getParam('console'));
 }, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {

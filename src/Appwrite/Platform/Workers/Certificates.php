@@ -6,7 +6,8 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -46,7 +47,9 @@ class Certificates extends Action
             ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
+            ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
             ->callback([$this, 'action']);
@@ -57,14 +60,16 @@ class Certificates extends Action
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param Log $log
      * @param CertificatesAdapter $certificates
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates): void
+    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -78,7 +83,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates, $skipRenewCheck);
+        $this->execute($domain, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck);
     }
 
     /**
@@ -87,13 +92,14 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -183,7 +189,7 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForFunctions);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
 
@@ -196,13 +202,14 @@ class Certificates extends Action
      * @param Database $dbForPlatform Database connection for console
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions): void
+    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
     {
         // Check if update or insert required
         $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
@@ -216,7 +223,7 @@ class Certificates extends Action
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForFunctions);
+        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
     }
 
     /**
@@ -335,7 +342,7 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions): void
+    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
     {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
@@ -364,50 +371,28 @@ class Certificates extends Action
                 return;
             }
 
-            /** Trigger Webhook */
             $ruleModel = new Rule();
             $queueForEvents
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].update')
                 ->setParam('ruleId', $rule->getId())
-                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
-                ->trigger();
+                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
 
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
 
             /** Trigger Functions */
             $queueForFunctions
-                ->setProject($project)
-                ->setEvent('rules.[ruleId].update')
-                ->setParam('ruleId', $rule->getId())
-                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
+                ->from($queueForEvents)
                 ->trigger();
 
-            /** Trigger realtime event */
-            $allEvents = Event::generateEvents('rules.[ruleId].update', [
-                'ruleId' => $rule->getId(),
-            ]);
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $rule,
-                project: $project
-            );
-            Realtime::send(
-                projectId: 'console',
-                payload: $rule->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
-            Realtime::send(
-                projectId: $project->getId(),
-                payload: $rule->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            /** Trigger Realtime Events */
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->setSubscribers(['console', $projectId])
+                ->trigger();
         }
     }
 }

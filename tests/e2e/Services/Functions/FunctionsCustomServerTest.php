@@ -14,7 +14,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -1701,9 +1700,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $executions['headers']['status-code']);
             $this->assertEquals(1, count($executions['body']['executions']));
         });
-
-        // Await Aggregation
-        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $this->assertEventually(function () use ($functionId) {
             $response = $this->getUsage($functionId, [
