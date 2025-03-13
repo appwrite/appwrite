@@ -111,7 +111,7 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployment-' . $site['deploymentId'] . ')';
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -132,7 +132,7 @@ class Comment
                 foreach ($project['function'] as $functionId => $function) {
                     $generateImage = function (string $status) use ($protocol, $hostname) {
                         $extention = $status === 'building' ? 'gif' : 'png';
-                        $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
+                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
                         $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
                         return $imageUrl;
                     };
