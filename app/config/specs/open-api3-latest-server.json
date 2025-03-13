@@ -9379,17 +9379,18 @@
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "description": "Type of reference passed. Allowed values are: branch",
+                                        "description": "Type of reference passed. Allowed values are: branch, commit",
                                         "x-example": "branch",
                                         "enum": [
-                                            "branch"
+                                            "branch",
+                                            "commit"
                                         ],
                                         "x-enum-name": "VCSDeploymentType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
-                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name, commit hash",
                                         "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
@@ -17947,18 +17948,19 @@
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "description": "Type of reference passed. Allowed values are: branch",
+                                        "description": "Type of reference passed. Allowed values are: branch, commit",
                                         "x-example": "branch",
                                         "enum": [
                                             "branch",
-                                            "commit"
+                                            "commit",
+                                            "tag"
                                         ],
                                         "x-enum-name": "VCSDeploymentType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
-                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name, commit hash",
                                         "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
