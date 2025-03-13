@@ -5043,16 +5043,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.7",
+            "version": "0.40.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873"
+                "reference": "56f09482d9e2f223911277ab887f197402708049"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9e89b0bc4d8e6c81817d27096629f34a149fa873",
-                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/56f09482d9e2f223911277ab887f197402708049",
+                "reference": "56f09482d9e2f223911277ab887f197402708049",
                 "shasum": ""
             },
             "require": {
@@ -5088,9 +5088,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.2"
             },
-            "time": "2025-03-12T08:43:55+00:00"
+            "time": "2025-03-06T16:31:03+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -5317,16 +5317,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.21.1",
+            "version": "v1.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86"
+                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c44bffbb2334e90fba560933c45948fa4a3f3e86",
-                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/531fa0871fbde719c51b12afa3a443b8f4e4b425",
+                "reference": "531fa0871fbde719c51b12afa3a443b8f4e4b425",
                 "shasum": ""
             },
             "require": {
@@ -5337,9 +5337,9 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.70.2",
-                "illuminate/view": "^11.44.1",
-                "larastan/larastan": "^3.1.0",
+                "friendsofphp/php-cs-fixer": "^3.68.5",
+                "illuminate/view": "^11.42.0",
+                "larastan/larastan": "^3.0.4",
                 "laravel-zero/framework": "^11.36.1",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3",
@@ -5379,7 +5379,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-03-11T03:22:21+00:00"
+            "time": "2025-02-18T03:18:57+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5794,16 +5794,16 @@
         },
         {
             "name": "phpbench/phpbench",
-            "version": "1.4.1",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbench/phpbench.git",
-                "reference": "78cd98a9aa34e0f8f80ca01972a8b88d2c30194b"
+                "reference": "4248817222514421cba466bfa7adc7d8932345d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/78cd98a9aa34e0f8f80ca01972a8b88d2c30194b",
-                "reference": "78cd98a9aa34e0f8f80ca01972a8b88d2c30194b",
+                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/4248817222514421cba466bfa7adc7d8932345d4",
+                "reference": "4248817222514421cba466bfa7adc7d8932345d4",
                 "shasum": ""
             },
             "require": {
@@ -5880,7 +5880,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpbench/phpbench/issues",
-                "source": "https://github.com/phpbench/phpbench/tree/1.4.1"
+                "source": "https://github.com/phpbench/phpbench/tree/1.4.0"
             },
             "funding": [
                 {
@@ -5888,7 +5888,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-12T08:01:40+00:00"
+            "time": "2025-01-26T19:54:45+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
