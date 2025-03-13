@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Compute;
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Query;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -39,25 +38,29 @@ class Base extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        // TODO: Support tag and commit in future
+        $commitDetails = [];
+        $branchUrl = "";
+        $providerBranch = "";
+
+        // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
+            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            try {
+                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+            } catch (\Throwable $error) {
+                // Ignore; deployment can continue
+            }
+        } elseif ($referenceType === 'commit') {
+            try {
+                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+            } catch (\Throwable $error) {
+                // Ignore; deployment can continue
+            }
         }
 
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
-        $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
-
-        $commitDetails = [];
-        if ($template->isEmpty()) {
-            try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
-            } catch (\Throwable $error) {
-                Console::warning('Failed to get latest commit details');
-                Console::warning($error->getMessage());
-                Console::warning($error->getTraceAsString());
-            }
-        }
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
