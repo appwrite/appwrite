@@ -794,9 +794,10 @@ class Builds extends Action
 
                         $config['sleep'] = 3000; // 3 seconds
 
+                        // Makes tests much faster
                         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
                         if ($isDevelopment) {
-                            $config['timeout'] = 10000; // 10 seconds
+                            $config['sleep'] = 0; // Override this when running Screenshot.php task
                         }
 
                         $response = $client->fetch(

@@ -1659,20 +1659,14 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $oldDeploymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($oldDeploymentDomain);
+        $siteDomain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($siteDomain);
 
-        $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => 'true'
-        ]);
-        $this->assertNotEmpty($deploymentId);
-
-        $newDeploymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($newDeploymentDomain);
+        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($delpoymentDomain);
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $newDeploymentDomain);
+        $proxyClient->setEndpoint('http://' . $siteDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", $response['body']);
@@ -1680,7 +1674,7 @@ class SitesCustomServerTest extends Scope
         $contentLength = $response['headers']['content-length'];
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $oldDeploymentDomain);
+        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
@@ -2069,13 +2063,6 @@ class SitesCustomServerTest extends Scope
         $domain = $this->getDeploymentDomain($deploymentId);
         $this->assertNotEmpty($domain);
 
-        // Create second deployment to make first one a preview
-        $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentId);
-
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
@@ -2177,13 +2164,14 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
 
         // Failure: Membership missing
+        $email = \uniqid() . 'newuser@appwrite.io';
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
             'userId' => ID::unique(),
-            'email' => 'newuser@appwrite.io',
+            'email' => $email,
             'password' => 'password'
         ]);
         $this->assertEquals(201, $user['headers']['status-code']);
@@ -2193,7 +2181,7 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'email' => 'newuser@appwrite.io',
+            'email' => $email,
             'password' => 'password',
         ]);
         $this->assertEquals(201, $session['headers']['status-code']);
