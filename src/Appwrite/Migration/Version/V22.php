@@ -75,6 +75,14 @@ class V22 extends Migration
                         Console::warning("'personalRefreshToken' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'memberships':
+                    // Create roles index
+                    try {
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_roles');
+                    } catch (Throwable $th) {
+                        Console::warning("'_key_roles' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
             }
 
             usleep(50000);
