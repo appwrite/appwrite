@@ -567,13 +567,16 @@ class Functions extends Action
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
+        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
+        $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+
         $queueForEvents
             ->setProject($project)
             ->setUser($user)
             ->setEvent('functions.[functionId].executions.[executionId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())));
+            ->setPayload($realtimeExecution);
 
         /** Trigger Webhook */
         $queueForWebhooks
@@ -587,8 +590,8 @@ class Functions extends Action
 
         /** Trigger Realtime Events */
         $queueForRealtime
-            ->from($queueForEvents)
             ->setSubscribers(['console', $project->getId()])
+            ->from($queueForEvents)
             ->trigger();
 
         if (!empty($error)) {

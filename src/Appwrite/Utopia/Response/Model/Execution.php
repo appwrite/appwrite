@@ -145,7 +145,7 @@ class Execution extends Model
     /**
      * Convert DB structure to response model
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {
