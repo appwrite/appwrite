@@ -996,12 +996,18 @@ class Builds extends Action
                 return;
             }
 
+            // Color message red
+            $message = $th->getMessage();
+            if (!\str_contains($message, '')) {
+                $message = "[31m" . $message;
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('buildEndAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', "[31m" . $th->getMessage());
+            $deployment->setAttribute('buildLogs', $message);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
