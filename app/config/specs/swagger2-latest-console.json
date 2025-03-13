@@ -6676,8 +6676,6 @@
                             },
                             "required": [
                                 "required",
-                                "min",
-                                "max",
                                 "default"
                             ]
                         }
@@ -6914,8 +6912,6 @@
                             },
                             "required": [
                                 "required",
-                                "min",
-                                "max",
                                 "default"
                             ]
                         }
@@ -26604,7 +26600,8 @@
                                     "default": null,
                                     "x-example": "branch",
                                     "enum": [
-                                        "branch"
+                                        "branch",
+                                        "commit"
                                     ],
                                     "x-enum-name": "VCSDeploymentType",
                                     "x-enum-keys": []
@@ -38596,7 +38593,7 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "The deployment status. Possible values are \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
+                    "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
                     "x-example": "ready"
                 },
                 "buildLogs": {
@@ -40286,6 +40283,21 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "imageTransformations": {
+                    "type": "array",
+                    "description": "Aggregated number of files transformations per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "imageTransformationsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of files transformations.",
+                    "x-example": 0,
+                    "format": "int32"
                 }
             },
             "required": [
@@ -40293,7 +40305,9 @@
                 "filesTotal",
                 "filesStorageTotal",
                 "files",
-                "storage"
+                "storage",
+                "imageTransformations",
+                "imageTransformationsTotal"
             ]
         },
         "usageFunctions": {
@@ -41112,6 +41126,21 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "imageTransformations": {
+                    "type": "array",
+                    "description": "An array of aggregated number of image transformations.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "imageTransformationsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of image transformations.",
+                    "x-example": 0,
+                    "format": "int32"
                 }
             },
             "required": [
@@ -41143,7 +41172,9 @@
                 "authPhoneEstimate",
                 "authPhoneCountryBreakdown",
                 "databasesReads",
-                "databasesWrites"
+                "databasesWrites",
+                "imageTransformations",
+                "imageTransformationsTotal"
             ]
         },
         "headers": {

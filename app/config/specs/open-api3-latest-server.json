@@ -5953,8 +5953,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -6192,8 +6190,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -17954,7 +17950,8 @@
                                         "description": "Type of reference passed. Allowed values are: branch",
                                         "x-example": "branch",
                                         "enum": [
-                                            "branch"
+                                            "branch",
+                                            "commit"
                                         ],
                                         "x-enum-name": "VCSDeploymentType",
                                         "x-enum-keys": []
@@ -27908,7 +27905,7 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "The deployment status. Possible values are \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
+                        "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
                         "x-example": "ready"
                     },
                     "buildLogs": {
