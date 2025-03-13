@@ -107,7 +107,7 @@ class Create extends Action
             'buildEndAt' => null,
             'buildDuration' => null,
             'buildSize' => null,
-            'status' => 'processing',
+            'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
         ]));

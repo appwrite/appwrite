@@ -1557,7 +1557,7 @@ return [
                 'size' => 16,
                 'signed' => true,
                 'required' => true,
-                'default' => 'processing',
+                'default' => 'waiting',
                 'array' => false,
                 'filters' => [],
             ],
