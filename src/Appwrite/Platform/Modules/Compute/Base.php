@@ -119,25 +119,29 @@ class Base extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        // TODO: Support tag and commit in future
+        $commitDetails = [];
+        $branchUrl = "";
+        $providerBranch = "";
+
+        // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
+            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            try {
+                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+            } catch (\Throwable $error) {
+                // Ignore; deployment can continue
+            }
+        } elseif ($referenceType === 'commit') {
+            try {
+                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+            } catch (\Throwable $error) {
+                // Ignore; deployment can continue
+            }
         }
 
         $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
-        $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
-
-        $commitDetails = [];
-        if ($template->isEmpty()) {
-            try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
-            } catch (\Throwable $error) {
-                Console::warning('Failed to get latest commit details');
-                Console::warning($error->getMessage());
-                Console::warning($error->getTraceAsString());
-            }
-        }
 
         $commands = [];
         if (!empty($site->getAttribute('installCommand', ''))) {

@@ -59,8 +59,8 @@ class Create extends Base
                 ],
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
-            // TODO: Support tag and commit in future
-            ->param('type', '', new WhiteList(['branch']), 'Type of reference passed. Allowed values are: branch')
+            // TODO: Support tag in future
+            ->param('type', '', new WhiteList(['branch', 'commit']), 'Type of reference passed. Allowed values are: branch')
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
