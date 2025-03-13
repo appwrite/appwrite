@@ -14,6 +14,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
@@ -1324,6 +1325,21 @@ App::get('/v1/ping')
     ->desc('Test the connection between the Appwrite and the SDK.')
     ->label('scope', 'global')
     ->label('event', 'projects.[projectId].ping')
+    ->label('sdk', new Method(
+        namespace: 'ping',
+        name: 'get',
+        hide: true,
+        description: <<<EOT
+        Send a ping to project as part of onboarding.
+        EOT,
+        auth: [],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+    ))
     ->inject('response')
     ->inject('project')
     ->inject('dbForPlatform')
