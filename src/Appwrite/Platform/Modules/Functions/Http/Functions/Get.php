@@ -51,8 +51,11 @@ class Get extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, Response $response, Database $dbForProject)
-    {
+    public function action(
+        string $functionId,
+        Response $response,
+        Database $dbForProject
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

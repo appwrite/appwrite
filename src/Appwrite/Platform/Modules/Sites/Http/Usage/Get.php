@@ -57,8 +57,12 @@ class Get extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $range, Response $response, Database $dbForProject)
-    {
+    public function action(
+        string $siteId,
+        string $range,
+        Response $response,
+        Database $dbForProject
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

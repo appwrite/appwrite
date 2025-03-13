@@ -63,8 +63,16 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $variableId, string $key, ?string $value, ?bool $secret, Response $response, Database $dbForProject, Database $dbForPlatform)
-    {
+    public function action(
+        string $functionId,
+        string $variableId,
+        string $key,
+        ?string $value,
+        ?bool $secret,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

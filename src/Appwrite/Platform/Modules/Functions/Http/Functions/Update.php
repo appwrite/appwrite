@@ -106,8 +106,34 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
-    {
+    public function action(
+        string $functionId,
+        string $name,
+        string $runtime,
+        array $execute,
+        array $events,
+        string $schedule,
+        int $timeout,
+        bool $enabled,
+        bool $logging,
+        string $entrypoint,
+        string $commands,
+        array $scopes,
+        string $installationId,
+        ?string $providerRepositoryId,
+        string $providerBranch,
+        bool $providerSilentMode,
+        string $providerRootDirectory,
+        string $specification,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        Database $dbForPlatform,
+        GitHub $github
+    ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 

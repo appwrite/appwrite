@@ -65,8 +65,17 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Build $queueForBuilds, Device $deviceForSites)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Response $response,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        Device $deviceForSites
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

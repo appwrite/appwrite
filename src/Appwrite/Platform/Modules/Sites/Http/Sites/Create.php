@@ -91,8 +91,30 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, string $installationId, string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Database $dbForPlatform)
-    {
+    public function action(
+        string $siteId,
+        string $name,
+        string $framework,
+        bool $enabled,
+        int $timeout,
+        string $installCommand,
+        string $buildCommand,
+        string $outputDirectory,
+        string $buildRuntime,
+        string $adapter,
+        string $installationId,
+        string $fallbackFile,
+        string $providerRepositoryId,
+        string $providerBranch,
+        bool $providerSilentMode,
+        string $providerRootDirectory,
+        string $specification,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents,
+        Database $dbForPlatform
+    ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);

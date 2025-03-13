@@ -63,8 +63,15 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForSites)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Response $response,
+        Database $dbForProject,
+        DeleteEvent $queueForDeletes,
+        Event $queueForEvents,
+        Device $deviceForSites
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);

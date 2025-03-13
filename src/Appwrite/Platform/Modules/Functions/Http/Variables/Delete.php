@@ -59,8 +59,13 @@ class Delete extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForPlatform)
-    {
+    public function action(
+        string $functionId,
+        string $variableId,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
