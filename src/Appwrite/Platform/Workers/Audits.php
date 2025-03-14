@@ -7,7 +7,6 @@ use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
@@ -17,15 +16,16 @@ use Utopia\System\System;
 
 class Audits extends Action
 {
-    private const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
-    private const BATCH_SIZE_PRODUCTION = 5_000;
-    private const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+    protected const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
+    protected const BATCH_SIZE_PRODUCTION = 5_000;
+    protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
     private int $lastTriggeredTime = 0;
 
     private array $logs = [];
 
-    private function getBatchSize(): int
+
+    protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
             ? self::BATCH_SIZE_DEVELOPMENT
@@ -101,7 +101,7 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => DateTime::formatTz(DateTime::now())
+            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
         if (isset($this->logs[$project->getInternalId()])) {

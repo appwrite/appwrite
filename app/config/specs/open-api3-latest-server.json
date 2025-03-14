@@ -5953,8 +5953,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -6192,8 +6190,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }

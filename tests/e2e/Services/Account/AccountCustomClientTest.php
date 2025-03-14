@@ -2421,6 +2421,33 @@ class AccountCustomClientTest extends Scope
         $message = $smsRequest['data']['message'];
         $token = substr($message, 0, 6);
 
+        /**
+         * Test for FAILURE
+         */
+
+        // disable phone sessions
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'status' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authPhone']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals("Phone authentication is disabled for this project", $response['body']['message']);
+
         return \array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6)
         ]);
