@@ -595,10 +595,10 @@ App::init()
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
-                            'projectId' => 'console',
-                            'projectInternalId' => 'console',
+                            'projectId' => $console->getId(),
+                            'projectInternalId' => $console->getInternalId(),
                             'owner' => $owner,
-                            'region' => 'fra'
+                            'region' => $console->getAttribute('region')
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
