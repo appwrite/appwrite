@@ -50,7 +50,7 @@ Table of Contents:
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
-  - [Services](#services)
+  - [Products](#products)
   - [SDKs](#sdks)
     - [Client](#client)
     - [Server](#server)
