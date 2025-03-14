@@ -582,6 +582,12 @@ App::init()
                         ]);
                     }
 
+                    $owner = '';
+                    $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                    if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+                        $owner = 'Appwrite';
+                    }
+
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
@@ -590,7 +596,9 @@ App::init()
                             'resourceType' => 'api',
                             'status' => 'verifying',
                             'projectId' => 'console',
-                            'projectInternalId' => 'console'
+                            'projectInternalId' => 'console',
+                            'owner' => $owner,
+                            'region' => 'fra'
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
