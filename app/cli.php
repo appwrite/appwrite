@@ -187,7 +187,6 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
