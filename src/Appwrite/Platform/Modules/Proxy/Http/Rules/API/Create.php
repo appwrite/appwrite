@@ -117,6 +117,14 @@ class Create extends Action
             }
         }
 
+        $owner = '';
+        if (
+            ($functionsDomain != '' && \str_ends_with($domain->get(), $functionsDomain)) ||
+            ($sitesDomain != '' && \str_ends_with($domain->get(), $sitesDomain))
+        ) {
+            $owner = 'Appwrite';
+        }
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -127,6 +135,8 @@ class Create extends Action
             'trigger' => 'manual',
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get()]),
+            'owner' => $owner,
+            'region' => $project->getAttribute('region')
         ]);
 
         try {
