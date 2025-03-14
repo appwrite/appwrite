@@ -736,6 +736,12 @@ App::init()
                         ]);
                     }
 
+                    $owner = '';
+                    $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                    if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+                        $owner = 'Appwrite';
+                    }
+
                     if ($domainDocument->isEmpty()) {
                         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
                         $domainDocument = new Document([
@@ -744,9 +750,11 @@ App::init()
                             'domain' => $domain->get(),
                             'type' => 'api',
                             'status' => 'verifying',
-                            'projectId' => 'console',
-                            'projectInternalId' => 'console',
+                            'projectId' => $console->getId(),
+                            'projectInternalId' => $console->getInternalId(),
                             'search' => implode(' ', [$ruleId, $domain->get()]),
+                            'owner' => $owner,
+                            'region' => $console->getAttribute('region')
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);

@@ -389,6 +389,7 @@ class Deletes extends Action
 
         $query = [
             Query::lessThan('accessedAt', $datetime),
+            Query::orderDesc('accessedAt')
         ];
 
         $this->deleteByGroup(
@@ -422,6 +423,7 @@ class Deletes extends Action
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::orderDesc('time'),
             Query::equal('period', ['1h']),
         ], $dbForProject);
 
@@ -432,6 +434,7 @@ class Deletes extends Action
             // Delete Usage stats from logsDB
             $this->deleteByGroup('stats', [
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
+                Query::orderDesc('time'),
                 Query::equal('period', ['1h']),
             ], $dbForLogs);
         }
@@ -692,9 +695,11 @@ class Deletes extends Action
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
     {
         $dbForProject = $getProjectDB($project);
+
         // Delete Executions
         $this->deleteByGroup('executions', [
-            Query::lessThan('$createdAt', $datetime)
+            Query::lessThan('$createdAt', $datetime),
+            Query::orderDesc('$createdAt'),
         ], $dbForProject);
     }
 
@@ -712,7 +717,8 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::lessThan('$createdAt', $expired)
+            Query::lessThan('$createdAt', $expired),
+            Query::orderDesc('$createdAt'),
         ], $dbForProject);
     }
 
@@ -726,7 +732,8 @@ class Deletes extends Action
     {
         // Delete Dead Realtime Logs
         $this->deleteByGroup('realtime', [
-            Query::lessThan('timestamp', $datetime)
+            Query::lessThan('timestamp', $datetime),
+            Query::orderDesc('timestamp'),
         ], $dbForPlatform);
     }
 

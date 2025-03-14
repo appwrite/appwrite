@@ -134,7 +134,9 @@ const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
-const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
+const APP_DATABASE_TIMEOUT_MILLISECONDS_API = 15 * 1000; // 15 seconds
+const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
+const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_SITES = '/storage/sites';
@@ -1455,7 +1457,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -1487,7 +1489,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     return $database;
@@ -1512,7 +1514,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             $database
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
                 ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -1570,7 +1572,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
