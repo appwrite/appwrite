@@ -387,6 +387,8 @@ App::post('/v1/functions')
                     'resourceInternalId' => $function->getInternalId(),
                     'status' => 'verified',
                     'certificateId' => '',
+                    'owner' => 'Appwrite',
+                    'region' => $project->getAttribute('region')
                 ]))
             );
 
