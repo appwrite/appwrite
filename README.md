@@ -159,6 +159,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)       |
 |                       | [Quick start for Refine](https://appwrite.io/docs/quick-starts/refine)             |
 |                       | [Quick start for Angular](https://appwrite.io/docs/quick-starts/angular)           |
+|                       | [Quick start for Solid](https://appwrite.io/docs/quick-starts/solid)               |
 | **Mobile and Native** | [Quick start for React Native](https://appwrite.io/docs/quick-starts/react-native) |
 |                       | [Quick start for Flutter](https://appwrite.io/docs/quick-starts/flutter)           |
 |                       | [Quick start for Apple](https://appwrite.io/docs/quick-starts/apple)               |
@@ -172,6 +173,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
 |                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
 |                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
+|                       | [Quick start for Go](https://appwrite.io/docs/quick-starts/go)                     |
+
 
 ### Products
 
@@ -211,6 +214,7 @@ Below is a list of currently supported platforms and languages. If you would lik
 - :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Beta** (Maintained by the Appwrite Team)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go) - **Beta** (Maintained by the Appwrite Team)
 
 #### Community
 
