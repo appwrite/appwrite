@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 
 Config::load('events', __DIR__ . '/../config/events.php');
