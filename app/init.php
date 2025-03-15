@@ -19,10 +19,10 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 \error_reporting(E_ALL);
 
 require_once __DIR__ . '/init/constants.php';
-require_once __DIR__ . '/init/config.php';
+require_once __DIR__ . '/init/configs.php';
 require_once __DIR__ . '/init/database/filters.php';
 require_once __DIR__ . '/init/database/formats.php';
-require_once __DIR__ . '/init/locale.php';
+require_once __DIR__ . '/init/locales.php';
 require_once __DIR__ . '/init/registers.php';
 require_once __DIR__ . '/init/resources.php';
 
