@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -13,9 +14,14 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Request;
+use Utopia\Abuse\Adapters\TimeLimit as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -30,6 +36,7 @@ use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
@@ -66,43 +73,43 @@ App::setResource('publisher', function (Group $pools) {
 App::setResource('consumer', function (Group $pools) {
     return $pools->get('consumer')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForMessaging', function (Queue\Publisher $publisher) {
+App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
-App::setResource('queueForMails', function (Queue\Publisher $publisher) {
+App::setResource('queueForMails', function (Publisher $publisher) {
     return new Mail($publisher);
 }, ['publisher']);
-App::setResource('queueForBuilds', function (Queue\Publisher $publisher) {
+App::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
 }, ['publisher']);
-App::setResource('queueForDatabase', function (Queue\Publisher $publisher) {
+App::setResource('queueForDatabase', function (Publisher $publisher) {
     return new EventDatabase($publisher);
 }, ['publisher']);
-App::setResource('queueForDeletes', function (Queue\Publisher $publisher) {
+App::setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
-App::setResource('queueForEvents', function (Queue\Publisher $publisher) {
+App::setResource('queueForEvents', function (Publisher $publisher) {
     return new Event($publisher);
 }, ['publisher']);
-App::setResource('queueForWebhooks', function (Queue\Publisher $publisher) {
+App::setResource('queueForWebhooks', function (Publisher $publisher) {
     return new Webhook($publisher);
 }, ['publisher']);
 App::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
-App::setResource('queueForStatsUsage', function (Queue\Publisher $publisher) {
+App::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
-App::setResource('queueForAudits', function (Queue\Publisher $publisher) {
+App::setResource('queueForAudits', function (Publisher $publisher) {
     return new Audit($publisher);
 }, ['publisher']);
-App::setResource('queueForFunctions', function (Queue\Publisher $publisher) {
+App::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-App::setResource('queueForCertificates', function (Queue\Publisher $publisher) {
+App::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
-App::setResource('queueForMigrations', function (Queue\Publisher $publisher) {
+App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
 App::setResource('clients', function ($request, $console, $project) {
