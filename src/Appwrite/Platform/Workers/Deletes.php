@@ -387,8 +387,7 @@ class Deletes extends Action
 
         $query = [
             Query::lessThan('accessedAt', $datetime),
-            Query::orderDesc('accessedAt'),
-            Query::orderDesc('$internalId'),
+            Query::orderDesc('accessedAt')
         ];
 
         $this->deleteByGroup(
@@ -416,26 +415,24 @@ class Deletes extends Action
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
-        /** @var Database $dbForProject*/
+        /** @var \Utopia\Database\Database $dbForProject*/
         $dbForProject = $getProjectDB($project);
 
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
-            Query::orderDesc('$internalId'),
             Query::equal('period', ['1h']),
         ], $dbForProject);
 
         if ($project->getId() !== 'console') {
-            /** @var Database $dbForLogs*/
+            /** @var \Utopia\Database\Database $dbForLogs*/
             $dbForLogs = call_user_func($getLogsDB, $project);
 
             // Delete Usage stats from logsDB
             $this->deleteByGroup('stats', [
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
-                Query::orderDesc('$internalId'),
                 Query::equal('period', ['1h']),
             ], $dbForLogs);
         }
@@ -699,7 +696,6 @@ class Deletes extends Action
         $this->deleteByGroup('executions', [
             Query::lessThan('$createdAt', $datetime),
             Query::orderDesc('$createdAt'),
-            Query::orderDesc('$internalId'),
         ], $dbForProject);
     }
 
@@ -719,7 +715,6 @@ class Deletes extends Action
         $this->deleteByGroup('sessions', [
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
-            Query::orderDesc('$internalId'),
         ], $dbForProject);
     }
 
@@ -735,7 +730,6 @@ class Deletes extends Action
         $this->deleteByGroup('realtime', [
             Query::lessThan('timestamp', $datetime),
             Query::orderDesc('timestamp'),
-            Query::orderDesc('$internalId'),
         ], $dbForPlatform);
     }
 
@@ -755,7 +749,6 @@ class Deletes extends Action
             $this->deleteByGroup(Audit::COLLECTION, [
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
-                Query::orderDesc('$internalId'),
             ], $dbForProject);
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
