@@ -3,19 +3,18 @@
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
+use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
-use Utopia\Database\Database;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Adapter\AppSignal;
@@ -26,7 +25,6 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
@@ -39,11 +37,14 @@ if (!App::isProduction()) {
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher']);
 }
-
 $register->set('logger', function () {
     // Register error logger
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if (empty($providerConfig)) {
+        return;
+    }
 
     try {
         $loggingProvider = new DSN($providerConfig ?? '');
@@ -116,31 +117,43 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'queue' => [
-            'type' => 'queue',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+        'logs' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'publisher' => [
+            'type' => 'publisher',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'consumer' => [
+            'type' => 'consumer',
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
             'schemes' => ['redis'],
         ],
@@ -152,7 +165,7 @@ $register->set('pools', function () {
     $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
-        $workerCount = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
     }
@@ -212,12 +225,12 @@ $register->set('pools', function () {
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new Redis();
+                    $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
-                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -235,28 +248,26 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
-                        break;
+                        return $adapter;
                     case 'pubsub':
-                        $adapter = $resource();
-                        break;
-                    case 'queue':
-                        $adapter = match ($dsn->getScheme()) {
-                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                        return match ($dsn->getScheme()) {
+                            'redis' => new PubSub($resource()),
                             default => null
                         };
-                        break;
+                    case 'publisher':
+                    case 'consumer':
+                        return match ($dsn->getScheme()) {
+                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
+                            default => null
+                        };
                     case 'cache':
-                        $adapter = match ($dsn->getScheme()) {
+                        return match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
-                        break;
-
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-
-                return $adapter;
             });
 
             $group->add($pool);
@@ -312,22 +323,18 @@ $register->set('smtp', function () {
 
     return $mail;
 });
-
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2024-09.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
-
 $register->set('passwordsDictionary', function () {
-    $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
 });
-
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
-
 $register->set('hooks', function () {
     return new Hooks();
 });
