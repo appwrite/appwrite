@@ -21,7 +21,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
-use Utopia\Abuse\Adapters\TimeLimit as TimeLimitRedis;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
