@@ -1666,6 +1666,17 @@ return [
                 'filters' => ['encrypt']
             ],
             [
+                '$id' => ID::custom('secret'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

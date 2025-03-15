@@ -17,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -399,11 +400,12 @@ App::post('/v1/project/variables')
     ))
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
+    ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $key, string $value, bool $secret, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variableId = ID::unique();
 
         $variable = new Document([
@@ -418,6 +420,7 @@ App::post('/v1/project/variables')
             'resourceType' => 'project',
             'key' => $key,
             'value' => $value,
+            'secret' => $secret,
             'search' => implode(' ', [$variableId, $key, 'project']),
         ]);
 
