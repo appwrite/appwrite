@@ -163,6 +163,7 @@ jobs:
 
       - name: Load and Start Appwrite
         run: |
+          export _APP_STATS_RESOURCES_INTERVAL=5
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 30

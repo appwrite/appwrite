@@ -173,13 +173,13 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForBuckets($dbForProject, $dbForLogs, $region);
+                $this->countForBuckets($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
-                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+                $this->countImageTransformations($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
@@ -191,7 +191,7 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForFunctions($dbForProject, $dbForLogs, $region);
+                $this->countForFunctions($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
@@ -204,11 +204,11 @@ class StatsResources extends Action
         Console::info('End of count for: ' . $project->getId());
     }
 
-    protected function countForBuckets(Database $dbForProject, Database $dbForLogs, string $region)
+    protected function countForBuckets(Database $dbForProject, string $region)
     {
         $totalFiles = 0;
         $totalStorage = 0;
-        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
+        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $region, &$totalFiles, &$totalStorage) {
             $files = $dbForProject->count('bucket_' . $bucket->getInternalId());
 
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES);
@@ -229,7 +229,7 @@ class StatsResources extends Action
     /**
      * Need separate function to count per period data
      */
-    protected function countImageTransformations(Database $dbForProject, Database $dbForLogs, string $region)
+    protected function countImageTransformations(Database $dbForProject, string $region)
     {
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
@@ -295,7 +295,7 @@ class StatsResources extends Action
         return [$databaseDocuments, $databaseStorage];
     }
 
-    protected function countForFunctions(Database $dbForProject, Database $dbForLogs, string $region)
+    protected function countForFunctions(Database $dbForProject, string $region)
     {
         $deploymentsStorage = $dbForProject->sum('deployments', 'size');
         $buildsStorage = $dbForProject->sum('builds', 'size');
@@ -308,7 +308,7 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_BUILDS, $builds);
 
 
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $dbForLogs, $region) {
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
             $functionDeploymentsStorage = $dbForProject->sum('deployments', 'size', [
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
