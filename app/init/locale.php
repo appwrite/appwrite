@@ -3,9 +3,6 @@
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 
-/*
- * Localization
- */
 Locale::$exceptions = false;
 
 $locales = Config::getParam('locale-codes', []);
