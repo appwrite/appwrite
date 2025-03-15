@@ -8,7 +8,7 @@ use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 
-class V22 extends Migration
+class V23 extends Migration
 {
     /**
      * @throws Throwable
@@ -53,26 +53,12 @@ class V22 extends Migration
             $this->projectDB->setNamespace("_$internalProjectId");
 
             switch ($id) {
-                case 'installations':
-                    // Create personalAccessToken attribute
+                case 'memberships':
+                    // Create roles index
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalAccessToken');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_roles');
                     } catch (Throwable $th) {
-                        Console::warning("'personalAccessToken' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // Create personalAccessTokenExpiry attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalAccessTokenExpiry');
-                    } catch (Throwable $th) {
-                        Console::warning("'personalAccessTokenExpiry' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // Create personalRefreshToken attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'personalRefreshToken');
-                    } catch (Throwable $th) {
-                        Console::warning("'personalRefreshToken' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_roles' from {$id}: {$th->getMessage()}");
                     }
                     break;
             }
