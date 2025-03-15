@@ -118,6 +118,22 @@ class FunctionsConsoleClientTest extends Scope
 
         $variableId = $variable['body']['$id'];
 
+        // test for secret variable
+        $variable = $this->createVariable(
+            $data['functionId'],
+            [
+                'key' => 'APP_TEST_1',
+                'value' => 'TESTINGVALUE_1',
+                'secret' => true
+            ]
+        );
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals('APP_TEST_1', $variable['body']['key']);
+        $this->assertEmpty($variable['body']['value']);
+
+        $secretVariableId = $variable['body']['$id'];
+
         /**
          * Test for FAILURE
          */
@@ -157,7 +173,8 @@ class FunctionsConsoleClientTest extends Scope
         return array_merge(
             $data,
             [
-                'variableId' => $variableId
+                'variableId' => $variableId,
+                'secretVariableId' => $secretVariableId
             ]
         );
     }
@@ -177,10 +194,12 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, sizeof($response['body']['variables']));
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(2, sizeof($response['body']['variables']));
+        $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
+        $this->assertEquals("APP_TEST_1", $response['body']['variables'][1]['key']);
+        $this->assertEmpty($response['body']['variables'][1]['value']);
 
         /**
          * Test for FAILURE
@@ -206,6 +225,15 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals("APP_TEST", $response['body']['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['value']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables/' . $data['secretVariableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("APP_TEST_1", $response['body']['key']);
+        $this->assertEmpty($response['body']['value']);
 
         /**
          * Test for FAILURE
@@ -250,6 +278,27 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(200, $variable['headers']['status-code']);
         $this->assertEquals("APP_TEST_UPDATE", $variable['body']['key']);
         $this->assertEquals("TESTINGVALUEUPDATED", $variable['body']['value']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'] . '/variables/' . $data['secretVariableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE_1',
+            'value' => 'TESTINGVALUEUPDATED_1'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("APP_TEST_UPDATE_1", $response['body']['key']);
+        $this->assertEmpty($response['body']['value']);
+
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables/' . $data['secretVariableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertEquals("APP_TEST_UPDATE_1", $variable['body']['key']);
+        $this->assertEmpty($variable['body']['value']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
@@ -326,6 +375,13 @@ class FunctionsConsoleClientTest extends Scope
          */
 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/variables/' . $data['secretVariableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
