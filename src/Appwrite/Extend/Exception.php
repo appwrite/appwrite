@@ -39,6 +39,7 @@ class Exception extends \Exception
     public const GENERAL_UNKNOWN                   = 'general_unknown';
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    public const GENERAL_RESOURCE_BLOCKED          = 'general_resource_blocked';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
@@ -111,7 +112,6 @@ class Exception extends \Exception
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
-    public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
     public const TEAM_INVITE_NOT_FOUND             = 'team_invite_not_found';
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
@@ -210,6 +210,7 @@ class Exception extends \Exception
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
     public const INDEX_INVALID                     = 'index_invalid';
+    public const INDEX_DEPENDENCY                  = 'index_dependency';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';

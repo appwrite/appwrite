@@ -31,7 +31,7 @@ return [
     ],
     'blr' => [
         '$id' => 'blr',
-        'name' => 'Banglore',
+        'name' => 'Bengaluru',
         'disabled' => true,
         'flag' => 'in',
         'default' => true,

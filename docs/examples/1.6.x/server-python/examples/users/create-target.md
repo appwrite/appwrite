@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.users import Users
 from appwrite.enums import MessagingProviderType
 
 client = Client()

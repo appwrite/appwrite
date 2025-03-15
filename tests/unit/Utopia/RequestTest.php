@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Utopia;
 
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
@@ -31,8 +32,13 @@ class RequestTest extends TestCase
         $this->assertCount(2, $this->request->getFilters());
 
         $route = new Route(Request::METHOD_GET, '/test');
-        $route->label('sdk.method', 'method');
-        $route->label('sdk.namespace', 'namespace');
+        $route->label('sdk', new Method(
+            namespace: 'namespace',
+            name: 'method',
+            description: 'description',
+            auth: [],
+            responses: [],
+        ));
         // set test header to prevent header populaten inside the request class
         $this->request->addHeader('EXAMPLE', 'VALUE');
         $this->request->setRoute($route);

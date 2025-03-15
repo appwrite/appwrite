@@ -31,6 +31,9 @@ func main() {
         messaging.WithUpdatePushBadge(0),
         messaging.WithUpdatePushDraft(false),
         messaging.WithUpdatePushScheduledAt(""),
+        messaging.WithUpdatePushContentAvailable(false),
+        messaging.WithUpdatePushCritical(false),
+        messaging.WithUpdatePushPriority("normal"),
     )
 
     if error != nil {

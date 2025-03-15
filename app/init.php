@@ -18,8 +18,6 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 \ini_set('default_socket_timeout', -1);
 \error_reporting(E_ALL);
 
-use Utopia\System\System;
-
 require_once __DIR__ . '/init/constants.php';
 require_once __DIR__ . '/init/config.php';
 require_once __DIR__ . '/init/database/filters.php';

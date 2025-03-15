@@ -18,7 +18,7 @@ class Migration extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Variable creation date in ISO 8601 format.',
+                'description' => 'Migration creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -46,9 +46,15 @@ class Migration extends Model
                 'default' => '',
                 'example' => 'Appwrite',
             ])
+            ->addRule('destination', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A string containing the type of destination of the migration.',
+                'default' => 'Appwrite',
+                'example' => 'Appwrite',
+            ])
             ->addRule('resources', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Resources to migration.',
+                'description' => 'Resources to migrate.',
                 'default' => [],
                 'example' => ['user'],
                 'array' => true
