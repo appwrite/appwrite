@@ -306,6 +306,10 @@ class Migrations extends Action
             Console::error($th->getMessage());
             Console::error($th->getTraceAsString());
 
+            Console::error('PREVIOUS:');
+            Console::error($th->getPrevious()?->getMessage() ?? '');
+            Console::error($th->getPrevious()?->getTraceAsString() ?? '');
+
             if (! $migration->isEmpty()) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
@@ -346,7 +350,7 @@ class Migrations extends Action
 
                     foreach ($destination->getErrors() as $error) {
                         /** @var MigrationException $error */
-                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                        ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
                             'migrationId' => $migration->getId(),
                             'source' => $migration->getAttribute('source') ?? '',
                             'destination' => $migration->getAttribute('destination') ?? '',
