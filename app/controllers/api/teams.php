@@ -27,6 +27,7 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -1126,7 +1127,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
+    ->inject('store')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Store $store) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1206,13 +1208,18 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             Authorization::setRole(Role::user($userId)->toString());
 
             if (!Config::getParam('domainVerification')) {
-                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+                $encoded = $store
+                    ->setProperty('id', $user->getId())
+                    ->setProperty('secret', $secret)
+                    ->encode();
+
+                $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
 
             $response
                 ->addCookie(
-                    name: Auth::$cookieName . '_legacy',
-                    value: Auth::encodeSession($user->getId(), $secret),
+                    name: $store->getKey() . '_legacy',
+                    value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
                     domain: Config::getParam('cookieDomain'),
@@ -1220,8 +1227,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                     httponly: true
                 )
                 ->addCookie(
-                    name: Auth::$cookieName,
-                    value: Auth::encodeSession($user->getId(), $secret),
+                    name: $store->getKey(),
+                    value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
                     domain: Config::getParam('cookieDomain'),

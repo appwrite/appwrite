@@ -38,6 +38,7 @@ use Utopia\Auth\Hashes\Scrypt;
 use Utopia\Auth\Hashes\ScryptModified;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -2014,7 +2015,8 @@ App::post('/v1/users/:userId/sessions')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->inject('store')
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2057,8 +2059,13 @@ App::post('/v1/users/:userId/sessions')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        $encoded = $store
+            ->setProperty('id', $user->getId())
+            ->setProperty('secret', $secret)
+            ->encode();
+
         $session
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
+            ->setAttribute('secret', $encoded)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents

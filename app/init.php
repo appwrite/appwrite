@@ -51,6 +51,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -1286,13 +1287,14 @@ App::setResource('clients', function ($request, $console, $project) {
     return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
+App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, Store $store) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var string $mode */
+    /** @var Utopia\Auth\Store $store */
 
     /**
      * Handles user authentication and session validation.
@@ -1315,62 +1317,64 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     Authorization::setDefaultStatus(true);
 
-    Auth::setCookieName('a_session_' . $project->getId());
+    $store->setKey('a_session_' . $project->getId());
 
     if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
+        $store->setKey('a_session_' . $console->getId());
     }
 
-    $session = Auth::decodeSession(
+    $store->decode(
         $request->getCookie(
-            Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
+            $store->getKey(), // Get sessions
+            $request->getCookie($store->getKey() . '_legacy', '')
         )
     );
 
+    var_dump($store);
+
     // Get session from header for SSR clients
-    if (empty($session['id']) && empty($session['secret'])) {
+    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
 
         if (!empty($sessionHeader)) {
-            $session = Auth::decodeSession($sessionHeader);
+            $store->decode($sessionHeader);
         }
     }
 
     // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
-    if ($response) {
+    if ($response) { // if in http context - add debug header
         $response->addHeader('X-Debug-Fallback', 'false');
     }
 
-    if (empty($session['id']) && empty($session['secret'])) {
+    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
         if ($response) {
             $response->addHeader('X-Debug-Fallback', 'true');
         }
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
-        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+        $store->decode(((isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
-    Auth::$unique = $session['id'] ?? '';
-    Auth::$secret = $session['secret'] ?? '';
+    // Auth::$unique = $session['id'] ?? '';
+    // Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
             if ($project->getId() === 'console') {
-                $user = $dbForPlatform->getDocument('users', Auth::$unique);
+                $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
             } else {
-                $user = $dbForProject->getDocument('users', Auth::$unique);
+                $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
             }
         }
     } else {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
     }
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''))
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -1411,7 +1415,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store']);
 
 App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
@@ -1976,3 +1980,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 
     return Key::decode($project, $key);
 }, ['request', 'project']);
+
+App::setResource('store', function () {
+    return new Store();
+});

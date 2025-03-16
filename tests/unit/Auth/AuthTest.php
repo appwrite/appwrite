@@ -4,6 +4,7 @@ namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Store;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -36,8 +37,18 @@ class AuthTest extends TestCase
         $secret = 'secret';
         $session = 'eyJpZCI6ImlkIiwic2VjcmV0Ijoic2VjcmV0In0=';
 
-        $this->assertEquals(Auth::encodeSession($id, $secret), $session);
-        $this->assertEquals(Auth::decodeSession($session), ['id' => $id, 'secret' => $secret]);
+        $store = new Store();
+
+        $encoded = $store
+            ->setProperty('id', $id)
+            ->setProperty('secret', $secret)
+            ->encode();
+
+        $decoded = $store->decode($encoded);
+        
+        $this->assertEquals($encoded, $session);
+        $this->assertEquals($decoded->getProperty('id'), $id);
+        $this->assertEquals($decoded->getProperty('secret'), $secret);
     }
 
     public function testHash(): void
