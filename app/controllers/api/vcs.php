@@ -245,7 +245,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitHash' => $providerCommitHash,
                 'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
                 'providerCommitAuthor' => $providerCommitAuthor,
-                'providerCommitMessage' => $providerCommitMessage,
+                'providerCommitMessage' => mb_strimwidth($providerCommitMessage, 0, 255, '...'),
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
@@ -705,17 +705,17 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 ->addOption(new Flutter())
                 ->addOption(new Nuxt())
                 ->addOption(new Astro())
-                ->addOption(new Remix())
                 ->addOption(new SvelteKit())
-                ->addOption(new NextJs());
+                ->addOption(new NextJs())
+                ->addOption(new Remix());
 
             $framework = $detector->detect();
 
             if (!\is_null($framework)) {
-                $framework = $framework->getName();
                 $output->setAttribute('installCommand', $framework->getInstallCommand());
                 $output->setAttribute('buildCommand', $framework->getBuildCommand());
                 $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
+                $framework = $framework->getName();
             } else {
                 $framework = 'other';
                 $output->setAttribute('installCommand', '');
@@ -863,9 +863,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         ->addOption(new Flutter())
                         ->addOption(new Nuxt())
                         ->addOption(new Astro())
-                        ->addOption(new Remix())
                         ->addOption(new SvelteKit())
-                        ->addOption(new NextJs());
+                        ->addOption(new NextJs())
+                        ->addOption(new Remix());
 
                     $detectedFramework = $frameworkDetector->detect();
 

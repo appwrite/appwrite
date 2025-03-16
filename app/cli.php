@@ -25,8 +25,8 @@ use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-// overwriting runtimes to be architectur agnostic for CLI
-Config::setParam('runtimes', (new Runtimes('v4rc'))->getAll(supported: false));
+// overwriting runtimes to be architecture agnostic for CLI
+Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';
@@ -43,8 +43,7 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -98,6 +97,10 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
 
     return $dbForPlatform;
 }, ['pools', 'cache']);
+
+CLI::setResource('console', function () {
+    return new Document(Config::getParam('console'));
+}, []);
 
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
@@ -183,7 +186,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant

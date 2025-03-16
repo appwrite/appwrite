@@ -4360,7 +4360,7 @@
                     "deprecated": false,
                     "demo": "console\/get-resource.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCheck if a resource ID is available.",
-                    "rate-limit": 10,
+                    "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "userId:{userId}, url:{url}",
                     "scope": "rules.read",
@@ -6476,8 +6476,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -6713,8 +6711,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -9082,7 +9078,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, runtime, deployment, schedule, scheduleNext, schedulePrevious, timeout, entrypoint, commands, installationId",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, runtime, deploymentId, schedule, scheduleNext, schedulePrevious, timeout, entrypoint, commands, installationId",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -9232,7 +9228,9 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "flutter-3.27",
+                                            "flutter-3.29"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -9851,7 +9849,9 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "flutter-3.27",
+                                            "flutter-3.29"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -10510,17 +10510,18 @@
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "description": "Type of reference passed. Allowed values are: branch",
+                                        "description": "Type of reference passed. Allowed values are: branch, commit",
                                         "x-example": "branch",
                                         "enum": [
-                                            "branch"
+                                            "branch",
+                                            "commit"
                                         ],
                                         "x-enum-name": "VCSDeploymentType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
-                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name, commit hash",
                                         "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
@@ -10892,17 +10893,6 @@
                                 "type": "string"
                             },
                             "default": []
-                        },
-                        "in": "query"
-                    },
-                    {
-                        "name": "search",
-                        "description": "Search term to filter your list results. Max length: 256 chars.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<SEARCH>",
-                            "default": ""
                         },
                         "in": "query"
                     }
@@ -11880,7 +11870,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
-                    "weight": 133,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11987,7 +11977,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
-                    "weight": 129,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12035,7 +12025,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
-                    "weight": 135,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12096,7 +12086,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
-                    "weight": 134,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12157,7 +12147,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
-                    "weight": 136,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12229,7 +12219,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
-                    "weight": 137,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12378,7 +12368,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
-                    "weight": 141,
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12439,7 +12429,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
-                    "weight": 132,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12500,7 +12490,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
-                    "weight": 138,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12561,7 +12551,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
-                    "weight": 139,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12622,7 +12612,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
-                    "weight": 140,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12866,7 +12856,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
-                    "weight": 131,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13023,7 +13013,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
-                    "weight": 130,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24718,8 +24708,10 @@
                                     "framework": {
                                         "type": "string",
                                         "description": "Sites framework.",
-                                        "x-example": "nextjs",
+                                        "x-example": "analog",
                                         "enum": [
+                                            "analog",
+                                            "angular",
                                             "nextjs",
                                             "react",
                                             "nuxt",
@@ -24728,6 +24720,7 @@
                                             "astro",
                                             "remix",
                                             "flutter",
+                                            "vite",
                                             "other"
                                         ],
                                         "x-enum-name": null,
@@ -24823,7 +24816,9 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "flutter-3.27",
+                                            "flutter-3.29"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -25343,8 +25338,10 @@
                                     "framework": {
                                         "type": "string",
                                         "description": "Sites framework.",
-                                        "x-example": "nextjs",
+                                        "x-example": "analog",
                                         "enum": [
+                                            "analog",
+                                            "angular",
                                             "nextjs",
                                             "react",
                                             "nuxt",
@@ -25353,6 +25350,7 @@
                                             "astro",
                                             "remix",
                                             "flutter",
+                                            "vite",
                                             "other"
                                         ],
                                         "x-enum-name": null,
@@ -25448,7 +25446,9 @@
                                             "bun-1.1",
                                             "go-1.23",
                                             "static-1",
-                                            "flutter-3.24"
+                                            "flutter-3.24",
+                                            "flutter-3.27",
+                                            "flutter-3.29"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -26069,17 +26069,19 @@
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "description": "Type of reference passed. Allowed values are: branch",
+                                        "description": "Type of reference passed. Allowed values are: branch, commit",
                                         "x-example": "branch",
                                         "enum": [
-                                            "branch"
+                                            "branch",
+                                            "commit",
+                                            "tag"
                                         ],
                                         "x-enum-name": "VCSDeploymentType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
                                         "type": "string",
-                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name",
+                                        "description": "VCS reference to create deployment from. Depending on type this can be: branch name, commit hash",
                                         "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
@@ -26445,17 +26447,6 @@
                         "schema": {
                             "type": "string",
                             "default": []
-                        },
-                        "in": "query"
-                    },
-                    {
-                        "name": "search",
-                        "description": "Search term to filter your list results. Max length: 256 chars.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<SEARCH>",
-                            "default": ""
                         },
                         "in": "query"
                     }
@@ -37187,7 +37178,7 @@
                         "description": "Function execution and build runtime.",
                         "x-example": "python-3.8"
                     },
-                    "deployment": {
+                    "deploymentId": {
                         "type": "string",
                         "description": "Function's active deployment ID.",
                         "x-example": "5e5ea5c16897e"
@@ -37283,7 +37274,7 @@
                     "live",
                     "logging",
                     "runtime",
-                    "deployment",
+                    "deploymentId",
                     "scopes",
                     "vars",
                     "events",
@@ -38017,7 +38008,7 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "The deployment status. Possible values are \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
+                        "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
                         "x-example": "ready"
                     },
                     "buildLogs": {
@@ -40479,13 +40470,15 @@
                         },
                         "x-example": []
                     },
-                    "imageTransformationsTotal": {
-                        "type": "integer",
-                        "description": "An array of aggregated number of image transformations.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
                     "imageTransformations": {
+                        "type": "array",
+                        "description": "An array of aggregated number of image transformations.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "imageTransformationsTotal": {
                         "type": "integer",
                         "description": "Total aggregated number of image transformations.",
                         "x-example": 0,
@@ -40522,8 +40515,8 @@
                     "authPhoneCountryBreakdown",
                     "databasesReads",
                     "databasesWrites",
-                    "imageTransformationsTotal",
-                    "imageTransformations"
+                    "imageTransformations",
+                    "imageTransformationsTotal"
                 ]
             },
             "headers": {

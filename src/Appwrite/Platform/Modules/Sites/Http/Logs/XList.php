@@ -18,7 +18,6 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
 
 class XList extends Base
 {
@@ -54,13 +53,12 @@ class XList extends Base
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('queries', [], new Logs(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
-            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, array $queries, string $search, Response $response, Database $dbForProject)
+    public function action(string $siteId, array $queries, Response $response, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -72,10 +70,6 @@ class XList extends Base
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
         }
 
         // Set internal queries

@@ -21,12 +21,12 @@ class Screenshot extends Action
         $this
             ->desc('Create Site template screenshot')
             ->param('templateId', '', new Text(128), 'Template ID.')
-            ->callback(fn (string $templateId) => $this->action($templateId));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $templateId): void
     {
-        $templates = Config::getParam('site-templates', []);
+        $templates = Config::getParam('templates-site', []);
 
         $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
             return $item['key'] === $templateId;
@@ -37,6 +37,8 @@ class Screenshot extends Action
             throw new \Exception("Template {$templateId} not found. Find correct ID in app/config/templates/site.php");
         }
 
+        Console::warning('Make sure to override $config[\'sleep\'] in Builds.php worker to high number, like 10000 (10 seconds)');
+
         Console::info("Found: " . $template['name']);
 
         $client = new Client();
@@ -46,6 +48,10 @@ class Screenshot extends Action
         // Register
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
+
+        Console::info("Email: {$email}");
+        Console::info("Pass: {$password}");
+
         $user = $client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -137,11 +143,11 @@ class Screenshot extends Action
             'name' => $template["name"],
             'framework' => $framework['key'],
             'adapter' => $framework['adapter'],
-            'buildCommand' => $framework['buildCommand'],
+            'buildCommand' => $framework['buildCommand'] ?? '',
             'buildRuntime' => $framework['buildRuntime'],
-            'fallbackFile' => $framework['fallbackFile'],
-            'installCommand' => $framework['installCommand'],
-            'outputDirectory' => $framework['outputDirectory'],
+            'fallbackFile' => $framework['fallbackFile'] ?? '',
+            'installCommand' => $framework['installCommand'] ?? '',
+            'outputDirectory' => $framework['outputDirectory'] ?? '',
             'providerRootDirectory' => $framework['providerRootDirectory'],
             'timeout' => 60
         ]);
@@ -214,11 +220,16 @@ class Screenshot extends Action
         $deploymentId = $deployment['body']['$id'];
 
         // Await screenshot
-        $attempts = 50;
+        $attempts = 60; // 5 min
         $sleep = 5;
 
         $idLight = '';
         $idDark = '';
+
+        if ($templateId === 'starter-for-react-native') {
+            Console::warning("React Native template takes long to build, increasing waiting time ...");
+            $attempts = 180; // 15 min
+        }
 
         Console::log("Awaiting deployment (every $sleep seconds, $attempts attempts)");
 
@@ -279,7 +290,6 @@ class Screenshot extends Action
         foreach ($themes as $theme) {
             $file = $client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $theme['fileId'] . '/download', [
                 'x-appwrite-project' => 'console',
-                'x-appwrite-mode' => 'admin',
                 'cookie' => $cookieConsole
             ]);
 

@@ -908,11 +908,13 @@ class UsageTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_PATCH,
-            '/functions/' . $functionId . '/deployments/' . $deploymentId,
+            '/functions/' . $functionId . '/deployment',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
+            ], $this->getHeaders(), [
+                'deploymentId' => $deploymentId,
+            ]),
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -920,7 +922,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));
-        $this->assertEquals($deploymentId, $response['body']['deployment']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
 
         $response = $this->client->call(
             Client::METHOD_POST,

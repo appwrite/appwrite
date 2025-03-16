@@ -77,8 +77,22 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $repository, string $owner, string $rootDirectory, string $version, bool $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Event $queueForEvents, Document $project, Build $queueForBuilds, GitHub $github)
-    {
+    public function action(
+        string $functionId,
+        string $repository,
+        string $owner,
+        string $rootDirectory,
+        string $version,
+        bool $activate,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Document $project,
+        Build $queueForBuilds,
+        GitHub $github
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -108,8 +122,8 @@ class Create extends Base
             );
 
             $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
+                ->setParam('functionId', $function->getId())
+                ->setParam('deploymentId', $deployment->getId());
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

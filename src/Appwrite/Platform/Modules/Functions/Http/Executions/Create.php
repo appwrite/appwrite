@@ -96,8 +96,25 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb)
-    {
+    public function action(
+        string $functionId,
+        string $body,
+        mixed $async,
+        string $path,
+        string $method,
+        mixed $headers,
+        ?string $scheduledAt,
+        Response $response,
+        Request $request,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $user,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage,
+        Func $queueForFunctions,
+        Reader $geodb
+    ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -146,7 +163,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -249,7 +266,6 @@ class Create extends Base
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$functionId, $executionId]),
         ]);
 
         $queueForEvents

@@ -49,7 +49,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse-limit', 120)
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('value', '', new Text(256), 'Resource value.')
@@ -59,8 +59,12 @@ class Get extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $value, string $type, Response $response, Database $dbForPlatform)
-    {
+    public function action(
+        string $value,
+        string $type,
+        Response $response,
+        Database $dbForPlatform
+    ) {
         if ($type === 'rules') {
             $validator = new Domain($value);
 

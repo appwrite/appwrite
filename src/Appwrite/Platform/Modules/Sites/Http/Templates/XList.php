@@ -55,13 +55,18 @@ class XList extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(array $frameworks, array $usecases, int $limit, int $offset, Response $response)
-    {
-        $templates = Config::getParam('site-templates', []);
+    public function action(
+        array $frameworks,
+        array $usecases,
+        int $limit,
+        int $offset,
+        Response $response
+    ) {
+        $templates = Config::getParam('templates-site', []);
 
         if (!empty($frameworks)) {
             $templates = \array_filter($templates, function ($template) use ($frameworks) {
-                return \count(\array_intersect($frameworks, \array_column($template['frameworks'], 'name'))) > 0;
+                return \count(\array_intersect($frameworks, \array_column($template['frameworks'], 'key'))) > 0;
             });
         }
 

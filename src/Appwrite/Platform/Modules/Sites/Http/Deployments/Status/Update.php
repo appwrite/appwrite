@@ -59,8 +59,14 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

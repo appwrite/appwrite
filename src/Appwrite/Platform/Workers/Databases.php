@@ -38,7 +38,7 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('queueForRealtime')
             ->inject('log')
-            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $queueForRealtime, $log));
+            ->callback([$this, 'action']);
     }
 
     /**

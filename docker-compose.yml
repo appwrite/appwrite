@@ -206,7 +206,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.3.0-sites-rc.18
+    image: appwrite/console:5.3.0-sites-rc.26
     restart: unless-stopped
     networks:
       - appwrite
@@ -953,7 +953,7 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.1
+    image: appwrite/browser:0.2.2
     networks:
       - appwrite
 
@@ -962,7 +962,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.9
+    image: openruntimes/executor:0.7.10
     restart: unless-stopped
     networks:
       - appwrite
@@ -985,7 +985,7 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v4,v4rc
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v5
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY

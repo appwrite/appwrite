@@ -52,7 +52,7 @@ class Functions extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
+            ->callback([$this, 'action']);
     }
 
     public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
@@ -280,7 +280,6 @@ class Functions extends Action
             'errors' => $message,
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$function->getId(), $executionId]),
         ]);
 
         $execution = $dbForProject->createDocument('executions', $execution);
@@ -338,7 +337,7 @@ class Functions extends Action
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
-        $deploymentId = $function->getAttribute('deployment', '');
+        $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
@@ -419,7 +418,6 @@ class Functions extends Action
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
             $execution = $dbForProject->createDocument('executions', $execution);
@@ -569,13 +567,16 @@ class Functions extends Action
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
+        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
+        $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+
         $queueForEvents
             ->setProject($project)
             ->setUser($user)
             ->setEvent('functions.[functionId].executions.[executionId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())));
+            ->setPayload($realtimeExecution);
 
         /** Trigger Webhook */
         $queueForWebhooks
@@ -587,41 +588,11 @@ class Functions extends Action
             ->from($queueForEvents)
             ->trigger();
 
-        /** Trigger realtime event */
-        $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
-            'functionId' => $function->getId(),
-            'executionId' => $execution->getId()
-        ]);
-
-        // Ensure all placeholder got related attribute
-        $execution = $execution->setAttribute('functionId', $execution->getAttribute('resourceId'));
-
-        $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
-            event: $allEvents[0],
-            payload: $execution,
-            project: $project
-        );
-        Realtime::send(
-            projectId: 'console',
-            payload: $execution->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles']
-        );
-        Realtime::send(
-            projectId: $project->getId(),
-            payload: $execution->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles']
-        );
-
+        /** Trigger Realtime Events */
         $queueForRealtime
-            ->from($queueForEvents)
             ->setSubscribers(['console', $project->getId()])
+            ->from($queueForEvents)
             ->trigger();
-
 
         if (!empty($error)) {
             throw new Exception($error, $errorCode);

@@ -24,12 +24,13 @@ class Maintenance extends Action
         $this
             ->desc('Schedules maintenance tasks and publishes them to our queues')
             ->inject('dbForPlatform')
+            ->inject('console')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback(fn (Database $dbForPlatform, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForPlatform, $queueForCertificates, $queueForDeletes));
+            ->callback([$this, 'action']);
     }
 
-    public function action(Database $dbForPlatform, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -41,7 +42,7 @@ class Maintenance extends Action
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $queueForDeletes, $queueForCertificates) {
+        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -52,8 +53,13 @@ class Maintenance extends Action
                     ->setProject($project)
                     ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                     ->trigger();
-
             });
+
+            $queueForDeletes
+                ->setType(DELETE_TYPE_MAINTENANCE)
+                ->setProject($console)
+                ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                ->trigger();
 
             $this->notifyDeleteConnections($queueForDeletes);
             $this->renewCertificates($dbForPlatform, $queueForCertificates);

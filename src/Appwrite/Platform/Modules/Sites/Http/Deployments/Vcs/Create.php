@@ -59,9 +59,9 @@ class Create extends Base
                 ],
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
-            // TODO: Support tag and commit in future
-            ->param('type', '', new WhiteList(['branch']), 'Type of reference passed. Allowed values are: branch')
-            ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name')
+            // TODO: Support tag in future
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit')
+            ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
@@ -74,8 +74,20 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $type, string $reference, bool $activate, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Event $queueForEvents, Build $queueForBuilds, GitHub $github)
-    {
+    public function action(
+        string $siteId,
+        string $type,
+        string $reference,
+        bool $activate,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        GitHub $github
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

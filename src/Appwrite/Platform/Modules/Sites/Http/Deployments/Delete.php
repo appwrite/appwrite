@@ -63,8 +63,15 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Device $deviceForSites)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Response $response,
+        Database $dbForProject,
+        DeleteEvent $queueForDeletes,
+        Event $queueForEvents,
+        Device $deviceForSites
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);
@@ -89,7 +96,7 @@ class Delete extends Action
             }
         }
 
-        if ($site->getAttribute('deployment') === $deployment->getId()) { // Reset site deployment
+        if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
             $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
                 'deploymentId' => '',
                 'deploymentInternalId' => '',

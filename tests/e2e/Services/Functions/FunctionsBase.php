@@ -59,7 +59,7 @@ trait FunctionsBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
-                $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+                $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
             }, 100000, 500);
         }
 
@@ -256,7 +256,7 @@ trait FunctionsBase
         $template = $this->client->call(Client::METHOD_GET, '/functions/templates/' . $templateId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]));
 
         return $template;
     }
@@ -351,7 +351,7 @@ trait FunctionsBase
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $function = $this->getFunction($functionId);
-            $this->assertEquals($deploymentId, $function['body']['deployment'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         return $deploymentId;

@@ -64,8 +64,16 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Event $queueForEvents, Build $queueForBuilds, Device $deviceForFunctions)
-    {
+    public function action(
+        string $functionId,
+        string $deploymentId,
+        string $buildId,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        Device $deviceForFunctions
+    ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -99,7 +107,7 @@ class Create extends Action
             'buildEndAt' => null,
             'buildDuration' => null,
             'buildSize' => null,
-            'status' => 'processing',
+            'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
         ]));

@@ -57,8 +57,12 @@ class XList extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(array $queries, string $search, Response $response, Database $dbForProject)
-    {
+    public function action(
+        array $queries,
+        string $search,
+        Response $response,
+        Database $dbForProject
+    ) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

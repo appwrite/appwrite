@@ -61,8 +61,15 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForPlatform)
-    {
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Document $project,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Database $dbForPlatform
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -86,6 +93,7 @@ class Update extends Base
         ])));
 
         $queries = [
+            Query::equal('trigger', 'manual'),
             Query::equal("type", ["deployment"]),
             Query::equal("deploymentResourceType", ["site"]),
             Query::equal("deploymentResourceInternalId", [$site->getInternalId()]),

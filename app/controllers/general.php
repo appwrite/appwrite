@@ -14,16 +14,19 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
+use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
+use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -148,7 +151,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
-        $isPreview = $type === 'function' ? false : ($rule->getAttribute('deploymentId', '') !== $resource->getAttribute('deploymentId', ''));
+        $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');
@@ -245,7 +248,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $version = match ($type) {
             'function' => $resource->getAttribute('version', 'v2'),
-            'site' => 'v4',
+            'site' => 'v5',
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
@@ -330,7 +333,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$resource->getId(), $executionId]),
         ]);
 
         if ($type === 'function') {
@@ -417,7 +419,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         try {
             $version = match ($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
-                'site' => 'v4',
+                'site' => 'v5',
             };
             $entrypoint = match ($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
@@ -610,7 +612,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     return false;
 }
 
-/*
 App::init()
     ->groups(['api'])
     ->inject('project')
@@ -620,7 +621,6 @@ App::init()
             throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Admin mode is not allowed for console project');
         }
     });
-*/
 
 App::init()
     ->groups(['database', 'functions', 'sites', 'messaging'])
@@ -692,6 +692,9 @@ App::init()
             if (version_compare($requestFormat, '1.6.0', '<')) {
                 $request->addFilter(new RequestV18());
             }
+            if (version_compare($requestFormat, '1.7.0', '<')) {
+                $request->addFilter(new RequestV19());
+            }
         }
 
         $domain = $request->getHostname();
@@ -733,6 +736,12 @@ App::init()
                         ]);
                     }
 
+                    $owner = '';
+                    $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                    if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+                        $owner = 'Appwrite';
+                    }
+
                     if ($domainDocument->isEmpty()) {
                         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
                         $domainDocument = new Document([
@@ -741,9 +750,11 @@ App::init()
                             'domain' => $domain->get(),
                             'type' => 'api',
                             'status' => 'verifying',
-                            'projectId' => 'console',
-                            'projectInternalId' => 'console',
+                            'projectId' => $console->getId(),
+                            'projectInternalId' => $console->getInternalId(),
                             'search' => implode(' ', [$ruleId, $domain->get()]),
+                            'owner' => $owner,
+                            'region' => $console->getAttribute('region')
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
@@ -840,6 +851,9 @@ App::init()
             }
             if (version_compare($responseFormat, '1.6.0', '<')) {
                 $response->addFilter(new ResponseV18());
+            }
+            if (version_compare($responseFormat, '1.7.0', '<')) {
+                $response->addFilter(new ResponseV19());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
@@ -1029,11 +1043,9 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+        $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+        if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
-            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
-            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
-
             try {
                 $loggingProvider = new DSN($providerConfig ?? '');
                 $providerName = $loggingProvider->getScheme();
@@ -1333,6 +1345,21 @@ App::get('/v1/ping')
     ->desc('Test the connection between the Appwrite and the SDK.')
     ->label('scope', 'global')
     ->label('event', 'projects.[projectId].ping')
+    ->label('sdk', new Method(
+        namespace: 'ping',
+        name: 'get',
+        hide: true,
+        description: <<<EOT
+        Send a ping to project as part of onboarding.
+        EOT,
+        auth: [],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+    ))
     ->inject('response')
     ->inject('project')
     ->inject('dbForPlatform')

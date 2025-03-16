@@ -16,8 +16,6 @@ if (System::getEnv('_APP_ENV') === 'development') {
 
 $url = $protocol . '://' . $hostname;
 
-// TODO: @Meldiron Angular
-
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
         'key' => 'sveltekit',
@@ -75,7 +73,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => '',
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
-        'buildRuntime' => 'flutter-3.24',
+        'buildRuntime' => 'flutter-3.29',
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
@@ -88,6 +86,15 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => 'index.html',
     ],
+    'VITE' => [
+        'key' => 'vite',
+        'name' => 'Vite',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist',
+    ],
     'REACT' => [
         'key' => 'react',
         'name' => 'React',
@@ -96,6 +103,16 @@ const TEMPLATE_FRAMEWORKS = [
         'buildRuntime' => 'node-22',
         'adapter' => 'static',
         'outputDirectory' => './dist',
+        'fallbackFile' => 'index.html',
+    ],
+    'ANGULAR' => [
+        'key' => 'angular',
+        'name' => 'Angular',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './dist/angular/browser',
         'fallbackFile' => 'index.html',
     ],
     'VUE' => [
@@ -136,6 +153,135 @@ return [
         'providerOwner' => 'Meldiron',
         'providerVersion' => '0.1.*',
         'variables' => []
+    ],
+    [
+        'key' => 'starter-for-flutter',
+        'name' => 'Flutter starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-flutter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-flutter-light.png',
+        'frameworks' => [
+            getFramework('FLUTTER', [
+                'providerRootDirectory' => './',
+                'buildCommand' => 'sh build.sh',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-flutter',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'APPWRITE_PUBLIC_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-js',
+        'name' => 'JavaScript starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
+        'frameworks' => [
+            getFramework('VITE', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-js',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-angular',
+        'name' => 'Angular starter',
+        'useCases' => ['starter'],
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-angular-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-angular-light.png',
+        'frameworks' => [
+            getFramework('ANGULAR', [
+                'providerRootDirectory' => './',
+                'outputDirectory' => './dist/angular-starter-kit-for-appwrite/browser',
+                'buildCommand' => 'sh prepare-env.sh && npm run build'
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-angular',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
     ],
     [
         'key' => 'starter-for-svelte',

@@ -71,7 +71,7 @@ class Messaging extends Action
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('queueForStatsUsage')
-            ->callback(fn (Message $message, Document $project, Log $log, Database $dbForProject, Device $deviceForFiles, StatsUsage $queueForStatsUsage) => $this->action($message, $project, $log, $dbForProject, $deviceForFiles, $queueForStatsUsage));
+            ->callback([$this, 'action']);
     }
 
     /**

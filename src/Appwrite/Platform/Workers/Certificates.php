@@ -52,10 +52,7 @@ class Certificates extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
-            ->callback(
-                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates) =>
-                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates)
-            );
+            ->callback([$this, 'action']);
     }
 
     /**

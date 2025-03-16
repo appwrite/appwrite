@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -58,7 +59,9 @@ class Builds extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
+            ->inject('queueForRealtime')
             ->inject('queueForStatsUsage')
             ->inject('cache')
             ->inject('dbForProject')
@@ -67,8 +70,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log) =>
-                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $deviceForSites, $isResourceBlocked, $deviceForFiles, $log));
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -76,7 +78,9 @@ class Builds extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param StatsUsage $queueForStatsUsage
      * @param Cache $cache
      * @param Database $dbForProject
@@ -87,7 +91,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Func $queueForFunctions, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -108,7 +112,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $deviceForSites, $deviceForFiles, $queueForFunctions, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment($deviceForFunctions, $deviceForSites, $deviceForFiles, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
                 break;
 
             default:
@@ -120,7 +124,9 @@ class Builds extends Action
      * @param Device $deviceForFunctions
      * @param Device $deviceForSites
      * @param Device $deviceForFiles
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
      * @param StatsUsage $queueForStatsUsage
      * @param Database $dbForPlatform
@@ -136,7 +142,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForSites, Device $deviceForFiles, Func $queueForFunctions, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForSites, Device $deviceForFiles, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -183,10 +189,7 @@ class Builds extends Action
         }
 
         // Realtime preparation
-        $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
-            $resourceKey => $resource->getId(),
-            'deploymentId' => $deployment->getId()
-        ]);
+        $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
@@ -382,21 +385,16 @@ class Builds extends Action
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     /**
-                     * Send realtime Event
+                     * Trigger Realtime Event
                      */
-                    $target = Realtime::fromPayload(
-                        // Pass first, most verbose event pattern
-                        event: $allEvents[0],
-                        payload: $deployment,
-                        project: $project
-                    );
-                    Realtime::send(
-                        projectId: 'console',
-                        payload: $deployment->getArrayCopy(),
-                        events: $allEvents,
-                        channels: $target['channels'],
-                        roles: $target['roles']
-                    );
+                    $queueForRealtime
+                        ->setSubscribers(['console'])
+                        ->setProject($project)
+                        ->setEvent($event)
+                        ->setParam($resourceKey, $resource->getId())
+                        ->setParam('deploymentId', $deployment->getId())
+                        ->setPayload($deployment->getArrayCopy())
+                        ->trigger();
                 }
 
                 $tmpPath = '/tmp/builds/' . $deploymentId;
@@ -446,40 +444,34 @@ class Builds extends Action
                 $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
-            /** Trigger Webhook */
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                    ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
                     ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
                     ->setParam($resourceKey, $resource->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
-            $deploymentUpdate->trigger();
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($deploymentUpdate)
+                ->trigger();
 
             /** Trigger Functions */
             $queueForFunctions
                 ->from($deploymentUpdate)
                 ->trigger();
 
-            /** Trigger Realtime */
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $deployment,
-                project: $project
-            );
-
-            Realtime::send(
-                projectId: 'console',
-                payload: $deployment->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            /** Trigger Realtime Event */
+            $queueForRealtime
+                ->setSubscribers(['console'])
+                ->setProject($project)
+                ->setEvent($event)
+                ->setParam($resourceKey, $resource->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             $vars = [];
 
@@ -493,8 +485,11 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            // Some runtimes/frameworks can't compile with less memory than this
+            $minMemory = $resource->getCollection() === 'sites' ? 2048 : 1024;
+
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
-            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
 
@@ -603,13 +598,13 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $allEvents, $timeout, &$err, &$isCanceled) {
+                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $event, $timeout, &$err, $queueForRealtime, &$isCanceled, $resourceKey, $resource) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, $allEvents, $project, &$isCanceled, &$deployment) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, $event, $project, &$isCanceled, &$deployment, $queueForRealtime, $resourceKey, $resource) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -646,21 +641,16 @@ class Builds extends Action
                                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                                     /**
-                                     * Send realtime Event
+                                     * Trigger Realtime Event
                                      */
-                                    $target = Realtime::fromPayload(
-                                        // Pass first, most verbose event pattern
-                                        event: $allEvents[0],
-                                        payload: $deployment,
-                                        project: $project
-                                    );
-                                    Realtime::send(
-                                        projectId: 'console',
-                                        payload: $deployment->getArrayCopy(),
-                                        events: $allEvents,
-                                        channels: $target['channels'],
-                                        roles: $target['roles']
-                                    );
+                                    $queueForRealtime
+                                        ->setSubscribers(['console'])
+                                        ->setProject($project)
+                                        ->setEvent($event)
+                                        ->setParam($resourceKey, $resource->getId())
+                                        ->setParam('deploymentId', $deployment->getId())
+                                        ->setPayload($deployment->getArrayCopy())
+                                        ->trigger();
                                 }
                             }
                         );
@@ -689,7 +679,7 @@ class Builds extends Action
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
 
-            if ($resource->getCollection() === 'sites' && empty($resource->getAttribute('adapter', ''))) {
+            if ($resource->getCollection() === 'sites') {
                 // TODO: Refactor with structured command in future, using utopia library (CLI)
                 $listFilesCommand = "cd /usr/local/build && cd " . \escapeshellarg($resource->getAttribute('outputDirectory', './')) . " && find . -name 'node_modules' -prune -o -type f -print";
                 $command = $executor->createCommand(
@@ -710,9 +700,15 @@ class Builds extends Action
                     ->addOption(new XStatic());
                 $detection = $detector->detect();
 
-                $resource->setAttribute('adapter', $detection->getName());
-                $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                $adapter = $resource->getAttribute('adapter', '');
+
+                if (empty($adapter)) {
+                    $resource->setAttribute('adapter', $detection->getName());
+                    $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                }
             }
 
             $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
@@ -784,6 +780,14 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
+                        $config['sleep'] = 3000; // 3 seconds
+
+                        // Makes tests much faster
+                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+                        if ($isDevelopment) {
+                            $config['sleep'] = 0; // Override this when running Screenshot.php task
+                        }
+
                         $response = $client->fetch(
                             url: 'http://appwrite-browser:3000/v1/screenshots',
                             method: 'POST',
@@ -851,7 +855,7 @@ class Builds extends Action
                     case 'functions':
                         $oldDeploymentInternalId = $resource->getAttribute('deploymentInternalId', '');
 
-                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
@@ -971,7 +975,7 @@ class Builds extends Action
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
-                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
@@ -980,12 +984,18 @@ class Builds extends Action
                 return;
             }
 
+            // Color message red
+            $message = $th->getMessage();
+            if (!\str_contains($message, '')) {
+                $message = "[31m" . $message;
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $deployment->setAttribute('buildEndAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'failed');
-            $deployment->setAttribute('buildLogs', "[31m" . $th->getMessage());
+            $deployment->setAttribute('buildLogs', $message);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
@@ -994,21 +1004,17 @@ class Builds extends Action
             }
         } finally {
             /**
-             * Send realtime Event
+             * Trigger Realtime Event
              */
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $deployment,
-                project: $project
-            );
-            Realtime::send(
-                projectId: 'console',
-                payload: $deployment->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            $queueForRealtime
+            ->setSubscribers(['console'])
+                ->setProject($project)
+                ->setEvent($event)
+                ->setParam($resourceKey, $resource->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
             $this->sendUsage(
                 resource:$resource,
                 deployment: $deployment,
@@ -1099,7 +1105,7 @@ class Builds extends Action
     {
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
-            'sites' => 'v4',
+            'sites' => 'v5',
         };
     }
 

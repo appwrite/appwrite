@@ -106,8 +106,34 @@ class Update extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github)
-    {
+    public function action(
+        string $functionId,
+        string $name,
+        string $runtime,
+        array $execute,
+        array $events,
+        string $schedule,
+        int $timeout,
+        bool $enabled,
+        bool $logging,
+        string $entrypoint,
+        string $commands,
+        array $scopes,
+        string $installationId,
+        ?string $providerRepositoryId,
+        string $providerBranch,
+        bool $providerSilentMode,
+        string $providerRootDirectory,
+        string $specification,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents,
+        Build $queueForBuilds,
+        Database $dbForPlatform,
+        GitHub $github
+    ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -207,10 +233,10 @@ class Update extends Base
         }
 
         // Enforce Cold Start if spec limits change.
-        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
+        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
-                $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
+                $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
             } catch (\Throwable $th) {
                 // Don't throw if the deployment doesn't exist
                 if ($th->getCode() !== 404) {
@@ -254,7 +280,7 @@ class Update extends Base
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
         Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());

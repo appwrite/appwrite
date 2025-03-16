@@ -108,7 +108,7 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deployment', ''));
+        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
@@ -123,6 +123,14 @@ class Create extends Action
             if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
             }
+        }
+
+        $owner = '';
+        if (
+            ($functionsDomain != '' && \str_ends_with($domain->get(), $functionsDomain)) ||
+            ($sitesDomain != '' && \str_ends_with($domain->get(), $sitesDomain))
+        ) {
+            $owner = 'Appwrite';
         }
 
         $rule = new Document([
@@ -141,6 +149,8 @@ class Create extends Action
             'deploymentVcsProviderBranch' => $branch,
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain->get(), $branch]),
+            'owner' => $owner,
+            'region' => $project->getAttribute('region')
         ]);
 
         try {

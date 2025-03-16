@@ -100,8 +100,32 @@ class Create extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Response $response, Database $dbForProject, callable $timelimit, Document $project, Event $queueForEvents, Database $dbForPlatform)
-    {
+    public function action(
+        string $functionId,
+        string $name,
+        string $runtime,
+        array $execute,
+        array $events,
+        string $schedule,
+        int $timeout,
+        bool $enabled,
+        bool $logging,
+        string $entrypoint,
+        string $commands,
+        array $scopes,
+        string $installationId,
+        string $providerRepositoryId,
+        string $providerBranch,
+        bool $providerSilentMode,
+        string $providerRootDirectory,
+        string $specification,
+        Response $response,
+        Database $dbForProject,
+        callable $timelimit,
+        Document $project,
+        Event $queueForEvents,
+        Database $dbForPlatform
+    ) {
 
         // Temporary abuse check
         $abuseCheck = function () use ($project, $timelimit, $response) {
@@ -159,7 +183,7 @@ class Create extends Base
             'name' => $name,
             'runtime' => $runtime,
             'deploymentInternalId' => '',
-            'deployment' => '',
+            'deploymentId' => '',
             'events' => $events,
             'schedule' => $schedule,
             'scheduleInternalId' => '',
@@ -169,7 +193,7 @@ class Create extends Base
             'commands' => $commands,
             'scopes' => $scopes,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v4',
+            'version' => 'v5',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,

@@ -7,7 +7,6 @@ use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
@@ -102,7 +101,7 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => DateTime::formatTz(DateTime::now())
+            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
         if (isset($this->logs[$project->getInternalId()])) {
