@@ -76,9 +76,12 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
+        $startTime = microtime(true);
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
+        $endTime = microtime(true);
+        $executionTime = $endTime - $startTime;
+        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . $executionTime .' seconds');
     }
-
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
     {
