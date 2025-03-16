@@ -2680,7 +2680,10 @@ App::get('/v1/account/prefs')
     ->action(function (Response $response, Document $user) {
 
         $prefs = $user->getAttribute('prefs', []);
-
+        var_dump([
+          'location' => 'account::prefs',
+          '$user' => $user,
+        ]);
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
