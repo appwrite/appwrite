@@ -3145,7 +3145,8 @@ App::patch('/v1/account/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('store')
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store) {
 
         $user->setAttribute('status', false);
 
