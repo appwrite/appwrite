@@ -3080,6 +3080,11 @@ App::patch('/v1/account/prefs')
     ->inject('queueForEvents')
     ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
+        var_dump([
+            'userId' => $user->getId(),
+            'account:setPrefs' => $prefs,
+        ]);
+
         $user->setAttribute('prefs', $prefs);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));

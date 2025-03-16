@@ -1556,7 +1556,10 @@ App::patch('/v1/users/:userId/prefs')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
+        var_dump([
+            'userId' => $user->getId(),
+            'user:setPrefs' => $prefs,
+        ]);
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $queueForEvents
