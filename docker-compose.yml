@@ -83,6 +83,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -247,6 +248,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -279,6 +281,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -308,6 +311,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -348,6 +352,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -400,6 +405,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -433,6 +439,7 @@ services:
       - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -502,6 +509,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -532,6 +540,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -574,6 +583,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - maildev
@@ -610,6 +620,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
     environment:
@@ -664,6 +675,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
       - ./tests:/usr/src/code/tests
     depends_on:
       - mariadb
@@ -698,6 +710,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
     environment:
@@ -736,6 +749,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -767,6 +781,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -798,6 +813,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -829,6 +845,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
@@ -861,6 +878,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -889,6 +907,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -916,6 +935,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
