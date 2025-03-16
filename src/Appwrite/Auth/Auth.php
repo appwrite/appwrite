@@ -101,11 +101,6 @@ class Auth
     /**
      * @var string
      */
-    public static $cookieName = 'a_session';
-
-    /**
-     * @var string
-     */
     public static $cookieNamePreview = 'a_jwt_console';
 
     /**

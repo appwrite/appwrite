@@ -269,8 +269,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $protocol = $request->getProtocol();
 
     $response
-        ->addCookie(Auth::$cookieName . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-        ->addCookie(Auth::$cookieName, $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+        ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ->setStatusCode(Response::STATUS_CODE_CREATED);
 
     $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -968,8 +968,8 @@ App::post('/v1/account/sessions/email')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1131,8 +1131,8 @@ App::post('/v1/account/sessions/anonymous')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1750,13 +1750,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             if ($state['success']['path'] == $oauthDefaultSuccess) {
                 $query['project'] = $project->getId();
                 $query['domain'] = Config::getParam('cookieDomain');
-                $query['key'] = Auth::$cookieName;
+                $query['key'] = $store->getKey();
                 $query['secret'] = $encoded;
             }
 
             $response
-                ->addCookie(Auth::$cookieName . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie(Auth::$cookieName, $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {
@@ -3161,8 +3161,8 @@ App::patch('/v1/account/status')
 
         $protocol = $request->getProtocol();
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie($store->getKey(), '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
