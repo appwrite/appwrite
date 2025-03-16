@@ -45,7 +45,7 @@ class AuthTest extends TestCase
             ->encode();
 
         $decoded = $store->decode($encoded);
-        
+
         $this->assertEquals($encoded, $session);
         $this->assertEquals($decoded->getProperty('id'), $id);
         $this->assertEquals($decoded->getProperty('secret'), $secret);
