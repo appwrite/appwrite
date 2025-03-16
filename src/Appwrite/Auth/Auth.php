@@ -109,48 +109,6 @@ class Auth
     public static $cookieNamePreview = 'a_jwt_console';
 
     /**
-     * User Unique ID.
-     *
-     * @var string
-     */
-    public static $unique = '';
-
-    /**
-     * User Secret Key.
-     *
-     * @var string
-     */
-    public static $secret = '';
-
-    /**
-     * Set Cookie Name.
-     *
-     * @param $string
-     *
-     * @return string
-     */
-    public static function setCookieName($string)
-    {
-        return self::$cookieName = $string;
-    }
-
-    /**
-     * Encode Session.
-     *
-     * @param string $id
-     * @param string $secret
-     *
-     * @return string
-     */
-    public static function encodeSession($id, $secret)
-    {
-        return \base64_encode(\json_encode([
-            'id' => $id,
-            'secret' => $secret,
-        ]));
-    }
-
-    /**
      * Token type to session provider mapping.
      */
     public static function getSessionProviderByTokenType(int $type): string
@@ -169,27 +127,6 @@ class Auth
             default:
                 return Auth::SESSION_PROVIDER_TOKEN;
         }
-    }
-
-    /**
-     * Decode Session.
-     *
-     * @param string $session
-     *
-     * @return array
-     *
-     * @throws \Exception
-     */
-    public static function decodeSession($session)
-    {
-        $session = \json_decode(\base64_decode($session), true);
-        $default = ['id' => null, 'secret' => ''];
-
-        if (!\is_array($session)) {
-            return $default;
-        }
-
-        return \array_merge($default, $session);
     }
 
     /**

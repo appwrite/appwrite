@@ -1330,8 +1330,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         )
     );
 
-    var_dump($store);
-
     // Get session from header for SSR clients
     if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
@@ -1354,9 +1352,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $fallback = \json_decode($fallback, true);
         $store->decode(((isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
-
-    // Auth::$unique = $session['id'] ?? '';
-    // Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
@@ -1433,13 +1428,13 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
-App::setResource('session', function (Document $user) {
+App::setResource('session', function (Document $user, Store $store) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''));
 
     if (!$sessionId) {
         return;
@@ -1452,7 +1447,7 @@ App::setResource('session', function (Document $user) {
     }
 
     return;
-}, ['user']);
+}, ['user', 'store']);
 
 App::setResource('console', function () {
     return new Document(Config::getParam('console'));

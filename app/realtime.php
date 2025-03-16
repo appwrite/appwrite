@@ -15,6 +15,7 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -649,15 +650,14 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
                 }
 
-                $session = Auth::decodeSession($message['data']['session']);
-                Auth::$unique = $session['id'] ?? '';
-                Auth::$secret = $session['secret'] ?? '';
+                $store = new Store();
+                $store->decode($message['data']['session']);
 
-                $user = $database->getDocument('users', Auth::$unique);
+                $user = $database->getDocument('users', $store->getProperty('id', ''));
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', '')) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
