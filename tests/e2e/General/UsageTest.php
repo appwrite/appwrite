@@ -133,7 +133,7 @@ class UsageTest extends Scope
     {
         $requestsTotal = $data['requestsTotal'];
 
-        $this->assertEventually(function() use ($data) {
+        $this->assertEventually(function () use ($data) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/project/usage',
@@ -154,7 +154,7 @@ class UsageTest extends Scope
             $this->assertArrayHasKey('bucketsBreakdown', $response['body']);
         });
 
-        $this->assertEventually(function() {
+        $this->assertEventually(function () {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/users/usage?range=90d',
@@ -316,7 +316,7 @@ class UsageTest extends Scope
         $storageTotal  = $data['storageTotal'];
         $filesTotal    = $data['filesTotal'];
 
-        $this->assertEventually(function() use ($requestsTotal, $storageTotal) {
+        $this->assertEventually(function () use ($requestsTotal, $storageTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/project/usage',
@@ -335,7 +335,7 @@ class UsageTest extends Scope
             $this->assertEquals($storageTotal, $response['body']['filesStorageTotal']);
         });
 
-        $this->assertEventually(function() use ($bucketsTotal, $storageTotal, $filesTotal) {
+        $this->assertEventually(function () use ($bucketsTotal, $storageTotal, $filesTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/storage/usage?range=30d',
@@ -350,7 +350,7 @@ class UsageTest extends Scope
             $this->validateDates($response['body']['files']);
         });
 
-        $this->assertEventually(function() use ($bucketId, $storageTotal, $filesTotal) {
+        $this->assertEventually(function () use ($bucketId, $storageTotal, $filesTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/storage/' . $bucketId . '/usage?range=30d',
@@ -561,7 +561,7 @@ class UsageTest extends Scope
             $this->assertEquals($documentsTotal, $response['body']['documentsTotal']);
         });
 
-        $this->assertEventually(function() use ($databasesTotal, $collectionsTotal, $documentsTotal) {
+        $this->assertEventually(function () use ($databasesTotal, $collectionsTotal, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/usage?range=30d',
@@ -576,7 +576,7 @@ class UsageTest extends Scope
             $this->validateDates($response['body']['documents']);
         });
 
-        $this->assertEventually(function() use ($databaseId, $collectionsTotal, $documentsTotal) {
+        $this->assertEventually(function () use ($databaseId, $collectionsTotal, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/' . $databaseId . '/usage?range=30d',
@@ -590,7 +590,7 @@ class UsageTest extends Scope
             $this->validateDates($response['body']['documents']);
         });
 
-        $this->assertEventually(function() use ($databaseId, $collectionId, $documentsTotal) {
+        $this->assertEventually(function () use ($databaseId, $collectionId, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d',
