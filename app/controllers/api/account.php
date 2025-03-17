@@ -3080,6 +3080,7 @@ App::patch('/v1/account/prefs')
         $user->setAttribute('prefs', $prefs);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
