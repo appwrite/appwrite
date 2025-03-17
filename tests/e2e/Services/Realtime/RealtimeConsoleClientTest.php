@@ -534,9 +534,10 @@ class RealtimeConsoleClientTest extends Scope
             'timeout' => 10
         ]);
 
-        $functionId = $response1['body']['$id'] ?? '';
-
         $this->assertEquals(201, $response1['headers']['status-code']);
+
+        $functionId = $response1['body']['$id'];
+        $this->assertNotEmpty($functionId);
 
         $projectId = 'console';
 
@@ -570,6 +571,9 @@ class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -580,8 +584,48 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
         $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-        // $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']); TODO @christyjacob4 : enable test once we allow functions.* events
-        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals("waiting", $response['data']['payload']['status']);
+        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
+        $this->assertEquals("processing", $response['data']['payload']['status']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
+        $this->assertEquals("building", $response['data']['payload']['status']);
+
+        $previousBuildLogs = null;
+        while (true) {
+            $response = json_decode($client->receive(), true);
+            $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
+            $this->assertContains('console', $response['data']['channels']);
+            $this->assertContains("projects.{$projectId}", $response['data']['channels']);
+            $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
+
+            // Ignore comparasion for first payload
+            if ($previousBuildLogs !== null) {
+                $this->assertNotEquals($previousBuildLogs, $response['data']['payload']['buildLogs']);
+            }
+
+            $previousBuildLogs = $response['data']['payload']['buildLogs'];
+
+            $this->assertThat(
+                $response['data']['payload']['status'],
+                $this->logicalOr(
+                    $this->equalTo('building'),
+                    $this->equalTo('ready'),
+                ),
+            );
+
+            if ($response['data']['payload']['status'] === 'ready') {
+                break;
+            }
+        }
 
         $client->close();
     }
