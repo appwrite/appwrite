@@ -37,7 +37,6 @@ class SitesCustomClientTest extends Scope
             $this->assertArrayHasKey('variables', $template);
             $this->assertArrayHasKey('screenshotDark', $template);
             $this->assertArrayHasKey('screenshotLight', $template);
-            $this->assertArrayHasKey('ada', $template);
         }
 
         // List templates with pagination
