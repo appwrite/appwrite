@@ -902,7 +902,7 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        $userProofForPassword = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+        $userProofForPassword = ProofsPassword::createHash($profile->getAttribute('hash', $proofForPassword->getHash()->getName()), $profile->getAttribute('hashOptions', $proofForPassword->getHash()->getOptions()));
 
         if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !$userProofForPassword->verify($password, $profile->getAttribute('password'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -1457,7 +1457,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = \json_decode($request->getParam('user'), true);
+        $userParam = \json_decode($request->getParam('user', '{}'), true); // only valid for Apple OAuth2 which returns a user param in the request
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif (is_array($userParam)) {
@@ -2472,7 +2472,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('store')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2510,6 +2511,8 @@ App::post('/v1/account/tokens/phone')
                 'status' => true,
                 'password' => null,
                 'passwordUpdate' => null,
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
