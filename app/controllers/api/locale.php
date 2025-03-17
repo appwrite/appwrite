@@ -118,7 +118,7 @@ App::get('/v1/locale/countries')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-countries'); /* @var $list array */
+        $list = array_keys(Config::getParam('locale-countries')); /* @var $list array */
         $output = [];
 
         foreach ($list as $value) {
@@ -229,7 +229,7 @@ App::get('/v1/locale/continents')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-continents');
+        $list = array_keys(Config::getParam('locale-continents'));
 
         foreach ($list as $value) {
             $output[] = new Document([
