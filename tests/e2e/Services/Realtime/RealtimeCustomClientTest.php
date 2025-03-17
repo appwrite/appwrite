@@ -674,6 +674,7 @@ class RealtimeCustomClientTest extends Scope
         $user = $this->getUser();
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
+        $documentIds = [];
 
         $client = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
@@ -763,6 +764,7 @@ class RealtimeCustomClientTest extends Scope
         $response = json_decode($client->receive(), true);
 
         $documentId = $document['body']['$id'];
+        $documentIds[] = $documentId;
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
