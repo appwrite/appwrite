@@ -808,13 +808,13 @@ App::setResource(
 
 App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
     $allowed = false;
-     
+
     if (App::isDevelopment()) {
         $allowed = true;
     } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
         $allowed = true;
     }
-    
+
     if ($allowed) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', '')) ?? '';
         if (!empty($host)) {
