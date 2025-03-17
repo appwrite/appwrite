@@ -277,6 +277,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         'status' => 'verified',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
                     ]))
                 );
 
@@ -302,6 +304,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'status' => 'verified',
                                 'certificateId' => '',
                                 'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
                             ]))
                         );
                     } catch (Duplicate $err) {
@@ -331,6 +335,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'status' => 'verified',
                                 'certificateId' => '',
                                 'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
                             ]))
                         );
                     } catch (Duplicate $err) {

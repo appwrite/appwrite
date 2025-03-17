@@ -11,7 +11,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 
 class XList extends Base
 {

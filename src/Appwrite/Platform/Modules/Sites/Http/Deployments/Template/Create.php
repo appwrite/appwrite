@@ -183,6 +183,8 @@ class Create extends Base
                 'status' => 'verified',
                 'certificateId' => '',
                 'search' => implode(' ', [$ruleId, $domain]),
+                'owner' => 'Appwrite',
+                'region' => $project->getAttribute('region')
             ]))
         );
 
