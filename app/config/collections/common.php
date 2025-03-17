@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 

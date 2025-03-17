@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Projects;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;

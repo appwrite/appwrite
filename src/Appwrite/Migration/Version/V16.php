@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;

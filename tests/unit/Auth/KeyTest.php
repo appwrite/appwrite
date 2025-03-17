@@ -3,7 +3,6 @@
 namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;

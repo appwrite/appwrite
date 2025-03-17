@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Extend\Exception;
 use Executor\Executor;

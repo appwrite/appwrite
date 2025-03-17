@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 
 $member = [
     'global',
