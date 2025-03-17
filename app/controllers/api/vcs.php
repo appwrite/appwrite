@@ -724,7 +724,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             }
 
             $frameworks = Config::getParam('frameworks');
-            if (!\in_array($framework, array_keys($frameworks), true)) {
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
                 $framework = 'other';
             }
             $output->setAttribute('framework', $framework);
@@ -876,7 +876,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     }
 
                     $frameworks = Config::getParam('frameworks');
-                    if (!\in_array($framework, array_keys($frameworks), true)) {
+                    if (!\in_array($framework, \array_keys($frameworks), true)) {
                         $framework = 'other';
                     }
                     $repo['framework'] = $framework;

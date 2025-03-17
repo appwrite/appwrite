@@ -63,7 +63,7 @@ class Create extends Base
             ))
             ->param('siteId', '', new CustomId(), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
@@ -125,12 +125,6 @@ class Create extends Base
         }
 
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
-
-        $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
-
-        if (!empty($allowList) && !\in_array($framework, $allowList)) {
-            throw new Exception(Exception::SITE_FRAMEWORK_UNSUPPORTED, 'Framework "' . $framework . '" is not supported');
-        }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 

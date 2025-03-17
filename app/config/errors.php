@@ -553,11 +553,6 @@ return [
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::SITE_FRAMEWORK_UNSUPPORTED => [
-        'name' => Exception::SITE_FRAMEWORK_UNSUPPORTED,
-        'description' => 'The requested framework is either inactive or unsupported. Please check the value of the _APP_SITES_FRAMEWORKS environment variable.',
-        'code' => 404,
-    ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
         'description' => 'Site Template with the requested ID could not be found.',

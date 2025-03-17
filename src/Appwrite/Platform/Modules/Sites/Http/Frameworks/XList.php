@@ -53,20 +53,9 @@ class XList extends Base
     {
         $frameworks = Config::getParam('frameworks');
 
-        $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
-
-        $allowed = [];
-        foreach ($frameworks as $id => $framework) {
-            if (!empty($allowList) && !\in_array($id, $allowList)) {
-                continue;
-            }
-
-            $allowed[] = $framework;
-        }
-
         $response->dynamic(new Document([
-            'total' => count($allowed),
-            'frameworks' => $allowed
+            'total' => count($frameworks),
+            'frameworks' => \array_values($frameworks)
         ]), Response::MODEL_FRAMEWORK_LIST);
     }
 }
