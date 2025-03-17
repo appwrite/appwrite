@@ -1364,6 +1364,11 @@ class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('buildRuntime', $framework);
         $this->assertArrayHasKey('runtimes', $framework);
         $this->assertArrayHasKey('adapters', $framework);
+        $this->assertIsArray($framework['adapters']);
+        $this->assertArrayHasKey('key', $framework['adapters'][0]);
+        $this->assertArrayHasKey('installCommand', $framework['adapters'][0]);
+        $this->assertArrayHasKey('buildCommand', $framework['adapters'][0]);
+        $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
     public function testSiteStatic(): void
