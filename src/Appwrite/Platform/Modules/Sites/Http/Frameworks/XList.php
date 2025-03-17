@@ -52,6 +52,12 @@ class XList extends Base
     {
         $frameworks = Config::getParam('frameworks');
 
+        foreach ($frameworks as $key => $framework) {
+            if (!empty($framework['adapters'])) {
+                $frameworks[$key]['adapters'] = \array_values($framework['adapters']);
+            }
+        }
+
         $response->dynamic(new Document([
             'total' => count($frameworks),
             'frameworks' => \array_values($frameworks)
