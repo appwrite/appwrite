@@ -104,7 +104,7 @@ abstract class ScheduleBase extends Action
             }
 
             $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION')]),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -154,7 +154,7 @@ abstract class ScheduleBase extends Action
                     }
 
                     $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', [System::getEnv('_APP_REGION')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));

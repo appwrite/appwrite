@@ -157,7 +157,7 @@ class StatsUsageDump extends Action
                             'time' => $time,
                             'metric' => $key,
                             'value' => $value,
-                            'region' => System::getEnv('_APP_REGION', 'default'),
+                            'region' => System::getEnv('_APP_REGION'),
                         ]);
 
                         $documentClone = new Document($document->getArrayCopy());
@@ -191,7 +191,7 @@ class StatsUsageDump extends Action
                 'time' => $time,
                 'metric' => $key,
                 'value' => $value,
-                'region' => System::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION'),
             ]);
             $documentClone = new Document($document->getArrayCopy());
             $dbForProject->createOrUpdateDocumentsWithIncrease(

@@ -1,13 +1,6 @@
 <?php
 
 return [
-    'default' => [
-        '$id' => 'default',
-        'name' => 'Frankfurt',
-        'disabled' => false,
-        'flag' => 'de',
-        'default' => true,
-    ],
     'fra' => [
         '$id' => 'fra',
         'name' => 'Frankfurt',

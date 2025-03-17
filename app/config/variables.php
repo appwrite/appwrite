@@ -9,7 +9,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_REGION',
-                'description' => 'Set your server running geo region. By default, the var is set to \'default\'.',
+                'description' => 'Set your server running geo region. By default, the var is set to \'fra\'.',
                 'introduction' => '',
                 'default' => 'default',
                 'required' => false,
