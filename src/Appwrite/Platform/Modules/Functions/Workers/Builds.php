@@ -937,6 +937,8 @@ class Builds extends Action
                             'status' => 'verified',
                             'certificateId' => '',
                             'search' => implode(' ', [$ruleId, $domain]),
+                            'owner' => 'Appwrite',
+                            'region' => $project->getAttribute('region')
                         ]));
                     } catch (Duplicate $err) {
                         $rule = $dbForPlatform->getDocument('rules', $ruleId);

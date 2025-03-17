@@ -277,6 +277,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         'status' => 'verified',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
                     ]))
                 );
 
@@ -302,6 +304,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'status' => 'verified',
                                 'certificateId' => '',
                                 'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
                             ]))
                         );
                     } catch (Duplicate $err) {
@@ -331,6 +335,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                                 'status' => 'verified',
                                 'certificateId' => '',
                                 'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
                             ]))
                         );
                     } catch (Duplicate $err) {
@@ -724,7 +730,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             }
 
             $frameworks = Config::getParam('frameworks');
-            if (!\in_array($framework, array_keys($frameworks), true)) {
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
                 $framework = 'other';
             }
             $output->setAttribute('framework', $framework);
@@ -876,7 +882,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     }
 
                     $frameworks = Config::getParam('frameworks');
-                    if (!\in_array($framework, array_keys($frameworks), true)) {
+                    if (!\in_array($framework, \array_keys($frameworks), true)) {
                         $framework = 'other';
                     }
                     $repo['framework'] = $framework;

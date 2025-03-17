@@ -47,7 +47,7 @@ class XList extends Base
                     )
                 ]
             ))
-            ->param('frameworks', [], new ArrayList(new WhiteList(array_keys(Config::getParam('frameworks')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of frameworks allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' frameworks are allowed.', true)
+            ->param('frameworks', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('frameworks')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of frameworks allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' frameworks are allowed.', true)
             ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools', 'starter', 'databases', 'ai', 'messaging', 'utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering site templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
             ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
             ->param('offset', 0, new Range(0, 5000), 'Offset the list of returned templates. Maximum offset is 5000.', true)
