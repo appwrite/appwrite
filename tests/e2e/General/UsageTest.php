@@ -912,9 +912,10 @@ class UsageTest extends Scope
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders(), [
+            ], $this->getHeaders()),
+            [
                 'deploymentId' => $deploymentId,
-            ]),
+            ],
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
