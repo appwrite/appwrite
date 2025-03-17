@@ -51,6 +51,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Proofs\Code;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -1976,6 +1979,22 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
-App::setResource('store', function () {
+App::setResource('store', function (): Store {
     return new Store();
 });
+
+App::setResource('proofForPassword', function (): Password {
+    return new Password();
+});
+
+App::setResource('proofForToken', function (): Token {
+    return new Token();
+});
+
+App::setResource('proofForCode', function (): Code {
+    return new Code();
+});
+
+
+
+

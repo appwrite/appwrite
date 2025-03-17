@@ -38,6 +38,7 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -364,7 +365,9 @@ App::post('/v1/account')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        $proof = new ProofsPassword();
+        $hash = $proof->hash($password);
+
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user->setAttributes([
@@ -377,7 +380,7 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => $password,
+                'password' => $hash,
                 'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
                 'passwordUpdate' => DateTime::now(),
                 'hash' => Auth::DEFAULT_ALGO,
@@ -942,7 +945,7 @@ App::post('/v1/account/sessions/email')
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
             $user
-                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('password', (new ProofsPassword())->hash($password))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
             $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -2930,13 +2933,14 @@ App::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('proofForPassword')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
         if (
             !empty($passwordUpdate) &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+            !$proofForPassword->verify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }

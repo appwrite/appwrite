@@ -238,20 +238,6 @@ class Auth
     }
 
     /**
-     * Password Generator.
-     *
-     * Generate random password string
-     *
-     * @param int $length
-     *
-     * @return string
-     */
-    public static function passwordGenerator(int $length = 20): string
-    {
-        return \bin2hex(\random_bytes($length));
-    }
-
-    /**
      * Token Generator.
      *
      * Generate random password string

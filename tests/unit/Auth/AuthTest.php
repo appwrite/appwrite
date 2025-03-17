@@ -163,12 +163,6 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md8'));
     }
 
-    public function testPasswordGenerator(): void
-    {
-        $this->assertEquals(\mb_strlen(Auth::passwordGenerator()), 40);
-        $this->assertEquals(\mb_strlen(Auth::passwordGenerator(5)), 10);
-    }
-
     public function testTokenGenerator(): void
     {
         $this->assertEquals(\strlen(Auth::tokenGenerator()), 256);

@@ -27,6 +27,7 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -469,7 +470,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->inject('proofForPassword')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword) {
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -542,6 +544,7 @@ App::post('/v1/teams/:teamId/memberships')
 
             try {
                 $userId = ID::unique();
+                $hash = $proofForPassword->hash($proofForPassword->generate());
                 $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
@@ -555,9 +558,9 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => true,
                     // TODO: Set password empty?
-                    'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
-                    'hash' => Auth::DEFAULT_ALGO,
-                    'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                    'password' => $hash,
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
                     /**
                      * Set the password update time to 0 for users created using
                      * team invite and OAuth to allow password updates without an
