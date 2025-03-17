@@ -882,29 +882,12 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/functions/' . $functionId . '/deployments',
-            array_merge([
-                'content-type' => 'multipart/form-data',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'entrypoint' => 'index.php',
-                'code' => $this->packageFunction('php'),
-                'activate' => true,
-            ]
-        );
-
-        $deploymentId = $response['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
-        $this->assertEquals('index.php', $response['body']['entrypoint']);
-
-        // Wait for deployment to build.
-        sleep(self::WAIT + 20);
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true,
+        ]);
+        $this->assertNotEmpty($deploymentId);
 
         $response = $this->client->call(
             Client::METHOD_PATCH,
