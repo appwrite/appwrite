@@ -23,6 +23,10 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Proofs\Code;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -48,10 +52,6 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Utopia\Auth\Store;
-use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
-use Utopia\Auth\Proofs\Code;
 
 // Runtime Execution
 App::setResource('log', fn () => new Log());
