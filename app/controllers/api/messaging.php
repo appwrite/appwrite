@@ -3058,7 +3058,7 @@ App::post('/v1/messaging/messages/sms')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
