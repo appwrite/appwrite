@@ -917,6 +917,8 @@ class UsageTest extends Scope
                 'deploymentId' => $deploymentId,
             ],
         );
+        
+        \var_dump($response);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
