@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc0403c64758248a8147745b6fd7a214",
+    "content-hash": "54fc27a2c8d4f5ab4959dbc93be319e1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -709,16 +709,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.30.0",
+            "version": "v4.30.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "e1d66682f6836aa87820400f0aa07d9eb566feb6"
+                "reference": "f29ba8a30dfd940efb3a8a75dc44446539101f24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/e1d66682f6836aa87820400f0aa07d9eb566feb6",
-                "reference": "e1d66682f6836aa87820400f0aa07d9eb566feb6",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/f29ba8a30dfd940efb3a8a75dc44446539101f24",
+                "reference": "f29ba8a30dfd940efb3a8a75dc44446539101f24",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +747,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.30.0"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.30.1"
             },
-            "time": "2025-03-04T22:54:49+00:00"
+            "time": "2025-03-13T21:08:17+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -3705,16 +3705,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.60.6",
+            "version": "0.61.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f3c9aa964b39c6205069f038a26e709a15541406"
+                "reference": "349fbdf4bc088f7775c7dfb8b80239a617a88436"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f3c9aa964b39c6205069f038a26e709a15541406",
-                "reference": "f3c9aa964b39c6205069f038a26e709a15541406",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/349fbdf4bc088f7775c7dfb8b80239a617a88436",
+                "reference": "349fbdf4bc088f7775c7dfb8b80239a617a88436",
                 "shasum": ""
             },
             "require": {
@@ -3755,9 +3755,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.60.6"
+                "source": "https://github.com/utopia-php/database/tree/0.61.2"
             },
-            "time": "2025-03-05T01:23:14+00:00"
+            "time": "2025-03-15T11:47:42+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4810,16 +4810,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.9.3",
+            "version": "0.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "865a00c67e81a20938b883f9aa802303790dd3b5"
+                "reference": "1a8d280b176acc99ea8d9e7364b8767cbb206b4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/865a00c67e81a20938b883f9aa802303790dd3b5",
-                "reference": "865a00c67e81a20938b883f9aa802303790dd3b5",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/1a8d280b176acc99ea8d9e7364b8767cbb206b4a",
+                "reference": "1a8d280b176acc99ea8d9e7364b8767cbb206b4a",
                 "shasum": ""
             },
             "require": {
@@ -4854,9 +4854,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.9.3"
+                "source": "https://github.com/utopia-php/vcs/tree/0.9.4"
             },
-            "time": "2025-02-26T16:33:35+00:00"
+            "time": "2025-03-13T10:09:45+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5043,16 +5043,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.1",
+            "version": "0.40.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837"
+                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/df180676b6fbde7832ae1495af3e2f3e8f700837",
-                "reference": "df180676b6fbde7832ae1495af3e2f3e8f700837",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9e89b0bc4d8e6c81817d27096629f34a149fa873",
+                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873",
                 "shasum": ""
             },
             "require": {
@@ -5088,9 +5088,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.7"
             },
-            "time": "2025-02-26T07:07:10+00:00"
+            "time": "2025-03-12T08:43:55+00:00"
         },
         {
             "name": "doctrine/annotations",
