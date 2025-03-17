@@ -231,16 +231,4 @@ class Auth
 
         return $roles;
     }
-
-    /**
-     * Check if user is anonymous.
-     *
-     * @param Document $user
-     * @return bool
-     */
-    public static function isAnonymousUser(Document $user): bool
-    {
-        return is_null($user->getAttribute('email'))
-            && is_null($user->getAttribute('phone'));
-    }
 }
