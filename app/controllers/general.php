@@ -582,6 +582,12 @@ App::init()
                         ]);
                     }
 
+                    $owner = '';
+                    $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+                    if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+                        $owner = 'Appwrite';
+                    }
+
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
@@ -589,8 +595,10 @@ App::init()
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
-                            'projectId' => 'console',
-                            'projectInternalId' => 'console'
+                            'projectId' => $console->getId(),
+                            'projectInternalId' => $console->getInternalId(),
+                            'owner' => $owner,
+                            'region' => $console->getAttribute('region')
                         ]);
 
                         $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
@@ -859,11 +867,9 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+        $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+        if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
-            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
-            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
-
             try {
                 $loggingProvider = new DSN($providerConfig ?? '');
                 $providerName = $loggingProvider->getScheme();
