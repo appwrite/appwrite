@@ -84,7 +84,7 @@ $admins = [
 ];
 
 return [
-    Auth::USER_ROLE_GUESTS => [
+    USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -102,23 +102,23 @@ return [
             'execution.write',
         ],
     ],
-    Auth::USER_ROLE_USERS => [
+    USER_ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    Auth::USER_ROLE_ADMIN => [
+    USER_ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_DEVELOPER => [
+    USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_OWNER => [
+    USER_ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    Auth::USER_ROLE_APPS => [
+    USER_ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

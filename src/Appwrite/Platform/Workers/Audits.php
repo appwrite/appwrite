@@ -83,7 +83,7 @@ class Audits extends Action
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
 
         // Create event data
         $eventData = [

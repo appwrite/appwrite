@@ -3512,12 +3512,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "966fbfefb27be94e3363f07279787d5cf8a66b95"
+                "reference": "ed49b9e481030ba5e589140b41a9f4be1486310f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/966fbfefb27be94e3363f07279787d5cf8a66b95",
-                "reference": "966fbfefb27be94e3363f07279787d5cf8a66b95",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/ed49b9e481030ba5e589140b41a9f4be1486310f",
+                "reference": "ed49b9e481030ba5e589140b41a9f4be1486310f",
                 "shasum": ""
             },
             "require": {
@@ -3559,7 +3559,7 @@
                 "issues": "https://github.com/utopia-php/auth/issues",
                 "source": "https://github.com/utopia-php/auth/tree/dev"
             },
-            "time": "2025-03-16T18:32:00+00:00"
+            "time": "2025-03-17T19:57:57+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4860,16 +4860,16 @@
         },
         {
             "name": "utopia-php/telemetry",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "d35f2f0632f4ee0be63fb7ace6a94a6adda71a80"
+                "reference": "437f0021777f0e575dfb9e8a1a081b3aed75e33f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/d35f2f0632f4ee0be63fb7ace6a94a6adda71a80",
-                "reference": "d35f2f0632f4ee0be63fb7ace6a94a6adda71a80",
+                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/437f0021777f0e575dfb9e8a1a081b3aed75e33f",
+                "reference": "437f0021777f0e575dfb9e8a1a081b3aed75e33f",
                 "shasum": ""
             },
             "require": {
@@ -4890,7 +4890,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\Telemetry\\": "src/Telemetry"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4904,9 +4904,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.1.0"
+                "source": "https://github.com/utopia-php/telemetry/tree/0.1.1"
             },
-            "time": "2024-11-13T10:29:53+00:00"
+            "time": "2025-03-17T11:57:52+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -5143,16 +5143,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.40.7",
+            "version": "0.40.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873"
+                "reference": "dbb45a5db22cdc3368fe2573c07ba6088f188fa4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9e89b0bc4d8e6c81817d27096629f34a149fa873",
-                "reference": "9e89b0bc4d8e6c81817d27096629f34a149fa873",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/dbb45a5db22cdc3368fe2573c07ba6088f188fa4",
+                "reference": "dbb45a5db22cdc3368fe2573c07ba6088f188fa4",
                 "shasum": ""
             },
             "require": {
@@ -5188,9 +5188,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.40.9"
             },
-            "time": "2025-03-12T08:43:55+00:00"
+            "time": "2025-03-17T18:39:14+00:00"
         },
         {
             "name": "doctrine/annotations",

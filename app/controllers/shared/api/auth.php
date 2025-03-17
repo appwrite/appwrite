@@ -20,7 +20,7 @@ App::init()
         $lastUpdate = $session->getAttribute('mfaUpdatedAt');
         if (!empty($lastUpdate)) {
             $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
 
             $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
         }

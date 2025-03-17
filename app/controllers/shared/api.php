@@ -282,11 +282,11 @@ App::init()
             Authorization::setDefaultStatus(false);
 
             // Handle special app role case
-            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+            if ($apiKey->getRole() === USER_ROLE_APPS) {
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
-                    'type' => Auth::ACTIVITY_TYPE_APP,
+                    'type' => ACTIVITY_TYPE_APP,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -551,7 +551,7 @@ App::init()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         }
 
@@ -773,7 +773,7 @@ App::shutdown()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
@@ -787,7 +787,7 @@ App::shutdown()
             $user = new Document([
                 '$id' => '',
                 'status' => true,
-                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'type' => ACTIVITY_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',

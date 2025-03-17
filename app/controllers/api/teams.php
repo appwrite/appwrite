@@ -451,7 +451,7 @@ App::post('/v1/teams/:teamId/memberships')
             ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+                return !in_array($role, [USER_ROLE_APPS, USER_ROLE_GUESTS, USER_ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
@@ -1038,7 +1038,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+                return !in_array($role, [USER_ROLE_APPS, USER_ROLE_GUESTS, USER_ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
@@ -1184,7 +1184,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = Auth::tokenGenerator();
             $session = new Document(array_merge([
@@ -1196,7 +1196,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $user->getAttribute('email'),
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),

@@ -2022,11 +2022,11 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
@@ -2034,7 +2034,7 @@ App::post('/v1/users/:userId/sessions')
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_SERVER,
+                'provider' => SESSION_PROVIDER_SERVER,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
@@ -2099,7 +2099,7 @@ App::post('/v1/users/:userId/tokens')
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
-    ->param('expire', Auth::TOKEN_EXPIRATION_GENERIC, new Range(60, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
+    ->param('expire', TOKEN_EXPIRATION_GENERIC, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -2118,7 +2118,7 @@ App::post('/v1/users/:userId/tokens')
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_GENERIC,
+            'type' => TOKEN_TYPE_GENERIC,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),

@@ -4,6 +4,7 @@ namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Proofs\Password;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -37,7 +38,7 @@ class AuthTest extends TestCase
         // Bcrypt - Version Y
         $plain = 'secret';
         $hash = '$2y$08$PDbMtV18J1KOBI9tIYabBuyUwBrtXPGhLxCy9pWP6xkldVOKLrLKy';
-        $generatedHash = Auth::passwordHash($plain, 'bcrypt');
+        $generatedHash = Password::createHash('bcrypt')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
@@ -45,7 +46,7 @@ class AuthTest extends TestCase
         // Bcrypt - Version A
         $plain = 'test123';
         $hash = '$2a$12$3f2ZaARQ1AmhtQWx2nmQpuXcWfTj1YV2/Hl54e8uKxIzJe3IfwLiu';
-        $generatedHash = Auth::passwordHash($plain, 'bcrypt');
+        $generatedHash = Password::createHash('bcrypt')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
@@ -53,7 +54,7 @@ class AuthTest extends TestCase
         // Bcrypt - Cost 5
         $plain = 'hello-world';
         $hash = '$2a$05$IjrtSz6SN7UJ6Sh3l.b5jODEvEG2LMJTPAHIaLWRvlWx7if3VMkFO';
-        $generatedHash = Auth::passwordHash($plain, 'bcrypt');
+        $generatedHash = Password::createHash('bcrypt')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
@@ -61,7 +62,7 @@ class AuthTest extends TestCase
         // Bcrypt - Cost 15
         $plain = 'super-secret-password';
         $hash = '$2a$15$DS0ZzbsFZYumH/E4Qj5oeOHnBcM3nCCsCA2m4Goigat/0iMVQC4Na';
-        $generatedHash = Auth::passwordHash($plain, 'bcrypt');
+        $generatedHash = Password::createHash('bcrypt')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
@@ -69,7 +70,7 @@ class AuthTest extends TestCase
         // MD5 - Short
         $plain = 'appwrite';
         $hash = '144fa7eaa4904e8ee120651997f70dcc';
-        $generatedHash = Auth::passwordHash($plain, 'md5');
+        $generatedHash = Password::createHash('md5')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md5'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'md5'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'md5'));
@@ -77,7 +78,7 @@ class AuthTest extends TestCase
         // MD5 - Long
         $plain = 'AppwriteIsAwesomeBackendAsAServiceThatIsAlsoOpenSourced';
         $hash = '8410e96cf7ac64e0b84c3f8517a82616';
-        $generatedHash = Auth::passwordHash($plain, 'md5');
+        $generatedHash = Password::createHash('md5')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md5'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'md5'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'md5'));
@@ -85,7 +86,7 @@ class AuthTest extends TestCase
         // PHPass
         $plain = 'pass123';
         $hash = '$P$BVKPmJBZuLch27D4oiMRTEykGLQ9tX0';
-        $generatedHash = Auth::passwordHash($plain, 'phpass');
+        $generatedHash = Password::createHash('phpass')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'phpass'));
@@ -93,7 +94,7 @@ class AuthTest extends TestCase
         // SHA
         $plain = 'developersAreAwesome!';
         $hash = '2455118438cb125354b89bb5888346e9bd23355462c40df393fab514bf2220b5a08e4e2d7b85d7327595a450d0ac965cc6661152a46a157c66d681bed20a4735';
-        $generatedHash = Auth::passwordHash($plain, 'sha');
+        $generatedHash = Password::createHash('sha')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'sha'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'sha'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'sha'));
@@ -101,7 +102,7 @@ class AuthTest extends TestCase
         // Argon2
         $plain = 'safe-argon-password';
         $hash = '$argon2id$v=19$m=2048,t=3,p=4$MWc5NWRmc2QxZzU2$41mp7rSgBZ49YxLbbxIac7aRaxfp5/e1G45ckwnK0g8';
-        $generatedHash = Auth::passwordHash($plain, 'argon2');
+        $generatedHash = Password::createHash('argon2')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'argon2'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'argon2'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'argon2'));
@@ -109,7 +110,7 @@ class AuthTest extends TestCase
         // Scrypt
         $plain = 'some-scrypt-password';
         $hash = 'b448ad7ba88b653b5b56b8053a06806724932d0751988bc9cd0ef7ff059e8ba8a020e1913b7069a650d3f99a1559aba0221f2c277826919513a054e76e339028';
-        $generatedHash = Auth::passwordHash($plain, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]);
+        $generatedHash = Password::createHash('scrypt')->setOptions([ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2])->hash($plain);
 
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
@@ -126,7 +127,7 @@ class AuthTest extends TestCase
         // Provider #1 (Database)
         $plain = 'example-password';
         $hash = '$2a$10$3bIGRWUes86CICsuchGLj.e.BqdCdg2/1Ud9LvBhJr0j7Dze8PBdS';
-        $generatedHash = Auth::passwordHash($plain, 'bcrypt');
+        $generatedHash = Password::createHash('bcrypt')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
@@ -134,7 +135,7 @@ class AuthTest extends TestCase
         // Provider #2 (Blog)
         $plain = 'your-password';
         $hash = '$P$BkiNDJTpAWXtpaMhEUhUdrv7M0I1g6.';
-        $generatedHash = Auth::passwordHash($plain, 'phpass');
+        $generatedHash = Password::createHash('phpass')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'phpass'));
@@ -147,7 +148,7 @@ class AuthTest extends TestCase
         $signerKey = 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==';
 
         $options = [ 'salt' => $salt, 'saltSeparator' => $saltSeparator, 'signerKey' => $signerKey ];
-        $generatedHash = Auth::passwordHash($plain, 'scryptMod', $options);
+        $generatedHash = Password::createHash('scryptMod')->hash($plain, $options);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scryptMod', $options));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scryptMod', $options));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scryptMod', $options));
@@ -159,7 +160,7 @@ class AuthTest extends TestCase
 
         // Bcrypt - Cost 5
         $plain = 'whatIsMd8?!?';
-        $generatedHash = Auth::passwordHash($plain, 'md8');
+        $generatedHash = Password::createHash('md8')->hash($plain);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md8'));
     }
 
@@ -187,14 +188,14 @@ class AuthTest extends TestCase
             new Document([
                 '$id' => ID::custom('token1'),
                 'secret' => $hash,
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
                 'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
                 'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
@@ -206,14 +207,14 @@ class AuthTest extends TestCase
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => ID::custom('token1'),
                 'secret' => $hash,
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
                 'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
                 'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
@@ -232,13 +233,13 @@ class AuthTest extends TestCase
         $tokens1 = [
             new Document([
                 '$id' => ID::custom('token1'),
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'type' => TOKEN_TYPE_RECOVERY,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'type' => TOKEN_TYPE_RECOVERY,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
@@ -247,13 +248,13 @@ class AuthTest extends TestCase
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => ID::custom('token1'),
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'type' => TOKEN_TYPE_RECOVERY,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'type' => TOKEN_TYPE_RECOVERY,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
@@ -262,25 +263,25 @@ class AuthTest extends TestCase
         $tokens3 = [ // Correct secret and expire time, wrong type
             new Document([
                 '$id' => ID::custom('token1'),
-                'type' => Auth::TOKEN_TYPE_INVITE,
+                'type' => TOKEN_TYPE_INVITE,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'type' => TOKEN_TYPE_RECOVERY,
                 'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), $tokens1[0]);
+        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, $secret), $tokens1[0]);
         $this->assertEquals(Auth::tokenVerify($tokens1, null, $secret), $tokens1[0]);
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, $secret), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, $secret), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
     }
 
     public function testIsPrivilegedUser(): void
@@ -288,16 +289,16 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isPrivilegedUser([]));
         $this->assertEquals(false, Auth::isPrivilegedUser([Role::guests()->toString()]));
         $this->assertEquals(false, Auth::isPrivilegedUser([Role::users()->toString()]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_ADMIN]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_DEVELOPER]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_SYSTEM]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([USER_ROLE_ADMIN]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([USER_ROLE_DEVELOPER]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([USER_ROLE_OWNER]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([USER_ROLE_APPS, USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([USER_ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([USER_ROLE_OWNER, USER_ROLE_ADMIN, USER_ROLE_DEVELOPER]));
     }
 
     public function testIsAppUser(): void
@@ -305,16 +306,16 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isAppUser([]));
         $this->assertEquals(false, Auth::isAppUser([Role::guests()->toString()]));
         $this->assertEquals(false, Auth::isAppUser([Role::users()->toString()]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_ADMIN]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_DEVELOPER]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_SYSTEM]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_ADMIN]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_DEVELOPER]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_OWNER]));
+        $this->assertEquals(true, Auth::isAppUser([USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(true, Auth::isAppUser([USER_ROLE_APPS, USER_ROLE_APPS]));
+        $this->assertEquals(true, Auth::isAppUser([USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([USER_ROLE_OWNER, USER_ROLE_ADMIN, USER_ROLE_DEVELOPER]));
     }
 
     public function testGuestRoles(): void
@@ -394,7 +395,7 @@ class AuthTest extends TestCase
 
     public function testPrivilegedUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_OWNER);
+        Authorization::setRole(USER_ROLE_OWNER);
         $user  = new Document([
             '$id' => ID::custom('123'),
             'emailVerification' => true,
@@ -438,7 +439,7 @@ class AuthTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_APPS);
+        Authorization::setRole(USER_ROLE_APPS);
         $user  = new Document([
             '$id' => ID::custom('123'),
             'memberships' => [

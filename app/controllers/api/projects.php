@@ -117,7 +117,7 @@ App::post('/v1/projects')
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,

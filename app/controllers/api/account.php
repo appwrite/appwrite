@@ -176,17 +176,17 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $user->setAttributes($userFromRequest->getArrayCopy());
 
-    $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
     $record = $geodb->get($request->getIP());
-    $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+    $sessionSecret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL,
-        Auth::TOKEN_TYPE_OAUTH2,
-        Auth::TOKEN_TYPE_EMAIL => Type::EMAIL,
-        Auth::TOKEN_TYPE_PHONE => Type::PHONE,
-        Auth::TOKEN_TYPE_GENERIC => 'token',
+        TOKEN_TYPE_MAGIC_URL,
+        TOKEN_TYPE_OAUTH2,
+        TOKEN_TYPE_EMAIL => Type::EMAIL,
+        TOKEN_TYPE_PHONE => Type::PHONE,
+        TOKEN_TYPE_GENERIC => 'token',
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
@@ -221,11 +221,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === TOKEN_TYPE_EMAIL) {
         $user->setAttribute('emailVerification', true);
     }
 
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_PHONE) {
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PHONE) {
         $user->setAttribute('phoneVerification', true);
     }
 
@@ -236,8 +236,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL,
-        Auth::TOKEN_TYPE_EMAIL => false,
+        TOKEN_TYPE_MAGIC_URL,
+        TOKEN_TYPE_EMAIL => false,
         default => true
     };
 
@@ -383,8 +383,8 @@ App::post('/v1/account')
                 'password' => $hash,
                 'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
                 'passwordUpdate' => DateTime::now(),
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'hash' => $proof->getHash()->getName(),
+                'hashOptions' => $proof->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
@@ -821,7 +821,7 @@ App::patch('/v1/account/sessions/:sessionId')
         }
 
         // Extend session
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
@@ -893,7 +893,8 @@ App::post('/v1/account/sessions/email')
     ->inject('queueForMails')
     ->inject('hooks')
     ->inject('store')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store) {
+    ->inject('proofForPassword')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -901,7 +902,9 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+        $userProofForPassword = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+
+        if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !$userProofForPassword->verify($password, $profile->getAttribute('password'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -917,16 +920,16 @@ App::post('/v1/account/sessions/email')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -943,11 +946,11 @@ App::post('/v1/account/sessions/email')
         Authorization::setRole(Role::user($user->getId())->toString());
 
         // Re-hash if not using recommended algo
-        if ($user->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
+        if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
             $user
                 ->setAttribute('password', (new ProofsPassword())->hash($password))
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
@@ -1033,7 +1036,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store) {
+    ->inject('proofForPassword')
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword) {
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1065,8 +1069,8 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
-            'hash' => Auth::DEFAULT_ALGO,
-            'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+            'hash' => $proofForPassword->getHash()->getName(),
+            'hashOptions' => $proofForPassword->getHash()->getOptions(),
             'passwordUpdate' => null,
             'registration' => DateTime::now(),
             'reset' => false,
@@ -1084,17 +1088,17 @@ App::post('/v1/account/sessions/anonymous')
         Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
 
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
+                'provider' => SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -1350,7 +1354,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store) use ($oauthDefaultSuccess) {
+    ->inject('proofForPassword')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1568,8 +1573,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => null,
-                        'hash' => Auth::DEFAULT_ALGO,
-                        'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                        'hash' => $proofForPassword->getHash()->getName(),
+                        'hashOptions' => $proofForPassword->getHash()->getOptions(),
                         'passwordUpdate' => null,
                         'registration' => DateTime::now(),
                         'reset' => false,
@@ -1668,17 +1673,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
 
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         // If the `token` param is set, we will return the token in the query string
         if ($state['token']) {
-            $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_OAUTH2);
+            $secret = Auth::tokenGenerator(TOKEN_LENGTH_OAUTH2);
             $token = new Document([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'type' => Auth::TOKEN_TYPE_OAUTH2,
+                'type' => TOKEN_TYPE_OAUTH2,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -1707,7 +1712,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+            $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
 
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
@@ -1902,7 +1907,8 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1951,8 +1957,8 @@ App::post('/v1/account/tokens/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
@@ -1970,14 +1976,14 @@ App::post('/v1/account/tokens/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
+        $tokenSecret = Auth::tokenGenerator(TOKEN_LENGTH_MAGIC_URL);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_MAGIC_URL,
+            'type' => TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -2150,7 +2156,8 @@ App::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2198,8 +2205,8 @@ App::post('/v1/account/tokens/email')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
@@ -2216,13 +2223,13 @@ App::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = Auth::codeGenerator(6);
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_EMAIL,
+            'type' => TOKEN_TYPE_EMAIL,
             'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -2549,13 +2556,13 @@ App::post('/v1/account/tokens/phone')
         }
 
         $secret ??= Auth::codeGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_PHONE,
+            'type' => TOKEN_TYPE_PHONE,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -2861,14 +2868,16 @@ App::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->inject('proofForPassword')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword) {
 
+        $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
-        if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
+        if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        $newPassword = $proofForPassword->hash($password);
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $user->getAttribute('passwordHistory', []);
         if ($historyLimit > 0) {
@@ -2894,8 +2903,8 @@ App::patch('/v1/account/password')
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
             ->setAttribute('passwordUpdate', DateTime::now())
-            ->setAttribute('hash', Auth::DEFAULT_ALGO)
-            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+            ->setAttribute('hash', $proofForPassword->getHash()->getName())
+            ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
@@ -2938,9 +2947,11 @@ App::patch('/v1/account/email')
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
+        $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+
         if (
             !empty($passwordUpdate) &&
-            !$proofForPassword->verify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+            !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -2967,9 +2978,9 @@ App::patch('/v1/account/email')
 
         if (empty($passwordUpdate)) {
             $user
-                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
@@ -3030,13 +3041,16 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('proofForPassword')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
+        $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+
         if (
             !empty($passwordUpdate) &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+            !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -3060,9 +3074,9 @@ App::patch('/v1/account/phone')
 
         if (empty($passwordUpdate)) {
             $user
-                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
@@ -3233,14 +3247,14 @@ App::post('/v1/account/recovery')
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_RECOVERY);
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY);
 
-        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_RECOVERY);
+        $secret = Auth::tokenGenerator(TOKEN_LENGTH_RECOVERY);
         $recovery = new Document([
             '$id' => ID::unique(),
             'userId' => $profile->getId(),
             'userInternalId' => $profile->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_RECOVERY,
+            'type' => TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -3391,7 +3405,8 @@ App::put('/v1/account/recovery')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3399,7 +3414,7 @@ App::put('/v1/account/recovery')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $verifiedToken = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_RECOVERY, $secret);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -3407,7 +3422,7 @@ App::put('/v1/account/recovery')
 
         Authorization::setRole(Role::user($profile->getId())->toString());
 
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        $newPassword = $proofForPassword->hash($password);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $profile->getAttribute('passwordHistory', []);
@@ -3427,8 +3442,8 @@ App::put('/v1/account/recovery')
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('passwordHistory', $history)
                 ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
@@ -3495,14 +3510,14 @@ App::post('/v1/account/verification')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $verificationSecret = Auth::tokenGenerator(TOKEN_LENGTH_VERIFICATION);
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_VERIFICATION,
+            'type' => TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -3658,7 +3673,7 @@ App::put('/v1/account/verification')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $verifiedToken = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_VERIFICATION, $secret);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -3750,13 +3765,13 @@ App::post('/v1/account/verification/phone')
         }
 
         $secret ??= Auth::codeGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_PHONE,
+            'type' => TOKEN_TYPE_PHONE,
             'secret' => Auth::hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -3880,7 +3895,7 @@ App::put('/v1/account/verification/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $verifiedToken = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_PHONE, $secret);
+        $verifiedToken = Auth::tokenVerify($user->getAttribute('tokens', []), TOKEN_TYPE_PHONE, $secret);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -4354,7 +4369,7 @@ App::post('/v1/account/mfa/challenge')
     ->inject('plan')
     ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
 
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
         $challenge = new Document([
             'userId' => $user->getId(),

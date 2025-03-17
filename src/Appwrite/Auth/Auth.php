@@ -2,13 +2,6 @@
 
 namespace Appwrite\Auth;
 
-use Appwrite\Auth\Hash\Argon2;
-use Appwrite\Auth\Hash\Bcrypt;
-use Appwrite\Auth\Hash\Md5;
-use Appwrite\Auth\Hash\Phpass;
-use Appwrite\Auth\Hash\Scrypt;
-use Appwrite\Auth\Hash\Scryptmodified;
-use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
@@ -17,87 +10,6 @@ use Utopia\Database\Validator\Roles;
 
 class Auth
 {
-    public const SUPPORTED_ALGOS = [
-        'argon2',
-        'bcrypt',
-        'md5',
-        'sha',
-        'phpass',
-        'scrypt',
-        'scryptMod',
-        'plaintext'
-    ];
-
-    public const DEFAULT_ALGO = 'argon2';
-    public const DEFAULT_ALGO_OPTIONS = ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
-
-    /**
-     * User Roles.
-     */
-    public const USER_ROLE_ANY = 'any';
-    public const USER_ROLE_GUESTS = 'guests';
-    public const USER_ROLE_USERS = 'users';
-    public const USER_ROLE_ADMIN = 'admin';
-    public const USER_ROLE_DEVELOPER = 'developer';
-    public const USER_ROLE_OWNER = 'owner';
-    public const USER_ROLE_APPS = 'apps';
-    public const USER_ROLE_SYSTEM = 'system';
-
-    /**
-     * Activity associated with user or the app.
-     */
-    public const ACTIVITY_TYPE_APP = 'app';
-    public const ACTIVITY_TYPE_USER = 'user';
-    public const ACTIVITY_TYPE_GUEST = 'guest';
-
-    /**
-     * Token Types.
-     */
-    public const TOKEN_TYPE_LOGIN = 1; // Deprecated
-    public const TOKEN_TYPE_VERIFICATION = 2;
-    public const TOKEN_TYPE_RECOVERY = 3;
-    public const TOKEN_TYPE_INVITE = 4;
-    public const TOKEN_TYPE_MAGIC_URL = 5;
-    public const TOKEN_TYPE_PHONE = 6;
-    public const TOKEN_TYPE_OAUTH2 = 7;
-    public const TOKEN_TYPE_GENERIC = 8;
-    public const TOKEN_TYPE_EMAIL = 9; // OTP
-
-    /**
-     * Session Providers.
-     */
-    public const SESSION_PROVIDER_EMAIL = 'email';
-    public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
-    public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
-    public const SESSION_PROVIDER_PHONE = 'phone';
-    public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
-    public const SESSION_PROVIDER_TOKEN = 'token';
-    public const SESSION_PROVIDER_SERVER = 'server';
-
-    /**
-     * Token Expiration times.
-     */
-    public const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
-    public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
-    public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
-    public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
-    public const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
-    public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
-
-    /**
-     * Token Lengths.
-     */
-    public const TOKEN_LENGTH_MAGIC_URL = 64;
-    public const TOKEN_LENGTH_VERIFICATION = 256;
-    public const TOKEN_LENGTH_RECOVERY = 256;
-    public const TOKEN_LENGTH_OAUTH2 = 64;
-    public const TOKEN_LENGTH_SESSION = 256;
-
-    /**
-     * MFA
-     */
-    public const MFA_RECENT_DURATION = 1800; // 30 mins
-
     /**
      * @var string
      */
@@ -109,18 +21,18 @@ class Auth
     public static function getSessionProviderByTokenType(int $type): string
     {
         switch ($type) {
-            case Auth::TOKEN_TYPE_VERIFICATION:
-            case Auth::TOKEN_TYPE_RECOVERY:
-            case Auth::TOKEN_TYPE_INVITE:
-                return Auth::SESSION_PROVIDER_EMAIL;
-            case Auth::TOKEN_TYPE_MAGIC_URL:
-                return Auth::SESSION_PROVIDER_MAGIC_URL;
-            case Auth::TOKEN_TYPE_PHONE:
-                return Auth::SESSION_PROVIDER_PHONE;
-            case Auth::TOKEN_TYPE_OAUTH2:
-                return Auth::SESSION_PROVIDER_OAUTH2;
+            case TOKEN_TYPE_VERIFICATION:
+            case TOKEN_TYPE_RECOVERY:
+            case TOKEN_TYPE_INVITE:
+                return SESSION_PROVIDER_EMAIL;
+            case TOKEN_TYPE_MAGIC_URL:
+                return SESSION_PROVIDER_MAGIC_URL;
+            case TOKEN_TYPE_PHONE:
+                return SESSION_PROVIDER_PHONE;
+            case TOKEN_TYPE_OAUTH2:
+                return SESSION_PROVIDER_OAUTH2;
             default:
-                return Auth::SESSION_PROVIDER_TOKEN;
+                return SESSION_PROVIDER_TOKEN;
         }
     }
 
@@ -136,105 +48,6 @@ class Auth
     public static function hash(string $string)
     {
         return \hash('sha256', $string);
-    }
-
-    /**
-     * Password Hash.
-     *
-     * One way string hashing for user passwords
-     *
-     * @param string $string
-     * @param string $algo hashing algorithm to use
-     * @param array $options algo-specific options
-     *
-     * @return bool|string|null
-     */
-    public static function passwordHash(string $string, string $algo, array $options = [])
-    {
-        // Plain text not supported, just an alias. Switch to recommended algo
-        if ($algo === 'plaintext') {
-            $algo = Auth::DEFAULT_ALGO;
-            $options = Auth::DEFAULT_ALGO_OPTIONS;
-        }
-
-        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
-            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
-        }
-
-        switch ($algo) {
-            case 'argon2':
-                $hasher = new Argon2($options);
-                return $hasher->hash($string);
-            case 'bcrypt':
-                $hasher = new Bcrypt($options);
-                return $hasher->hash($string);
-            case 'md5':
-                $hasher = new Md5($options);
-                return $hasher->hash($string);
-            case 'sha':
-                $hasher = new Sha($options);
-                return $hasher->hash($string);
-            case 'phpass':
-                $hasher = new Phpass($options);
-                return $hasher->hash($string);
-            case 'scrypt':
-                $hasher = new Scrypt($options);
-                return $hasher->hash($string);
-            case 'scryptMod':
-                $hasher = new Scryptmodified($options);
-                return $hasher->hash($string);
-            default:
-                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
-        }
-    }
-
-    /**
-     * Password verify.
-     *
-     * @param string $plain
-     * @param string $hash
-     * @param string $algo hashing algorithm used to hash
-     * @param array $options algo-specific options
-     *
-     * @return bool
-     */
-    public static function passwordVerify(string $plain, string $hash, string $algo, array $options = [])
-    {
-        // Plain text not supported, just an alias. Switch to recommended algo
-        if ($algo === 'plaintext') {
-            $algo = Auth::DEFAULT_ALGO;
-            $options = Auth::DEFAULT_ALGO_OPTIONS;
-        }
-
-        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
-            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
-        }
-
-        switch ($algo) {
-            case 'argon2':
-                $hasher = new Argon2($options);
-                return $hasher->verify($plain, $hash);
-            case 'bcrypt':
-                $hasher = new Bcrypt($options);
-                return $hasher->verify($plain, $hash);
-            case 'md5':
-                $hasher = new Md5($options);
-                return $hasher->verify($plain, $hash);
-            case 'sha':
-                $hasher = new Sha($options);
-                return $hasher->verify($plain, $hash);
-            case 'phpass':
-                $hasher = new Phpass($options);
-                return $hasher->verify($plain, $hash);
-            case 'scrypt':
-                $hasher = new Scrypt($options);
-                return $hasher->verify($plain, $hash);
-            case 'scryptMod':
-                $hasher = new Scryptmodified($options);
-                return $hasher->verify($plain, $hash);
-            default:
-                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
-        }
     }
 
     /**
@@ -339,9 +152,9 @@ class Auth
     public static function isPrivilegedUser(array $roles): bool
     {
         if (
-            in_array(self::USER_ROLE_OWNER, $roles) ||
-            in_array(self::USER_ROLE_DEVELOPER, $roles) ||
-            in_array(self::USER_ROLE_ADMIN, $roles)
+            in_array(USER_ROLE_OWNER, $roles) ||
+            in_array(USER_ROLE_DEVELOPER, $roles) ||
+            in_array(USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -358,7 +171,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (in_array(self::USER_ROLE_APPS, $roles)) {
+        if (in_array(USER_ROLE_APPS, $roles)) {
             return true;
         }
 

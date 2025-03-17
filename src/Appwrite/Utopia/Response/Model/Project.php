@@ -105,7 +105,7 @@ class Project extends Model
             ->addRule('authDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'default' => TOKEN_EXPIRATION_LOGIN_LONG,
                 'example' => 60,
             ])
             ->addRule('authLimit', [
@@ -359,7 +359,7 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
-        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
