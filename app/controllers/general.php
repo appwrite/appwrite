@@ -977,17 +977,29 @@ App::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
+            $logLevel = $code >= 500 ? 'error' : 'warning';
+            $logPrefix = $code >= 500 ? '[Error]' : '[Warning]';
+
+            Console::$logLevel($logPrefix . ' Timestamp: ' . date('c', time()));
 
             if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
+                Console::$logLevel($logPrefix . ' Status Code: ' . $code);
+                Console::$logLevel($logPrefix . ' Method: ' . $route->getMethod());
+                Console::$logLevel($logPrefix . ' URL: ' . $route->getPath());
             }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
+            Console::$logLevel($logPrefix . ' Type: ' . get_class($error));
+            Console::$logLevel($logPrefix . ' Message: ' . $message);
+            Console::$logLevel($logPrefix . ' File: ' . $file);
+            Console::$logLevel($logPrefix . ' Line: ' . $line);
+            Console::$logLevel($logPrefix . ' Trace:');
+            foreach ($trace as $index => $entry) {
+                $file = $entry['file'] ?? 'unknown';
+                $line = $entry['line'] ?? 0;
+                $function = $entry['function'] ?? 'unknown';
+                $class = $entry['class'] ?? '';
+                $type = $entry['type'] ?? '';
+                Console::$logLevel("  #{$index} {$file}({$line}): {$class}{$type}{$function}()");
+            }
         }
 
         switch ($class) {
