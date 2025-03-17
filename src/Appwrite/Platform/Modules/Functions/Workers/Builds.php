@@ -285,7 +285,8 @@ class Builds extends Action
                     $directorySize = $device->getFileSize($source);
                     $deployment
                         ->setAttribute('sourcePath', $source)
-                        ->setAttribute('sourceSize', $directorySize);
+                        ->setAttribute('sourceSize', $directorySize)
+                        ->setAttribute('totalSize', $directorySize);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
@@ -436,7 +437,8 @@ class Builds extends Action
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
-                    ->setAttribute('sourceSize', $directorySize);
+                    ->setAttribute('sourceSize', $directorySize)
+                    ->setAttribute('totalSize', $directorySize);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                 $queueForRealtime
@@ -720,6 +722,7 @@ class Builds extends Action
             $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
+            $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
 
             $logs = '';
             foreach ($response['output'] as $log) {
