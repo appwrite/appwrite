@@ -36,7 +36,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
-use Utopia\Pools\Connection;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;

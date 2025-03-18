@@ -329,7 +329,8 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $total = $useProjectDB(fn (Database $dbForProject) =>
+            $total = $useProjectDB(
+                fn (Database $dbForProject) =>
                 $dbForProject->count('users', max: APP_LIMIT_USERS)
             );
 
@@ -342,7 +343,8 @@ App::post('/v1/account')
         }
 
         // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $useProjectDB(fn (Database $dbForProject) =>
+        $identityWithMatchingEmail = $useProjectDB(
+            fn (Database $dbForProject) =>
             $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ])
@@ -391,11 +393,13 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            $user = Authorization::skip(fn () => $useProjectDB(fn (Database $dbForProject) =>
+            $user = Authorization::skip(fn () => $useProjectDB(
+                fn (Database $dbForProject) =>
                 $dbForProject->createDocument('users', $user)
             ));
             try {
-                $target = Authorization::skip(fn () => $useProjectDB(fn (Database $dbForProject) =>
+                $target = Authorization::skip(fn () => $useProjectDB(
+                    fn (Database $dbForProject) =>
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
@@ -418,7 +422,8 @@ App::post('/v1/account')
                 }
             }
 
-            $useProjectDB(fn (Database $dbForProject) =>
+            $useProjectDB(
+                fn (Database $dbForProject) =>
                 $dbForProject->purgeCachedDocument('users', $user->getId())
             );
         } catch (Duplicate) {
