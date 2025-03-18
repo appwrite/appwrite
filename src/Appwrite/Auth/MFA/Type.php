@@ -2,7 +2,6 @@
 
 namespace Appwrite\Auth\MFA;
 
-use Appwrite\Auth\Auth;
 use OTPHP\OTP;
 use Utopia\Auth\Proofs\Token;
 

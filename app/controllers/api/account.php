@@ -38,9 +38,9 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
+use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
-use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -3234,7 +3234,7 @@ App::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->inject('proofForToken')   
+    ->inject('proofForToken')
     ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {

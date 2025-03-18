@@ -4,7 +4,6 @@ namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
 use PHPUnit\Framework\TestCase;
-use Utopia\Auth\Proofs\Password;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

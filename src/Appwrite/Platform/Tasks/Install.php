@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;

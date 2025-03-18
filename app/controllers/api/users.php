@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Password;
