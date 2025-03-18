@@ -35,6 +35,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
+use Utopia\Pools\Connection;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
@@ -313,7 +314,7 @@ App::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project): Database {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -353,6 +354,55 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     }
 
     return $database;
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
+
+App::setResource('useProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
+    /**
+     * @template T
+     * @param callable(Database): T $callback
+     */
+    return function (callable $callback) use ($pools, $dbForPlatform, $cache, $project): mixed {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $callback($dbForPlatform);
+        }
+
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        return $pools
+            ->get($dsn->getHost())
+            ->use(function (Connection $connection) use ($callback, $cache, $project, $dsn) {
+                $adapter = $connection->getResource();
+
+                $database = new Database($adapter, $cache);
+
+                $database
+                    ->setMetadata('host', \gethostname())
+                    ->setMetadata('project', $project->getId())
+                    ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+                    ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+                if (\in_array($dsn->getHost(), $sharedTables)) {
+                    $database
+                        ->setSharedTables(true)
+                        ->setTenant($project->getInternalId())
+                        ->setNamespace($dsn->getParam('namespace'));
+                } else {
+                    $database
+                        ->setSharedTables(false)
+                        ->setTenant(null)
+                        ->setNamespace('_' . $project->getInternalId());
+                }
+
+                return $callback($database);
+            });
+    };
 }, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
