@@ -2113,7 +2113,9 @@ App::post('/v1/users/:userId/tokens')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = $proofForToken->generate();
+        $secret = $proofForToken
+            ->setLength($length)
+            ->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
