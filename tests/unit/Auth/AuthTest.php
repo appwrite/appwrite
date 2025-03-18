@@ -10,7 +10,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
-
+use Utopia\Auth\Proofs\Token;
 class AuthTest extends TestCase
 {
     /**
@@ -64,10 +64,12 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
-        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
+        $proofForToken = new Token();
+
+        $this->assertEquals(Auth::sessionVerify($tokens1, $secret, $proofForToken), 'token1');
+        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret', $proofForToken), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, $secret, $proofForToken), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret', $proofForToken), false);
     }
 
     public function testTokenVerify(): void
