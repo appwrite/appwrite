@@ -809,7 +809,7 @@ App::error()
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
-
+        Console::warning('Appwrite CE Method: ' . $route->getMethod(). 'URL: ' . $route->getPath());
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));
 
