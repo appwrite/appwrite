@@ -870,7 +870,9 @@ App::setResource('proofForToken', function (): Token {
 });
 
 App::setResource('proofForTokenCode', function (): Token {
-    return new Token()->setLength(6);
+    $token = new Token();
+    $token->setLength(6);
+    return $token;
 });
 
 App::setResource('proofForCode', function (): Code {

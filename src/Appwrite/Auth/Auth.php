@@ -12,11 +12,18 @@ class Auth
 {
     /**
      * @var string
+     *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      */
     public static $cookieNamePreview = 'a_jwt_console';
 
     /**
      * Token type to session provider mapping.
+     *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
+     * @param int $type
+     *
+     * @return string
      */
     public static function getSessionProviderByTokenType(int $type): string
     {
@@ -41,6 +48,7 @@ class Auth
      *
      * One-way encryption
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param $string
      *
      * @return string
@@ -55,6 +63,7 @@ class Auth
      *
      * Generate random password string
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param int $length Length of returned token
      *
      * @return string
@@ -74,6 +83,7 @@ class Auth
     /**
      * Verify token and check that its not expired.
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param array<Document> $tokens
      * @param int $type Type of token to verify, if null will verify any type
      * @param string $secret
@@ -101,6 +111,7 @@ class Auth
     /**
      * Verify session and check that its not expired.
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param array<Document> $sessions
      * @param string $secret
      *
@@ -125,6 +136,7 @@ class Auth
     /**
      * Is Privileged User?
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param array<string> $roles
      *
      * @return bool
@@ -145,6 +157,7 @@ class Auth
     /**
      * Is App User?
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param array<string> $roles
      *
      * @return bool
@@ -161,6 +174,7 @@ class Auth
     /**
      * Returns all roles for a user.
      *
+     * @deprecated We plan to deprecate this class in the future. Use Utopia Auth when possible.
      * @param Document $user
      * @return array<string>
      */
