@@ -93,6 +93,8 @@ class Update extends Base
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
+            'deploymentStatus' => $deployment->getAttribute('status', ''),
+            'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
         // Inform scheduler if function is still active

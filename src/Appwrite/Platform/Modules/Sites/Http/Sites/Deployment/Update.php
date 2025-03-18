@@ -92,6 +92,8 @@ class Update extends Base
             'deploymentId' => $deployment->getId(),
             'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
             'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+            'deploymentStatus' => $deployment->getAttribute('status', ''),
+            'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
         $queries = [

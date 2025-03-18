@@ -58,6 +58,18 @@ class Site extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('deploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Active deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('deploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Active deployment status. Possible values are "waiting", "processing", "building", "waiting", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
+            ])
             ->addRule('deploymentScreenshotLight', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Screenshot of active deployment with light theme preference file ID.',
