@@ -344,7 +344,6 @@ $image = $this->getParam('image', '');
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_EMAIL_CERTIFICATES
 
-
   appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-databases
@@ -370,7 +369,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-
 
   appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -436,7 +434,6 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
 
-
   appwrite-worker-certificates:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-certificates
@@ -469,7 +466,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-
 
   appwrite-worker-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -509,7 +505,6 @@ $image = $this->getParam('image', '');
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
 
-
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-mails
@@ -543,7 +538,6 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
-
 
   appwrite-worker-messaging:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -596,7 +590,6 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
 
-
   appwrite-worker-migrations:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-migrations
@@ -626,7 +619,6 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
-
 
   appwrite-task-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -662,7 +654,6 @@ $image = $this->getParam('image', '');
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
-
   appwrite-task-stats-resources:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     container_name: appwrite-task-stats-resources
@@ -694,7 +685,6 @@ $image = $this->getParam('image', '');
       - _APP_DATABASE_SHARED_TABLES
       - _APP_STATS_RESOURCES_INTERVAL
 
-
   appwrite-worker-stats-resources:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-stats-resources
@@ -722,7 +712,6 @@ $image = $this->getParam('image', '');
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_STATS_RESOURCES_INTERVAL
-
 
   appwrite-worker-stats-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -752,7 +741,6 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-
   appwrite-worker-stats-usage-dump:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-stats-usage-dump
@@ -781,7 +769,6 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-
   appwrite-task-scheduler-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-functions
@@ -806,7 +793,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-
 
   appwrite-task-scheduler-executions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -833,7 +819,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
 
-
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-messages
@@ -858,7 +843,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-
 
   appwrite-assistant:
     image: appwrite/assistant:0.4.0

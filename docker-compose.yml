@@ -270,7 +270,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-worker-audits:
     entrypoint: worker-audits
     <<: *x-logging
@@ -299,7 +298,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -332,7 +330,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -394,7 +391,6 @@ services:
       - _APP_DATABASE_SHARED_TABLES_V1
       - _APP_EMAIL_CERTIFICATES
 
-
   appwrite-worker-databases:
     entrypoint: worker-databases
     <<: *x-logging
@@ -425,7 +421,6 @@ services:
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-builds:
     entrypoint: worker-builds
@@ -493,7 +488,6 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-worker-certificates:
     entrypoint: worker-certificates
     <<: *x-logging
@@ -528,7 +522,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -572,7 +565,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-worker-mails:
     entrypoint: worker-mails
     <<: *x-logging
@@ -606,7 +598,6 @@ services:
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
@@ -663,7 +654,6 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-worker-migrations:
     entrypoint: worker-migrations
     <<: *x-logging
@@ -698,7 +688,6 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-task-maintenance:
     entrypoint: maintenance
@@ -738,7 +727,6 @@ services:
       - _APP_MAINTENANCE_DELAY
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-task-stats-resources:
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
@@ -770,7 +758,6 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_STATS_RESOURCES_INTERVAL
 
-  
   appwrite-worker-stats-resources:
     entrypoint: worker-stats-resources
     <<: *x-logging
@@ -802,7 +789,6 @@ services:
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
 
-  
   appwrite-worker-stats-usage:
     entrypoint: worker-stats-usage
     <<: *x-logging
@@ -833,7 +819,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-worker-stats-usage-dump:
     entrypoint: worker-stats-usage-dump
@@ -867,7 +852,6 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_STATS_USAGE_DUAL_WRITING_DBS
 
-  
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
@@ -896,7 +880,6 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
 
-
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
     <<: *x-logging
@@ -923,7 +906,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
@@ -952,7 +934,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-
 
   appwrite-assistant:
     container_name: appwrite-assistant
