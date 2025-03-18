@@ -58,6 +58,18 @@ class Site extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('deploymentScreenshotLight', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot of active deployment with light theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('deploymentScreenshotDark', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Screenshot of active deployment with dark theme preference file ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
                 'description' => 'Site variables.',

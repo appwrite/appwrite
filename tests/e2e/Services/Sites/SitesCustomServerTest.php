@@ -1816,10 +1816,14 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
-
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['screenshotLight']);
         $this->assertNotEmpty($deployment['body']['screenshotDark']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
+        $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge([

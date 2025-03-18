@@ -788,7 +788,7 @@ class Builds extends Action
                         ]);
 
                         $config['sleep'] = 3000;
-                        
+
                         $frameworks = Config::getParam('frameworks', []);
                         $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
                         if (!is_null($framework)) {
@@ -898,6 +898,8 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
+                        $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),
