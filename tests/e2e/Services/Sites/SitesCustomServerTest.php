@@ -360,6 +360,13 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Env variable is Appwrite", $response['body']);
         $this->assertStringNotContainsString("Variable not found", $response['body']);
 
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -1515,6 +1522,12 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
@@ -1535,6 +1548,13 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Astro Blog", $response['body']);
         $this->assertStringContainsString("About Me", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
         $this->cleanupSite($siteId);
     }
@@ -1985,11 +2005,32 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals('index.html', $site['body']['fallbackFile']);
 
-        $deploymentId2 = $this->setupDuplicateDeployment($siteId, $deploymentId1);
+        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId1);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId2 = $deployment['body']['$id'];
         $this->assertNotEmpty($deploymentId2);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId2) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
+        }, 50000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
         $this->cleanupSite($siteId);
     }

@@ -100,6 +100,7 @@ class Create extends Action
             '$internalId' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
+            'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
