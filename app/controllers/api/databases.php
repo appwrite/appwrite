@@ -3355,7 +3355,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $processDocument($collection, $document);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, min($operations, 1))
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
@@ -3520,7 +3520,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, min($operations, 1))
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
@@ -3661,7 +3661,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $processDocument($collection, $document);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, min($operations, 1))
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
@@ -3959,7 +3959,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $setCollection($collection, $newDocument);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, min($operations, 1))
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
