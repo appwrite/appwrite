@@ -412,6 +412,16 @@ Server::setResource('logError', function (Registry $register, Document $project)
     };
 }, ['register', 'project']);
 
+Server::setResource('specifications', function () {
+    return Config::getParam('runtime-specifications', [
+        APP_FUNCTION_SPECIFICATION_DEFAULT => [
+            'slug ' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+            'memory' => APP_FUNCTION_MEMORY_DEFAULT,
+            'cpus' => APP_FUNCTION_CPUS_DEFAULT
+        ]
+    ]);
+});
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
