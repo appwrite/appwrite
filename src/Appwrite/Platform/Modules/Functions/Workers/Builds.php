@@ -784,12 +784,12 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
-                        $config['sleep'] = 3000; // 3 seconds
-
-                        // Makes tests much faster
-                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-                        if ($isDevelopment) {
-                            $config['sleep'] = 0; // Override this when running Screenshot.php task
+                        $config['sleep'] = 3000;
+                        
+                        $frameworks = Config::getParam('frameworks', []);
+                        $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                        if (!is_null($framework)) {
+                            $config['sleep'] = $framework['screenshotSleep'];
                         }
 
                         $response = $client->fetch(
