@@ -38,6 +38,7 @@ use Utopia\Auth\Hashes\Scrypt;
 use Utopia\Auth\Hashes\ScryptModified;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -2016,13 +2017,14 @@ App::post('/v1/users/:userId/sessions')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
+        $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -2035,7 +2037,7 @@ App::post('/v1/users/:userId/sessions')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => SESSION_PROVIDER_SERVER,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
@@ -2104,14 +2106,15 @@ App::post('/v1/users/:userId/tokens')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator($length);
+        $secret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
@@ -2119,7 +2122,7 @@ App::post('/v1/users/:userId/tokens')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_GENERIC,
-            'secret' => Auth::hash($secret),
+            'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP()

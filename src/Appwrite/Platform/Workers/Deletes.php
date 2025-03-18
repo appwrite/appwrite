@@ -1110,6 +1110,7 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for deployment " . $deploymentId);
         $this->deleteByGroup('rules', [
+            Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$deploymentInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])

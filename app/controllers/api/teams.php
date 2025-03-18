@@ -28,6 +28,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -471,7 +472,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('proofForPassword')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken) {
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -592,7 +594,7 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
-        $secret = Auth::tokenGenerator();
+        $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
             $membershipId = ID::unique();
             $membership = new Document([
@@ -612,7 +614,7 @@ App::post('/v1/teams/:teamId/memberships')
                 'invited' => DateTime::now(),
                 'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
                 'confirm' => ($isPrivilegedUser || $isAppUser),
-                'secret' => Auth::hash($secret),
+                'secret' => $proofForToken->hash($secret),
                 'search' => implode(' ', [$membershipId, $invitee->getId()])
             ]);
 
@@ -1131,7 +1133,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1150,7 +1153,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
+        if ($proofForToken->verify($membership->getAttribute('secret'), $secret)) {
             throw new Exception(Exception::TEAM_INVALID_SECRET);
         }
 
@@ -1186,7 +1189,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $record = $geodb->get($request->getIP());
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-            $secret = Auth::tokenGenerator();
+            $secret = $proofForToken->generate();
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 '$permissions' => [
@@ -1198,7 +1201,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 'userInternalId' => $user->getInternalId(),
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $user->getAttribute('email'),
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],

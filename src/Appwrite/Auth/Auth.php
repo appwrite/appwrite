@@ -72,26 +72,6 @@ class Auth
     }
 
     /**
-     * Code Generator.
-     *
-     * Generate random code string
-     *
-     * @param int $length
-     *
-     * @return string
-     */
-    public static function codeGenerator(int $length = 6): string
-    {
-        $value = '';
-
-        for ($i = 0; $i < $length; $i++) {
-            $value .= random_int(0, 9);
-        }
-
-        return $value;
-    }
-
-    /**
      * Verify token and check that its not expired.
      *
      * @param array<Document> $tokens

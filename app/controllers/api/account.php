@@ -39,6 +39,8 @@ use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -156,7 +158,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 };
 
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -179,7 +181,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
     $record = $geodb->get($request->getIP());
-    $sessionSecret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
+    $sessionSecret = $proofForToken->generate();
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
         TOKEN_TYPE_MAGIC_URL,
@@ -196,7 +198,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
-            'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
+            'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
@@ -894,7 +896,8 @@ App::post('/v1/account/sessions/email')
     ->inject('hooks')
     ->inject('store')
     ->inject('proofForPassword')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -923,7 +926,7 @@ App::post('/v1/account/sessions/email')
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
+        $secret = $proofForToken->generate();
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1037,7 +1040,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1091,7 +1095,7 @@ App::post('/v1/account/sessions/anonymous')
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
+        $secret = $proofForToken->generate();
 
         $session = new Document(array_merge(
             [
@@ -1099,7 +1103,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => SESSION_PROVIDER_ANONYMOUS,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
@@ -1189,6 +1193,7 @@ App::post('/v1/account/sessions/token')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
+    ->inject('proofForTokenCode')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -1355,7 +1360,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword) use ($oauthDefaultSuccess) {
+    ->inject('proofForToken')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1712,7 +1718,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            $secret = Auth::tokenGenerator(TOKEN_LENGTH_SESSION);
+            $secret = $proofForToken->generate();
 
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
@@ -1723,7 +1729,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
@@ -1908,7 +1914,8 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForPassword')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1976,7 +1983,7 @@ App::post('/v1/account/tokens/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $tokenSecret = Auth::tokenGenerator(TOKEN_LENGTH_MAGIC_URL);
+        $tokenSecret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -1984,7 +1991,7 @@ App::post('/v1/account/tokens/magic-url')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_MAGIC_URL,
-            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
+            'secret' => $proofForToken->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -2157,7 +2164,8 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForPassword')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword) {
+    ->inject('proofForTokenCode')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsToken $proofForTokenCode) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2222,7 +2230,7 @@ App::post('/v1/account/tokens/email')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $tokenSecret = Auth::codeGenerator(6);
+        $tokenSecret = $proofForTokenCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2394,6 +2402,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
+    ->inject('proofForTokenCode')
     ->action($createSession);
 
 App::put('/v1/account/sessions/phone')
@@ -2432,6 +2441,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
+    ->inject('proofForTokenCode')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
@@ -2473,7 +2483,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForPassword')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2558,7 +2569,7 @@ App::post('/v1/account/tokens/phone')
             }
         }
 
-        $secret ??= Auth::codeGenerator();
+        $secret ??= $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2566,7 +2577,7 @@ App::post('/v1/account/tokens/phone')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_PHONE,
-            'secret' => Auth::hash($secret),
+            'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -3223,7 +3234,8 @@ App::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
+    ->inject('proofForToken')   
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3252,13 +3264,13 @@ App::post('/v1/account/recovery')
 
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY);
 
-        $secret = Auth::tokenGenerator(TOKEN_LENGTH_RECOVERY);
+        $secret = $proofForToken->generate();
         $recovery = new Document([
             '$id' => ID::unique(),
             'userId' => $profile->getId(),
             'userInternalId' => $profile->getInternalId(),
             'type' => TOKEN_TYPE_RECOVERY,
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+            'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -3499,7 +3511,8 @@ App::post('/v1/account/verification')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('proofForToken')
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3513,7 +3526,7 @@ App::post('/v1/account/verification')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $verificationSecret = Auth::tokenGenerator(TOKEN_LENGTH_VERIFICATION);
+        $verificationSecret = $proofForToken->generate();
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -3521,7 +3534,7 @@ App::post('/v1/account/verification')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_VERIFICATION,
-            'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
+            'secret' => $proofForToken->hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -3738,7 +3751,8 @@ App::post('/v1/account/verification/phone')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->inject('proofForToken')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3767,7 +3781,7 @@ App::post('/v1/account/verification/phone')
             }
         }
 
-        $secret ??= Auth::codeGenerator();
+        $secret ??= $proofForToken->generate();
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -3775,7 +3789,7 @@ App::post('/v1/account/verification/phone')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_PHONE,
-            'secret' => Auth::hash($secret),
+            'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -4370,15 +4384,17 @@ App::post('/v1/account/mfa/challenge')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->inject('proofForToken')
+    ->inject('proofForCode')
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
-        $code = Auth::codeGenerator();
+        $code = $proofForCode->generate();
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => $factor,
-            'token' => Auth::tokenGenerator(),
+            'token' => $proofForToken->generate(),
             'code' => $code,
             'expire' => $expire,
             '$permissions' => [
