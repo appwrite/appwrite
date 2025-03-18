@@ -27,6 +27,7 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -375,9 +376,7 @@ App::setResource('useProjectDB', function (Group $pools, Database $dbForPlatform
 
         return $pools
             ->get($dsn->getHost())
-            ->use(function (Connection $connection) use ($callback, $cache, $project, $dsn) {
-                $adapter = $connection->getResource();
-
+            ->use(function (Adapter $adapter) use ($callback, $cache, $project, $dsn) {
                 $database = new Database($adapter, $cache);
 
                 $database
