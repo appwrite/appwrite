@@ -59,7 +59,6 @@ class Base extends Action
             }
         }
 
-        $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -85,7 +84,7 @@ class Base extends Action
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerCommitHash' => $commitDetails['commitHash'] ?? '',
-            'providerCommitAuthorUrl' => $authorUrl,
+            'providerCommitAuthorUrl' => $commitDetails['commitAuthorUrl'] ?? '',
             'providerCommitAuthor' => $commitDetails['commitAuthor'] ?? '',
             'providerCommitMessage' => mb_strimwidth($commitDetails['commitMessage'] ?? '', 0, 255, '...'),
             'providerCommitUrl' => $commitDetails['commitUrl'] ?? '',
@@ -143,7 +142,6 @@ class Base extends Action
             }
         }
 
-        $authorUrl = "https://github.com/$owner";
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
 
         $commands = [];
@@ -177,7 +175,7 @@ class Base extends Action
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerCommitHash' => $commitDetails['commitHash'] ?? '',
-            'providerCommitAuthorUrl' => $authorUrl,
+            'providerCommitAuthorUrl' => $commitDetails['commitAuthorUrl'] ?? '',
             'providerCommitAuthor' => $commitDetails['commitAuthor'] ?? '',
             'providerCommitMessage' => mb_strimwidth($commitDetails['commitMessage'] ?? '', 0, 255, '...'),
             'providerCommitUrl' => $commitDetails['commitUrl'] ?? '',
