@@ -102,6 +102,7 @@ class Delete extends Action
                 'deploymentInternalId' => '',
                 'deploymentScreenshotDark' => '',
                 'deploymentScreenshotLight' => '',
+                'deploymentCreatedAt' => '',
             ])));
         }
 

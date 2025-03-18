@@ -367,6 +367,13 @@ class SitesCustomServerTest extends Scope
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['deploymentId']);
+        $this->assertNotEmpty($site['body']['deploymentCreatedAt']);
+        $this->assertEquals($deployment['body']['$id'], $site['body']['deploymentId']);
+        $this->assertEquals($deployment['body']['$createdAt'], $site['body']['deploymentCreatedAt']);
+
         $this->cleanupSite($siteId);
     }
 

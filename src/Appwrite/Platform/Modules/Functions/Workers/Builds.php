@@ -868,6 +868,7 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
@@ -900,6 +901,7 @@ class Builds extends Action
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                         $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
                         $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),

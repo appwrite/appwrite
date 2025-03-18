@@ -493,6 +493,13 @@ class FunctionsCustomServerTest extends Scope
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['deploymentId']);
+        $this->assertNotEmpty($function['body']['deploymentCreatedAt']);
+        $this->assertEquals($deployment['body']['$id'], $function['body']['deploymentId']);
+        $this->assertEquals($deployment['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
+
         $function = $this->cleanupFunction($functionId);
     }
 
