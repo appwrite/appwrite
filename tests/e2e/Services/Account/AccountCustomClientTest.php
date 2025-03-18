@@ -2535,7 +2535,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
-        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
         $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 

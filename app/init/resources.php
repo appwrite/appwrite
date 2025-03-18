@@ -23,6 +23,8 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -168,7 +170,7 @@ App::setResource('clients', function ($request, $console, $project) {
     return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, Store $store) {
+App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, Store $store, Token $proofForToken) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
@@ -250,7 +252,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''))
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -291,7 +293,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken']);
 
 App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
@@ -309,13 +311,13 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Store $store) {
+App::setResource('session', function (Document $user, Store $store, Token $proofForToken) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''));
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken);
 
     if (!$sessionId) {
         return;
@@ -328,7 +330,7 @@ App::setResource('session', function (Document $user, Store $store) {
     }
 
     return;
-}, ['user', 'store']);
+}, ['user', 'store', 'proofForToken']);
 
 App::setResource('console', function () {
     return new Document(Config::getParam('console'));
@@ -862,19 +864,27 @@ App::setResource('store', function (): Store {
 });
 
 App::setResource('proofForPassword', function (): Password {
-    return new Password();
+    $hash = new Argon2();
+    $hash
+        ->setMemoryCost(2048)
+        ->setTimeCost(4)
+        ->setThreads(3);
+
+    $password = new Password();
+    $password
+        ->setHash($hash);
+
+    return $password;
 });
 
 App::setResource('proofForToken', function (): Token {
-    return new Token();
-});
-
-App::setResource('proofForTokenCode', function (): Token {
     $token = new Token();
-    $token->setLength(6);
+    $token->setHash(new Sha());
     return $token;
 });
 
 App::setResource('proofForCode', function (): Code {
-    return new Code();
+    $code = new Code();
+    $code->setHash(new Sha());
+    return $code;
 });

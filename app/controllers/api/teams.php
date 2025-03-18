@@ -624,7 +624,7 @@ App::post('/v1/teams/:teamId/memberships')
             Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         } elseif ($membership->getAttribute('confirm') === false) {
-            $membership->setAttribute('secret', Auth::hash($secret));
+            $membership->setAttribute('secret', $proofForToken->hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {

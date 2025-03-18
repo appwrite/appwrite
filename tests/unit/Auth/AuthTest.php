@@ -22,12 +22,6 @@ class AuthTest extends TestCase
         Authorization::setRole(Role::any()->toString());
     }
 
-    public function testHash(): void
-    {
-        $secret = 'secret';
-        $this->assertEquals(Auth::hash($secret), '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b');
-    }
-
     public function testSessionVerify(): void
     {
         $expireTime1 = 60 * 60 * 24;

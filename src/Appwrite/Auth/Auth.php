@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth;
 
+use Utopia\Auth\Proof;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
@@ -90,7 +92,7 @@ class Auth
      *
      * @return false|Document
      */
-    public static function tokenVerify(array $tokens, int $type = null, string $secret): false|Document
+    public static function tokenVerify(array $tokens, int $type = null, string $secret, Proof $proofForToken): false|Document
     {
         foreach ($tokens as $token) {
             if (
@@ -98,7 +100,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->isSet('type') &&
                 ($type === null ||  $token->getAttribute('type') === $type) &&
-                $token->getAttribute('secret') === self::hash($secret) &&
+                $proofForToken->verify($secret, $token->getAttribute('secret')) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $token;
@@ -117,13 +119,13 @@ class Auth
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret)
+    public static function sessionVerify(array $sessions, string $secret, Token $proofForToken)
     {
         foreach ($sessions as $session) {
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
-                $session->getAttribute('secret') === self::hash($secret) &&
+                $proofForToken->verify($secret, $session->getAttribute('secret')) &&
                 DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();

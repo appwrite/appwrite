@@ -170,7 +170,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
 
-    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
+    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret, $proofForToken);
 
     if (!$verifiedToken) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -539,14 +539,15 @@ App::get('/v1/account/sessions')
     ->inject('user')
     ->inject('locale')
     ->inject('store')
-    ->action(function (Response $response, Document $user, Locale $locale, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (Response $response, Document $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''));
+        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -593,7 +594,8 @@ App::delete('/v1/account/sessions')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('store')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -609,7 +611,7 @@ App::delete('/v1/account/sessions')
                 ->setAttribute('current', false)
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-            if ($session->getAttribute('secret') == Auth::hash($store->getProperty('secret', ''))) {
+            if ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
@@ -659,7 +661,8 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('locale')
     ->inject('store')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -667,7 +670,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -675,7 +678,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash($store->getProperty('secret', ''))))
+                    ->setAttribute('current', ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))))
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
                 ;
@@ -718,11 +721,12 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('store')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -741,7 +745,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
             $session->setAttribute('current', false);
 
-            if ($session->getAttribute('secret') == Auth::hash($store->getProperty('secret', ''))) { // If current session delete the cookies too
+            if ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
                     ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
@@ -803,10 +807,11 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store, ProofsToken $proofForToken) {
 
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
@@ -934,7 +939,7 @@ App::post('/v1/account/sessions/email')
                 'userInternalId' => $user->getInternalId(),
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
@@ -1193,7 +1198,7 @@ App::post('/v1/account/sessions/token')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
-    ->inject('proofForTokenCode')
+    ->inject('proofForToken')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -1498,7 +1503,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''));
+        $current = Auth::sessionVerify($sessions, $store->getProperty('secret', ''), $proofForToken);
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -2164,8 +2169,8 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForPassword')
-    ->inject('proofForTokenCode')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsToken $proofForTokenCode) {
+    ->inject('proofForCode')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2230,7 +2235,7 @@ App::post('/v1/account/tokens/email')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $tokenSecret = $proofForTokenCode->generate();
+        $tokenSecret = $proofForCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2238,7 +2243,7 @@ App::post('/v1/account/tokens/email')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_EMAIL,
-            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
+            'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -2402,7 +2407,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
-    ->inject('proofForTokenCode')
+    ->inject('proofForToken')
     ->action($createSession);
 
 App::put('/v1/account/sessions/phone')
@@ -2441,7 +2446,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
-    ->inject('proofForTokenCode')
+    ->inject('proofForToken')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
@@ -2689,19 +2694,15 @@ App::post('/v1/account/jwts')
     ->inject('response')
     ->inject('user')
     ->inject('store')
-    ->action(function (Response $response, Document $user, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (Response $response, Document $user, Store $store, ProofsToken $proofForToken) {
 
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = new Document();
 
-        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
-            if ($session->getAttribute('secret') == Auth::hash($store->getProperty('secret', ''))) { // If current session delete the cookies too
-                $current = $session;
-            }
-        }
+        $sessionId = Auth::sessionVerify($sessions, $store->getProperty('secret', ''), $proofForToken);
 
-        if ($current->isEmpty()) {
+        if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
@@ -2711,7 +2712,7 @@ App::post('/v1/account/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
                 'userId' => $user->getId(),
-                'sessionId' => $current->getId(),
+                'sessionId' => $sessionId,
             ])]), Response::MODEL_JWT);
     });
 
@@ -3421,7 +3422,8 @@ App::put('/v1/account/recovery')
     ->inject('queueForEvents')
     ->inject('hooks')
     ->inject('proofForPassword')
-    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3429,7 +3431,7 @@ App::put('/v1/account/recovery')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_RECOVERY, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_RECOVERY, $secret, $proofForToken);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -3680,7 +3682,8 @@ App::put('/v1/account/verification')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('proofForToken')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken) {
 
         $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
@@ -3689,7 +3692,7 @@ App::put('/v1/account/verification')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_VERIFICATION, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -3751,8 +3754,8 @@ App::post('/v1/account/verification/phone')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->inject('proofForToken')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken) {
+    ->inject('proofForCode')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3781,7 +3784,7 @@ App::post('/v1/account/verification/phone')
             }
         }
 
-        $secret ??= $proofForToken->generate();
+        $secret ??= $proofForCode->generate();
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -3789,7 +3792,7 @@ App::post('/v1/account/verification/phone')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => TOKEN_TYPE_PHONE,
-            'secret' => $proofForToken->hash($secret),
+            'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -3904,7 +3907,8 @@ App::put('/v1/account/verification/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('proofForCode')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode) {
 
         $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
@@ -3912,7 +3916,7 @@ App::put('/v1/account/verification/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $verifiedToken = Auth::tokenVerify($user->getAttribute('tokens', []), TOKEN_TYPE_PHONE, $secret);
+        $verifiedToken = Auth::tokenVerify($user->getAttribute('tokens', []), TOKEN_TYPE_PHONE, $secret, $proofForCode);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -4389,6 +4393,7 @@ App::post('/v1/account/mfa/challenge')
     ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
+        
         $code = $proofForCode->generate();
         $challenge = new Document([
             'userId' => $user->getId(),
@@ -4692,7 +4697,8 @@ App::post('/v1/account/targets/push')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('store')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Store $store) {
+    ->inject('proofForToken')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -4708,7 +4714,7 @@ App::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''));
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         try {

@@ -15,6 +15,7 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -654,10 +655,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $store->decode($message['data']['session']);
 
                 $user = $database->getDocument('users', $store->getProperty('id', ''));
+                $proofForToken = new Token();
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', '')) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');

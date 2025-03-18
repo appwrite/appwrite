@@ -19,6 +19,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -95,6 +96,7 @@ class Create extends Base
             ->inject('queueForFunctions')
             ->inject('geodb')
             ->inject('store')
+            ->inject('proofForToken')
             ->callback([$this, 'action']);
     }
 
@@ -116,7 +118,8 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
-        Store $store
+        Store $store,
+        Token $proofForToken
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -193,7 +196,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash($store->getProperty('secret', ''))) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
                     $current = $session;
                 }
             }

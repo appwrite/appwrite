@@ -977,7 +977,7 @@ App::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
-            $logLevel = $code >= 500 ? 'error' : 'warning';
+            $logLevel = $code >= 500 || $code == 0 ? 'error' : 'warning';
             $logPrefix = $code >= 500 || $code == 0 ? '[Error]' : '[Warning]';
 
             Console::$logLevel($logPrefix . ' Timestamp: ' . date('c', time()));
