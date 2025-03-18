@@ -519,8 +519,6 @@ App::init()
         */
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
-
-
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
@@ -809,7 +807,7 @@ App::error()
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
-        Console::warning('Appwrite CE Method: ' . $route->getMethod(). 'URL: ' . $route->getPath());
+
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));
 
@@ -822,7 +820,6 @@ App::error()
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
-            Console::error('[Error] Trace: ' . $error->getTraceAsString());
         }
 
         switch ($class) {

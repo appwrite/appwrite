@@ -272,7 +272,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
-App::setResource('project', function ($dbForPlatform, $request, $console) {
+App::setResource('project', function ($dbForPlatform, $request, $console, $utopia) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var Utopia\Database\Document $console */
@@ -289,6 +289,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
         var_dump([
             'projectId'       => $project->getId(),
             'projectRegion'   => $project->getAttribute('region'),
+            'params'          => 'Method: ' . $route->getMethod(). 'URL: ' . $route->getPath(),
             '_APP_REGION'     => System::getEnv('_APP_REGION'),
         ]);
 
@@ -296,7 +297,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     }
 
     return $project;
-}, ['dbForPlatform', 'request', 'console']);
+}, ['dbForPlatform', 'request', 'console', 'utopia']);
 
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
