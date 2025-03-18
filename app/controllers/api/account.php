@@ -153,7 +153,6 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->trigger();
 };
 
-
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -309,11 +308,11 @@ App::post('/v1/account')
     ->inject('response')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
-
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB, Hooks $hooks) {
         $email = \strtolower($email);
+
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
@@ -330,7 +329,9 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+            $total = $useProjectDB(fn (Database $dbForProject) =>
+                $dbForProject->count('users', max: APP_LIMIT_USERS)
+            );
 
             if ($total >= $limit) {
                 if ('console' === $project->getId()) {
@@ -341,9 +342,12 @@ App::post('/v1/account')
         }
 
         // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-        ]);
+        $identityWithMatchingEmail = $useProjectDB(fn (Database $dbForProject) =>
+            $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ])
+        );
+
         if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
@@ -354,8 +358,6 @@ App::post('/v1/account')
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
-
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
@@ -389,30 +391,36 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $useProjectDB(fn (Database $dbForProject) =>
+                $dbForProject->createDocument('users', $user)
+            ));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
-                    '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userId' => $user->getId(),
-                    'userInternalId' => $user->getInternalId(),
-                    'providerType' => MESSAGE_TYPE_EMAIL,
-                    'identifier' => $email,
-                ])));
+                $target = Authorization::skip(fn () => $useProjectDB(fn (Database $dbForProject) =>
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_EMAIL,
+                        'identifier' => $email,
+                    ]))
+                ));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
-                $existingTarget = $dbForProject->findOne('targets', [
+                $existingTarget = $useProjectDB(fn (Database $dbForProject) => $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
-                ]);
+                ]));
                 if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
 
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $useProjectDB(fn (Database $dbForProject) =>
+                $dbForProject->purgeCachedDocument('users', $user->getId())
+            );
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
