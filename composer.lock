@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ef36941f461409608974a804999f6787",
+    "content-hash": "e0d7f21b681e4591144fec16c4f0d6aa",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4375,25 +4375,26 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.5.0",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
+                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
-                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/ad64d45afda08ec8b29e2642a8d18075964d40bf",
+                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.3",
+                "utopia-php/telemetry": "0.1.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.8.*",
-                "phpunit/phpunit": "^9.3"
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "1.*",
+                "phpunit/phpunit": "11.*"
             },
             "type": "library",
             "autoload": {
@@ -4420,9 +4421,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
+                "source": "https://github.com/utopia-php/pools/tree/0.7.0"
             },
-            "time": "2024-04-19T11:11:54+00:00"
+            "time": "2025-03-18T03:55:33+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -8402,7 +8403,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
