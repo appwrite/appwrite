@@ -426,7 +426,7 @@ class V20 extends Migration
                 'period' => 'inf',
                 'value' => $value,
                 'time' => null,
-                'region' => 'fra',
+                'region' => 'default',
             ]));
         } catch (Duplicate $th) {
             Console::warning("Error while creating inf metric: duplicate id {$metric} {$id}");
