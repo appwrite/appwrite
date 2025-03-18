@@ -15,6 +15,7 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Sharding;
@@ -652,10 +653,19 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $store = new Store();
+                
                 $store->decode($message['data']['session']);
 
                 $user = $database->getDocument('users', $store->getProperty('id', ''));
+                
+                /**
+                 * TODO:
+                 * Moving forward, we should try to use our dependency injection container
+                 * to inject the proof for token.
+                 * This way we will have one source of truth for the proof for token.
+                 */
                 $proofForToken = new Token();
+                $proofForToken->setHash(new Sha());
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
