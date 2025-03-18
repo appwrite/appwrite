@@ -1153,7 +1153,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        if ($proofForToken->verify($membership->getAttribute('secret'), $secret)) {
+        if (!$proofForToken->verify($secret, $membership->getAttribute('secret'))) {
             throw new Exception(Exception::TEAM_INVALID_SECRET);
         }
 
