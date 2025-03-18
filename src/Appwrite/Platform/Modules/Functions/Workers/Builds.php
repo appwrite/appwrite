@@ -285,7 +285,8 @@ class Builds extends Action
                     $directorySize = $device->getFileSize($source);
                     $deployment
                         ->setAttribute('sourcePath', $source)
-                        ->setAttribute('sourceSize', $directorySize);
+                        ->setAttribute('sourceSize', $directorySize)
+                        ->setAttribute('totalSize', $directorySize);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
@@ -436,7 +437,8 @@ class Builds extends Action
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
-                    ->setAttribute('sourceSize', $directorySize);
+                    ->setAttribute('sourceSize', $directorySize)
+                    ->setAttribute('totalSize', $directorySize);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                 $queueForRealtime
@@ -720,6 +722,7 @@ class Builds extends Action
             $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
+            $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
 
             $logs = '';
             foreach ($response['output'] as $log) {
@@ -784,12 +787,12 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
-                        $config['sleep'] = 3000; // 3 seconds
+                        $config['sleep'] = 3000;
 
-                        // Makes tests much faster
-                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-                        if ($isDevelopment) {
-                            $config['sleep'] = 0; // Override this when running Screenshot.php task
+                        $frameworks = Config::getParam('frameworks', []);
+                        $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                        if (!is_null($framework)) {
+                            $config['sleep'] = $framework['screenshotSleep'];
                         }
 
                         $response = $client->fetch(
@@ -865,6 +868,7 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
@@ -895,6 +899,9 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
+                        $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
                         $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a7592b2898066e8fe4eecf4fe94db6ed",
+    "content-hash": "1a7016216cf6a246bc076b2e81bdeb9f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3816,16 +3816,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "5dcabbfcf99731f3a37d86b7cb1e93c968baf64b"
+                "reference": "8617ea205738743ef3363ad95791139e82ae44d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/5dcabbfcf99731f3a37d86b7cb1e93c968baf64b",
-                "reference": "5dcabbfcf99731f3a37d86b7cb1e93c968baf64b",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/8617ea205738743ef3363ad95791139e82ae44d5",
+                "reference": "8617ea205738743ef3363ad95791139e82ae44d5",
                 "shasum": ""
             },
             "require": {
@@ -3855,9 +3855,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.1.1"
+                "source": "https://github.com/utopia-php/detector/tree/0.1.2"
             },
-            "time": "2025-03-08T22:25:49+00:00"
+            "time": "2025-03-11T13:01:25+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4910,16 +4910,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.9.4",
+            "version": "0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "1a8d280b176acc99ea8d9e7364b8767cbb206b4a"
+                "reference": "6be02650cc361764900ade8c129f309df263eb74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/1a8d280b176acc99ea8d9e7364b8767cbb206b4a",
-                "reference": "1a8d280b176acc99ea8d9e7364b8767cbb206b4a",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/6be02650cc361764900ade8c129f309df263eb74",
+                "reference": "6be02650cc361764900ade8c129f309df263eb74",
                 "shasum": ""
             },
             "require": {
@@ -4937,8 +4937,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\VCS\\": "src/VCS",
-                    "Utopia\\Detector\\": "src/Detector"
+                    "Utopia\\VCS\\": "src/VCS"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4954,9 +4953,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.9.4"
+                "source": "https://github.com/utopia-php/vcs/tree/0.10.1"
             },
-            "time": "2025-03-13T10:09:45+00:00"
+            "time": "2025-03-18T11:44:09+00:00"
         },
         {
             "name": "utopia-php/websocket",
