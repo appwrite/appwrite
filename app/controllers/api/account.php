@@ -611,7 +611,7 @@ App::delete('/v1/account/sessions')
                 ->setAttribute('current', false)
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-            if ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))) {
+            if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
@@ -678,7 +678,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))))
+                    ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
                 ;
@@ -745,7 +745,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
             $session->setAttribute('current', false);
 
-            if ($proofForToken->verify($session->getAttribute('secret'), $store->getProperty('secret', ''))) { // If current session delete the cookies too
+            if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
                     ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
