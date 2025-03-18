@@ -1045,13 +1045,20 @@ class Deletes extends Action
         string $collection,
         array $queries,
         Database $database,
-        ?callable $callback = null
+        ?callable $callback = null,
+        bool $shortSelect = false
     ): void {
         $start = \microtime(true);
 
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
+
+        if (!\is_callable($callback) && $shortSelect) {
+            $queries = array_merge($queries, [
+                Query::select(['$internalId', '$id', '$permissions', '$updatedAt'])
+            ]);
+        }
 
         try {
             $documents = $database->deleteDocuments($collection, $queries);
