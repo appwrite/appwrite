@@ -77,12 +77,6 @@ class Func extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('deploymentStatus', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Active deployment status. Possible values are "waiting", "processing", "building", "waiting", "ready", and "failed".',
-                'default' => '',
-                'example' => 'ready',
-            ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Allowed permission scopes.',

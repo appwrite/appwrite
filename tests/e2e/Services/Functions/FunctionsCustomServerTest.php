@@ -496,10 +496,8 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['deploymentId']);
-        $this->assertNotEmpty($function['body']['deploymentStatus']);
         $this->assertNotEmpty($function['body']['deploymentCreatedAt']);
         $this->assertEquals($deployment['body']['$id'], $function['body']['deploymentId']);
-        $this->assertEquals($deployment['body']['status'], $function['body']['deploymentStatus']);
         $this->assertEquals($deployment['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
 
         $function = $this->cleanupFunction($functionId);

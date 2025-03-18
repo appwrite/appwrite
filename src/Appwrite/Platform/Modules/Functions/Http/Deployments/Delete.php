@@ -100,7 +100,6 @@ class Delete extends Action
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'deploymentId' => '',
                 'deploymentInternalId' => '',
-                'deploymentStatus' => '',
                 'deploymentCreatedAt' => '',
             ])));
         }
