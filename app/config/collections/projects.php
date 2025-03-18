@@ -1003,6 +1003,29 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+
+            [
+                '$id' => ID::custom('deploymentScreenshotLight'), // File ID from 'screenshots' Console bucket
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('deploymentScreenshotDark'), // File ID from 'screenshots' Console bucket
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => ID::custom('vars'),
                 'type' => Database::VAR_STRING,
