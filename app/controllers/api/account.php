@@ -4393,7 +4393,7 @@ App::post('/v1/account/mfa/challenge')
     ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
-        
+
         $code = $proofForCode->generate();
         $challenge = new Document([
             'userId' => $user->getId(),

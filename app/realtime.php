@@ -653,11 +653,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $store = new Store();
-                
+
                 $store->decode($message['data']['session']);
 
                 $user = $database->getDocument('users', $store->getProperty('id', ''));
-                
+
                 /**
                  * TODO:
                  * Moving forward, we should try to use our dependency injection container

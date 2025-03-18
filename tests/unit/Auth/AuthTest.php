@@ -4,13 +4,14 @@ namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
-use Utopia\Auth\Proofs\Token;
+
 class AuthTest extends TestCase
 {
     /**
@@ -24,10 +25,11 @@ class AuthTest extends TestCase
 
     public function testSessionVerify(): void
     {
+        $proofForToken = new Token();
         $expireTime1 = 60 * 60 * 24;
 
         $secret = 'secret1';
-        $hash = Auth::hash($secret);
+        $hash = $proofForToken->hash($secret);
         $tokens1 = [
             new Document([
                 '$id' => ID::custom('token1'),
@@ -64,8 +66,6 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $proofForToken = new Token();
-
         $this->assertEquals(Auth::sessionVerify($tokens1, $secret, $proofForToken), 'token1');
         $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret', $proofForToken), false);
         $this->assertEquals(Auth::sessionVerify($tokens2, $secret, $proofForToken), false);
@@ -74,8 +74,9 @@ class AuthTest extends TestCase
 
     public function testTokenVerify(): void
     {
+        $proofForToken = new Token();
         $secret = 'secret1';
-        $hash = Auth::hash($secret);
+        $hash = $proofForToken->hash($secret);
         $tokens1 = [
             new Document([
                 '$id' => ID::custom('token1'),
@@ -121,13 +122,13 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, $secret), $tokens1[0]);
-        $this->assertEquals(Auth::tokenVerify($tokens1, null, $secret), $tokens1[0]);
-        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, $secret, $proofForToken), $tokens1[0]);
+        $this->assertEquals(Auth::tokenVerify($tokens1, null, $secret, $proofForToken), $tokens1[0]);
+        $this->assertEquals(Auth::tokenVerify($tokens1, TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
     }
 
     public function testIsPrivilegedUser(): void
