@@ -153,13 +153,13 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->trigger();
 };
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, callable $useProjectDB, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
 
     /** @var Utopia\Database\Document $user */
-    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $userId)));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -207,15 +207,15 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     Authorization::setRole(Role::user($user->getId())->toString());
 
-    $session = $dbForProject->createDocument('sessions', $session
+    $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('sessions', $session
         ->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
-        ]));
+        ])));
 
-    Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
-    $dbForProject->purgeCachedDocument('users', $user->getId());
+    Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('tokens', $verifiedToken->getId())));
+    $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
     // Magic URL + Email OTP
     if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
@@ -227,7 +227,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     try {
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
     } catch (\Throwable $th) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
@@ -242,9 +242,9 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
 
-    $isNotFirstSession = $dbForProject->count('sessions', [
+    $isNotFirstSession = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('sessions', [
         Query::equal('userId', [$user->getId()]),
-    ]) !== 1;
+    ])) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
         sendSessionAlert($locale, $user, $project, $session, $queueForMails);
@@ -309,8 +309,7 @@ App::post('/v1/account')
     ->inject('user')
     ->inject('project')
     ->inject('useProjectDB')
-    ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB) {
         $email = \strtolower($email);
 
         if ('console' === $project->getId()) {
@@ -488,10 +487,10 @@ App::delete('/v1/account')
     ->inject('user')
     ->inject('project')
     ->inject('response')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Document $user, Document $project, Response $response, callable $useProjectDB, Event $queueForEvents, Delete $queueForDeletes) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -507,7 +506,7 @@ App::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('users', $user->getId()));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -590,17 +589,17 @@ App::delete('/v1/account/sessions')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Request $request, Response $response, Document $user, callable $useProjectDB, Locale $locale, Event $queueForEvents, Delete $queueForDeletes) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {/** @var Document $session */
-            $dbForProject->deleteDocument('sessions', $session->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('sessions', $session->getId()));
 
             if (!Config::getParam('domainVerification')) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -629,7 +628,7 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -714,12 +713,12 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('project')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Document $project) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, callable $useProjectDB, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Document $project) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -734,9 +733,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 continue;
             }
 
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
                 return $dbForProject->deleteDocument('sessions', $session->getId());
-            });
+            }));
 
             unset($sessions[$key]);
 
@@ -756,7 +755,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
             }
 
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
@@ -800,10 +799,10 @@ App::patch('/v1/account/sessions/:sessionId')
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->action(function (?string $sessionId, Response $response, Document $user, callable $useProjectDB, Document $project, Event $queueForEvents) {
 
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -845,8 +844,8 @@ App::patch('/v1/account/sessions/:sessionId')
         }
 
         // Save changes
-        $dbForProject->updateDocument('sessions', $sessionId, $session);
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('sessions', $sessionId, $session));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -887,20 +886,19 @@ App::post('/v1/account/sessions/email')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->inject('hooks')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, callable $useProjectDB, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
-        $profile = $dbForProject->findOne('users', [
+        $profile = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [
             Query::equal('email', [$email]),
-        ]);
+        ]));
 
         if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -915,8 +913,6 @@ App::post('/v1/account/sessions/email')
         $isAppUser = Auth::isAppUser($roles);
 
         $user->setAttributes($profile->getArrayCopy());
-
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -949,16 +945,16 @@ App::post('/v1/account/sessions/email')
                 ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
-            $dbForProject->updateDocument('users', $user->getId(), $user);
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
-        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+        $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
-        ]));
+        ])));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -988,9 +984,9 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            if ($dbForProject->count('sessions', [
+            if ($useProjectDB(fn(Database $dbForProject) => $dbForProject->count('sessions', [
                 Query::equal('userId', [$user->getId()]),
-            ]) !== 1) {
+            ])) !== 1) {
                 sendSessionAlert($locale, $user, $project, $session, $queueForMails);
             }
         }
@@ -1027,10 +1023,10 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('locale')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, callable $useProjectDB, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1043,7 +1039,7 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+            $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('users', max: APP_LIMIT_USERS));
 
             if ($total >= $limit) {
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
@@ -1078,7 +1074,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$internalId');
-        Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('users', $user)));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1106,13 +1102,13 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
+        $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
-        ]));
+        ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1170,7 +1166,7 @@ App::post('/v1/account/sessions/token')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
@@ -1337,10 +1333,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, callable $useProjectDB, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1457,18 +1453,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            $identityWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getInternalId()),
-            ]);
+            ]));
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
 
-            $userWithMatchingEmail = $dbForProject->find('users', [
+            $userWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->find('users', [
                 Query::equal('email', [$email]),
                 Query::notEqual('$id', $userId),
-            ]);
+            ]));
             if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
@@ -1480,20 +1476,20 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if ($current) { // Delete current session of new one.
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            $currentDocument = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('sessions', $current));
             if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
+                $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('sessions', $currentDocument->getId()));
+                $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
             }
         }
 
         if ($user->isEmpty()) {
-            $session = $dbForProject->findOne('sessions', [ // Get user by provider id
+            $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('sessions', [ // Get user by provider id
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
-            ]);
+            ]));
             if (!$session->isEmpty()) {
-                $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
+                $user->setAttributes($useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy()));
             }
         }
 
@@ -1507,22 +1503,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $userWithEmail = $dbForProject->findOne('users', [
+            $userWithEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [
                 Query::equal('email', [$email]),
-            ]);
+            ]));
             if (!$userWithEmail->isEmpty()) {
                 $user->setAttributes($userWithEmail->getArrayCopy());
             }
 
             // If user is not found, check if there is an identity with the same provider user ID
             if ($user === false || $user->isEmpty()) {
-                $identity = $dbForProject->findOne('identities', [
+                $identity = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
                     Query::equal('provider', [$provider]),
                     Query::equal('providerUid', [$oauth2ID]),
-                ]);
+                ]));
 
                 if (!$identity->isEmpty()) {
-                    $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                    $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $identity->getAttribute('userId')));
                 }
             }
 
@@ -1530,7 +1526,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+                    $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('users', max: APP_LIMIT_USERS));
 
                     if ($total >= $limit) {
                         $failureRedirect(Exception::USER_COUNT_EXCEEDED);
@@ -1538,9 +1534,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 // Makes sure this email is not already used in another identity
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                $identityWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$email]),
-                ]);
+                ]));
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
@@ -1574,8 +1570,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
-                    $dbForProject->createDocument('targets', new Document([
+                    $userDoc = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('users', $user)));
+                    $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
@@ -1585,7 +1581,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'userInternalId' => $userDoc->getInternalId(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
-                    ]));
+                    ])));
 
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -1600,24 +1596,24 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $identity = $dbForProject->findOne('identities', [
+        $identity = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getInternalId()]),
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
-        ]);
+        ]));
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
 
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+            $identitiesWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->find('identities', [
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getInternalId()),
-            ]);
+            ]));
             if (!empty($identitiesWithMatchingEmail)) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
-            $dbForProject->createDocument('identities', new Document([
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('identities', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -1632,13 +1628,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-            ]));
+            ])));
         } else {
             $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
                 ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
-            $dbForProject->updateDocument('identities', $identity->getId(), $identity);
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('identities', $identity->getId(), $identity));
         }
 
         if (empty($user->getAttribute('email'))) {
@@ -1651,7 +1647,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
@@ -1677,12 +1673,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             Authorization::setRole(Role::user($user->getId())->toString());
 
-            $token = $dbForProject->createDocument('tokens', $token
+            $token = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $token
                 ->setAttribute('$permissions', [
                     Permission::read(Role::user($user->getId())),
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
-                ]));
+                ])));
 
             $queueForEvents
                 ->setEvent('users.[userId].tokens.[tokenId].create')
@@ -1716,11 +1712,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-            $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+            $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
             $session->setAttribute('expire', $expire);
 
@@ -1757,11 +1753,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ->setAttribute('sessionId', $session->getId())
                     ->setAttribute('sessionInternalId', $session->getInternalId());
 
-                $dbForProject->updateDocument('targets', $target->getId(), $target);
+                $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('targets', $target->getId(), $target));
             }
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
@@ -1883,11 +1879,11 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('response')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1901,14 +1897,14 @@ App::post('/v1/account/tokens/magic-url')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
+        $result = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [Query::equal('email', [$email])]));
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+                $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('users', max: APP_LIMIT_USERS));
 
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
@@ -1916,9 +1912,9 @@ App::post('/v1/account/tokens/magic-url')
             }
 
             // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            $identityWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-            ]);
+            ]));
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
@@ -1952,7 +1948,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('users', $user)));
         }
 
         $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
@@ -1971,14 +1967,14 @@ App::post('/v1/account/tokens/magic-url')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         if (empty($url)) {
             $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
@@ -2131,11 +2127,11 @@ App::post('/v1/account/tokens/email')
     ->inject('response')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2148,14 +2144,14 @@ App::post('/v1/account/tokens/email')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
+        $result = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [Query::equal('email', [$email])]));
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+                $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('users', max: APP_LIMIT_USERS));
 
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
@@ -2163,9 +2159,9 @@ App::post('/v1/account/tokens/email')
             }
 
             // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            $identityWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-            ]);
+            ]));
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
@@ -2197,7 +2193,7 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('users', $user)));
         }
 
         $tokenSecret = Auth::codeGenerator(6);
@@ -2216,14 +2212,14 @@ App::post('/v1/account/tokens/email')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $subject = $locale->getText("emails.otpSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
@@ -2365,7 +2361,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
@@ -2402,7 +2398,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
@@ -2440,14 +2436,14 @@ App::post('/v1/account/tokens/phone')
     ->inject('response')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, callable $useProjectDB, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2456,14 +2452,14 @@ App::post('/v1/account/tokens/phone')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
+        $result = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [Query::equal('phone', [$phone])]));
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+                $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('users', max: APP_LIMIT_USERS));
 
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
@@ -2496,9 +2492,9 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('users', $user)));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2508,15 +2504,15 @@ App::post('/v1/account/tokens/phone')
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
-                ])));
+                ]))));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
-                $existingTarget = $dbForProject->findOne('targets', [
+                $existingTarget = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
-                ]);
+                ]));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
             }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
         }
 
         $secret = null;
@@ -2546,14 +2542,14 @@ App::post('/v1/account/tokens/phone')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
@@ -2644,8 +2640,8 @@ App::post('/v1/account/jwts')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
-    ->action(function (Response $response, Document $user, Database $dbForProject) {
+    ->inject('useProjectDB')
+    ->action(function (Response $response, Document $user, callable $useProjectDB) {
 
 
         $sessions = $user->getAttribute('sessions', []);
@@ -2719,8 +2715,8 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->inject('useProjectDB')
+    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, callable $useProjectDB) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2734,9 +2730,14 @@ App::get('/v1/account/logs')
             Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
         ]);
 
-        $audit = new EventAudit($dbForProject);
+        $logs = [];
+        $total = 0;
 
-        $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+        $useProjectDB(function(Database $dbForProject) use ($user, $queries, &$logs, &$total) {
+            $audit = new EventAudit($dbForProject);
+            $logs = $audit->getLogsByUser($user->getInternalId(), $queries);
+            $total = $audit->countLogsByUser($user->getInternalId(), $queries);
+        });
 
         $output = [];
 
@@ -2765,7 +2766,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId(), $queries),
+            'total' => $total,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2794,13 +2795,13 @@ App::patch('/v1/account/name')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2835,10 +2836,9 @@ App::patch('/v1/account/password')
     ->inject('response')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->inject('hooks')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, callable $useProjectDB, Event $queueForEvents) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -2865,8 +2865,6 @@ App::patch('/v1/account/password')
             }
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
-
         $user
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
@@ -2874,7 +2872,7 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2906,11 +2904,10 @@ App::patch('/v1/account/email')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
     ->inject('project')
-    ->inject('hooks')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents, Document $project) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2921,17 +2918,15 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
-
         $oldEmail = $user->getAttribute('email');
 
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+        $identityWithMatchingEmail = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
             Query::notEqual('userInternalId', $user->getInternalId()),
-        ]);
+        ]));
         if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
@@ -2949,25 +2944,25 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
-        ]));
+        ])));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
             /**
              * @var Document $oldTarget
              */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email))));
             }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
         } catch (Duplicate) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
@@ -3002,11 +2997,10 @@ App::patch('/v1/account/phone')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
     ->inject('project')
-    ->inject('hooks')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents, Document $project) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3017,11 +3011,9 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
-
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
-        ]));
+        ])));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -3043,16 +3035,16 @@ App::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
             /**
              * @var Document $oldTarget
              */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone))));
             }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -3086,13 +3078,13 @@ App::patch('/v1/account/prefs')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $user->setAttribute('prefs', $prefs);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3123,13 +3115,13 @@ App::patch('/v1/account/status')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $user->setAttribute('status', false);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3176,12 +3168,12 @@ App::post('/v1/account/recovery')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, callable $useProjectDB, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3194,9 +3186,9 @@ App::post('/v1/account/recovery')
 
         $email = \strtolower($email);
 
-        $profile = $dbForProject->findOne('users', [
+        $profile = $useProjectDB(fn(Database $dbForProject) => $dbForProject->findOne('users', [
             Query::equal('email', [$email]),
-        ]);
+        ]));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3224,14 +3216,14 @@ App::post('/v1/account/recovery')
 
         Authorization::setRole(Role::user($profile->getId())->toString());
 
-        $recovery = $dbForProject->createDocument('tokens', $recovery
+        $recovery = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($profile->getId())),
                 Permission::update(Role::user($profile->getId())),
                 Permission::delete(Role::user($profile->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $profile->getId()));
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -3362,12 +3354,11 @@ App::put('/v1/account/recovery')
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('project')
     ->inject('queueForEvents')
-    ->inject('hooks')
-    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks) {
-        $profile = $dbForProject->getDocument('users', $userId);
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, callable $useProjectDB, Document $project, Event $queueForEvents) {
+        $profile = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3396,26 +3387,27 @@ App::put('/v1/account/recovery')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
-
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
+        $profile = $useProjectDB(fn(Database $dbForProject) =>
+            $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('passwordHistory', $history)
                 ->setAttribute('passwordUpdate', DateTime::now())
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('emailVerification', true));
+                ->setAttribute('emailVerification', true)
+            )
+        );
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $recoveryDocument = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('tokens', $verifiedToken->getId()));
 
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $profile->getId()));
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -3452,11 +3444,11 @@ App::post('/v1/account/verification')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, callable $useProjectDB, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3486,14 +3478,14 @@ App::post('/v1/account/verification')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
+        $verification = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
@@ -3622,11 +3614,11 @@ App::put('/v1/account/verification')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $secret, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $userId)));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3641,18 +3633,18 @@ App::put('/v1/account/verification')
 
         Authorization::setRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
+        $profile = $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true)));
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $verification = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $verification = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('tokens', $verifiedToken->getId()));
 
         /**
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $profile->getId()));
 
         $queueForEvents
             ->setParam('userId', $userId)
@@ -3687,7 +3679,7 @@ App::post('/v1/account/verification/phone')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('project')
@@ -3695,7 +3687,7 @@ App::post('/v1/account/verification/phone')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (Request $request, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3740,14 +3732,14 @@ App::post('/v1/account/verification/phone')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
+        $verification = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
-            ]));
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
@@ -3845,11 +3837,11 @@ App::put('/v1/account/verification/phone')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $secret, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('users', $userId)));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3863,17 +3855,17 @@ App::put('/v1/account/verification/phone')
 
         Authorization::setRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
+        $profile = $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true)));
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $verificationDocument = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('tokens', $verifiedToken->getId()));
 
         /**
          * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $profile->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3909,13 +3901,13 @@ App::patch('/v1/account/mfa')
     ->inject('response')
     ->inject('user')
     ->inject('session')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $session, callable $useProjectDB, Event $queueForEvents) {
 
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $user = $useProjectDB(fn(Database $dbForProject) => $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user)));
 
         if ($mfa) {
             $factors = $session->getAttribute('factors', []);
@@ -3932,7 +3924,7 @@ App::patch('/v1/account/mfa')
             $factors = \array_unique($factors);
 
             $session->setAttribute('factors', $factors);
-            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('sessions', $session->getId(), $session));
         }
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -4002,9 +3994,9 @@ App::post('/v1/account/mfa/authenticators/:type')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $otp = (match ($type) {
             Type::TOTP => new TOTP(),
@@ -4020,7 +4012,7 @@ App::post('/v1/account/mfa/authenticators/:type')
             if ($authenticator->getAttribute('verified')) {
                 throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
             }
-            $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+            $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('authenticators', $authenticator->getId()));
         }
 
         $authenticator = new Document([
@@ -4044,8 +4036,8 @@ App::post('/v1/account/mfa/authenticators/:type')
             'uri' => $otp->getProvisioningUri()
         ]);
 
-        $authenticator = $dbForProject->createDocument('authenticators', $authenticator);
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $authenticator = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('authenticators', $authenticator));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4078,9 +4070,9 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->inject('response')
     ->inject('user')
     ->inject('session')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, callable $useProjectDB, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -4106,15 +4098,15 @@ App::put('/v1/account/mfa/authenticators/:type')
 
         $authenticator->setAttribute('verified', true);
 
-        $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
         $factors = \array_unique($factors);
 
         $session->setAttribute('factors', $factors);
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('sessions', $session->getId(), $session));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4144,9 +4136,9 @@ App::post('/v1/account/mfa/recovery-codes')
     ))
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
 
@@ -4156,7 +4148,7 @@ App::post('/v1/account/mfa/recovery-codes')
 
         $mfaRecoveryCodes = Type::generateBackupCodes();
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4188,11 +4180,11 @@ App::patch('/v1/account/mfa/recovery-codes')
         ],
         contentType: ContentType::JSON
     ))
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('response')
     ->inject('user')
     ->inject('queueForEvents')
-    ->action(function (Database $dbForProject, Response $response, Document $user, Event $queueForEvents) {
+    ->action(function (callable $useProjectDB, Response $response, Document $user, Event $queueForEvents) {
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
         if (empty($mfaRecoveryCodes)) {
@@ -4201,7 +4193,7 @@ App::patch('/v1/account/mfa/recovery-codes')
 
         $mfaRecoveryCodes = Type::generateBackupCodes();
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4270,9 +4262,9 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $type, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, Response $response, Document $user, callable $useProjectDB, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -4283,8 +4275,8 @@ App::delete('/v1/account/mfa/authenticators/:type')
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('authenticators', $authenticator->getId()));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4316,7 +4308,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
     ->inject('response')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('user')
     ->inject('locale')
     ->inject('project')
@@ -4327,7 +4319,7 @@ App::post('/v1/account/mfa/challenge')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
+    ->action(function (string $factor, Response $response, callable $useProjectDB, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -4345,7 +4337,7 @@ App::post('/v1/account/mfa/challenge')
             ],
         ]);
 
-        $challenge = $dbForProject->createDocument('challenges', $challenge);
+        $challenge = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('challenges', $challenge));
 
         switch ($factor) {
             case Type::PHONE:
@@ -4539,11 +4531,11 @@ App::put('/v1/account/mfa/challenge')
     ->inject('response')
     ->inject('user')
     ->inject('session')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Document $session, callable $useProjectDB, Event $queueForEvents) {
 
-        $challenge = $dbForProject->getDocument('challenges', $challengeId);
+        $challenge = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('challenges', $challengeId));
 
         if ($challenge->isEmpty()) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -4551,7 +4543,7 @@ App::put('/v1/account/mfa/challenge')
 
         $type = $challenge->getAttribute('type');
 
-        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
+        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($useProjectDB) {
             if (
                 $challenge->isSet('type') &&
                 $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
@@ -4561,7 +4553,7 @@ App::put('/v1/account/mfa/challenge')
                     $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
                     $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                    $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('users', $user->getId(), $user));
 
                     return true;
                 }
@@ -4584,8 +4576,8 @@ App::put('/v1/account/mfa/challenge')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $dbForProject->deleteDocument('challenges', $challengeId);
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('challenges', $challengeId));
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = $type;
@@ -4595,7 +4587,7 @@ App::put('/v1/account/mfa/challenge')
             ->setAttribute('factors', $factors)
             ->setAttribute('mfaUpdatedAt', DateTime::now());
 
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('sessions', $session->getId(), $session));
 
         $queueForEvents
                     ->setParam('userId', $user->getId())
@@ -4631,13 +4623,13 @@ App::post('/v1/account/targets/push')
     ->inject('user')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('useProjectDB')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, callable $useProjectDB) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+        $provider = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('providers', $providerId)));
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('targets', $targetId)));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4649,10 +4641,10 @@ App::post('/v1/account/targets/push')
         $device = $detector->getDevice();
 
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $session = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('sessions', $sessionId));
 
         try {
-            $target = $dbForProject->createDocument('targets', new Document([
+            $target = $useProjectDB(fn(Database $dbForProject) => $dbForProject->createDocument('targets', new Document([
                 '$id' => $targetId,
                 '$permissions' => [
                     Permission::read(Role::user($user->getId())),
@@ -4668,12 +4660,12 @@ App::post('/v1/account/targets/push')
                 'sessionInternalId' => $session->getInternalId(),
                 'identifier' => $identifier,
                 'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
+            ])));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -4710,10 +4702,10 @@ App::put('/v1/account/targets/:targetId/push')
     ->inject('user')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('useProjectDB')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, callable $useProjectDB) {
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('targets', $targetId)));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4736,9 +4728,9 @@ App::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $target = $useProjectDB(fn(Database $dbForProject) => $dbForProject->updateDocument('targets', $target->getId(), $target));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -4774,9 +4766,9 @@ App::delete('/v1/account/targets/:targetId/push')
     ->inject('user')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+    ->inject('useProjectDB')
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, callable $useProjectDB) {
+        $target = Authorization::skip(fn () => $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('targets', $targetId)));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4786,9 +4778,9 @@ App::delete('/v1/account/targets/:targetId/push')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('targets', $target->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('targets', $target->getId()));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->purgeCachedDocument('users', $user->getId()));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_TARGET)
@@ -4821,8 +4813,8 @@ App::get('/v1/account/identities')
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Database $dbForProject) {
+    ->inject('useProjectDB')
+    ->action(function (array $queries, Response $response, Document $user, callable $useProjectDB) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -4848,7 +4840,7 @@ App::get('/v1/account/identities')
             }
 
             $identityId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('identities', $identityId);
+            $cursorDocument = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('identities', $identityId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Identity '{$identityId}' for the 'cursor' value not found.");
@@ -4859,8 +4851,8 @@ App::get('/v1/account/identities')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $results = $dbForProject->find('identities', $queries);
-        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        $results = $useProjectDB(fn(Database $dbForProject) => $dbForProject->find('identities', $queries));
+        $total = $useProjectDB(fn(Database $dbForProject) => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT));
 
         $response->dynamic(new Document([
             'identities' => $results,
@@ -4891,17 +4883,17 @@ App::delete('/v1/account/identities/:identityId')
     ))
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
-    ->inject('dbForProject')
+    ->inject('useProjectDB')
     ->inject('queueForEvents')
-    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $identityId, Response $response, callable $useProjectDB, Event $queueForEvents) {
 
-        $identity = $dbForProject->getDocument('identities', $identityId);
+        $identity = $useProjectDB(fn(Database $dbForProject) => $dbForProject->getDocument('identities', $identityId));
 
         if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('identities', $identityId);
+        $useProjectDB(fn(Database $dbForProject) => $dbForProject->deleteDocument('identities', $identityId));
 
         $queueForEvents
             ->setParam('userId', $identity->getAttribute('userId'))
