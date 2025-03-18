@@ -183,7 +183,13 @@ App::post('/v1/functions')
     ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
-        Config::getParam('runtime-specifications', []),
+        Config::getParam('runtime-specifications', [
+            APP_FUNCTION_SPECIFICATION_DEFAULT => [
+                'slug ' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+                'memory' => APP_FUNCTION_MEMORY_DEFAULT,
+                'cpus' => APP_FUNCTION_CPUS_DEFAULT
+            ]
+        ]),
         App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
         App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
@@ -857,7 +863,13 @@ App::put('/v1/functions/:functionId')
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
-        Config::getParam('runtime-specifications', []),
+        Config::getParam('runtime-specifications', [
+            APP_FUNCTION_SPECIFICATION_DEFAULT => [
+                'slug ' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+                'memory' => APP_FUNCTION_MEMORY_DEFAULT,
+                'cpus' => APP_FUNCTION_CPUS_DEFAULT
+            ]
+        ]),
         App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
         App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
@@ -967,8 +979,6 @@ App::put('/v1/functions/:functionId')
         ) {
             $live = false;
         }
-
-        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
 
         // Enforce Cold Start if spec limits change.
         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
@@ -1883,11 +1893,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('user')
+    ->inject('specifications')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForPlatform, Document $user, array $specifications, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1928,7 +1939,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = $specifications[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 

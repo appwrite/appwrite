@@ -52,10 +52,11 @@ class Functions extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked));
+            ->inject('specifications')
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked, $specifications) => $this->action($project, $message, $dbForProject, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $log, $isResourceBlocked, $specifications));
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
+    public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked, array $specifications): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -153,6 +154,7 @@ class Functions extends Action
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
                             'content-type' => 'application/json'
                         ],
+                        specifications: $specifications,
                         data: null,
                         user: $user,
                         jwt: null,
@@ -192,6 +194,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    specifications: $specifications,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -216,6 +219,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    specifications: $specifications,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -302,6 +306,7 @@ class Functions extends Action
      * @param string $path
      * @param string $method
      * @param array $headers
+     * @param array $specifications
      * @param string|null $data
      * @param Document|null $user
      * @param string|null $jwt
@@ -328,6 +333,7 @@ class Functions extends Action
         string $path,
         string $method,
         array $headers,
+        array $specifications,
         string $data = null,
         ?Document $user = null,
         string $jwt = null,
@@ -338,7 +344,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = $specifications[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
 

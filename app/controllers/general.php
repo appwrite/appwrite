@@ -50,7 +50,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, array $specifications)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -185,7 +185,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = $specifications[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -505,7 +505,8 @@ App::init()
     ->inject('queueForFunctions')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname) {
+    ->inject('specifications')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname, array $specifications) {
         /*
         * Appwrite Router
         */
@@ -513,7 +514,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname, $specifications)) {
                 return;
             }
         }
