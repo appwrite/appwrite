@@ -211,6 +211,11 @@ class Builds extends Action
         $deployment->setAttribute('status', 'processing');
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
+        if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+        }
+
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
             ->trigger();
@@ -451,6 +456,11 @@ class Builds extends Action
             /** Request the executor to build the code... */
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            }
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -731,6 +741,11 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            }
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1016,6 +1031,11 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $message);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            }
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())

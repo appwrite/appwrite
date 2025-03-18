@@ -161,6 +161,13 @@ class Create extends Base
             'activate' => $activate,
         ]));
 
+        $site = $site
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('sites', $site->getId(), $site);
+
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
 
