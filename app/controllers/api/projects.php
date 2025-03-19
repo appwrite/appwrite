@@ -307,7 +307,7 @@ App::get('/v1/projects')
             )
         ]
     ))
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {"method":"equal", "attribute":"<attribute>", "values":[]}. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')

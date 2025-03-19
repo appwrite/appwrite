@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.6.1",
+        "version": "1.6.2",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -279,7 +279,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, provider, providerUid, providerEmail, providerAccessTokenExpiry",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, provider, providerUid, providerEmail, providerAccessTokenExpiry",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -447,7 +447,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -4348,7 +4348,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -4548,7 +4548,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -4803,7 +4803,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: trigger, status, responseStatusCode, duration, requestMethod, requestPath, deploymentId",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: trigger, status, responseStatusCode, duration, requestMethod, requestPath, deploymentId",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -5741,7 +5741,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, signature, mimeType, sizeOriginal, chunksTotal, chunksUploaded",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, signature, mimeType, sizeOriginal, chunksTotal, chunksUploaded",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -6493,7 +6493,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, total, billingPlan",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, total, billingPlan",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -6859,7 +6859,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, teamId, invited, joined, confirm",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, teamId, invited, joined, confirm",
                         "required": false,
                         "schema": {
                             "type": "array",
