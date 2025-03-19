@@ -4525,7 +4525,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. Available query methods: equal, notEqual, lessThan, lessThanEqual, greaterThan, greaterThanEqual, contains, between, search, select, orderDesc, orderAsc, isNull, isNotNull, startsWith, endsWith, limit, offset. Available query methods: equal, notEqual, lessThan, lessThanEqual, greaterThan, greaterThanEqual, contains, between, search, select, orderDesc, orderAsc, isNull, isNotNull, startsWith, endsWith, limit, offset. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. Query strings are in form of JSON strings like: {\"method\":\"equal\", \"attribute\":\"<attribute>\", \"values\":[]}. Available query methods: equal, notEqual, lessThan, lessThanEqual, greaterThan, greaterThanEqual, contains, between, search, select, orderDesc, orderAsc, isNull, isNotNull, startsWith, endsWith, limit, offset. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
