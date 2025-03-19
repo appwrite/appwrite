@@ -2079,7 +2079,7 @@ App::post('/v1/functions/:functionId/executions')
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getInternalId(),
