@@ -3512,12 +3512,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "dfdf614644237700e41935b51da7e39f6848a6e7"
+                "reference": "19fb580de44fac5928f9c0211fd0fdfd5022efdb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/dfdf614644237700e41935b51da7e39f6848a6e7",
-                "reference": "dfdf614644237700e41935b51da7e39f6848a6e7",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/19fb580de44fac5928f9c0211fd0fdfd5022efdb",
+                "reference": "19fb580de44fac5928f9c0211fd0fdfd5022efdb",
                 "shasum": ""
             },
             "require": {
@@ -3559,7 +3559,7 @@
                 "issues": "https://github.com/utopia-php/auth/issues",
                 "source": "https://github.com/utopia-php/auth/tree/dev"
             },
-            "time": "2025-03-18T19:34:43+00:00"
+            "time": "2025-03-19T06:47:02+00:00"
         },
         {
             "name": "utopia-php/cache",
