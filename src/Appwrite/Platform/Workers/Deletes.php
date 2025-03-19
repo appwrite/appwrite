@@ -357,21 +357,23 @@ class Deletes extends Action
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
         );
 
-        $query[] = Query::equal('resource', [$resource]);
+        $queries = [
+            Query::equal('resource', [$resource])
+        ];
 
         if (!empty($resourceType)) {
-            $query[] = Query::equal('resourceType', [$resourceType]);
+            $queries[] = Query::equal('resourceType', [$resourceType]);
         }
 
-        $query[] = Query::orderAsc();
+        $queries[] = Query::orderAsc();
 
         /**
-         * todo: missing index on `resource`, `resourceType`
+         * todo: No index on `resource`, `resourceType`, But it is fine since resource index is a strong index!
          */
 
         $this->deleteByGroup(
             'cache',
-            $query,
+            $queries,
             $dbForProject,
             function (Document $document) use ($cache, $projectId) {
                 $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
@@ -719,7 +721,7 @@ class Deletes extends Action
 
         // Delete identities
         /**
-         * todo: Remove Duplication index `_key_userInternalId`
+         * todo: Remove Duplication index `_key_userInternalId` , But lets leave because of index length issue in unique index
          */
         $this->deleteByGroup('identities', [
             Query::equal('userInternalId', [$userInternalId]),
@@ -836,13 +838,13 @@ class Deletes extends Action
 
         /**
          * Delete rules
-         * todo: No index for this query
+         * todo: No index for this query, drop _key_projectInternalId and create _key_projectInternalId, resourceInternalId, resourceType
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['function']),
             Query::orderAsc()
         ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
@@ -850,12 +852,12 @@ class Deletes extends Action
 
         /**
          * Delete Variables
-         * todo: No index for this query
+         * todo: No index for this query , drop _key_resourceInternalId and create new one with {resourceInternalId, resourceType}
          */
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
-            Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['function']),
             Query::orderAsc()
         ], $dbForProject);
 
