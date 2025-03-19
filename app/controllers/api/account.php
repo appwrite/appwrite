@@ -383,7 +383,7 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => $hash,
-                'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
+                'passwordHistory' => $passwordHistory > 0 ? [$hash] : [],
                 'passwordUpdate' => DateTime::now(),
                 'hash' => $proof->getHash()->getName(),
                 'hashOptions' => $proof->getHash()->getOptions(),
@@ -2894,9 +2894,11 @@ App::patch('/v1/account/password')
 
         $newPassword = $proofForPassword->hash($password);
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $hash = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         $history = $user->getAttribute('passwordHistory', []);
+
         if ($historyLimit > 0) {
-            $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            $validator = new PasswordHistory($history, $hash);
             if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
@@ -3441,10 +3443,12 @@ App::put('/v1/account/recovery')
 
         $newPassword = $proofForPassword->hash($password);
 
+        $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $profile->getAttribute('passwordHistory', []);
+        
         if ($historyLimit > 0) {
-            $validator = new PasswordHistory($history, $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+            $validator = new PasswordHistory($history, $hash);
             if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
