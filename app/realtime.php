@@ -15,10 +15,12 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Cache\Adapter as CacheAdapter;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter as DatabaseAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,100 +43,79 @@ require_once __DIR__ . '/init.php';
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Allows overriding
-if (!function_exists('getConsoleDB')) {
-    function getConsoleDB(): Database
+if (!function_exists('useConsoleDB')) {
+    function useConsoleDB(): callable
     {
         global $register;
 
         /** @var \Utopia\Pools\Group $pools */
         $pools = $register->get('pools');
 
-        $dbAdapter = $pools
-            ->get('console')
-            ->pop()
-            ->getResource()
-        ;
+        return function (callable $callback) use ($pools): mixed {
+            return $pools->use(
+                ['console', ...Config::getParam('pools-cache')],
+                function (DatabaseAdapter $adapter, CacheAdapter ...$cacheAdapters) use ($callback) {
+                    $database = new Database($adapter, new Cache(new Sharding($cacheAdapters)));
+                    $database
+                        ->setNamespace('_console')
+                        ->setMetadata('host', \gethostname())
+                        ->setMetadata('project', '_console');
 
-        $database = new Database($dbAdapter, getCache());
-
-        $database
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
-
-        return $database;
+                    return $callback($database);
+                }
+            );
+        };
     }
 }
 
 // Allows overriding
-if (!function_exists('getProjectDB')) {
-    function getProjectDB(Document $project): Database
+if (!function_exists('useProjectDB')) {
+    function useProjectDB(Document $project): callable
     {
-        global $register;
-
-        /** @var \Utopia\Pools\Group $pools */
-        $pools = $register->get('pools');
-
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return getConsoleDB();
+            return useConsoleDB();
         }
 
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($adapter, getCache());
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $database
-                ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
-        }
-
-        $database
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-
-        return $database;
-    }
-}
-
-// Allows overriding
-if (!function_exists('getCache')) {
-    function getCache(): Cache
-    {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-        $list = Config::getParam('pools-cache', []);
-        $adapters = [];
+        return function (callable $callback) use ($pools, $project) {
+            try {
+                $dsn = new DSN($project->getAttribute('database'));
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            }
 
-        foreach ($list as $value) {
-            $adapters[] = $pools
-                ->get($value)
-                ->pop()
-                ->getResource()
-            ;
-        }
+            return $pools->use(
+                [$dsn->getHost(), ...Config::getParam('pools-cache')],
+                function (DatabaseAdapter $adapter, CacheAdapter ...$cacheAdapters) use ($callback, $project, $dsn) {
+                    $database = new Database($adapter, new Cache(new Sharding($cacheAdapters)));
 
-        return new Cache(new Sharding($adapters));
+                    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+                    if (\in_array($dsn->getHost(), $sharedTables)) {
+                        $database
+                            ->setSharedTables(true)
+                            ->setTenant($project->getInternalId())
+                            ->setNamespace($dsn->getParam('namespace'));
+                    } else {
+                        $database
+                            ->setSharedTables(false)
+                            ->setTenant(null)
+                            ->setNamespace('_' . $project->getInternalId());
+                    }
+
+                    $database
+                        ->setMetadata('host', \gethostname())
+                        ->setMetadata('project', $project->getId());
+
+                    return $callback($database);
+                }
+            );
+        };
     }
 }
 
@@ -252,7 +233,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
-        $database = getConsoleDB();
 
         do {
             try {
@@ -266,7 +246,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     'value' => '{}'
                 ]);
 
-                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                $statsDocument = Authorization::skip(fn () => useConsoleDB()(fn (Database $database) => $database->createDocument('realtime', $document)));
                 break;
             } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
@@ -291,13 +271,11 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             }
 
             try {
-                $database = getConsoleDB();
-
                 $statsDocument
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-                Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                Authorization::skip(fn () => useConsoleDB()(fn (Database $database) => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument)));
             } catch (Throwable $th) {
                 call_user_func($logError, $th, "updateWorkerDocument");
             } finally {
@@ -326,13 +304,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         // TODO: Remove this if check once it doesn't cause issues for cloud
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-                $database = getConsoleDB();
-
                 $payload = [];
 
-                $list = Authorization::skip(fn () => $database->find('realtime', [
+                $list = Authorization::skip(fn () => useConsoleDB()(fn (Database $database) => $database->find('realtime', [
                     Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
-                ]));
+                ])));
 
                 /**
                  * Aggregate stats across containers.
@@ -425,11 +401,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = getConsoleDB();
-                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = getProjectDB($project);
+                        $project = Authorization::skip(fn () => useConsoleDB()(fn (Database $database) => $database->getDocument('projects', $projectId)));
 
-                        $user = $database->getDocument('users', $userId);
+                        $user = useProjectDB($project)(fn (Database $database) => $database->getDocument('users', $userId));
 
                         $roles = Auth::getRoles($user);
                         $channels = $realtime->connections[$connection]['channels'];
@@ -605,13 +579,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
-        $database = getConsoleDB();
 
         if ($projectId !== 'console') {
-            $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
-            $database = getProjectDB($project);
+            $project = Authorization::skip(fn () => useConsoleDB()(fn (Database $database) => $database->getDocument('projects', $projectId)));
         } else {
-            $project = null;
+            $project = new Document();
         }
 
         /*
@@ -653,7 +625,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 Auth::$unique = $session['id'] ?? '';
                 Auth::$secret = $session['secret'] ?? '';
 
-                $user = $database->getDocument('users', Auth::$unique);
+                $user = useProjectDB($project)(fn (Database $database) => $database->getDocument('users', Auth::$unique));
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
