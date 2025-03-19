@@ -1322,7 +1322,7 @@ App::patch('/v1/users/:userId/password')
         $hash = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $user->getAttribute('passwordHistory', []);
-        
+
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $hash);
             if (!$validator->isValid($password)) {

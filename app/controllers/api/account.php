@@ -3446,7 +3446,7 @@ App::put('/v1/account/recovery')
         $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $profile->getAttribute('passwordHistory', []);
-        
+
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $hash);
             if (!$validator->isValid($password)) {
