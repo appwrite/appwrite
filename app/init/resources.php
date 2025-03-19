@@ -285,17 +285,6 @@ App::setResource('project', function ($dbForPlatform, $request, $console, $utopi
 
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-    if (!empty($project->getAttribute('region')) && $project->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
-        var_dump([
-            'projectId'       => $project->getId(),
-            'projectRegion'   => $project->getAttribute('region'),
-            'params'          => 'Method: ' . $route->getMethod(). 'URL: ' . $route->getPath(),
-            '_APP_REGION'     => System::getEnv('_APP_REGION'),
-        ]);
-
-        throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
-    }
-
     return $project;
 }, ['dbForPlatform', 'request', 'console', 'utopia']);
 
