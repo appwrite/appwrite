@@ -2320,19 +2320,20 @@ class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($domain);
 
-        $deploymentId = $this->setupDeployment($siteId, [
+        $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('empty'),
-            'activate' => 'true'
+            'activate' => true
         ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('200', $site['headers']['status-code']);
-
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString("ERROR: No source code found. Please ensure your source directory exists and isn't empty.", $deployment['body']['buildLogs']);
+        }, 100000, 500);
 
         $this->cleanupSite($siteId);
     }
