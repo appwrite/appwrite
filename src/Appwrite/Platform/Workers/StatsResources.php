@@ -113,6 +113,13 @@ class StatsResources extends Action
             $keys = $dbForPlatform->count('keys', [
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ]);
+
+            $domains = $dbForPlatform->count('rules', [
+                Query::equal('projectInternalId', [$project->getInternalId()]),
+                Query::equal('owner', ['']),
+            ]);
+
+
             $databases = $dbForProject->count('databases');
             $buckets = $dbForProject->count('buckets');
             $users = $dbForProject->count('users');
@@ -161,6 +168,7 @@ class StatsResources extends Action
                 METRIC_PROVIDERS => $providers,
                 METRIC_TOPICS => $topics,
                 METRIC_KEYS => $keys,
+                METRIC_DOMAINS => $domains,
                 METRIC_TARGETS => $targets,
                 str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
                 str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,

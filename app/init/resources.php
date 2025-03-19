@@ -525,7 +525,7 @@ function getDevice(string $root, string $connection = ''): Device
         $accessSecret = '';
         $bucket = '';
         $region = '';
-        $url = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+        $url = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
 
         try {
             $dsn = new DSN($connection);
@@ -566,7 +566,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
-                $s3EndpointUrl = App::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+                $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
                 return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
