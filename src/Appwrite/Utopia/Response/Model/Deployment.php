@@ -64,6 +64,12 @@ class Deployment extends Model
                 'default' => 0,
                 'example' => 128,
             ])
+            ->addRule('totalSize', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The total size in bytes (source and build output).',
+                'default' => 0,
+                'example' => 128,
+            ])
             ->addRule('buildId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The current build ID.',

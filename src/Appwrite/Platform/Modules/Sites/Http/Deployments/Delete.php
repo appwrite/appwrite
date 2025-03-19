@@ -100,6 +100,9 @@ class Delete extends Action
             $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
                 'deploymentId' => '',
                 'deploymentInternalId' => '',
+                'deploymentScreenshotDark' => '',
+                'deploymentScreenshotLight' => '',
+                'deploymentCreatedAt' => '',
             ])));
         }
 

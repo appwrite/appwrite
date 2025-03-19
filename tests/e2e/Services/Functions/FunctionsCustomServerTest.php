@@ -408,6 +408,12 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
+        $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
         $deployments = $this->listDeployments($functionId);
 
         $this->assertEquals(200, $deployments['headers']['status-code']);
@@ -480,7 +486,21 @@ class FunctionsCustomServerTest extends Scope
             $this->assertStringContainsString("Total users: " . $totalUsers, $execution['body']['logs']);
         }, 10000, 500);
 
-        $function = $this->deleteFunction($functionId);
+        $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['deploymentId']);
+        $this->assertNotEmpty($function['body']['deploymentCreatedAt']);
+        $this->assertEquals($deployment['body']['$id'], $function['body']['deploymentId']);
+        $this->assertEquals($deployment['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
+
+        $function = $this->cleanupFunction($functionId);
     }
 
     /**
@@ -1634,11 +1654,14 @@ class FunctionsCustomServerTest extends Scope
             'entrypoint' => 'index.php',
             'timeout' => 15,
         ]);
-        $this->setupDeployment($functionId, [
+        $this->assertNotEmpty($functionId);
+
+        $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
             'code' => $this->packageFunction('php-cookie'),
             'activate' => true
         ]);
+        $this->assertNotEmpty($deploymentId);
 
         $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
         $execution = $this->createExecution($functionId, [
@@ -1653,6 +1676,13 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($cookie, $execution['body']['responseBody']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2029,12 +2059,33 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertStringContainsString('maintenance.js', $function['body']['commands']);
 
-        $deploymentId2 = $this->setupDuplicateDeployment($functionId, $deploymentId1);
+        $deployment = $this->createDuplicateDeployment($functionId, $deploymentId1);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId2 = $deployment['body']['$id'];
         $this->assertNotEmpty($deploymentId2);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId2);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId2) {
+            $function = $this->getFunction($functionId);
+            $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
+        }, 50000, 500);
 
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertStringContainsString('Maintenance', $execution['body']['responseBody']);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId2);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
         $this->cleanupFunction($functionId);
     }

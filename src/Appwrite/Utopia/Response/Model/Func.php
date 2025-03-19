@@ -71,6 +71,12 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('deploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Active deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Allowed permission scopes.',

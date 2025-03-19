@@ -19,6 +19,7 @@ return [
     'analog' => [
         'key' => 'analog',
         'name' => 'Analog',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/analog/bundle.sh',
@@ -44,6 +45,7 @@ return [
     'angular' => [
         'key' => 'angular',
         'name' => 'Angular',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/angular/bundle.sh',
@@ -69,6 +71,7 @@ return [
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/next-js/bundle.sh',
@@ -93,6 +96,7 @@ return [
     'react' => [
         'key' => 'react',
         'name' => 'React',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
@@ -109,6 +113,7 @@ return [
     'nuxt' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/nuxt/bundle.sh',
@@ -133,6 +138,7 @@ return [
     'vue' => [
         'key' => 'vue',
         'name' => 'Vue.js',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
@@ -149,6 +155,7 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/sveltekit/bundle.sh',
@@ -173,6 +180,7 @@ return [
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/astro/bundle.sh',
@@ -197,6 +205,7 @@ return [
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'bundleCommand' => 'sh /usr/local/server/helpers/remix/bundle.sh',
@@ -221,6 +230,7 @@ return [
     'flutter' => [
         'key' => 'flutter',
         'name' => 'Flutter',
+        'screenshotSleep' => 5000,
         'buildRuntime' => 'flutter-3.29',
         'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
         'adapters' => [
@@ -236,6 +246,7 @@ return [
     'vite' => [
         'key' => 'vite',
         'name' => 'Vite',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
@@ -251,6 +262,7 @@ return [
     'other' => [
         'key' => 'other',
         'name' => 'Other',
+        'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [

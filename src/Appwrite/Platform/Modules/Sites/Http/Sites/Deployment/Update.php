@@ -90,6 +90,9 @@ class Update extends Base
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
+            'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+            'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+            'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
         $queries = [

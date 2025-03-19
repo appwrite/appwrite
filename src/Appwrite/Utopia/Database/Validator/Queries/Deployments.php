@@ -7,6 +7,7 @@ class Deployments extends Base
     public const ALLOWED_ATTRIBUTES = [
         'buildSize',
         'sourceSize',
+        'totalSize',
         'buildDuration',
         'status',
         'activate',

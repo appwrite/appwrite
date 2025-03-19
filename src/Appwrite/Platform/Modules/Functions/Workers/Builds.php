@@ -190,6 +190,12 @@ class Builds extends Action
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
+        $queueForRealtime
+            ->setSubscribers(['console'])
+            ->setProject($project)
+            ->setEvent($event)
+            ->setParam($resourceKey, $resource->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
@@ -204,6 +210,10 @@ class Builds extends Action
         $deployment->setAttribute('buildStartAt', $startTime);
         $deployment->setAttribute('status', 'processing');
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
 
         $source = $deployment->getAttribute('sourcePath', '');
         $installationId = $deployment->getAttribute('installationId', '');
@@ -275,8 +285,13 @@ class Builds extends Action
                     $directorySize = $device->getFileSize($source);
                     $deployment
                         ->setAttribute('sourcePath', $source)
-                        ->setAttribute('sourceSize', $directorySize);
+                        ->setAttribute('sourceSize', $directorySize)
+                        ->setAttribute('totalSize', $directorySize);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+                    $queueForRealtime
+                        ->setPayload($deployment->getArrayCopy())
+                        ->trigger();
                 }
             } elseif ($isVcsEnabled) {
                 // VCS and VCS+Temaplte
@@ -384,15 +399,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                    /**
-                     * Trigger Realtime Event
-                     */
                     $queueForRealtime
-                        ->setSubscribers(['console'])
-                        ->setProject($project)
-                        ->setEvent($event)
-                        ->setParam($resourceKey, $resource->getId())
-                        ->setParam('deploymentId', $deployment->getId())
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
                 }
@@ -430,8 +437,13 @@ class Builds extends Action
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
-                    ->setAttribute('sourceSize', $directorySize);
+                    ->setAttribute('sourceSize', $directorySize)
+                    ->setAttribute('totalSize', $directorySize);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+                $queueForRealtime
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
@@ -439,6 +451,10 @@ class Builds extends Action
             /** Request the executor to build the code... */
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             if ($isVcsEnabled) {
                 $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
@@ -465,11 +481,6 @@ class Builds extends Action
 
             /** Trigger Realtime Event */
             $queueForRealtime
-                ->setSubscribers(['console'])
-                ->setProject($project)
-                ->setEvent($event)
-                ->setParam($resourceKey, $resource->getId())
-                ->setParam('deploymentId', $deployment->getId())
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
@@ -577,7 +588,6 @@ class Builds extends Action
                     try {
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
-                        // TODO: Detect adapter if adapter is empty
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
@@ -598,13 +608,13 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $event, $timeout, &$err, $queueForRealtime, &$isCanceled, $resourceKey, $resource) {
+                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, $event, $project, &$isCanceled, &$deployment, $queueForRealtime, $resourceKey, $resource) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -640,15 +650,7 @@ class Builds extends Action
                                     $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
                                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                                    /**
-                                     * Trigger Realtime Event
-                                     */
                                     $queueForRealtime
-                                        ->setSubscribers(['console'])
-                                        ->setProject($project)
-                                        ->setEvent($event)
-                                        ->setParam($resourceKey, $resource->getId())
-                                        ->setParam('deploymentId', $deployment->getId())
                                         ->setPayload($deployment->getArrayCopy())
                                         ->trigger();
                                 }
@@ -720,6 +722,7 @@ class Builds extends Action
             $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
+            $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
 
             $logs = '';
             foreach ($response['output'] as $log) {
@@ -728,6 +731,10 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
@@ -780,12 +787,12 @@ class Builds extends Action
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
 
-                        $config['sleep'] = 3000; // 3 seconds
+                        $config['sleep'] = 3000;
 
-                        // Makes tests much faster
-                        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-                        if ($isDevelopment) {
-                            $config['sleep'] = 0; // Override this when running Screenshot.php task
+                        $frameworks = Config::getParam('frameworks', []);
+                        $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                        if (!is_null($framework)) {
+                            $config['sleep'] = $framework['screenshotSleep'];
                         }
 
                         $response = $client->fetch(
@@ -841,6 +848,10 @@ class Builds extends Action
                     }
 
                     $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+                    $queueForRealtime
+                        ->setPayload($deployment->getArrayCopy())
+                        ->trigger();
                 } catch (\Throwable $th) {
                     Console::warning("Screenshot failed to generate:");
                     Console::warning($th->getMessage());
@@ -857,6 +868,7 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
 
                         $queries = [
@@ -873,7 +885,9 @@ class Builds extends Action
                             $queries[] = Query::equal("deploymentInternalId", [$oldDeploymentInternalId]);
                         }
 
-                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment) {
+                        $rulesUpdated = false;
+                        $this->listRules($project, $queries, $dbForPlatform, function (Document $rule) use ($dbForPlatform, $deployment, &$rulesUpdated) {
+                            $rulesUpdated = true;
                             $rule = $rule
                                 ->setAttribute('deploymentId', $deployment->getId())
                                 ->setAttribute('deploymentInternalId', $deployment->getInternalId());
@@ -885,8 +899,10 @@ class Builds extends Action
 
                         $resource->setAttribute('deploymentId', $deployment->getId());
                         $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                        $resource->setAttribute('deploymentScreenshotDark', $deployment->getAttribute('screenshotDark', ''));
+                        $resource->setAttribute('deploymentScreenshotLight', $deployment->getAttribute('screenshotLight', ''));
+                        $resource->setAttribute('deploymentCreatedAt', $deployment->getCreatedAt());
                         $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-
                         $queries = [
                             Query::equal("projectInternalId", [$project->getInternalId()]),
                             Query::equal("type", ["deployment"]),
@@ -1001,19 +1017,15 @@ class Builds extends Action
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
         } finally {
-            /**
-             * Trigger Realtime Event
-             */
             $queueForRealtime
-            ->setSubscribers(['console'])
-                ->setProject($project)
-                ->setEvent($event)
-                ->setParam($resourceKey, $resource->getId())
-                ->setParam('deploymentId', $deployment->getId())
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
