@@ -356,6 +356,13 @@ return [
                 'attributes' => ['pingedAt'],
                 'lengths' => [],
                 'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_database'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['database'],
+                'lengths' => [],
+                'orders' => [],
             ]
         ],
     ],
