@@ -126,6 +126,13 @@ class Create extends Action
             'buildLogs' => '',
         ]));
 
+        $site = $site
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('sites', $site->getId(), $site);
+
         // Preview deployments for sites
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;

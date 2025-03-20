@@ -9188,7 +9188,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: buildSize, sourceSize, buildDuration, status, activate, type",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: buildSize, sourceSize, totalSize, buildDuration, status, activate, type",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -18075,7 +18075,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: buildSize, sourceSize, buildDuration, status, activate, type",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: buildSize, sourceSize, totalSize, buildDuration, status, activate, type",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -27974,6 +27974,36 @@
                     "description": "Site's active deployment ID.",
                     "x-example": "5e5ea5c16897e"
                 },
+                "deploymentCreatedAt": {
+                    "type": "string",
+                    "description": "Active deployment creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "deploymentScreenshotLight": {
+                    "type": "string",
+                    "description": "Screenshot of active deployment with light theme preference file ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "deploymentScreenshotDark": {
+                    "type": "string",
+                    "description": "Screenshot of active deployment with dark theme preference file ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "latestDeploymentId": {
+                    "type": "string",
+                    "description": "Site's latest deployment ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "latestDeploymentCreatedAt": {
+                    "type": "string",
+                    "description": "Latest deployment creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "latestDeploymentStatus": {
+                    "type": "string",
+                    "description": "Status of latest deployment. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
+                    "x-example": "ready"
+                },
                 "vars": {
                     "type": "array",
                     "description": "Site variables.",
@@ -28059,6 +28089,12 @@
                 "live",
                 "framework",
                 "deploymentId",
+                "deploymentCreatedAt",
+                "deploymentScreenshotLight",
+                "deploymentScreenshotDark",
+                "latestDeploymentId",
+                "latestDeploymentCreatedAt",
+                "latestDeploymentStatus",
                 "vars",
                 "timeout",
                 "installCommand",
@@ -28131,6 +28167,26 @@
                     "type": "string",
                     "description": "Function's active deployment ID.",
                     "x-example": "5e5ea5c16897e"
+                },
+                "deploymentCreatedAt": {
+                    "type": "string",
+                    "description": "Active deployment creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "latestDeploymentId": {
+                    "type": "string",
+                    "description": "Function's latest deployment ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "latestDeploymentCreatedAt": {
+                    "type": "string",
+                    "description": "Latest deployment creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "latestDeploymentStatus": {
+                    "type": "string",
+                    "description": "Status of latest deployment. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
+                    "x-example": "ready"
                 },
                 "scopes": {
                     "type": "array",
@@ -28225,6 +28281,10 @@
                 "logging",
                 "runtime",
                 "deploymentId",
+                "deploymentCreatedAt",
+                "latestDeploymentId",
+                "latestDeploymentCreatedAt",
+                "latestDeploymentStatus",
                 "scopes",
                 "vars",
                 "events",
@@ -28379,13 +28439,19 @@
                     "type": "string",
                     "description": "Default output directory of build.",
                     "x-example": ".\/dist"
+                },
+                "fallbackFile": {
+                    "type": "string",
+                    "description": "Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.",
+                    "x-example": "index.html"
                 }
             },
             "required": [
                 "key",
                 "installCommand",
                 "buildCommand",
-                "outputDirectory"
+                "outputDirectory",
+                "fallbackFile"
             ]
         },
         "deployment": {
@@ -28439,6 +28505,12 @@
                     "x-example": 128,
                     "format": "int32"
                 },
+                "totalSize": {
+                    "type": "integer",
+                    "description": "The total size in bytes (source and build output).",
+                    "x-example": 128,
+                    "format": "int32"
+                },
                 "buildId": {
                     "type": "string",
                     "description": "The current build ID.",
@@ -28461,7 +28533,7 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"waiting\", \"ready\", and \"failed\".",
+                    "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
                     "x-example": "ready"
                 },
                 "buildLogs": {
@@ -28536,6 +28608,7 @@
                 "entrypoint",
                 "sourceSize",
                 "buildSize",
+                "totalSize",
                 "buildId",
                 "activate",
                 "screenshotLight",

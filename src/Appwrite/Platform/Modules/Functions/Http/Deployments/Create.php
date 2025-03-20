@@ -240,6 +240,13 @@ class Create extends Action
                     'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
+
+                $function = $function
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('functions', $function->getId(), $function);
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
             }
@@ -273,6 +280,13 @@ class Create extends Action
                     'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
+
+                $function = $function
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('functions', $function->getId(), $function);
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
