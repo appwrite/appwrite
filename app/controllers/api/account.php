@@ -2680,10 +2680,7 @@ App::get('/v1/account/prefs')
     ->action(function (Response $response, Document $user) {
 
         $prefs = $user->getAttribute('prefs', []);
-        var_dump([
-            'location' => 'account::prefs',
-            '$prefs' => $prefs,
-        ]);
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -3079,11 +3076,6 @@ App::patch('/v1/account/prefs')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
-
-        var_dump([
-            'userId' => $user->getId(),
-            'account:setPrefs' => $prefs,
-        ]);
 
         $user->setAttribute('prefs', $prefs);
 
