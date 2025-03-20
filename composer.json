@@ -51,7 +51,7 @@
         "utopia-php/cache": "0.12.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-fix-transaction-commit as 0.61.0",
+        "utopia-php/database": "0.61.*",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
