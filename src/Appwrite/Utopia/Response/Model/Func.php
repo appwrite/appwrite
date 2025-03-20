@@ -79,7 +79,7 @@ class Func extends Model
             ])
             ->addRule('latestDeploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Site\'s latest deployment ID.',
+                'description' => 'Function\'s latest deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
