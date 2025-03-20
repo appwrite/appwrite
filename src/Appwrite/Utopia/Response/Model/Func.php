@@ -77,6 +77,24 @@ class Func extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('latestDeploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site\'s latest deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Latest deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Status of latest deployment. Possible values are "waiting", "processing", "building", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
+            ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Allowed permission scopes.',
