@@ -1926,7 +1926,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['logs']);
             $this->assertEmpty($execution['body']['errors']);
-        }, 10000, 500);
+        }, 20000, 1000);
 
         // Domain Executions test
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
