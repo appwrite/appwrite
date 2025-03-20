@@ -191,6 +191,13 @@ App::init()
     ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
 
+        var_dump([
+            'location'        => 'api.php',
+            'projectId'       => !empty($project->getId()) ? $project->getId() : 'NA',
+            'params'          => 'Method: ' . $route->getMethod(). '  URL: ' . $route->getPath(),
+            '_APP_REGION'     => System::getEnv('_APP_REGION'),
+        ]);
+
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
