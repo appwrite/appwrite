@@ -1201,7 +1201,13 @@ class Builds extends Action
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
-            $providerTargetUrl = "{$protocol}://{$hostname}/console/project-{$project->getId()}/functions/function-{$resource->getId()}";
+
+            $resourceType = match ($resource->getCollection()) {
+                'functions' => 'function',
+                'sites' => 'site',
+                default => throw new \Exception('Invalid resource type')
+            };
+            $providerTargetUrl = "{$protocol}://{$hostname}/console/project-{$project->getId()}/{$resource->getCollection()}/$resourceType-{$resource->getId()}";
 
             $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
         }
