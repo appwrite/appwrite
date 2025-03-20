@@ -623,7 +623,6 @@ return [
                 'array' => false,
                 'filters' => ['datetime'],
             ],
-
             [
                 '$id' => ID::custom('latestDeploymentStatus'),
                 'type' => Database::VAR_STRING,
@@ -1125,7 +1124,6 @@ return [
                 'array' => false,
                 'filters' => ['datetime'],
             ],
-
             [
                 '$id' => ID::custom('latestDeploymentStatus'),
                 'type' => Database::VAR_STRING,

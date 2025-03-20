@@ -99,6 +99,8 @@ class Delete extends Action
 
         if ($function->getAttribute('latestDeploymentId') === $deployment->getId()) {
             $latestDeployment = $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['functions']),
+                Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::orderDesc('$createdAt'),
             ]);
             $function = $dbForProject->updateDocument(
