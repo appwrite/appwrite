@@ -215,12 +215,12 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
 
 Server::setResource('auditRetention', function () {
     return array_reduce(
-        explode(',', System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 'project=1209600,console=15778800')),
+        explode(',', System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 'project=1209600,console=15778800')), // project = 14 days, console = 6 months
         function ($carry, $part) {
             [$key, $value] = explode('=', $part);
             $carry[$key] = DateTime::addSeconds(new \DateTime(), -1 * (int)$value);
@@ -231,7 +231,7 @@ Server::setResource('auditRetention', function () {
 });
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {
