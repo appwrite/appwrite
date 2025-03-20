@@ -1558,7 +1558,6 @@ App::patch('/v1/users/:userId/prefs')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
-        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId());
