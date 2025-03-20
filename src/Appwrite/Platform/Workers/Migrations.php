@@ -34,6 +34,9 @@ class Migrations extends Action
 
     protected Document $project;
 
+    /**
+     * @var callable
+     */
     protected $logError;
 
     public static function getName(): string
