@@ -409,7 +409,11 @@ App::get('/v1/migrations/appwrite/report')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
         $appwrite = new Appwrite($projectID, $endpoint, $key);
-
+        var_dump([
+            'projectID' => $projectID,
+            'endpoint' => $endpoint,
+            'key' => $key
+        ]);
         try {
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
