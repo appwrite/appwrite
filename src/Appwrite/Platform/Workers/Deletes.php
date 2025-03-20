@@ -365,6 +365,7 @@ class Deletes extends Action
             $queries[] = Query::equal('resourceType', [$resourceType]);
         }
 
+        $queries[] = Query::select(['$internalId', '$id', '$updatedAt']);
         $queries[] = Query::orderAsc();
 
         /**
@@ -404,7 +405,8 @@ class Deletes extends Action
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
         );
 
-        $query = [
+        $queries = [
+            Query::select(['$internalId', '$id', '$updatedAt']),
             Query::lessThan('accessedAt', $datetime),
             Query::orderDesc('accessedAt'),
             Query::orderDesc(),
@@ -412,7 +414,7 @@ class Deletes extends Action
 
         $this->deleteByGroup(
             'cache',
-            $query,
+            $queries,
             $dbForProject,
             function (Document $document) use ($cache, $projectId) {
                 $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
@@ -440,6 +442,7 @@ class Deletes extends Action
 
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
+            Query::select(['$internalId', '$id', '$updatedAt']),
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
@@ -452,6 +455,7 @@ class Deletes extends Action
 
             // Delete Usage stats from logsDB
             $this->deleteByGroup('stats', [
+                Query::select(['$internalId', '$id', '$updatedAt']),
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
@@ -755,6 +759,7 @@ class Deletes extends Action
 
         // Delete Executions
         $this->deleteByGroup('executions', [
+            Query::select(['$internalId', '$id', '$updatedAt']),
             Query::lessThan('$createdAt', $datetime),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -775,6 +780,7 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
+            Query::select(['$internalId', '$id', '$updatedAt']),
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -811,6 +817,7 @@ class Deletes extends Action
 
         try {
             $this->deleteByGroup(Audit::COLLECTION, [
+                Query::select(['$internalId', '$id', '$updatedAt']),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
                 Query::orderAsc(), // KEY "index-time" ("time" DESC)
@@ -897,6 +904,7 @@ class Deletes extends Action
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
+            Query::select(['$internalId', '$id', '$updatedAt']),
             Query::equal('functionInternalId', [$functionInternalId]),
             Query::orderAsc()
         ], $dbForProject);
@@ -1017,7 +1025,7 @@ class Deletes extends Action
 
         /**
          * Delete builds
-         * todo: no index for `deploymentInternalId` change to temporary to deploymentId?
+         * todo: no index for `deploymentInternalId` Same as above index , no need to handle again...
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
 
@@ -1047,20 +1055,13 @@ class Deletes extends Action
         string $collection,
         array $queries,
         Database $database,
-        ?callable $callback = null,
-        bool $shortSelect = false
+        ?callable $callback = null
     ): void {
         $start = \microtime(true);
 
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
-
-        if (!\is_callable($callback) && $shortSelect) {
-            $queries = array_merge($queries, [
-                Query::select(['$internalId', '$id', '$permissions', '$updatedAt'])
-            ]);
-        }
 
         try {
             $documents = $database->deleteDocuments($collection, $queries);
