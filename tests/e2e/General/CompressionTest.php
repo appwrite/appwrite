@@ -67,8 +67,6 @@ class CompressionTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        sleep(10);
-
         // get prefs with compression
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/prefs', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
