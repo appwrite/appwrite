@@ -152,7 +152,11 @@ class StatsUsage extends Action
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
-                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $document->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)));
+                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(
+                        ['{databaseInternalId}', '{collectionInternalId}'],
+                        [$databaseInternalId, $document->getInternalId()],
+                        METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
+                    )));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [

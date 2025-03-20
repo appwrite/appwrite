@@ -65,8 +65,22 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
-    {
+    public function action(
+        Message $message,
+        Document $project,
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        callable $getLogsDB,
+        Device $deviceForFiles,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
+        Device $deviceForBuilds,
+        Device $deviceForCache,
+        CertificatesAdapter $certificates,
+        string $executionRetention,
+        string $auditRetention,
+        Log $log
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
