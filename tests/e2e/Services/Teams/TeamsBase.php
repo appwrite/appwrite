@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -10,6 +11,8 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBase
 {
+    use Async;
+
     public function testCreateTeam(): array
     {
         /**
@@ -379,12 +382,15 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $this->assertEventually(function () use ($teamUid) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertEquals(404, $response['headers']['status-code']);
+        });
+
 
         return [];
     }
