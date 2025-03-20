@@ -91,8 +91,23 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Device $deviceForSites, callable $isResourceBlocked, Device $deviceForFiles, Log $log): void
-    {
+    public function action(
+        Message $message,
+        Document $project,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        StatsUsage $queueForStatsUsage,
+        Cache $cache,
+        Database $dbForProject,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
+        callable $isResourceBlocked,
+        Device $deviceForFiles,
+        Log $log
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -112,7 +127,25 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $deviceForSites, $deviceForFiles, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log);
+                $this->buildDeployment(
+                    $deviceForFunctions,
+                    $deviceForSites,
+                    $deviceForFiles,
+                    $queueForWebhooks,
+                    $queueForFunctions,
+                    $queueForRealtime,
+                    $queueForEvents,
+                    $queueForStatsUsage,
+                    $dbForPlatform,
+                    $dbForProject,
+                    $github,
+                    $project,
+                    $resource,
+                    $deployment,
+                    $template,
+                    $isResourceBlocked,
+                    $log
+                );
                 break;
 
             default:
@@ -142,9 +175,26 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Device $deviceForSites, Device $deviceForFiles, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, callable $isResourceBlocked, Log $log): void
-    {
-        $resourceKey = match($resource->getCollection()) {
+    protected function buildDeployment(
+        Device $deviceForFunctions,
+        Device $deviceForSites,
+        Device $deviceForFiles,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        GitHub $github,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        Document $template,
+        callable $isResourceBlocked,
+        Log $log
+    ): void {
+        $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
             default => throw new \Exception('Invalid resource type')
@@ -1170,8 +1220,18 @@ class Builds extends Action
      * @throws Conflict
      * @throws Restricted
      */
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $resource, string $deploymentId, Database $dbForProject, Database $dbForPlatform): void
-    {
+    protected function runGitAction(
+        string $status,
+        GitHub $github,
+        string $providerCommitHash,
+        string $owner,
+        string $repositoryName,
+        Document $project,
+        Document $resource,
+        string $deploymentId,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ): void {
         if ($resource->getAttribute('providerSilentMode', false) === true) {
             return;
         }

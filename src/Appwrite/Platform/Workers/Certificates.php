@@ -69,8 +69,17 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates): void
-    {
+    public function action(
+        Message $message,
+        Database $dbForPlatform,
+        Mail $queueForMails,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Log $log,
+        CertificatesAdapter $certificates
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -99,8 +108,18 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
-    {
+    private function execute(
+        Domain $domain,
+        Database $dbForPlatform,
+        Mail $queueForMails,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Log $log,
+        CertificatesAdapter $certificates,
+        bool $skipRenewCheck = false
+    ): void {
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
@@ -209,8 +228,16 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
-    {
+    private function saveCertificateDocument(
+        string $domain,
+        Document $certificate,
+        bool $success,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime
+    ): void {
         // Check if update or insert required
         $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!$certificateDocument->isEmpty()) {
@@ -342,8 +369,16 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
-    {
+    private function updateDomainDocuments(
+        string $certificateId,
+        string $domain,
+        bool $success,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime
+    ): void {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
             $rule = $dbForPlatform->getDocument('rules', md5($domain));

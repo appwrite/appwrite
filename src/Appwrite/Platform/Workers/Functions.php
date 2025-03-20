@@ -55,8 +55,18 @@ class Functions extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Log $log, callable $isResourceBlocked): void
-    {
+    public function action(
+        Document $project,
+        Message $message,
+        Database $dbForProject,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage,
+        Log $log,
+        callable $isResourceBlocked
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
