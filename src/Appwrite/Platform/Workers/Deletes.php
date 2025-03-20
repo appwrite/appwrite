@@ -751,9 +751,16 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
 
+        [$projectAuditRetention, $consoleAuditRetention] = array_map(
+            function ($part) {
+                return DateTime::addSeconds(new \DateTime(), -1 * (int)explode('=', $part)[1]);
+            },
+            explode(',', $auditRetention)
+        );
+
         try {
             $this->deleteByGroup(Audit::COLLECTION, [
-                Query::lessThan('time', $auditRetention),
+                Query::lessThan('time', ($projectId === 'console' ? $consoleAuditRetention : $projectAuditRetention)),
                 Query::orderDesc('time'),
                 Query::orderDesc('$internalId'),
             ], $dbForProject);

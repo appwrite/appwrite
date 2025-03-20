@@ -219,7 +219,7 @@ Server::setResource('abuseRetention', function () {
 });
 
 Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
+    return System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 'project=1209600,console=15778800'); // project = 14 days, console = 6 months
 });
 
 Server::setResource('executionRetention', function () {
