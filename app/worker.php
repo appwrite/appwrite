@@ -219,14 +219,14 @@ Server::setResource('abuseRetention', function () {
 });
 
 Server::setResource('auditRetention', function () {
-    return array_map(
-        function ($part) {
+    return array_reduce(
+        explode(',', System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 'project=1209600,console=15778800')),
+        function ($carry, $part) {
             [$key, $value] = explode('=', $part);
-            return [
-                $key => DateTime::addSeconds(new \DateTime(), -1 * (int)$value)
-            ];
+            $carry[$key] = DateTime::addSeconds(new \DateTime(), -1 * (int)$value);
+            return $carry;
         },
-        explode(',', System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 'project=1209600,console=15778800'))
+        []
     );
 });
 
