@@ -57,7 +57,7 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
+                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, array $auditRetention, Log $log) =>
                     $this->action($message, $project, $dbForPlatform, $getProjectDB, $getLogsDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
             );
     }
@@ -66,7 +66,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, array $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -746,21 +746,14 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
+    private function deleteAuditLogs(Document $project, callable $getProjectDB, array $auditRetention): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
 
-        [$projectAuditRetention, $consoleAuditRetention] = array_map(
-            function ($part) {
-                return DateTime::addSeconds(new \DateTime(), -1 * (int)explode('=', $part)[1]);
-            },
-            explode(',', $auditRetention)
-        );
-
         try {
             $this->deleteByGroup(Audit::COLLECTION, [
-                Query::lessThan('time', ($projectId === 'console' ? $consoleAuditRetention : $projectAuditRetention)),
+                Query::lessThan('time', ($projectId === 'console' ? $auditRetention['console'] : $auditRetention['project'])),
                 Query::orderDesc('time'),
                 Query::orderDesc('$internalId'),
             ], $dbForProject);
