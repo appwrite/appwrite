@@ -19823,8 +19823,7 @@
                                     "default": "default",
                                     "x-example": "default",
                                     "enum": [
-                                        "default",
-                                        "fra"
+                                        "default"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []

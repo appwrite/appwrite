@@ -19353,8 +19353,7 @@
                                         "description": "Project Region.",
                                         "x-example": "default",
                                         "enum": [
-                                            "default",
-                                            "fra"
+                                            "default"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
