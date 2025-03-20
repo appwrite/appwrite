@@ -27885,13 +27885,19 @@
                         "type": "string",
                         "description": "Default output directory of build.",
                         "x-example": ".\/dist"
+                    },
+                    "fallbackFile": {
+                        "type": "string",
+                        "description": "Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.",
+                        "x-example": "index.html"
                     }
                 },
                 "required": [
                     "key",
                     "installCommand",
                     "buildCommand",
-                    "outputDirectory"
+                    "outputDirectory",
+                    "fallbackFile"
                 ]
             },
             "deployment": {
