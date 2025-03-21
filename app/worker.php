@@ -220,8 +220,8 @@ Server::setResource('abuseRetention', function () {
 
 Server::setResource('auditRetention', function () {
     return [
-        'project' => DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('APP_MAINTENANCE_RETENTION_AUDIT', '1209600')),
-        'console' => DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', '15778800'))
+        'project' => DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('APP_MAINTENANCE_RETENTION_AUDIT', 1209600)),
+        'console' => DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800))
     ];
 });
 
