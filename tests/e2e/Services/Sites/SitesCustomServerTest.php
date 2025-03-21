@@ -2331,4 +2331,41 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testSubProjects(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Sub project site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './'
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('subProjects'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $site = $this->getSite($siteId);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
+        $this->assertEquals(200, $response1['headers']['status-code']);
+        $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
+        $this->assertEquals(308, $response2['headers']['status-code']);
+        $this->cleanupSite($siteId);
+    }
 }
