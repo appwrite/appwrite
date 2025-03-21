@@ -125,6 +125,15 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
     ],
+    'OTHER' => [
+        'key' => 'other',
+        'name' => 'Other',
+        'installCommand' => '',
+        'buildCommand' => '',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -134,15 +143,165 @@ function getFramework(string $frameworkEnum, array $overrides)
 }
 
 return [
+[
+    'key' => 'nxt-lnk',
+    'name' => 'Nxt Lnk',
+    'useCases' => ['portfolio'],
+    'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
+    'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
+    'frameworks' => [
+        getFramework('NEXTJS', [
+            'providerRootDirectory' => './nextjs/nxtlnk',
+        ]),
+    ],
+    'vcsProvider' => 'github',
+    'providerRepositoryId' => 'templates-for-sites',
+    'providerOwner' => 'appwrite',
+    'providerVersion' => '0.3.*',
+    'variables' => []
+],
+
+[
+    'key' => 'magic-portfolio',
+    'name' => 'Magic Portfolio',
+    'useCases' => ['portfolio'],
+    'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
+    'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
+    'frameworks' => [
+        getFramework('NEXTJS', [
+            'providerRootDirectory' => './nextjs/magic-portfolio',
+        ]),
+    ],
+    'vcsProvider' => 'github',
+    'providerRepositoryId' => 'templates-for-sites',
+    'providerOwner' => 'appwrite',
+    'providerVersion' => '0.3.*',
+    'variables' => []
+],
+
+[
+    'key' => 'littlelink',
+    'name' => 'LittleLink',
+    'useCases' => ['portfolio'],
+    'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
+    'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
+    'frameworks' => [
+        getFramework('OTHER', [
+            'providerRootDirectory' => './other/littlelink',
+        ]),
+    ],
+    'vcsProvider' => 'github',
+    'providerRepositoryId' => 'templates-for-sites',
+    'providerOwner' => 'appwrite',
+    'providerVersion' => '0.3.*',
+    'variables' => []
+],
+
+[
+    'key' => 'logspot',
+    'name' => 'Logspot',
+    'useCases' => ['blog'],
+    'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
+    'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
+    'frameworks' => [
+        getFramework('NUXT', [
+            'providerRootDirectory' => './nuxt/logspot',
+            'buildCommand' => 'npm run generate',
+            'outputDirectory' => './dist',
+            'adapter' => 'static',
+        ]),
+    ],
+    'vcsProvider' => 'github',
+    'providerRepositoryId' => 'templates-for-sites',
+    'providerOwner' => 'appwrite',
+    'providerVersion' => '0.3.*',
+    'variables' => []
+],
     [
-        'key' => 'template-for-onelink',
-        'name' => 'Onelink template',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/template-for-onelink-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/template-for-onelink-light.png',
+        'key' => 'astro-nano',
+        'name' => 'Astro Nano',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/astro-nano-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-nano-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/nano',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-starlight',
+        'name' => 'Astro Starlight',
+        'useCases' => ['documentation'],
+        'screenshotDark' => $url . '/images/sites/templates/astro-starlight-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-starlight-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starlight',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-sphere',
+        'name' => 'Astro Sphere',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/astro-sphere-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-sphere-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/sphere',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-starlog',
+        'name' => 'Astro Starlog',
+        'useCases' => ['blog'],
+        'screenshotDark' => $url . '/images/sites/templates/astro-starlog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-starlog-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starlog',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'onelink',
+        'name' => 'Onelink',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/onelink-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/onelink-light.png',
         'frameworks' => [
             getFramework('NUXT', [
-                'providerRootDirectory' => './onelink',
+                'providerRootDirectory' => './nuxt/onelink',
                 'buildCommand' => 'npm run generate',
                 'outputDirectory' => './dist',
                 'adapter' => 'static',
@@ -150,8 +309,8 @@ return [
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'Meldiron',
-        'providerVersion' => '0.1.*',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -539,7 +698,7 @@ return [
     [
         'key' => 'template-for-event',
         'name' => 'Event template',
-        'useCases' => ['starter'],
+        'useCases' => ['events'],
         'screenshotDark' => $url . '/images/sites/templates/template-for-event-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-event-light.png',
         'frameworks' => [
@@ -575,7 +734,7 @@ return [
     [
         'key' => 'template-for-portfolio',
         'name' => 'Portfolio template',
-        'useCases' => ['starter'],
+        'useCases' => ['portfolio'],
         'screenshotDark' => $url . '/images/sites/templates/template-for-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-portfolio-light.png',
         'frameworks' => [
@@ -592,7 +751,7 @@ return [
     [
         'key' => 'template-for-store',
         'name' => 'Store template',
-        'useCases' => ['starter'],
+        'useCases' => ['ecommerce'],
         'screenshotDark' => $url . '/images/sites/templates/template-for-store-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-store-light.png',
         'frameworks' => [
@@ -634,7 +793,7 @@ return [
     [
         'key' => 'template-for-blog',
         'name' => 'Blog template',
-        'useCases' => ['starter'],
+        'useCases' => ['blog'],
         'screenshotDark' => $url . '/images/sites/templates/template-for-blog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-blog-light.png',
         'frameworks' => [
@@ -674,74 +833,6 @@ return [
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'flutter-starter',
-        'name' => 'Flutter starter',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/flutter-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/flutter-starter-light.png',
-        'frameworks' => [
-            getFramework('FLUTTER', [
-                'providerRootDirectory' => './flutter/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nextjs-starter',
-        'name' => 'Next.js starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/nextjs-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/nextjs-starter-light.png',
-        'frameworks' => [
-            getFramework('NEXTJS', [
-                'providerRootDirectory' => './nextjs/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nuxt-starter',
-        'name' => 'Nuxt starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/nuxt-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/nuxt-starter-light.png',
-        'frameworks' => [
-            getFramework('NUXT', [
-                'providerRootDirectory' => './nuxt/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'sveltekit-starter',
-        'name' => 'SvelteKit starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/sveltekit-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/sveltekit-starter-light.png',
-        'frameworks' => [
-            getFramework('SVELTEKIT', [
-                'providerRootDirectory' => './sveltekit/starter',
             ]),
         ],
         'vcsProvider' => 'github',
