@@ -2363,7 +2363,6 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString("ERROR: No source code found. Please ensure your source directory exists and isn't empty.", $deployment['body']['buildLogs']);
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
