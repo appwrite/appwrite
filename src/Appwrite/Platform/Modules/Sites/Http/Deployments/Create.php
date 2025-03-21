@@ -250,6 +250,13 @@ class Create extends Action
                     'type' => $type
                 ]));
 
+                $site = $site
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('sites', $site->getId(), $site);
+
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
 
@@ -309,6 +316,13 @@ class Create extends Action
                     'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
+
+                $site = $site
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('sites', $site->getId(), $site);
 
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;

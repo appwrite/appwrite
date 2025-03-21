@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eca74b44aa6dc476aa8056344e87f363",
+    "content-hash": "eeb306ee6d2576e466ceea5e927664d0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -753,16 +753,16 @@
         },
         {
             "name": "jean85/pretty-package-versions",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Jean85/pretty-package-versions.git",
-                "reference": "3c4e5f62ba8d7de1734312e4fff32f67a8daaf10"
+                "reference": "4d7aa5dab42e2a76d99559706022885de0e18e1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/3c4e5f62ba8d7de1734312e4fff32f67a8daaf10",
-                "reference": "3c4e5f62ba8d7de1734312e4fff32f67a8daaf10",
+                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/4d7aa5dab42e2a76d99559706022885de0e18e1a",
+                "reference": "4d7aa5dab42e2a76d99559706022885de0e18e1a",
                 "shasum": ""
             },
             "require": {
@@ -772,8 +772,9 @@
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.2",
                 "jean85/composer-provided-replaced-stub-package": "^1.0",
-                "phpstan/phpstan": "^1.4",
+                "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^7.5|^8.5|^9.6",
+                "rector/rector": "^2.0",
                 "vimeo/psalm": "^4.3 || ^5.0"
             },
             "type": "library",
@@ -806,9 +807,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Jean85/pretty-package-versions/issues",
-                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.0"
+                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
-            "time": "2024-11-18T16:19:46+00:00"
+            "time": "2025-03-19T14:43:43+00:00"
         },
         {
             "name": "league/csv",
@@ -4204,16 +4205,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.22",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a0269746bd318ff0993f5aa008675b971689d5b5"
+                "reference": "36ec7af2e6bf78de5d86e1b0a953fd7dcdf69dab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a0269746bd318ff0993f5aa008675b971689d5b5",
-                "reference": "a0269746bd318ff0993f5aa008675b971689d5b5",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/36ec7af2e6bf78de5d86e1b0a953fd7dcdf69dab",
+                "reference": "36ec7af2e6bf78de5d86e1b0a953fd7dcdf69dab",
                 "shasum": ""
             },
             "require": {
@@ -4254,9 +4255,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.22"
+                "source": "https://github.com/utopia-php/migration/tree/0.8.1"
             },
-            "time": "2025-03-13T07:35:55+00:00"
+            "time": "2025-03-18T07:48:08+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4420,25 +4421,26 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.5.0",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
+                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
-                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/ad64d45afda08ec8b29e2642a8d18075964d40bf",
+                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.3",
+                "utopia-php/telemetry": "0.1.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.8.*",
-                "phpunit/phpunit": "^9.3"
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "1.*",
+                "phpunit/phpunit": "11.*"
             },
             "type": "library",
             "autoload": {
@@ -4465,9 +4467,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
+                "source": "https://github.com/utopia-php/pools/tree/0.7.0"
             },
-            "time": "2024-04-19T11:11:54+00:00"
+            "time": "2025-03-18T03:55:33+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -8505,7 +8507,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8529,5 +8531,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

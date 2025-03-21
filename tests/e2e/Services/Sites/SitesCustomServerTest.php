@@ -2057,6 +2057,15 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($siteId);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertArrayHasKey('latestDeploymentId', $site['body']);
+        $this->assertArrayHasKey('latestDeploymentCreatedAt', $site['body']);
+        $this->assertArrayHasKey('latestDeploymentStatus', $site['body']);
+        $this->assertEmpty($site['body']['latestDeploymentId']);
+        $this->assertEmpty($site['body']['latestDeploymentCreatedAt']);
+        $this->assertEmpty($site['body']['latestDeploymentStatus']);
+
         $domain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($domain);
         $proxyClient = new Client();
@@ -2068,6 +2077,11 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId1);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $site['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Hello Appwrite', $response['body']);
@@ -2078,25 +2092,42 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId2);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId2, $site['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Index page', $response['body']);
 
-        $function = $this->getSite($siteId);
-        $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
+        $this->assertEquals($deploymentId2, $site['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
 
-        $function = $this->updateSiteDeployment($siteId, $deploymentId1);
-        $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
+        $site = $this->updateSiteDeployment($siteId, $deploymentId1);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $site['body']['deploymentId']);
 
-        $function = $this->getSite($siteId);
-        $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $site['body']['deploymentId']);
+        $this->assertEquals($deploymentId2, $site['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Hello Appwrite', $response['body']);
+
+        $deployment = $this->deleteDeployment($siteId, $deploymentId2);
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $site['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
 
         $this->cleanupSite($siteId);
     }

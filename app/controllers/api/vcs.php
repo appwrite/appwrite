@@ -253,6 +253,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'activate' => $activate,
             ]));
 
+            $resource = $resource
+                ->setAttribute('latestDeploymentId', $deployment->getId())
+                ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+
             if ($resource->getCollection() === 'sites') {
                 $projectId = $project->getId();
 

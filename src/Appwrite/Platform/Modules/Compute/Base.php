@@ -94,6 +94,13 @@ class Base extends Action
             'activate' => $activate,
         ]));
 
+        $function = $function
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('functions', $function->getId(), $function);
+
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
@@ -184,6 +191,13 @@ class Base extends Action
             'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,
         ]));
+
+        $site = $site
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;

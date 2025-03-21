@@ -113,6 +113,13 @@ class Create extends Action
             'buildLogs' => '',
         ]));
 
+        $function = $function
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('functions', $function->getId(), $function);
+
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
