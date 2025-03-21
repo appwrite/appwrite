@@ -2332,7 +2332,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testSubProjects(): void
+    public function testPermanentRedirect(): void
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
