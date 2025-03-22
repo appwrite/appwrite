@@ -14,6 +14,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -51,7 +52,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
-            'region' => 'default',
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -91,7 +92,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => '',
             'teamId' => $team['body']['$id'],
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -102,7 +103,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -131,7 +132,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => $projectId,
             'name' => 'Project Duplicate',
             'teamId' => $teamId,
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
@@ -180,7 +181,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Team 1 Project',
             'teamId' => $team1,
-            'region' => 'default',
+            'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -279,7 +280,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
             'teamId' => $team['body']['$id'],
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2044,7 +2045,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -2137,7 +2138,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -3751,7 +3752,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
             'teamId' => $teamId,
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -3822,7 +3823,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 1',
             'teamId' => $teamId,
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -3832,7 +3833,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 2',
             'teamId' => $teamId,
-            'region' => 'default'
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
 
         $project1Id = $project1['body']['$id'];
