@@ -20630,6 +20630,368 @@
                 }
             }
         },
+        "\/projects\/{projectId}\/dev-keys": {
+            "get": {
+                "summary": "List dev keys",
+                "operationId": "projectsListDevKeys",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Dev Keys List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKeyList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listDevKeys",
+                    "weight": 395,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/list-dev-keys.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterList all the project\\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create dev key",
+                "operationId": "projectsCreateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createDevKey",
+                    "weight": 392,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/create-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/projects\/{projectId}\/dev-keys\/{keyId}": {
+            "get": {
+                "summary": "Get dev key",
+                "operationId": "projectsGetDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDevKey",
+                    "weight": 394,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/get-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a project\\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update dev key",
+                "operationId": "projectsUpdateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateDevKey",
+                    "weight": 393,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/update-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a project\\'s dev key by its unique ID. Use this endpoint to update a project\\'s dev key name or expiration time.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete dev key",
+                "operationId": "projectsDeleteDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDevKey",
+                    "weight": 396,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/delete-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a project\\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
         "\/projects\/{projectId}\/jwts": {
             "post": {
                 "summary": "Create JWT",
@@ -34217,6 +34579,30 @@
                     "keys"
                 ]
             },
+            "devKeyList": {
+                "description": "Dev Keys List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of keys documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "keys": {
+                        "type": "array",
+                        "description": "List of keys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "keys"
+                ]
+            },
             "platformList": {
                 "description": "Platforms List",
                 "type": "object",
@@ -38477,6 +38863,14 @@
                         },
                         "x-example": {}
                     },
+                    "devKeys": {
+                        "type": "array",
+                        "description": "List of dev keys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": {}
+                    },
                     "smtpEnabled": {
                         "type": "boolean",
                         "description": "Status for custom SMTP",
@@ -38660,6 +39054,7 @@
                     "platforms",
                     "webhooks",
                     "keys",
+                    "devKeys",
                     "smtpEnabled",
                     "smtpSenderName",
                     "smtpSenderEmail",
@@ -38848,6 +39243,56 @@
                     "secret",
                     "accessedAt",
                     "sdks"
+                ]
+            },
+            "devKey": {
+                "description": "DevKey",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Key ID.",
+                        "x-example": "5e5ea5c16897e"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Key creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Key update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Key name.",
+                        "x-example": "My API Key"
+                    },
+                    "expire": {
+                        "type": "string",
+                        "description": "Key expiration date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "Secret key.",
+                        "x-example": "919c2d18fb5d4...a2ae413da83346ad2"
+                    },
+                    "accessedAt": {
+                        "type": "string",
+                        "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "name",
+                    "expire",
+                    "secret",
+                    "accessedAt"
                 ]
             },
             "mockNumber": {

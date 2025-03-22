@@ -28,6 +28,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -772,6 +773,27 @@ App::setResource('plan', function (array $plan = []) {
 App::setResource('smsRates', function () {
     return [];
 });
+
+App::setResource('devKey', function (Request $request, Document $project, Database $dbForPlatform) {
+    $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+    // Check if given key match project's development keys
+    $key = $project->find('secret', $devKey, 'devKeys');
+    if ($key) {
+        $expire = $key->getAttribute('expire');
+        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+            return new Document([]);
+        }
+
+        $accessedAt = $key->getAttribute('accessedAt', '');
+        if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+            $key->setAttribute('accessedAt', DatabaseDateTime::now());
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $key));
+            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+        }
+        return $key;
+    }
+    return new Document([]);
+}, ['request', 'project', 'dbForPlatform']);
 
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
