@@ -5,9 +5,9 @@ namespace Appwrite\Platform;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Functions;
+use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
 use Appwrite\Platform\Modules\Sites;
-use Appwrite\Platform\Modules\Projects;
 use Utopia\Platform\Platform;
 
 class Appwrite extends Platform
