@@ -1,6 +1,7 @@
 tasks:
   - name: Run Appwrite Docker Stack
     init: |
+      git config --global --add safe.directory /app
       git submodule update --init
       docker compose build
       docker compose pull
@@ -23,11 +24,3 @@ vscode:
   extensions:
     - ms-azuretools.vscode-docker
     - zobo.php-intellisense
-
-github:
-  # https://www.gitpod.io/docs/prebuilds#github-specific-configuration
-  prebuilds:
-    # enable for pull requests coming from forks (defaults to false)
-    pullRequestsFromForks: true
-    # add a check to pull requests (defaults to true)
-    addCheck: false
