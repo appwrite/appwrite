@@ -284,15 +284,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console, $utopi
     }
 
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-    if(empty($project)) {
-        var_dump([
-          'location' => 'project resource',
-          'getParam(project)' => $request->getParam('project'),
-          'x-appwrite-project' => $request->getHeader('x-appwrite-project', ''),
-          'projectId' => $projectId,
-        ]);
 
-    }
     return $project;
 }, ['dbForPlatform', 'request', 'console', 'utopia']);
 
