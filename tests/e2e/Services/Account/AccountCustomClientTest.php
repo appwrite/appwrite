@@ -1862,10 +1862,11 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
+        $this->assertArrayHasKey('a_session_' . $this->getProject()['$id'], $response['cookies']);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',

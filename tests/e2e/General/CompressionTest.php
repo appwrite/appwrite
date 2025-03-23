@@ -74,7 +74,7 @@ class CompressionTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('content-encoding', $response['headers'], 'Content encoding should be gzip, headers received: ' . json_encode($response['headers'], JSON_PRETTY_PRINT));
+        $this->assertArrayHasKey('content-encoding', $response['headers'], '`Content-Encoding` should be gzip, instead received response: ' . json_encode($response, JSON_PRETTY_PRINT));
         $this->assertLessThan(2000, intval($response['headers']['content-length']));
 
         // get prefs without compression
@@ -116,7 +116,7 @@ class CompressionTest extends Scope
         ]);
         $fileId = $file['body']['$id'];
 
-        // get image with header
+        // get image with accept header
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'accept-encoding' => 'gzip',
@@ -125,7 +125,8 @@ class CompressionTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('content-encoding', $response['headers']);
-        // get image without
+
+        // get image without accept header
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
