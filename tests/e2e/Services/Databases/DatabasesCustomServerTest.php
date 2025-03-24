@@ -120,7 +120,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::orderDesc()->toString(),
+                Query::orderDesc()->setAttribute('')->toString(),
             ],
         ]);
 
@@ -453,7 +453,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::orderDesc()->toString(),
+                Query::orderDesc()->setAttribute('')->toString(),
             ],
         ]);
 

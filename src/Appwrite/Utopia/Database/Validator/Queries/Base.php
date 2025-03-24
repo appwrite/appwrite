@@ -60,13 +60,11 @@ class Base extends Queries
             'type' => Database::VAR_STRING,
             'array' => false,
         ]);
-
         $attributes[] = new Document([
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
-
         $attributes[] = new Document([
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
@@ -78,15 +76,8 @@ class Base extends Queries
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order(
-                array_merge($attributes, [
-                    new Document([
-                        'key' => '$internalId',
-                        'type' => Database::VAR_STRING,
-                        'array' => false,
-                    ])
-                ])
-            )];
+            new Order($attributes),
+        ];
 
         parent::__construct($validators);
     }
