@@ -2331,4 +2331,82 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testEmptyOutputDirectoryExists(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro empty output directory',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './random',
+            'buildCommand' => 'mkdir random && npm run build',
+            'installCommand' => 'npm install',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => true
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error: Build output directory is empty.', $deployment['body']['buildLogs']);
+        }, 100000, 500);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testEmptyOutputDirectoryDoesNotExist(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro empty output directory',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './random',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => true
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error: Output directory is either not set or does not exist.', $deployment['body']['buildLogs']);
+        }, 100000, 500);
+
+        $this->cleanupSite($siteId);
+    }
 }
