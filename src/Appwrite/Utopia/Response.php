@@ -675,7 +675,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = Auth::isPrivilegedUser($roles);
                 $isAppUser = Auth::isAppUser($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) || !$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
