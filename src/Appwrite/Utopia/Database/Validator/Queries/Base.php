@@ -60,11 +60,19 @@ class Base extends Queries
             'type' => Database::VAR_STRING,
             'array' => false,
         ]);
+
+        $attributes[] = new Document([
+            'key' => '$internalId',
+            'type' => Database::VAR_STRING,
+            'array' => false,
+        ]);
+
         $attributes[] = new Document([
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
+
         $attributes[] = new Document([
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
