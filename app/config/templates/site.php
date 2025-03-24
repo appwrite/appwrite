@@ -143,80 +143,80 @@ function getFramework(string $frameworkEnum, array $overrides)
 }
 
 return [
-[
-    'key' => 'nxt-lnk',
-    'name' => 'Nxt Lnk',
-    'useCases' => ['portfolio'],
-    'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
-    'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
-    'frameworks' => [
-        getFramework('NEXTJS', [
-            'providerRootDirectory' => './nextjs/nxtlnk',
-        ]),
+    [
+        'key' => 'nxt-lnk',
+        'name' => 'Nxt Lnk',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/nxtlnk',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
     ],
-    'vcsProvider' => 'github',
-    'providerRepositoryId' => 'templates-for-sites',
-    'providerOwner' => 'appwrite',
-    'providerVersion' => '0.3.*',
-    'variables' => []
-],
 
-[
-    'key' => 'magic-portfolio',
-    'name' => 'Magic Portfolio',
-    'useCases' => ['portfolio'],
-    'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
-    'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
-    'frameworks' => [
-        getFramework('NEXTJS', [
-            'providerRootDirectory' => './nextjs/magic-portfolio',
-        ]),
+    [
+        'key' => 'magic-portfolio',
+        'name' => 'Magic Portfolio',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/magic-portfolio',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
     ],
-    'vcsProvider' => 'github',
-    'providerRepositoryId' => 'templates-for-sites',
-    'providerOwner' => 'appwrite',
-    'providerVersion' => '0.3.*',
-    'variables' => []
-],
 
-[
-    'key' => 'littlelink',
-    'name' => 'LittleLink',
-    'useCases' => ['portfolio'],
-    'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
-    'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
-    'frameworks' => [
-        getFramework('OTHER', [
-            'providerRootDirectory' => './other/littlelink',
-        ]),
+    [
+        'key' => 'littlelink',
+        'name' => 'LittleLink',
+        'useCases' => ['portfolio'],
+        'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
+        'frameworks' => [
+            getFramework('OTHER', [
+                'providerRootDirectory' => './other/littlelink',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
     ],
-    'vcsProvider' => 'github',
-    'providerRepositoryId' => 'templates-for-sites',
-    'providerOwner' => 'appwrite',
-    'providerVersion' => '0.3.*',
-    'variables' => []
-],
 
-[
-    'key' => 'logspot',
-    'name' => 'Logspot',
-    'useCases' => ['blog'],
-    'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
-    'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
-    'frameworks' => [
-        getFramework('NUXT', [
-            'providerRootDirectory' => './nuxt/logspot',
-            'buildCommand' => 'npm run generate',
-            'outputDirectory' => './dist',
-            'adapter' => 'static',
-        ]),
+    [
+        'key' => 'logspot',
+        'name' => 'Logspot',
+        'useCases' => ['blog'],
+        'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/logspot',
+                'buildCommand' => 'npm run generate',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
     ],
-    'vcsProvider' => 'github',
-    'providerRepositoryId' => 'templates-for-sites',
-    'providerOwner' => 'appwrite',
-    'providerVersion' => '0.3.*',
-    'variables' => []
-],
     [
         'key' => 'astro-nano',
         'name' => 'Astro Nano',

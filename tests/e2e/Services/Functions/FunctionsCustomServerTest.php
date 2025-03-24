@@ -2177,4 +2177,78 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testEmptyEntrypointInCreateDeployment()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'php-8.0',
+            'name' => 'Empty Entrypoint Test',
+            'entrypoint' => '',
+            'execute' => ['any']
+        ]);
+        $this->assertNotEmpty($functionId);
+
+        $deployment = $this->createDeployment($functionId, [
+            'code' => $this->packageFunction('php-cookie'),
+            'activate' => true
+        ]);
+        $this->assertEquals(404, $deployment['headers']['status-code']);
+        $this->assertStringContainsString('Entrypoint for your Appwrite Function is missing.', $deployment['body']['message']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testEmptyEntrypointInCreateTemplateDeployment()
+    {
+        $starterTemplate = $this->getTemplate('starter');
+        $this->assertEquals(200, $starterTemplate['headers']['status-code']);
+
+        $phpRuntime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
+            return $runtime['name'] === 'php-8.0';
+        }))[0];
+
+        $this->assertEmpty($starterTemplate['body']['variables']);
+
+        $function = $this->createFunction(
+            [
+                'functionId' => ID::unique(),
+                'name' => $starterTemplate['body']['name'],
+                'runtime' => 'php-8.0',
+                'execute' => $starterTemplate['body']['permissions'],
+                'entrypoint' => '',
+                'events' => $starterTemplate['body']['events'],
+                'schedule' => $starterTemplate['body']['cron'],
+                'timeout' => $starterTemplate['body']['timeout'],
+                'commands' => $phpRuntime['commands'],
+                'scopes' => $starterTemplate['body']['scopes'],
+                'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
+                'templateOwner' => $starterTemplate['body']['providerOwner'],
+                'templateRootDirectory' => $phpRuntime['providerRootDirectory'],
+                'templateVersion' => $starterTemplate['body']['providerVersion'],
+            ]
+        );
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $deployment = $this->createTemplateDeployment(
+            $functionId,
+            [
+                'functionId' => ID::unique(),
+                'activate' => true,
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'rootDirectory' => $phpRuntime['providerRootDirectory'],
+                'version' => $starterTemplate['body']['providerVersion'],
+            ]
+        );
+
+        $this->assertEquals(404, $deployment['headers']['status-code']);
+        $this->assertStringContainsString('Entrypoint for your Appwrite Function is missing.', $deployment['body']['message']);
+
+        $function = $this->cleanupFunction($functionId);
+    }
 }
