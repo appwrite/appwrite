@@ -123,6 +123,7 @@ class DatabasesCustomServerTest extends Scope
                 Query::orderDesc()->toString(),
             ],
         ]);
+
         $this->assertEquals(2, $databases['body']['total']);
         $this->assertEquals($base[0]['$id'], $databases['body']['databases'][0]['$id']);
         $this->assertEquals($base[1]['$id'], $databases['body']['databases'][1]['$id']);
