@@ -539,6 +539,75 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSettingsForRollback(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => '',
+            'buildCommand' => '',
+            'installCommand' => '',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertArrayHasKey('adapter', $site['body']);
+        $this->assertArrayHasKey('fallbackFile', $site['body']);
+        $this->assertEmpty($site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId1 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+
+        $site = $this->updateSite([
+            'fallbackFile' => 'hello.html',
+            'adapter' => 'ssr',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            '$id' => $siteId
+        ]);
+
+        $deploymentId2 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId2);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->updateSiteDeployment($siteId, $deploymentId1);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/something');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**
