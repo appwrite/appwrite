@@ -1,3 +1,13 @@
+## 15.0.0
+
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 14.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+
 ## 13.0.0
 
 * Fixed realtime reconnection issues

@@ -572,7 +572,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_ACCESS_KEY',
-                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'description' => 'S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your S3 storage provider',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -580,7 +580,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_SECRET',
-                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
+                'description' => 'S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your S3 storage provider.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -588,7 +588,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_REGION',
-                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
+                'description' => 'S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from your S3 storage provider.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -596,8 +596,16 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_BUCKET',
-                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
+                'description' => 'S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your S3 storage provider.',
                 'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_ENDPOINT',
+                'description' => 'S3 storage endpoint. Required when using S3 storage providers other than AWS.',
+                'introduction' => '0.16.2',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1040,9 +1048,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'description' => 'The maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
                 'introduction' => '0.7.0',
                 'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE',
+                'description' => 'The maximum duration (in seconds) upto which to retain console audit logs. The default value is 15778800 seconds (6 months).',
+                'introduction' => '1.6.2',
+                'default' => '15778800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -116,6 +116,7 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_S3_SECRET
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -147,6 +148,7 @@ $image = $this->getParam('image', '');
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
@@ -163,11 +165,10 @@ $image = $this->getParam('image', '');
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
-
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:5.2.27
+    image: <?php echo $organization; ?>/console:5.2.53
     restart: unless-stopped
     networks:
       - appwrite
@@ -318,6 +319,7 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_S3_SECRET
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -339,7 +341,10 @@ $image = $this->getParam('image', '');
       - _APP_EXECUTOR_HOST
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_CERTIFICATES
 
   appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -413,6 +418,7 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_S3_SECRET
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -568,6 +574,7 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_S3_SECRET
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -646,6 +653,7 @@ $image = $this->getParam('image', '');
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
@@ -881,6 +889,7 @@ $image = $this->getParam('image', '');
       - OPR_EXECUTOR_STORAGE_S3_SECRET=$_APP_STORAGE_S3_SECRET
       - OPR_EXECUTOR_STORAGE_S3_REGION=$_APP_STORAGE_S3_REGION
       - OPR_EXECUTOR_STORAGE_S3_BUCKET=$_APP_STORAGE_S3_BUCKET
+      - OPR_EXECUTOR_STORAGE_S3_ENDPOINT=$_APP_STORAGE_S3_ENDPOINT
       - OPR_EXECUTOR_STORAGE_DO_SPACES_ACCESS_KEY=$_APP_STORAGE_DO_SPACES_ACCESS_KEY
       - OPR_EXECUTOR_STORAGE_DO_SPACES_SECRET=$_APP_STORAGE_DO_SPACES_SECRET
       - OPR_EXECUTOR_STORAGE_DO_SPACES_REGION=$_APP_STORAGE_DO_SPACES_REGION

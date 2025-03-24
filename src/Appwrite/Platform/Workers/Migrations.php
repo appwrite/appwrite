@@ -3,8 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Realtime;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -35,6 +34,9 @@ class Migrations extends Action
 
     protected Document $project;
 
+    /**
+     * @var callable
+     */
     protected $logError;
 
     public static function getName(): string
@@ -54,13 +56,14 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('logError')
-            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError));
+            ->inject('queueForRealtime')
+            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -87,7 +90,7 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration);
+        $this->processMigration($migration, $queueForRealtime);
     }
 
     /**
@@ -155,61 +158,36 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function updateMigrationDocument(Document $migration, Document $project): Document
+    protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
-        /** Trigger Realtime */
-        $allEvents = Event::generateEvents('migrations.[migrationId].update', [
-            'migrationId' => $migration->getId(),
-        ]);
-
-        $target = Realtime::fromPayload(
-            event: $allEvents[0],
-            payload: $migration,
-            project: $project
-        );
-
-        Realtime::send(
-            projectId: 'console',
-            payload: $migration->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-        );
-
-        Realtime::send(
-            projectId: $project->getId(),
-            payload: $migration->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-        );
+        /** Trigger Realtime Events */
+        $queueForRealtime
+            ->setProject($project)
+            ->setSubscribers(['console', $project->getId()])
+            ->setEvent('migrations.[migrationId].update')
+            ->setParam('migrationId', $migration->getId())
+            ->setPayload($migration->getArrayCopy())
+            ->trigger();
 
         return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
     }
 
     /**
-     * @throws \Utopia\Database\Exception
-     * @throws Authorization
-     * @throws Conflict
-     * @throws Restricted
-     * @throws Structure
-     */
-    protected function removeAPIKey(Document $apiKey): void
-    {
-        $this->dbForPlatform->deleteDocument('keys', $apiKey->getId());
-    }
-
-    /**
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
      * @throws Exception
      */
     protected function generateAPIKey(Document $project): string
     {
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
+            'disabledMetrics' => [
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+            ],
             'scopes' => [
                 'users.read',
                 'users.write',
@@ -222,12 +200,9 @@ class Migrations extends Action
                 'functions.read',
                 'functions.write',
                 'databases.read',
-                'databases.write',
                 'collections.read',
-                'collections.write',
                 'documents.read',
-                'documents.write'
-            ]
+            ],
         ]);
 
         return API_KEY_DYNAMIC . '_' . $apiKey;
@@ -241,7 +216,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function processMigration(Document $migration): void
+    protected function processMigration(Document $migration, Realtime $queueForRealtime): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
@@ -265,7 +240,7 @@ class Migrations extends Action
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
@@ -279,14 +254,14 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migration->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             $transfer->run(
                 $migration->getAttribute('resources'),
-                function () use ($migration, $transfer, $projectDocument) {
+                function () use ($migration, $transfer, $projectDocument, $queueForRealtime) {
                     $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                     $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                    $this->updateMigrationDocument($migration, $projectDocument);
+                    $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
                 },
                 $migration->getAttribute('resourceId'),
                 $migration->getAttribute('resourceType')
@@ -323,7 +298,7 @@ class Migrations extends Action
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $this->updateMigrationDocument($migration, $projectDocument);
+                $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
                 return;
             }
@@ -364,7 +339,7 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errorMessages);
             }
         } finally {
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
 
             if ($migration->getAttribute('status', '') === 'failed') {
                 Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
