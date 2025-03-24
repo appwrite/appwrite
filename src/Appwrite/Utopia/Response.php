@@ -604,7 +604,7 @@ class Response extends SwooleResponse
      * @return array
      * @throws Exception
      */
-    public function output(Document $document, string $model): array
+    public function output(Document $document, string $model, bool $showSensitive = false): array
     {
         $data       = clone $document;
         $model      = $this->getModel($model);
@@ -675,7 +675,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = Auth::isPrivilegedUser($roles);
                 $isAppUser = Auth::isAppUser($roles);
 
-                if (!$isPrivilegedUser && !$isAppUser) {
+                if ((!$isPrivilegedUser && !$isAppUser) || !$showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
