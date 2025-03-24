@@ -120,10 +120,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::orderDesc()->setAttribute('')->toString(),
+                Query::orderDesc()->toString(),
             ],
         ]);
-        var_dump($databases);
         $this->assertEquals(2, $databases['body']['total']);
         $this->assertEquals($base[0]['$id'], $databases['body']['databases'][0]['$id']);
         $this->assertEquals($base[1]['$id'], $databases['body']['databases'][1]['$id']);
@@ -453,7 +452,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::orderDesc()->setAttribute('')->toString(),
+                Query::orderDesc()->toString(),
             ],
         ]);
 
