@@ -3133,9 +3133,6 @@ App::post('/v1/account/recovery')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
         $url = htmlentities($url);
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
@@ -3261,11 +3258,14 @@ App::post('/v1/account/recovery')
 
         $recovery->setAttribute('secret', $secret);
 
+        $payload = $response->output($recovery, Response::MODEL_TOKEN);
+        $payload['secret'] = $secret;
+
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
-            ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
+            ->setPayload($payload, sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3355,10 +3355,13 @@ App::put('/v1/account/recovery')
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
+        $payload = $response->output($recoveryDocument, Response::MODEL_TOKEN);
+        $payload['secret'] = $secret;
+
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recoveryDocument->getId())
-        ;
+            ->setPayload($payload, sensitive: ['secret']);
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -3405,9 +3408,6 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
@@ -3518,10 +3518,13 @@ App::post('/v1/account/verification')
 
         $verification->setAttribute('secret', $verificationSecret);
 
+        $payload = $response->output($verification, Response::MODEL_TOKEN);
+        $payload['secret'] = $verificationSecret;
+
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
+            ->setPayload($payload, sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3586,9 +3589,13 @@ App::put('/v1/account/verification')
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
+        $payload = $response->output($verification, Response::MODEL_TOKEN);
+        $payload['secret'] = $secret;
+
         $queueForEvents
             ->setParam('userId', $userId)
-            ->setParam('tokenId', $verification->getId());
+            ->setParam('tokenId', $verification->getId())
+            ->setPayload($payload, sensitive: ['secret']);
 
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
