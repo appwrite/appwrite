@@ -272,7 +272,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
-App::setResource('project', function ($dbForPlatform, $request, $console, $utopia) {
+App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var Utopia\Database\Document $console */
@@ -286,7 +286,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console, $utopi
     $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForPlatform', 'request', 'console', 'utopia']);
+}, ['dbForPlatform', 'request', 'console']);
 
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
