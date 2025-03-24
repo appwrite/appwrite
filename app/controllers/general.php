@@ -1009,7 +1009,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = (App::isDevelopment()) ? [
+        $output = App::isDevelopment() ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,

@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.6.1",
+        "version": "1.6.2",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -10127,6 +10127,12 @@
                                     "description": "Variable value. Max length: 8192 chars.",
                                     "default": null,
                                     "x-example": "<VALUE>"
+                                },
+                                "secret": {
+                                    "type": "boolean",
+                                    "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                    "default": false,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -26037,6 +26043,11 @@
                     "description": "Variable value.",
                     "x-example": "myPa$$word1"
                 },
+                "secret": {
+                    "type": "boolean",
+                    "description": "Variable secret flag. Secret variables can only be updated or deleted, but never read.",
+                    "x-example": false
+                },
                 "resourceType": {
                     "type": "string",
                     "description": "Service to which the variable belongs. Possible values are \"project\", \"function\"",
@@ -26054,6 +26065,7 @@
                 "$updatedAt",
                 "key",
                 "value",
+                "secret",
                 "resourceType",
                 "resourceId"
             ]
