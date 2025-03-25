@@ -889,7 +889,6 @@ class Deletes extends Action
 
         /**
          * Delete VCS Repositories and VCS Comments
-         * todo: no index for this query
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
