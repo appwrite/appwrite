@@ -851,7 +851,6 @@ class Deletes extends Action
 
         /**
          * Delete Deployments
-         * todo: No index for `resourceInternalId`, perhaps use resourceId until fixed
          */
         Console::info("Deleting deployments for function " . $functionId);
 
