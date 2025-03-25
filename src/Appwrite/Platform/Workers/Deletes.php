@@ -539,7 +539,7 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION,
+            Audit::getCollection(),
             AbuseDatabase::COLLECTION,
         ];
 
@@ -799,7 +799,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         try {
-            $this->deleteByGroup(Audit::COLLECTION, [
+            $this->deleteByGroup(Audit::getCollection(), [
                 Query::select(['$internalId', '$id', '$updatedAt']),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),

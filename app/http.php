@@ -244,7 +244,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
-            if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
+            if ($dbForPlatform->getCollection(Audit::getCollection())->isEmpty()) {
                 $audit = new Audit($dbForPlatform);
                 $audit->setup();
             }
@@ -330,7 +330,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
-            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+            if ($dbForProject->getCollection(Audit::getCollection())->isEmpty()) {
                 $audit = new Audit($dbForProject);
                 $audit->setup();
             }
