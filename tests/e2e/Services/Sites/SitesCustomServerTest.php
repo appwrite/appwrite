@@ -544,18 +544,16 @@ class SitesCustomServerTest extends Scope
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
             'name' => 'Static site',
-            'framework' => 'other',
+            'framework' => 'astro',
             'buildRuntime' => 'node-22',
-            'outputDirectory' => '',
-            'buildCommand' => '',
-            'installCommand' => '',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
         ]);
         $this->assertNotEmpty($siteId);
 
         $site = $this->getSite($siteId);
         $this->assertEquals('200', $site['headers']['status-code']);
-        $this->assertArrayHasKey('adapter', $site['body']);
-        $this->assertArrayHasKey('fallbackFile', $site['body']);
         $this->assertEmpty($site['body']['adapter']);
         $this->assertEmpty($site['body']['fallbackFile']);
 
@@ -563,7 +561,7 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($domain);
 
         $deploymentId1 = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static-single-file'),
+            'code' => $this->packageSite('astro-static'),
             'activate' => 'true'
         ]);
         $this->assertNotEmpty($deploymentId1);
@@ -571,15 +569,23 @@ class SitesCustomServerTest extends Scope
         $site = $this->getSite($siteId);
         $this->assertEquals('200', $site['headers']['status-code']);
         $this->assertEquals('static', $site['body']['adapter']);
-        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+        $this->assertEquals('index.html', $site['body']['fallbackFile']);
 
         $site = $this->updateSite([
-            'fallbackFile' => 'hello.html',
-            'adapter' => 'ssr',
+            'name' => 'SSR site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
             'installCommand' => 'npm install',
-            '$id' => $siteId
+            'adapter' => 'ssr',
+            'fallbackFile' => '',
+            '$id' => $siteId,
         ]);
+
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
 
         $deploymentId2 = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('astro'),
@@ -587,9 +593,16 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId2);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro SSR", $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertEquals(404, $response['headers']['status-code']);
 
         $response = $this->updateSiteDeployment($siteId, $deploymentId1);
@@ -600,10 +613,10 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Main page', $response['body']);
-        $response = $proxyClient->call(Client::METHOD_GET, '/something');
+        $this->assertStringContainsString("Astro static", $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Main page', $response['body']);
+        $this->assertStringContainsString("Astro static", $response['body']);
 
         $this->cleanupSite($siteId);
     }
