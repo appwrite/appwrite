@@ -23,7 +23,7 @@ class Audits extends Action
 
     protected int $flushedAt;
 
-    protected array $logs = [];
+    private array $logs = [];
 
 
     protected function getBatchSize(): int
