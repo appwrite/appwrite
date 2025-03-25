@@ -21,7 +21,7 @@ class Audits extends Action
     protected const BATCH_SIZE_PRODUCTION = 5_000;
     protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
-    private int $flushedAt = 0;
+    protected int $flushedAt;
 
     private array $logs = [];
 
