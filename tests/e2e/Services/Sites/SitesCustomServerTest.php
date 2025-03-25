@@ -1987,6 +1987,57 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEquals($log1Id, $log2Id);
 
+        $site = $this->updateSite(
+            [
+                '$id' => $siteId,
+                'name' => 'SSR site',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'fallbackFile' => '',
+                'logging' => false // set logging to false
+            ]
+        );
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Inline logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-inline", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $log1Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log1Id);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Action logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-action", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $log2Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log2Id);
+
         $this->cleanupSite($siteId);
     }
 
