@@ -1929,12 +1929,12 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['errors']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-inline", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
 
@@ -1947,12 +1947,12 @@ class SitesCustomServerTest extends Scope
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['logs']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['errors']);
-        $this->assertStringContainsString("", $logs['body']['executions'][0]['errors']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-action", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
