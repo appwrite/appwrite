@@ -61,7 +61,11 @@ App::post('/v1/proxy/rules')
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
+        $functionsDomainFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+        if (
+            ($functionsDomain !== '' && str_ends_with($domain, $functionsDomain)) ||
+            ($functionsDomainFallback !== '' && str_ends_with($domain, $functionsDomainFallback))
+        ) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
         }
 
