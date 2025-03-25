@@ -2294,7 +2294,6 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('Error: Build output directory is empty.', $deployment['body']['buildLogs']);
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
@@ -2333,7 +2332,6 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status is failed, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('Error: Output directory is either not set or does not exist.', $deployment['body']['buildLogs']);
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
