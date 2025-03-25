@@ -82,7 +82,7 @@ class Base extends Queries
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order([...$attributes, $internalId])),
+            new Order([...$attributes, $internalId]),
         ];
 
         parent::__construct($validators);
