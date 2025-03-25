@@ -192,14 +192,6 @@ App::init()
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
-
-            var_dump([
-                'location'        => 'api.php',
-                'projectId'       => !empty($project->getId()) ? $project->getId() : 'NA',
-                'params'          => 'Method: ' . $route->getMethod(). '  URL: ' . $route->getPath(),
-                '_APP_REGION'     => System::getEnv('_APP_REGION'),
-            ]);
-
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
