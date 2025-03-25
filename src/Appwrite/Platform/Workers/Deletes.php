@@ -305,9 +305,6 @@ class Deletes extends Action
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
-        /**
-         * todo: No index found for `expired` attribute
-         */
         $this->deleteByGroup(
             'targets',
             [
@@ -323,9 +320,6 @@ class Deletes extends Action
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        /**
-         * todo: No index found for `sessionInternalId` attribute
-         */
         $this->deleteByGroup(
             'targets',
             [
@@ -367,10 +361,6 @@ class Deletes extends Action
 
         $queries[] = Query::select(['$internalId', '$id', '$updatedAt']);
         $queries[] = Query::orderAsc();
-
-        /**
-         * todo: No index on `resource`, `resourceType`, But it is fine since resource index is a strong index!
-         */
 
         $this->deleteByGroup(
             'cache',
@@ -446,7 +436,7 @@ class Deletes extends Action
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
-            Query::orderDesc(), // _key_period_time `period` ASC, `time `ASC
+            Query::orderDesc(),
         ], $dbForProject);
 
         if ($project->getId() !== 'console') {
@@ -459,7 +449,7 @@ class Deletes extends Action
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
-                Query::orderDesc(), // _key_period_time `period` ASC, `time `ASC
+                Query::orderDesc(),
             ], $dbForLogs);
         }
     }
@@ -639,11 +629,7 @@ class Deletes extends Action
             Query::orderAsc()
         ], $dbForPlatform);
 
-        /**
-         * No projectInternalId in this collection
-         * todo: No index for `projectId` attribute
-         */
-        // Delete Schedules ()
+        // Delete Schedules
         $this->deleteByGroup('schedules', [
             Query::equal('projectId', [$projectId]),
             Query::orderAsc()
@@ -724,9 +710,6 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete identities
-        /**
-         * todo: Remove Duplication index `_key_userInternalId` , But lets leave because of index length issue in unique index
-         */
         $this->deleteByGroup('identities', [
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
@@ -799,7 +782,7 @@ class Deletes extends Action
         $this->deleteByGroup('realtime', [
             Query::lessThan('timestamp', $datetime),
             Query::orderDesc('timestamp'),
-            Query::orderAsc(), // KEY "_key_timestamp" ("timestamp" DESC),
+            Query::orderAsc(),
         ], $dbForPlatform);
     }
 
@@ -820,7 +803,7 @@ class Deletes extends Action
                 Query::select(['$internalId', '$id', '$updatedAt']),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
-                Query::orderAsc(), // KEY "index-time" ("time" DESC)
+                Query::orderAsc(),
             ], $dbForProject);
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
@@ -845,7 +828,6 @@ class Deletes extends Action
 
         /**
          * Delete rules
-         * todo: No index for this query, drop _key_projectInternalId and create _key_projectInternalId, resourceInternalId, resourceType
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
@@ -859,7 +841,6 @@ class Deletes extends Action
 
         /**
          * Delete Variables
-         * todo: No index for this query , drop _key_resourceInternalId and create new one with {resourceInternalId, resourceType}
          */
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
@@ -885,7 +866,6 @@ class Deletes extends Action
 
         /**
          * Delete builds
-         * todo: No index for `deploymentInternalId`, perhaps use deploymentId until fixed
          */
         Console::info("Deleting builds for function " . $functionId);
 
@@ -900,7 +880,6 @@ class Deletes extends Action
 
         /**
          * Delete Executions
-         * todo: No index for `functionInternalId` , perhaps use functionId until fixed
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
@@ -923,9 +902,6 @@ class Deletes extends Action
             $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
             $projectInternalId = $document->getAttribute('projectInternalId', '');
 
-            /**
-             * todo: add index to this query
-             */
             $this->deleteByGroup('vcsComments', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::equal('projectInternalId', [$projectInternalId]),
@@ -1025,7 +1001,6 @@ class Deletes extends Action
 
         /**
          * Delete builds
-         * todo: no index for `deploymentInternalId` Same as above index , no need to handle again...
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
 
