@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Adapter\Audit;
+use Utopia\Audit\Log;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -20,7 +21,7 @@ class Audits extends Action
     protected const BATCH_SIZE_PRODUCTION = 5_000;
     protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
-    private int $lastTriggeredTime = 0;
+    private int $flushedAt = 0;
 
     private array $logs = [];
 
@@ -49,7 +50,7 @@ class Audits extends Action
             ->inject('project')
             ->callback([$this, 'action']);
 
-        $this->lastTriggeredTime = time();
+        $this->flushedAt = time();
     }
 
 
@@ -86,7 +87,8 @@ class Audits extends Action
         $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
 
         // Create event data
-        $eventData = [
+
+        $log = new Log([
             'userId' => $user->getInternalId(),
             'event' => $event,
             'resource' => $resource,
@@ -102,10 +104,10 @@ class Audits extends Action
                 'data' => $auditPayload,
             ],
             'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
-        ];
+        ]);
 
         if (isset($this->logs[$project->getInternalId()])) {
-            $this->logs[$project->getInternalId()]['logs'][] = $eventData;
+            $this->logs[$project->getInternalId()]['logs'][] = $log;
         } else {
             $this->logs[$project->getInternalId()] = [
                 'project' => new Document([
@@ -113,18 +115,18 @@ class Audits extends Action
                     '$internalId' => $project->getInternalId(),
                     'database' => $project->getAttribute('database'),
                 ]),
-                'logs' => [$eventData]
+                'logs' => [$log]
             ];
         }
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
         $batchSize = $this->getBatchSize();
-        $shouldProcessBatch = \count($this->logs) >= $batchSize;
-        if (!$shouldProcessBatch && \count($this->logs) > 0) {
-            $shouldProcessBatch = (\time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
+        $process = \count($this->logs) >= $batchSize;
+        if (!$process && \count($this->logs) > 0) {
+            $process = (\time() - $this->flushedAt) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
-        if ($shouldProcessBatch) {
+        if ($process) {
             try {
                 foreach ($this->logs as $internalId => $projectLogs) {
                     $dbForProject = $getProjectDB($projectLogs['project']);
@@ -140,7 +142,7 @@ class Audits extends Action
             } catch (Throwable $e) {
                 Console::error('Error processing audit logs: ' . $e->getMessage());
             } finally {
-                $this->lastTriggeredTime = time();
+                $this->flushedAt = time();
             }
         }
     }
