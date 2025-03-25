@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;

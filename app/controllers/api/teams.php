@@ -26,7 +26,7 @@ use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

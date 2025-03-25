@@ -11,7 +11,7 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
