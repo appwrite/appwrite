@@ -496,9 +496,8 @@ class Deletes extends Action
     {
 
         $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId(),
-            Query::equal('region', System::getEnv('_APP_REGION', 'default'))
-            ])
+            Query::equal('teamInternalId', [$document->getInternalId()]),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
         ]);
 
         foreach ($projects as $project) {
