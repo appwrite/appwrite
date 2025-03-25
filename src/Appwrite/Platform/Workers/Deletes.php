@@ -806,7 +806,7 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param string $datetime
+     * @param string $auditRetention
      * @return void
      * @throws Exception
      */
