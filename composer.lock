@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d2bec8137dcd84994121f89a29932d31",
+    "content-hash": "640d2a8be42ae521ea12d8a908873f2b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.62.1",
+            "version": "dev-feat-multi-tenant-insert",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "65dc51466c12552add10395900cdbb4728da4068"
+                "reference": "2e01c999153a202a8bae9c21e4302e7a674442d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/65dc51466c12552add10395900cdbb4728da4068",
-                "reference": "65dc51466c12552add10395900cdbb4728da4068",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/2e01c999153a202a8bae9c21e4302e7a674442d0",
+                "reference": "2e01c999153a202a8bae9c21e4302e7a674442d0",
                 "shasum": ""
             },
             "require": {
@@ -3546,9 +3546,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.62.1"
+                "source": "https://github.com/utopia-php/database/tree/feat-multi-tenant-insert"
             },
-            "time": "2025-03-24T08:27:18+00:00"
+            "time": "2025-03-25T04:45:25+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8132,9 +8132,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-multi-tenant-insert",
+            "alias": "0.62.1",
+            "alias_normalized": "0.62.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
