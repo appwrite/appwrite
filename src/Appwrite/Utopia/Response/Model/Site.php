@@ -46,6 +46,12 @@ class Site extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether logs and errors will be logged. When set to false, logs and errors will not be logged, but will reduce resource used by your Appwrite project.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site framework.',
