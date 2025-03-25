@@ -114,6 +114,8 @@ class Create extends Action
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'adapter' => $site->getAttribute('adapter', ''),
+            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
             'screenshotDark' => '',

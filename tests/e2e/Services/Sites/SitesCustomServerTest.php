@@ -539,6 +539,88 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSettingsForRollback(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEmpty($site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $deploymentId1 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro-static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId1);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('index.html', $site['body']['fallbackFile']);
+
+        $site = $this->updateSite([
+            'name' => 'SSR site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'adapter' => 'ssr',
+            'fallbackFile' => '',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
+
+        $deploymentId2 = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId2);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro SSR", $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->updateSiteDeployment($siteId, $deploymentId1);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro static", $response['body']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro static", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**
@@ -1904,6 +1986,57 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($log2Id);
 
         $this->assertNotEquals($log1Id, $log2Id);
+
+        $site = $this->updateSite(
+            [
+                '$id' => $siteId,
+                'name' => 'SSR site',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'fallbackFile' => '',
+                'logging' => false // set logging to false
+            ]
+        );
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Inline logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-inline", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $log1Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log1Id);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Action logs printed.", $response['body']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
+        $this->assertEquals("/logs-action", $logs['body']['executions'][0]['requestPath']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['logs']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        $log2Id = $logs['body']['executions'][0]['$id'];
+        $this->assertNotEmpty($log2Id);
 
         $this->cleanupSite($siteId);
     }
