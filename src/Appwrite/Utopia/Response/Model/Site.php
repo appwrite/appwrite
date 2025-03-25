@@ -48,7 +48,7 @@ class Site extends Model
             ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether logs and errors will be logged. When set to false, logs and errors will not be logged, but will reduce resource used by your Appwrite project.',
+                'description' => 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.',
                 'default' => true,
                 'example' => false,
             ])
