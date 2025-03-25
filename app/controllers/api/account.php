@@ -155,9 +155,6 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
-    $roles = Authorization::getRoles();
-    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-    $isAppUser = Auth::isAppUser($roles);
 
     /** @var Utopia\Database\Document $user */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -273,7 +270,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('current', true)
         ->setAttribute('countryName', $countryName)
         ->setAttribute('expire', $expire)
-        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '')
+        ->setAttribute('secret', Auth::encodeSession($user->getId(), $sessionSecret))
     ;
 
     $response->dynamic($session, Response::MODEL_SESSION);
@@ -530,9 +527,6 @@ App::get('/v1/account/sessions')
     ->inject('project')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
@@ -542,7 +536,7 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
-            $session->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '');
+            $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
             $sessions[$key] = $session;
         }
@@ -649,10 +643,6 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project) {
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -665,7 +655,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
+                    ->setAttribute('secret', $session->getAttribute('secret', ''))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -897,10 +887,6 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
         $user->setAttributes($profile->getArrayCopy());
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -966,7 +952,7 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
         ;
 
         $queueForEvents
@@ -1019,9 +1005,6 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('queueForEvents')
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         if ('console' === $project->getId()) {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
@@ -1123,7 +1106,7 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
+            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1884,9 +1867,6 @@ App::post('/v1/account/tokens/magic-url')
             $phrase = Phrase::generate();
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
@@ -2068,16 +2048,10 @@ App::post('/v1/account/tokens/magic-url')
             ->setRecipient($email)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $tokenSecret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $token->setAttribute('secret', '');
-        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -2130,10 +2104,6 @@ App::post('/v1/account/tokens/email')
         if ($phrase === true) {
             $phrase = Phrase::generate();
         }
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
@@ -2303,16 +2273,10 @@ App::post('/v1/account/tokens/email')
             ->setRecipient($email)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $tokenSecret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $token->setAttribute('secret', '');
-        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -2438,10 +2402,6 @@ App::post('/v1/account/tokens/phone')
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
         if (!$result->isEmpty()) {
@@ -2594,14 +2554,13 @@ App::post('/v1/account/tokens/phone')
             }
         }
 
-        // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $secret);
 
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-        // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
+        // Encode secret for clients
+        $token->setAttribute('secret', Auth::encodeSession($user->getId(), $secret));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3174,11 +3133,6 @@ App::post('/v1/account/recovery')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
         $url = htmlentities($url);
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
@@ -3302,19 +3256,13 @@ App::post('/v1/account/recovery')
             ->setSubject($subject)
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $recovery->setAttribute('secret', $secret);
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
-            ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $recovery->setAttribute('secret', '');
-        }
+            ->setPayload($response->output($recovery, Response::MODEL_TOKEN, true), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3407,7 +3355,7 @@ App::put('/v1/account/recovery')
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recoveryDocument->getId())
-        ;
+            ->setPayload($response->output($recoveryDocument, Response::MODEL_TOKEN, true), sensitive: ['secret']);
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -3454,9 +3402,6 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
@@ -3565,18 +3510,12 @@ App::post('/v1/account/verification')
             ->setName($user->getAttribute('name') ?? '')
             ->trigger();
 
-        // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $verificationSecret);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $verification->setAttribute('secret', '');
-        }
+            ->setPayload($response->output($verification, Response::MODEL_TOKEN, true), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3643,7 +3582,8 @@ App::put('/v1/account/verification')
 
         $queueForEvents
             ->setParam('userId', $userId)
-            ->setParam('tokenId', $verification->getId());
+            ->setParam('tokenId', $verification->getId())
+            ->setPayload($response->output($verification, Response::MODEL_TOKEN, true), sensitive: ['secret']);
 
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
@@ -3695,10 +3635,6 @@ App::post('/v1/account/verification/phone')
         if ($user->getAttribute('phoneVerification')) {
             throw new Exception(Exception::USER_PHONE_ALREADY_VERIFIED);
         }
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
 
         $secret = null;
         $sendSMS = true;
@@ -3788,18 +3724,12 @@ App::post('/v1/account/verification/phone')
             }
         }
 
-        // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $secret);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
-
-        // Hide secret for clients
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $verification->setAttribute('secret', '');
-        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

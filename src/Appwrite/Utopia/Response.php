@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -113,6 +114,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 
 /**
@@ -602,7 +604,7 @@ class Response extends SwooleResponse
      * @return array
      * @throws Exception
      */
-    public function output(Document $document, string $model): array
+    public function output(Document $document, string $model, bool $showSensitive = false): array
     {
         $data       = clone $document;
         $model      = $this->getModel($model);
@@ -665,6 +667,16 @@ class Response extends SwooleResponse
             } else {
                 if ($data[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
+                }
+            }
+
+            if ($rule['sensitive']) {
+                $roles = Authorization::getRoles();
+                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+                $isAppUser = Auth::isAppUser($roles);
+
+                if ((!$isPrivilegedUser && !$isAppUser) && !$showSensitive) {
+                    $data->setAttribute($key, '');
                 }
             }
 
