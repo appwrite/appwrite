@@ -798,13 +798,6 @@ class Builds extends Action
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-
-            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
-            }
-
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -938,6 +931,11 @@ class Builds extends Action
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            
+            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            }
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
