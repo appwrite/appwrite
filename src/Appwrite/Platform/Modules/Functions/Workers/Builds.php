@@ -41,6 +41,8 @@ use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
+use function Swoole\Coroutine\batch;
+
 class Builds extends Action
 {
     public static function getName(): string
@@ -849,69 +851,76 @@ class Builds extends Action
                     ]);
 
                     // TODO: @Meldiron if becomes too slow, do concurrently
-                    foreach ($configs as $key => $config) {
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
-                        ]);
+                    $screenshots = batch(\array_map(function ($key) use ($configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform) {
+                        return function () use ($key, $configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform) {
+                            $config = $configs[$key];
 
-                        $config['sleep'] = 3000;
+                            $config['headers'] = \array_merge($config['headers'] ?? [], [
+                                'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                            ]);
+                            $config['sleep'] = 3000;
 
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
+                            $frameworks = Config::getParam('frameworks', []);
+                            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                            if (!is_null($framework)) {
+                                $config['sleep'] = $framework['screenshotSleep'];
+                            }
 
-                        $fetchResponse = $client->fetch(
-                            url: 'http://appwrite-browser:3000/v1/screenshots',
-                            method: 'POST',
-                            body: $config
-                        );
+                            $fetchResponse = $client->fetch(
+                                url: 'http://appwrite-browser:3000/v1/screenshots',
+                                method: 'POST',
+                                body: $config
+                            );
 
-                        if ($fetchResponse->getStatusCode() >= 400) {
-                            throw new \Exception($fetchResponse->getBody());
-                        }
+                            if ($fetchResponse->getStatusCode() >= 400) {
+                                throw new \Exception($fetchResponse->getBody());
+                            }
 
-                        $screenshot = $fetchResponse->getBody();
+                            $screenshot = $fetchResponse->getBody();
 
-                        $fileId = ID::unique();
-                        $fileName = $fileId . '.png';
-                        $path = $deviceForFiles->getPath($fileName);
-                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+                            $fileId = ID::unique();
+                            $fileName = $fileId . '.png';
+                            $path = $deviceForFiles->getPath($fileName);
+                            $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                            $success = $deviceForFiles->write($path, $screenshot, "image/png");
 
-                        if (!$success) {
-                            throw new \Exception("Screenshot failed to save");
-                        }
+                            if (!$success) {
+                                throw new \Exception("Screenshot failed to save");
+                            }
 
-                        $teamId = $project->getAttribute('teamId', '');
-                        $file = new Document([
-                            '$id' => $fileId,
-                            '$permissions' => [
-                                Permission::read(Role::team(ID::custom($teamId))),
-                            ],
-                            'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getInternalId(),
-                            'name' => $fileName,
-                            'path' => $path,
-                            'signature' => $deviceForFiles->getFileHash($path),
-                            'mimeType' => $deviceForFiles->getFileMimeType($path),
-                            'sizeOriginal' => \strlen($screenshot),
-                            'sizeActual' => $deviceForFiles->getFileSize($path),
-                            'algorithm' => Compression::GZIP,
-                            'comment' => '',
-                            'chunksTotal' => 1,
-                            'chunksUploaded' => 1,
-                            'openSSLVersion' => null,
-                            'openSSLCipher' => null,
-                            'openSSLTag' => null,
-                            'openSSLIV' => null,
-                            'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
-                        ]);
-                        $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+                            $teamId = $project->getAttribute('teamId', '');
+                            $file = new Document([
+                                '$id' => $fileId,
+                                '$permissions' => [
+                                    Permission::read(Role::team(ID::custom($teamId))),
+                                ],
+                                'bucketId' => $bucket->getId(),
+                                'bucketInternalId' => $bucket->getInternalId(),
+                                'name' => $fileName,
+                                'path' => $path,
+                                'signature' => $deviceForFiles->getFileHash($path),
+                                'mimeType' => $deviceForFiles->getFileMimeType($path),
+                                'sizeOriginal' => \strlen($screenshot),
+                                'sizeActual' => $deviceForFiles->getFileSize($path),
+                                'algorithm' => Compression::GZIP,
+                                'comment' => '',
+                                'chunksTotal' => 1,
+                                'chunksUploaded' => 1,
+                                'openSSLVersion' => null,
+                                'openSSLCipher' => null,
+                                'openSSLTag' => null,
+                                'openSSLIV' => null,
+                                'search' => implode(' ', [$fileId, $fileName]),
+                                'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                            ]);
+                            $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
 
-                        $deployment->setAttribute($key, $fileId);
+                            return [ 'key' => $key, 'fileId' => $fileId ];
+                        };
+                    }, \array_keys($configs)));
+
+                    foreach ($screenshots as $screenshot) {
+                        $deployment->setAttribute($screenshot['key'], $screenshot['fileId']);
                     }
 
                     $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
