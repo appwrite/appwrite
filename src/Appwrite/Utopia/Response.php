@@ -112,7 +112,6 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
-use Utopia\CLI\Console;
 // Keep last
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
