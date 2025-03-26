@@ -180,10 +180,17 @@ class Deletes extends Action
      */
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
+        // Temporarly accepting both 'fra' and 'default'
+        // When all migrated, only use _APP_REGION with 'default' as default value
+        $regions = [System::getEnv('_APP_REGION', 'default')];
+        if (!in_array('default', $regions)) {
+            $regions[] = 'default';
+        }
+
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', $regions),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
