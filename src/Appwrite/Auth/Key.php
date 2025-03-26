@@ -79,7 +79,7 @@ class Key
     {
         return $this->previewAuthDisabled;
     }
-    
+
     public function isDeploymentStatusIgnored(): bool
     {
         return $this->deploymentStatusIgnored;
