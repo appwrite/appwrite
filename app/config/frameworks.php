@@ -22,7 +22,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/analog/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/analog/env.sh',
         'adapters' => [
             'ssr' => [
@@ -48,7 +48,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/angular/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/angular/env.sh',
         'adapters' => [
             'ssr' => [
@@ -74,7 +74,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/next-js/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/next-js/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/next-js/env.sh',
         'adapters' => [
             'ssr' => [
@@ -116,7 +116,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/nuxt/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/nuxt/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/nuxt/env.sh',
         'adapters' => [
             'ssr' => [
@@ -158,7 +158,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/sveltekit/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/sveltekit/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/sveltekit/env.sh',
         'adapters' => [
             'ssr' => [
@@ -183,7 +183,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/astro/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/astro/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/astro/env.sh',
         'adapters' => [
             'ssr' => [
@@ -208,7 +208,7 @@ return [
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'bundleCommand' => 'sh /usr/local/server/helpers/remix/bundle.sh',
+        'bundleCommand' => 'bash /usr/local/server/helpers/remix/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/remix/env.sh',
         'adapters' => [
             'ssr' => [

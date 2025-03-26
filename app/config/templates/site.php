@@ -392,7 +392,7 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'sh build.sh',
+                'buildCommand' => 'bash build.sh',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -478,7 +478,7 @@ return [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './',
                 'outputDirectory' => './dist/angular-starter-kit-for-appwrite/browser',
-                'buildCommand' => 'sh prepare-env.sh && npm run build'
+                'buildCommand' => 'bash prepare-env.sh && npm run build'
             ]),
         ],
         'vcsProvider' => 'github',
