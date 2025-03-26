@@ -30,14 +30,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist/analog',
-                'startCommand' => 'sh helpers/analog/server.sh',
+                'startCommand' => 'bash helpers/analog/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist/analog/public',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
             ]
         ]
@@ -56,14 +56,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist/angular',
-                'startCommand' => 'sh helpers/angular/server.sh',
+                'startCommand' => 'bash helpers/angular/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist/angular/browser',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.csr.html'
             ]
         ]
@@ -82,14 +82,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './.next',
-                'startCommand' => 'sh helpers/next-js/server.sh',
+                'startCommand' => 'bash helpers/next-js/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './out',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ]
         ]
     ],
@@ -105,7 +105,7 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
             ]
         ]
@@ -124,14 +124,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './.output',
-                'startCommand' => 'sh helpers/nuxt/server.sh',
+                'startCommand' => 'bash helpers/nuxt/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run generate',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './output/public',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ]
         ]
     ],
@@ -147,7 +147,7 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
             ]
         ]
@@ -166,14 +166,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './build',
-                'startCommand' => 'sh helpers/sveltekit/server.sh',
+                'startCommand' => 'bash helpers/sveltekit/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './build',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ]
         ]
     ],
@@ -191,14 +191,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'sh helpers/astro/server.sh',
+                'startCommand' => 'bash helpers/astro/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ]
         ]
     ],
@@ -216,14 +216,14 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './build',
-                'startCommand' => 'sh helpers/remix/server.sh',
+                'startCommand' => 'bash helpers/remix/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './build/client',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ]
         ]
     ],
@@ -239,7 +239,7 @@ return [
                 'buildCommand' => 'flutter build web',
                 'installCommand' => '',
                 'outputDirectory' => './build/web',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ],
         ],
     ],
@@ -255,7 +255,7 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ],
         ]
     ],
@@ -271,7 +271,7 @@ return [
                 'buildCommand' => '',
                 'installCommand' => '',
                 'outputDirectory' => './',
-                'startCommand' => 'sh helpers/server.sh',
+                'startCommand' => 'bash helpers/server.sh',
             ],
         ]
     ],
