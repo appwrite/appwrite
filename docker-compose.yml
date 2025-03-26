@@ -205,7 +205,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.3.0-sites-rc.28
+    image: appwrite/console:5.3.0-sites-rc.31
     restart: unless-stopped
     networks:
       - appwrite
