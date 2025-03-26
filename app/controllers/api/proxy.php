@@ -63,9 +63,8 @@ App::post('/v1/proxy/rules')
 
         $denyListString = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
         $deniedDomains = array_map('trim', explode(',', $denyListString));
-        var_dump($deniedDomains);
+
         foreach ($deniedDomains as $deniedDomain) {
-            var_dump(str_ends_with($domain, $deniedDomain));
             if (str_ends_with($domain, $deniedDomain)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or its subdomain to a specific resource. Please use a different domain.');
             }
