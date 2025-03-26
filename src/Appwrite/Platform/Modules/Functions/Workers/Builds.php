@@ -768,6 +768,10 @@ class Builds extends Action
                     $resource->setAttribute('adapter', $detection->getName());
                     $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                     $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                    $deployment->setAttribute('adapter', $detection->getName());
+                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                     throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }

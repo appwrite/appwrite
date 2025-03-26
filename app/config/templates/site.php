@@ -16,6 +16,16 @@ if (System::getEnv('_APP_ENV') === 'development') {
 
 $url = $protocol . '://' . $hostname;
 
+class UseCases
+{
+    public const PORTFOLIO = 'portfolio';
+    public const STARTER = 'starter';
+    public const EVENTS = 'events';
+    public const ECOMMERCE = 'ecommerce';
+    public const DOCUMENTATION = 'documentation';
+    public const BLOG = 'blog';
+}
+
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
         'key' => 'sveltekit',
@@ -125,6 +135,15 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => 'index.html',
     ],
+    'OTHER' => [
+        'key' => 'other',
+        'name' => 'Other',
+        'installCommand' => '',
+        'buildCommand' => '',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -135,14 +154,128 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
-        'key' => 'template-for-onelink',
-        'name' => 'Onelink template',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/template-for-onelink-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/template-for-onelink-light.png',
+        'key' => 'vitepress',
+        'name' => 'Vitepress',
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/vitepress-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/vitepress-light.png',
+        'frameworks' => [
+            getFramework('VITE', [
+                'providerRootDirectory' => './vite/vitepress',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm i vitepress && npm install',
+                'buildCommand' => 'npm run docs:build',
+                'outputDirectory' => './.vitepress/dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'vuepress',
+        'name' => 'Vuepress',
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/vuepress-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/vuepress-light.png',
+        'frameworks' => [
+            getFramework('VUE', [
+                'providerRootDirectory' => './vue/vuepress',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'outputDirectory' => './src/.vuepress/dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'docusaurus',
+        'name' => 'Docusaurus',
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/docusaurus-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/docusaurus-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/docusaurus',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'outputDirectory' => './build',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'nxt-lnk',
+        'name' => 'Nxt Lnk',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/nxtlnk',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'magic-portfolio',
+        'name' => 'Magic Portfolio',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/magic-portfolio',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'littlelink',
+        'name' => 'LittleLink',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
+        'frameworks' => [
+            getFramework('OTHER', [
+                'providerRootDirectory' => './other/littlelink',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'logspot',
+        'name' => 'Logspot',
+        'useCases' => [UseCases::BLOG],
+        'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
         'frameworks' => [
             getFramework('NUXT', [
-                'providerRootDirectory' => './onelink',
+                'providerRootDirectory' => './nuxt/logspot',
                 'buildCommand' => 'npm run generate',
                 'outputDirectory' => './dist',
                 'adapter' => 'static',
@@ -150,20 +283,116 @@ return [
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'Meldiron',
-        'providerVersion' => '0.1.*',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-nano',
+        'name' => 'Astro Nano',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/astro-nano-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-nano-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/nano',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-starlight',
+        'name' => 'Astro Starlight',
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/astro-starlight-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-starlight-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starlight',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-sphere',
+        'name' => 'Astro Sphere',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/astro-sphere-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-sphere-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/sphere',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'astro-starlog',
+        'name' => 'Astro Starlog',
+        'useCases' => [UseCases::BLOG],
+        'screenshotDark' => $url . '/images/sites/templates/astro-starlog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/astro-starlog-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starlog',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'onelink',
+        'name' => 'Onelink',
+        'useCases' => [UseCases::PORTFOLIO],
+        'screenshotDark' => $url . '/images/sites/templates/onelink-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/onelink-light.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/onelink',
+                'buildCommand' => 'npm run generate',
+                'outputDirectory' => './dist',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
         'key' => 'starter-for-flutter',
         'name' => 'Flutter starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-flutter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-flutter-light.png',
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'sh build.sh',
+                'buildCommand' => 'bash build.sh',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -200,7 +429,7 @@ return [
     [
         'key' => 'starter-for-js',
         'name' => 'JavaScript starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
         'frameworks' => [
@@ -242,14 +471,14 @@ return [
     [
         'key' => 'starter-for-angular',
         'name' => 'Angular starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-angular-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-angular-light.png',
         'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './',
                 'outputDirectory' => './dist/angular-starter-kit-for-appwrite/browser',
-                'buildCommand' => 'sh prepare-env.sh && npm run build'
+                'buildCommand' => 'bash prepare-env.sh && npm run build'
             ]),
         ],
         'vcsProvider' => 'github',
@@ -286,7 +515,7 @@ return [
     [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-svelte-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-svelte-light.png',
         'frameworks' => [
@@ -328,7 +557,7 @@ return [
     [
         'key' => 'starter-for-react',
         'name' => 'React starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-light.png',
         'frameworks' => [
@@ -370,7 +599,7 @@ return [
     [
         'key' => 'starter-for-vue',
         'name' => 'Vue starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-vue-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-vue-light.png',
         'frameworks' => [
@@ -412,7 +641,7 @@ return [
     [
         'key' => 'starter-for-react-native',
         'name' => 'React Native starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
@@ -455,7 +684,7 @@ return [
     [
         'key' => 'starter-for-nextjs',
         'name' => 'Next.js starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nextjs-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nextjs-light.png',
         'frameworks' => [
@@ -497,7 +726,7 @@ return [
     [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nuxt-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nuxt-light.png',
         'frameworks' => [
@@ -539,7 +768,7 @@ return [
     [
         'key' => 'template-for-event',
         'name' => 'Event template',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::EVENTS],
         'screenshotDark' => $url . '/images/sites/templates/template-for-event-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-event-light.png',
         'frameworks' => [
@@ -575,7 +804,7 @@ return [
     [
         'key' => 'template-for-portfolio',
         'name' => 'Portfolio template',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/template-for-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-portfolio-light.png',
         'frameworks' => [
@@ -592,7 +821,7 @@ return [
     [
         'key' => 'template-for-store',
         'name' => 'Store template',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::ECOMMERCE],
         'screenshotDark' => $url . '/images/sites/templates/template-for-store-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-store-light.png',
         'frameworks' => [
@@ -634,7 +863,7 @@ return [
     [
         'key' => 'template-for-blog',
         'name' => 'Blog template',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/template-for-blog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-blog-light.png',
         'frameworks' => [
@@ -651,7 +880,7 @@ return [
     [
         'key' => 'astro-starter',
         'name' => 'Astro starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
         'frameworks' => [
@@ -668,80 +897,12 @@ return [
     [
         'key' => 'remix-starter',
         'name' => 'Remix starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'flutter-starter',
-        'name' => 'Flutter starter',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/flutter-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/flutter-starter-light.png',
-        'frameworks' => [
-            getFramework('FLUTTER', [
-                'providerRootDirectory' => './flutter/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nextjs-starter',
-        'name' => 'Next.js starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/nextjs-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/nextjs-starter-light.png',
-        'frameworks' => [
-            getFramework('NEXTJS', [
-                'providerRootDirectory' => './nextjs/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'nuxt-starter',
-        'name' => 'Nuxt starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/nuxt-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/nuxt-starter-light.png',
-        'frameworks' => [
-            getFramework('NUXT', [
-                'providerRootDirectory' => './nuxt/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-    ],
-    [
-        'key' => 'sveltekit-starter',
-        'name' => 'SvelteKit starter website',
-        'useCases' => ['starter'],
-        'screenshotDark' => $url . '/images/sites/templates/sveltekit-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/sveltekit-starter-light.png',
-        'frameworks' => [
-            getFramework('SVELTEKIT', [
-                'providerRootDirectory' => './sveltekit/starter',
             ]),
         ],
         'vcsProvider' => 'github',

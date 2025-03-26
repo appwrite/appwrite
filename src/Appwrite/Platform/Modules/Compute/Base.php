@@ -171,6 +171,8 @@ class Base extends Action
             'resourceType' => 'sites',
             'buildCommands' => implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'adapter' => $site->getAttribute('adapter', ''),
+            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),

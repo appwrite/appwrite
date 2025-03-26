@@ -1590,7 +1590,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Scopes executions',
-            'commands' => 'sh setup.sh && composer install',
+            'commands' => 'bash setup.sh && composer install',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'scopes' => ['users.read'],
