@@ -931,7 +931,7 @@ class Builds extends Action
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-            
+
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
