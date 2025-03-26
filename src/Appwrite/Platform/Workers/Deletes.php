@@ -494,7 +494,7 @@ class Deletes extends Action
      */
     protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
-         var_dump('deleteProjectsByTeam appwrite CE');
+
         $projects = $dbForPlatform->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()]),
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')])

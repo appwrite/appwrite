@@ -280,12 +280,6 @@ App::init()
             }
 
             if (empty($adminRoles)) {
-                var_dump([
-                    'location' => 'api.php l291',
-                    'projectId' => !empty($project->getId()) ? $project->getId() : 'NA',
-                    '$user' => $user,
-                    '$team' => $team,
-                ]);
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
