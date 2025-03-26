@@ -31,7 +31,7 @@ use Utopia\System\System;
 
 class Deletes extends Action
 {
-    protected array $selects = ['$internalId', '$id', '$collection', '$updatedAt'];
+    protected array $selects = ['$internalId', '$id', '$collection', '$permissions', '$updatedAt'];
 
     public static function getName(): string
     {
