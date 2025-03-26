@@ -261,7 +261,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
 
         // Static site enforced runtime
-        if ($resource->getAttribute('adapter', '') === 'static') {
+        if ($deployment->getAttribute('adapter', '') === 'static') {
             $runtime = $runtimes['static-1'] ?? null;
         }
 
@@ -410,8 +410,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         ]);
 
         // SPA fallbackFile override
-        if ($resource->getAttribute('adapter', '') === 'static' && $resource->getAttribute('fallbackFile', '') !== '') {
-            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $resource->getAttribute('fallbackFile', '');
+        if ($deployment->getAttribute('adapter', '') === 'static' && $deployment->getAttribute('fallbackFile', '') !== '') {
+            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $deployment->getAttribute('fallbackFile', '');
         }
 
         /** Execute function */
@@ -438,7 +438,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $startCommand = $runtime['startCommand'];
 
                 if (!is_null($framework)) {
-                    $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                    $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? null;
                     if (!is_null($adapter) && isset($adapter['startCommand'])) {
                         $startCommand = $adapter['startCommand'];
                     }
@@ -473,7 +473,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             );
 
             // Branded 404 override
-            if ($executionResponse['statusCode'] === 404 && $resource->getAttribute('adapter', '') === 'static') {
+            if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
                 $layout = new View(__DIR__ . '/../views/general/404.phtml');
                 $executionResponse['body'] = $layout->render();
                 $executionResponse['headers']['content-length'] = \strlen($executionResponse['body']);

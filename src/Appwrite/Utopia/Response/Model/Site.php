@@ -46,6 +46,12 @@ class Site extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site framework.',
