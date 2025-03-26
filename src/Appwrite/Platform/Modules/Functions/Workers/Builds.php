@@ -793,7 +793,7 @@ class Builds extends Action
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
-            $logs .= "[0mCapturing screenshots ...\n";
+            $logs .= "[0m37Capturing screenshots ...\n";
             $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
