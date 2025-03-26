@@ -156,6 +156,8 @@ class Create extends Base
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'adapter' => $site->getAttribute('adapter', ''),
+            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'manual',
             'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,

@@ -55,7 +55,7 @@ class Func extends Model
             ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.',
+                'description' => 'When disabled, executions will exclude logs and errors, and will be slightly faster.',
                 'default' => true,
                 'example' => false,
             ])
