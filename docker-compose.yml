@@ -199,6 +199,7 @@ services:
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_DATABASE_KEYS
+      - _APP_CUSTOM_DOMAIN_DENY_LIST
 
   appwrite-console:
     <<: *x-logging

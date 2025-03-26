@@ -55,18 +55,17 @@ App::post('/v1/proxy/rules')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject) {
+
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
 
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        $functionsDomainFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-        if (
-            ($functionsDomain !== '' && str_ends_with($domain, $functionsDomain)) ||
-            ($functionsDomainFallback !== '' && str_ends_with($domain, $functionsDomainFallback))
-        ) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+        $deniedDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
+        foreach ($deniedDomains as $deniedDomain) {
+            if (str_ends_with($domain, $deniedDomain)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or its subdomain to a specific resource. Please use a different domain.');
+            }
         }
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
