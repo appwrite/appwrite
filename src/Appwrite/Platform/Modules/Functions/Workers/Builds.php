@@ -793,7 +793,7 @@ class Builds extends Action
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
-            $logs .= "[0m37Capturing screenshots ...\n";
+            $logs .= "[37mCapturing screenshots ...[0m\n";
             $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
@@ -843,9 +843,10 @@ class Builds extends Action
                         'deploymentStatusIgnored' => true
                     ]);
 
-                    // TODO: @Meldiron if becomes too slow, do concurrently
-                    $screenshots = batch(\array_map(function ($key) use ($configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform) {
-                        return function () use ($key, $configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform) {
+                    $screenshotError = null;
+                    $screenshots = batch(\array_map(function ($key) use ($configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform, &$screenshotError) {
+                        return function () use ($key, $configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform, &$screenshotError) {
+                            try {
                             $config = $configs[$key];
 
                             $config['headers'] = \array_merge($config['headers'] ?? [], [
@@ -909,8 +910,16 @@ class Builds extends Action
                             $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
 
                             return [ 'key' => $key, 'fileId' => $fileId ];
+                            } catch(\Throwable $th) {
+                                $screenshotError = $th->getMessage();
+                                return null;
+                            }
                         };
                     }, \array_keys($configs)));
+                    
+                    if(!\is_null($screenshotError)) {
+                        throw new \Exception($screenshotError);
+                    }
 
                     foreach ($screenshots as $screenshot) {
                         $deployment->setAttribute($screenshot['key'], $screenshot['fileId']);
