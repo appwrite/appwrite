@@ -778,24 +778,26 @@ class Builds extends Action
             }
 
             $executor->deleteRuntime($project->getId(), $deployment->getId(), '-build');
-
+            
             /** Update the build document */
             $deployment->setAttribute('buildStartAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $deployment->setAttribute('buildEndAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
             $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
-
+            
             $logs = '';
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
+            $logs .= "[0mCapturing screenshots ...\n";
             $deployment->setAttribute('buildLogs', $logs);
+            
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-
+            
             if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
@@ -804,13 +806,8 @@ class Builds extends Action
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
-
-            if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
-            }
-
-            Console::success("Build id: $deploymentId created");
-
+       
+            /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
@@ -848,6 +845,7 @@ class Builds extends Action
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
                         'previewAuthDisabled' => true,
+                        'deploymentStatusIgnored' => true
                     ]);
 
                     // TODO: @Meldiron if becomes too slow, do concurrently
@@ -864,17 +862,17 @@ class Builds extends Action
                             $config['sleep'] = $framework['screenshotSleep'];
                         }
 
-                        $response = $client->fetch(
+                        $fetchResponse = $client->fetch(
                             url: 'http://appwrite-browser:3000/v1/screenshots',
                             method: 'POST',
                             body: $config
                         );
 
-                        if ($response->getStatusCode() >= 400) {
-                            throw new \Exception($response->getBody());
+                        if ($fetchResponse->getStatusCode() >= 400) {
+                            throw new \Exception($fetchResponse->getBody());
                         }
 
-                        $screenshot = $response->getBody();
+                        $screenshot = $fetchResponse->getBody();
 
                         $fileId = ID::unique();
                         $fileName = $fileId . '.png';
@@ -927,6 +925,20 @@ class Builds extends Action
                     Console::warning($th->getTraceAsString());
                 }
             }
+
+            /** Update the status */
+            $deployment->setAttribute('status', 'ready');
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
+            if ($isVcsEnabled) {
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+            }
+
+            Console::success("Build id: $deploymentId created");
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
@@ -1066,6 +1078,12 @@ class Builds extends Action
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
+            Console::warning('Build failed:');
+            Console::error($th->getMessage());
+            Console::error($th->getFile());
+            Console::error($th->getLine());
+            Console::error($th->getTraceAsString());
+            
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
