@@ -31,6 +31,8 @@ use Utopia\System\System;
 
 class Deletes extends Action
 {
+    protected array $selects = ['$internalId', '$id', '$collection', '$updatedAt'];
+
     public static function getName(): string
     {
         return 'deletes';
@@ -366,7 +368,7 @@ class Deletes extends Action
             $queries[] = Query::equal('resourceType', [$resourceType]);
         }
 
-        $queries[] = Query::select(['$internalId', '$id', '$updatedAt']);
+        $queries[] = Query::select($this->selects);
         $queries[] = Query::orderAsc();
 
         $this->deleteByGroup(
@@ -403,7 +405,7 @@ class Deletes extends Action
         );
 
         $queries = [
-            Query::select(['$internalId', '$id', '$updatedAt']),
+            Query::select($this->selects),
             Query::lessThan('accessedAt', $datetime),
             Query::orderDesc('accessedAt'),
             Query::orderDesc(),
@@ -439,7 +441,7 @@ class Deletes extends Action
 
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
-            Query::select(['$internalId', '$id', '$updatedAt']),
+            Query::select($this->selects),
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
@@ -452,7 +454,7 @@ class Deletes extends Action
 
             // Delete Usage stats from logsDB
             $this->deleteByGroup('stats', [
-                Query::select(['$internalId', '$id', '$updatedAt']),
+                Query::select($this->selects),
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
@@ -749,7 +751,7 @@ class Deletes extends Action
 
         // Delete Executions
         $this->deleteByGroup('executions', [
-            Query::select(['$internalId', '$id', '$updatedAt']),
+            Query::select($this->selects),
             Query::lessThan('$createdAt', $datetime),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -770,7 +772,7 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::select(['$internalId', '$id', '$updatedAt']),
+            Query::select($this->selects),
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -807,7 +809,7 @@ class Deletes extends Action
 
         try {
             $this->deleteByGroup(Audit::COLLECTION, [
-                Query::select(['$internalId', '$id', '$updatedAt']),
+                Query::select($this->selects),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
                 Query::orderAsc(),
@@ -889,7 +891,7 @@ class Deletes extends Action
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            Query::select(['$internalId', '$id', '$updatedAt']),
+            Query::select($this->selects),
             Query::equal('functionInternalId', [$functionInternalId]),
             Query::orderAsc()
         ], $dbForProject);
