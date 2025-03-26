@@ -2427,7 +2427,7 @@ class SitesCustomServerTest extends Scope
         $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
         $this->assertEquals(200, $response1['headers']['status-code']);
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
-        $this->assertEquals(308, $response2['headers']['status-code']);
+        $this->assertEquals(200, $response2['headers']['status-code']);
         $this->cleanupSite($siteId);
     }
 }
