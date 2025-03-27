@@ -3186,24 +3186,35 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $isBulk = true;
 
         if (empty($data) && empty($documents)) {
+            // No single or bulk documents provided
             throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
         if (!empty($data) && !empty($documents)) {
+            // Both single and bulk documents provided
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, documents');
         }
         if (!empty($data) && empty($documentId)) {
+            // Single document provided without document ID
             throw new Exception(Exception::DOCUMENT_MISSING_DATA, 'Document ID is required when creating a single document');
         }
         if (!empty($documents) && !empty($documentId)) {
+            // Bulk documents provided with document ID
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, set "$id" in each document instead');
         }
         if (!empty($documents) && !empty($permissions)) {
+            // Bulk documents provided with permissions
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple documents, set "$permissions" in each document instead');
         }
 
         if (!empty($data)) {
+            // Single document provided, convert to single item array
+            // But remember that it was single, to respond with single document
             $isBulk = false;
             $documents = [$data];
+        }
+
+        if ($isBulk && \count($documents) > $maxBatchSize) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is limited to ' . $maxBatchSize . ' documents');
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument(
@@ -3233,17 +3244,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
         }
 
-        if ($isBulk && \count($documents) > $maxBatchSize) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is limited to ' . $maxBatchSize . ' documents');
-        }
+        $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk) {
+            $allowedPermissions = [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ];
 
-        $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-        ];
-
-        $setPermissions = function (Document $document, ?array $permissions) use ($user, $allowedPermissions, $isAPIKey, $isPrivilegedUser, $isBulk) {
             if ($isBulk) {
                 $permissions = $document['$permissions'] ?? null;
             }
@@ -3367,22 +3374,27 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        $documents = array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
             $document['$collection'] = $collection->getId();
 
-            if (!$isBulk) {
-                $document['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
-            } else {
-                if (empty($document['$id'])) {
-                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id must be set in each document when creating bulk documents');
-                }
+            // Determine the source ID depending on whether it's a bulk operation.
+            $sourceId = $isBulk ? $document['$id'] : $documentId;
 
-                $document['$id'] = $document['$id'] == 'unique()' ? ID::unique() : $document['$id'];
+            // For bulk operations, ensure $id is provided.
+            if ($isBulk && empty($sourceId)) {
+                throw new Exception(
+                    Exception::DOCUMENT_INVALID_STRUCTURE,
+                    '$id must be set in each document when creating bulk documents'
+                );
             }
+
+            // Assign a unique id if needed, otherwise use the provided id.
+            $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
 
             $document = new Document($document);
 
             $setPermissions($document, $permissions);
+
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
             return $document;
@@ -3460,17 +3472,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 'total' => count($documents),
                 'documents' => $documents
             ]), Response::MODEL_DOCUMENT_LIST);
-        } else {
-            $queueForEvents
-                ->setParam('documentId', $document->getId())
-                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
-            $response->dynamic(
-                $documents[0],
-                Response::MODEL_DOCUMENT
-            );
+            return;
         }
 
+        $queueForEvents
+            ->setParam('documentId', $documents[0]->getId())
+            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
+
+        $response->dynamic(
+            $documents[0],
+            Response::MODEL_DOCUMENT
+        );
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
