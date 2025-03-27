@@ -262,7 +262,6 @@ class Specs extends Action
                 $services[] = [
                     'name' => $service['key'] ?? '',
                     'description' => $service['subtitle'] ?? '',
-                    'x-globalAttributes' => $service['globalAttributes'] ?? [],
                 ];
             }
 
