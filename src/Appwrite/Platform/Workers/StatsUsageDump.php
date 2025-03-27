@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
+use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -14,10 +15,28 @@ use Utopia\System\System;
 
 class StatsUsageDump extends Action
 {
-    public const METRIC_COLLECTION_LEVEL_STORAGE = 4;
-    public const METRIC_DATABASE_LEVEL_STORAGE = 3;
-    public const METRIC_PROJECT_LEVEL_STORAGE = 2;
+    protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+
+    private int $lastDispatchTime = 0;
+    private int $lastDispatchTimeLogsDB = 0;
     protected array $stats = [];
+
+    /**
+    * Stats for batch write separated per project
+    * @var array
+    */
+    private array $projects = [];
+
+    /**
+     * Array of stat documents to batch write to logsDB
+     * @var array
+     */
+    private array $statDocuments = [];
+
+    protected function getBatchSize(): int
+    {
+        return intval(System::getEnv('_APP_QUEUE_PREFETCH_COUNT', 1));
+    }
 
     protected Registry $register;
 
@@ -127,19 +146,13 @@ class StatsUsageDump extends Action
             console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
-                /** @var \Utopia\Database\Database $dbForProject */
-                $dbForProject = $getProjectDB($project);
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
                         continue;
                     }
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
-                        try {
-                            $this->handleDatabaseStorage($key, $dbForProject, $project, $receivedAt);
-                        } catch (\Exception $e) {
-                            console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
-                        }
+                        // skip database storage calc as it's wrong and we plan to get this from StatsResources
                         continue;
                     }
 
@@ -160,202 +173,102 @@ class StatsUsageDump extends Action
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
 
-                        $documentClone = new Document($document->getArrayCopy());
+                        $this->projects[$project->getInternalId()]['project']  = new Document([
+                            '$id' => $project->getId(),
+                            '$internalId' => $project->getInternalId(),
+                            'database' => $project->getAttribute('database'),
+                        ]);
+                        $this->projects[$project->getInternalId()]['stats'] = $document;
 
-                        $dbForProject->createOrUpdateDocumentsWithIncrease(
-                            'stats',
-                            'value',
-                            [$document]
-                        );
-
-                        $this->writeToLogsDB($project, $documentClone);
+                        $this->prepareForLogsDB($project, $document);
                     }
                 }
             } catch (\Exception $e) {
                 console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
-    }
 
-    private function handleDatabaseStorage(string $key, Database $dbForProject, Document $project, string $receivedAt): void
-    {
-        $data = explode('.', $key);
-        $start = microtime(true);
-
-        $updateMetric = function (Database $dbForProject, Document $project, int $value, string $key, string $period, string|null $time) use ($receivedAt) {
-            $id = \md5("{$time}_{$period}_{$key}");
-
-            $document = new Document([
-                '$id' => $id,
-                'period' => $period,
-                'time' => $time,
-                'metric' => $key,
-                'value' => $value,
-                'region' => System::getEnv('_APP_REGION', 'default'),
-            ]);
-            $documentClone = new Document($document->getArrayCopy());
-            $dbForProject->createOrUpdateDocumentsWithIncrease(
-                'stats',
-                'value',
-                [$document]
-            );
-            $this->writeToLogsDB($project, $documentClone);
-        };
-
-        foreach ($this->periods as $period => $format) {
-            $time = null;
-
-            if ($period !== 'inf') {
-                $time = !empty($receivedAt) ? (new \DateTime($receivedAt))->format($format) : date($format, time());
-            }
-            $id = \md5("{$time}_{$period}_{$key}");
-
-            $value = 0;
-            $previousValue = 0;
-            try {
-                $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value', 0);
-            } catch (\Exception $e) {
-                // No previous value
-            }
-
-            switch (count($data)) {
-                // Collection Level
-                case self::METRIC_COLLECTION_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
-                    $databaseInternalId = $data[0];
-                    $collectionInternalId = $data[1];
-
-                    try {
-                        $value = $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collectionInternalId);
-                    } catch (\Exception $e) {
-                        // Collection not found
-                        if ($e->getMessage() !== 'Collection not found') {
-                            throw $e;
-                        }
-                    }
-
-                    // Compare with previous value
-                    $diff = $value - $previousValue;
-
-                    if ($diff === 0) {
-                        break;
-                    }
-
-                    // Update Collection
-                    $updateMetric($dbForProject, $project, $diff, $key, $period, $time);
-
-                    // Update Database
-                    $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
-                    $updateMetric($dbForProject, $project, $diff, $databaseKey, $period, $time);
-
-                    // Update Project
-                    $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
-                    break;
-                    // Database Level
-                case self::METRIC_DATABASE_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
-                    $databaseInternalId = $data[0];
-
-                    $collections = [];
-                    try {
-                        $collections = $dbForProject->find('database_' . $databaseInternalId);
-                    } catch (\Exception $e) {
-                        // Database not found
-                        if ($e->getMessage() !== 'Collection not found') {
-                            throw $e;
-                        }
-                    }
-
-                    foreach ($collections as $collection) {
-                        try {
-                            $value += $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
-                        } catch (\Exception $e) {
-                            // Collection not found
-                            if ($e->getMessage() !== 'Collection not found') {
-                                throw $e;
-                            }
-                        }
-                    }
-
-                    $diff = $value - $previousValue;
-
-                    if ($diff === 0) {
-                        break;
-                    }
-
-                    // Update Database
-                    $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
-                    $updateMetric($dbForProject, $project, $diff, $databaseKey, $period, $time);
-
-                    // Update Project
-                    $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
-                    break;
-                    // Project Level
-                case self::METRIC_PROJECT_LEVEL_STORAGE:
-                    Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
-                    // Get all project databases
-                    $databases = $dbForProject->find('database');
-
-                    // Recalculate all databases
-                    foreach ($databases as $database) {
-                        $collections = $dbForProject->find('database_' . $database->getInternalId());
-
-                        foreach ($collections as $collection) {
-                            try {
-                                $value += $dbForProject->getSizeOfCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-                            } catch (\Exception $e) {
-                                // Collection not found
-                                if ($e->getMessage() !== 'Collection not found') {
-                                    throw $e;
-                                }
-                            }
-                        }
-                    }
-
-                    $diff = $value - $previousValue;
-
-                    // Update Project
-                    $projectKey = METRIC_DATABASES_STORAGE;
-                    $updateMetric($dbForProject, $project, $diff, $projectKey, $period, $time);
-                    break;
-            }
+        $batchSize = $this->getBatchSize();
+        $shouldProcessBatch = \count($this->projects) >= $batchSize;
+        if (!$shouldProcessBatch && \count($this->projects) > 0) {
+            $shouldProcessBatch = (\time() - $this->lastDispatchTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
-        $end = microtime(true);
+        if ($shouldProcessBatch) {
+            try {
+                foreach ($this->projects as $internalId => $projectStats) {
+                    /** @var \Utopia\Database\Database $dbForProject */
+                    $dbForProject = $getProjectDB($projectStats['project']);
+                    Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
+                    $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
+                    Console::success('Batch successfully written to DB');
 
-        console::log('[' . DateTime::now() . '] DB Storage Calculation [' . $key . '] took ' . (($end - $start) * 1000) . ' milliseconds');
+                    unset($this->projects[$internalId]);
+                }
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs: ' . $e->getMessage());
+            } finally {
+                $this->lastDispatchTime = time();
+            }
+        }
+        $this->writeToLogsDB();
+
     }
 
-    protected function writeToLogsDB(Document $project, Document $document): void
+    protected function prepareForLogsDB(Document $project, Document $stat)
+    {
+        if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
+            Console::log('Dual Writing is disabled. Skipping...');
+            return;
+        }
+        if (array_key_exists($stat->getAttribute('metric'), $this->skipBaseMetrics)) {
+            return;
+        }
+        foreach ($this->skipParentIdMetrics as $skipMetric) {
+            if (str_ends_with($stat->getAttribute('metric'), $skipMetric)) {
+                return;
+            }
+        }
+        $documentClone = new Document($stat->getArrayCopy());
+        $documentClone->setAttribute('$tenant', (int) $project->getInternalId());
+        $this->statDocuments[] = $documentClone;
+    }
+
+    protected function writeToLogsDB(): void
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
             Console::log('Dual Writing is disabled. Skipping...');
             return;
         }
 
-        if (array_key_exists($document->getAttribute('metric'), $this->skipBaseMetrics)) {
-            return;
+        $batchSize = $this->getBatchSize();
+        $shouldProcessBatch = \count($this->statDocuments) >= $batchSize;
+        if (!$shouldProcessBatch && \count($this->statDocuments) > 0) {
+            $shouldProcessBatch = (\time() - $this->lastDispatchTimeLogsDB) >= self::BATCH_AGGREGATION_INTERVAL;
         }
-        foreach ($this->skipParentIdMetrics as $skipMetric) {
-            if (str_ends_with($document->getAttribute('metric'), $skipMetric)) {
-                return;
-            }
+
+        if (!$shouldProcessBatch) {
+            return;
         }
 
         /** @var \Utopia\Database\Database $dbForLogs*/
-        $dbForLogs = call_user_func($this->getLogsDB, $project);
+        $dbForLogs = call_user_func($this->getLogsDB);
+        $dbForLogs
+            ->setTenant(null)
+            ->setTenantPerDocument(true);
 
         try {
+            Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
             $dbForLogs->createOrUpdateDocumentsWithIncrease(
                 'stats',
                 'value',
-                [$document]
+                $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Console::error($th->getMessage());
+        } finally {
+            $this->lastDispatchTimeLogsDB = time();
         }
 
         $this->register->get('pools')->get('logs')->reclaim();

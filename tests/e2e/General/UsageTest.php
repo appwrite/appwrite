@@ -593,66 +593,66 @@ class UsageTest extends Scope
         return $data;
     }
 
-    public function testDatabaseStoragePrepare(): array
-    {
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'databaseId' => 'unique()',
-                'name' => 'dbStorageStats',
-            ]
-        );
+    // public function testDatabaseStoragePrepare(): array
+    // {
+    //     $response = $this->client->call(
+    //         Client::METHOD_POST,
+    //         '/databases',
+    //         array_merge([
+    //             'content-type' => 'application/json',
+    //             'x-appwrite-project' => $this->getProject()['$id']
+    //         ], $this->getHeaders()),
+    //         [
+    //             'databaseId' => 'unique()',
+    //             'name' => 'dbStorageStats',
+    //         ]
+    //     );
 
-        $this->assertNotEmpty($response['body']['$id']);
-        $databaseId = $response['body']['$id'];
+    //     $this->assertNotEmpty($response['body']['$id']);
+    //     $databaseId = $response['body']['$id'];
 
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'collectionId' => 'unique()',
-                'name' => 'collectionStorageStats',
-                'documentSecurity' => false,
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::create(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ]
-        );
+    //     $response = $this->client->call(
+    //         Client::METHOD_POST,
+    //         '/databases/' . $databaseId . '/collections',
+    //         array_merge([
+    //             'content-type' => 'application/json',
+    //             'x-appwrite-project' => $this->getProject()['$id']
+    //         ], $this->getHeaders()),
+    //         [
+    //             'collectionId' => 'unique()',
+    //             'name' => 'collectionStorageStats',
+    //             'documentSecurity' => false,
+    //             'permissions' => [
+    //                 Permission::read(Role::any()),
+    //                 Permission::create(Role::any()),
+    //                 Permission::update(Role::any()),
+    //                 Permission::delete(Role::any()),
+    //             ],
+    //         ]
+    //     );
 
-        $this->assertNotEmpty($response['body']['$id']);
-        $collectionId = $response['body']['$id'];
+    //     $this->assertNotEmpty($response['body']['$id']);
+    //     $collectionId = $response['body']['$id'];
 
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
-            [
-                'key' => 'data',
-                'size' => 100000,
-                'required' => true,
-            ]
-        );
+    //     $response = $this->client->call(
+    //         Client::METHOD_POST,
+    //         '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
+    //         array_merge([
+    //             'content-type' => 'application/json',
+    //             'x-appwrite-project' => $this->getProject()['$id']
+    //         ], $this->getHeaders()),
+    //         [
+    //             'key' => 'data',
+    //             'size' => 100000,
+    //             'required' => true,
+    //         ]
+    //     );
 
-        return [
-            'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
-        ];
-    }
+    //     return [
+    //         'databaseId' => $databaseId,
+    //         'collectionId' => $collectionId,
+    //     ];
+    // }
 
     // /** @depends testDatabaseStoragePrepare */
     // #[Retry(count: 1)]
