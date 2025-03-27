@@ -3223,6 +3223,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $hasRelationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        if ($isBulk && $hasRelationships) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+        }
+
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
@@ -4168,6 +4177,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $hasRelationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        if ($hasRelationships) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -4438,6 +4456,15 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $hasRelationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        if ($hasRelationships) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
         }
 
         try {
