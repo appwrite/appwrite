@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
 use Throwable;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -178,7 +179,7 @@ class StatsUsageDump extends Action
                             '$internalId' => $project->getInternalId(),
                             'database' => $project->getAttribute('database'),
                         ]);
-                        $this->projects[$project->getInternalId()]['stats'] = $document;
+                        $this->projects[$project->getInternalId()]['stats'][] = $document;
 
                         $this->prepareForLogsDB($project, $document);
                     }
@@ -194,7 +195,7 @@ class StatsUsageDump extends Action
             $shouldProcessBatch = (\time() - $this->lastDispatchTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
-        if ($shouldProcessBatch) {
+        if ($shouldProcessBatch || App::isDevelopment()) {
             try {
                 foreach ($this->projects as $internalId => $projectStats) {
                     /** @var \Utopia\Database\Database $dbForProject */
@@ -206,7 +207,7 @@ class StatsUsageDump extends Action
                     unset($this->projects[$internalId]);
                 }
             } catch (Throwable $e) {
-                Console::error('Error processing audit logs: ' . $e->getMessage());
+                Console::error('Error processing stats: ' . $e->getMessage());
             } finally {
                 $this->lastDispatchTime = time();
             }
