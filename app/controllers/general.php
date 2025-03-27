@@ -271,7 +271,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
+            if ($deployment->getAttribute('status') === 'failed') {
+                throw new AppwriteException(AppwriteException::BUILD_FAILED);
+            } else {
+                throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
+            }
         }
 
         if ($type === 'function') {
