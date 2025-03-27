@@ -3176,8 +3176,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->inject('project')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Document $project) {
+    ->inject('maxBatchSize')
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, int $maxBatchSize) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -3230,6 +3230,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if ($isBulk && $hasRelationships) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+        }
+        
+        if ($isBulk && \count($documents) > $maxBatchSize) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is limited to ' . $maxBatchSize . ' documents');
         }
 
         $allowedPermissions = [
@@ -3387,7 +3391,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $dbForProject->createDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $documents,
-                APP_LIMIT_DATABASE_BATCH
+                $maxBatchSize
             );
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
@@ -4152,8 +4156,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Document $project) {
+    ->inject('maxBatchSize')
+    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, int $maxBatchSize) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4234,7 +4238,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $partialDocument,
                 $queries,
-                APP_LIMIT_DATABASE_BATCH
+                $maxBatchSize
             )
         );
 
@@ -4441,8 +4445,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Document $project) {
+    ->inject('maxBatchSize')
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, int $maxBatchSize) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4473,11 +4477,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
+        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries, $maxBatchSize) {
             return $dbForProject->deleteDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $queries,
-                APP_LIMIT_DATABASE_BATCH
+                $maxBatchSize
             );
         });
 

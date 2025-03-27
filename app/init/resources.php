@@ -822,3 +822,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 
     return Key::decode($project, $key);
 }, ['request', 'project']);
+
+App::setResource('maxBatchSize', function () {
+    return APP_LIMIT_DATABASE_BATCH;
+});
