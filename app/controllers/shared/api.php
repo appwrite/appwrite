@@ -333,6 +333,8 @@ App::init()
          */
         $method = $route->getLabel('sdk', false);
 
+        // Take the first method if there's more than one,
+        // namespace can not differ between methods on the same route
         if (\is_array($method)) {
             $method = $method[0];
         }

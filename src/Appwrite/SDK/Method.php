@@ -182,7 +182,7 @@ class Method
         return $this->packaging;
     }
 
-    public function getRequestType(): string
+    public function getRequestType(): ContentType
     {
         return $this->requestType;
     }
@@ -268,7 +268,7 @@ class Method
         return $this;
     }
 
-    public function setRequestType(string $requestType): self
+    public function setRequestType(ContentType $requestType): self
     {
         $this->requestType = $requestType;
         return $this;

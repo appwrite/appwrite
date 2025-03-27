@@ -389,15 +389,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
         namespace: 'storage',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
-        type: MethodType::UPLOAD,
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        requestType: 'multipart/form-data',
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_FILE,
             )
-        ]
+        ],
+        type: MethodType::UPLOAD,
+        requestType: ContentType::MULTIPART
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
