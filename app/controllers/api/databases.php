@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
@@ -3138,11 +3139,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ],
                 contentType: ContentType::JSON,
                 parameters: [
-                    'databaseId' => ['optional' => false],
-                    'collectionId' => ['optional' => false],
-                    'documentId' => ['optional' => false],
-                    'data' => ['optional' => false],
-                    'permissions' => ['optional' => true],
+                    new Parameter('databaseId', optional: false),
+                    new Parameter('collectionId', optional: false),
+                    new Parameter('documentId', optional: false),
+                    new Parameter('data', optional: false),
+                    new Parameter('permissions', optional: true),
                 ]
             ),
             new Method(
@@ -3231,7 +3232,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         if ($isBulk && $hasRelationships) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
         }
-        
+
         if ($isBulk && \count($documents) > $maxBatchSize) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is limited to ' . $maxBatchSize . ' documents');
         }
