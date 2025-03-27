@@ -22,6 +22,12 @@ class TemplateSite extends Model
                 'default' => '',
                 'example' => 'Starter site',
             ])
+            ->addRule('tagline', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Short description of template',
+                'default' => '',
+                'example' => 'Minimal web app integrating with Appwrite.',
+            ])
             ->addRule('demoUrl', [
                 'type' => self::TYPE_STRING,
                 'description' => 'URL hosting a template demo.',

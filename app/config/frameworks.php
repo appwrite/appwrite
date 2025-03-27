@@ -138,7 +138,7 @@ return [
     'vue' => [
         'key' => 'vue',
         'name' => 'Vue.js',
-        'screenshotSleep' => 3000,
+        'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
@@ -224,6 +224,23 @@ return [
                 'installCommand' => 'npm install',
                 'outputDirectory' => './build/client',
                 'startCommand' => 'bash helpers/server.sh',
+            ]
+        ]
+    ],
+    'lynx' => [
+        'key' => 'lynx',
+        'name' => 'Lynx',
+        'screenshotSleep' => 5000,
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'bash helpers/server.sh',
+                'fallbackFile' => 'index.html'
             ]
         ]
     ],
