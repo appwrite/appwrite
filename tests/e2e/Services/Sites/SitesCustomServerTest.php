@@ -2442,29 +2442,26 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($siteId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('200', $site['headers']['status-code']);
-        $this->assertArrayHasKey('adapter', $site['body']);
-
         $domain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($domain);
 
         $deploymentId = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('subProjects'),
+            'code' => $this->packageSite('sub-directories'),
             'activate' => 'true'
         ]);
         $this->assertNotEmpty($deploymentId);
-
-        $site = $this->getSite($siteId);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Sub-directory index', $response['body']);
         $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
         $this->assertEquals(200, $response1['headers']['status-code']);
+        $this->assertStringContainsString('Sub-directory project1', $response1['body']);
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
+        $this->assertStringContainsString('Sub-directory project1', $response2['body']);
         $this->cleanupSite($siteId);
     }
 }
