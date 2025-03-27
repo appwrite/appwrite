@@ -709,16 +709,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.30.1",
+            "version": "v4.30.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "f29ba8a30dfd940efb3a8a75dc44446539101f24"
+                "reference": "a4c4d8565b40b9f76debc9dfeb221412eacb8ced"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/f29ba8a30dfd940efb3a8a75dc44446539101f24",
-                "reference": "f29ba8a30dfd940efb3a8a75dc44446539101f24",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/a4c4d8565b40b9f76debc9dfeb221412eacb8ced",
+                "reference": "a4c4d8565b40b9f76debc9dfeb221412eacb8ced",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +747,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.30.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.30.2"
             },
-            "time": "2025-03-13T21:08:17+00:00"
+            "time": "2025-03-26T18:01:50+00:00"
         },
         {
             "name": "league/csv",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.63.0",
+            "version": "0.63.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "51ff0a6514e6eda44a6da016d838e7e55282e01a"
+                "reference": "ad191bf34151815f716f553796a363ff2b6ef7d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/51ff0a6514e6eda44a6da016d838e7e55282e01a",
-                "reference": "51ff0a6514e6eda44a6da016d838e7e55282e01a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ad191bf34151815f716f553796a363ff2b6ef7d3",
+                "reference": "ad191bf34151815f716f553796a363ff2b6ef7d3",
                 "shasum": ""
             },
             "require": {
@@ -3546,9 +3546,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.63.0"
+                "source": "https://github.com/utopia-php/database/tree/0.63.1"
             },
-            "time": "2025-03-26T10:35:37+00:00"
+            "time": "2025-03-27T04:58:07+00:00"
         },
         {
             "name": "utopia-php/domains",
