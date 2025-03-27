@@ -3159,9 +3159,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ],
                 contentType: ContentType::JSON,
                 parameters: [
-                    'databaseId' => ['optional' => false],
-                    'collectionId' => ['optional' => false],
-                    'documents' => ['optional' => false],
+                    new Parameter('databaseId', optional: false),
+                    new Parameter('collectionId', optional: false),
+                    new Parameter('documents', optional: false),
                 ]
             )
         ]

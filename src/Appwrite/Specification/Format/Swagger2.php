@@ -25,26 +25,6 @@ class Swagger2 extends Format
         return 'Swagger 2';
     }
 
-    protected function getNestedModels(Model $model, array &$usedModels): void
-    {
-        foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
-                continue;
-            }
-            $types = (array)$rule['type'];
-            foreach ($types as $ruleType) {
-                if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
-                    $usedModels[] = $ruleType;
-                    foreach ($this->models as $m) {
-                        if ($m->getType() === $ruleType) {
-                            $this->getNestedModels($m, $usedModels);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public function parse(): array
     {
         /*
@@ -124,7 +104,7 @@ class Swagger2 extends Format
                 $sdk = $sdk[0];
             }
 
-            $consumes = [$sdk->getRequestType()];
+            $consumes = [$sdk->getRequestType()->value];
 
             $method = $sdk->getMethodName() ?? \uniqid();
 
