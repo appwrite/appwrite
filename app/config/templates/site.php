@@ -87,15 +87,6 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
-    'OTHER' => [
-        'key' => 'other',
-        'name' => 'Other',
-        'installCommand' => 'npm install',
-        'buildCommand' => 'npm run build',
-        'buildRuntime' => 'node-22',
-        'adapter' => 'static',
-        'fallbackFile' => 'index.html',
-    ],
     'VITE' => [
         'key' => 'vite',
         'name' => 'Vite',
@@ -144,6 +135,16 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'outputDirectory' => './',
     ],
+    'LYNX' => [
+        'key' => 'lynx',
+        'name' => 'Lynx',
+        'installCommand' => 'npm install && cd web && npm install && cd ..',
+        'buildCommand' => 'npm run build && cd web && npm run build && cd ..',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './web/dist',
+        'fallbackFile' => 'index.html',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -153,6 +154,23 @@ function getFramework(string $frameworkEnum, array $overrides)
 }
 
 return [
+    [
+        'key' => 'lynx-starter',
+        'name' => 'Lynx Starter',
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/lynx-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/lynx-starter-light.png',
+        'frameworks' => [
+            getFramework('LYNX', [
+                'providerRootDirectory' => './lynx/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
     [
         'key' => 'vitepress',
         'name' => 'Vitepress',

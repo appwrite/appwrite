@@ -227,6 +227,23 @@ return [
             ]
         ]
     ],
+    'lynx' => [
+        'key' => 'lynx',
+        'name' => 'Lynx',
+        'screenshotSleep' => 5000,
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'bash helpers/server.sh',
+                'fallbackFile' => 'index.html'
+            ]
+        ]
+    ],
     'flutter' => [
         'key' => 'flutter',
         'name' => 'Flutter',
