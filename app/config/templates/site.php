@@ -157,6 +157,8 @@ return [
     [
         'key' => 'lynx-starter',
         'name' => 'Lynx Starter',
+        'tagline' => 'Sample application built with Lynx, a cross-platform framework focused on performance.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/lynx-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/lynx-starter-light.png',
@@ -174,6 +176,8 @@ return [
     [
         'key' => 'vitepress',
         'name' => 'Vitepress',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Vite.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::DOCUMENTATION],
         'screenshotDark' => $url . '/images/sites/templates/vitepress-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/vitepress-light.png',
@@ -195,6 +199,8 @@ return [
     [
         'key' => 'vuepress',
         'name' => 'Vuepress',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Vue.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::DOCUMENTATION],
         'screenshotDark' => $url . '/images/sites/templates/vuepress-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/vuepress-light.png',
@@ -216,6 +222,8 @@ return [
     [
         'key' => 'docusaurus',
         'name' => 'Docusaurus',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by React.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::DOCUMENTATION],
         'screenshotDark' => $url . '/images/sites/templates/docusaurus-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/docusaurus-light.png',
@@ -237,6 +245,8 @@ return [
     [
         'key' => 'nxt-lnk',
         'name' => 'Nxt Lnk',
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
@@ -254,6 +264,8 @@ return [
     [
         'key' => 'magic-portfolio',
         'name' => 'Magic Portfolio',
+        'tagline' => 'Complex personal website to showcase your projects, articles, and more.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
@@ -271,6 +283,8 @@ return [
     [
         'key' => 'littlelink',
         'name' => 'LittleLink',
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
@@ -288,6 +302,8 @@ return [
     [
         'key' => 'logspot',
         'name' => 'Logspot',
+        'tagline' => 'Website to publish changelogs of your application.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
@@ -308,6 +324,8 @@ return [
     [
         'key' => 'astro-nano',
         'name' => 'Astro Nano',
+        'tagline' => 'Minimal personal website to showcase your projects, articles, and more.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/astro-nano-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-nano-light.png',
@@ -327,6 +345,8 @@ return [
     [
         'key' => 'astro-starlight',
         'name' => 'Astro Starlight',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Astro.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::DOCUMENTATION],
         'screenshotDark' => $url . '/images/sites/templates/astro-starlight-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starlight-light.png',
@@ -346,6 +366,8 @@ return [
     [
         'key' => 'astro-sphere',
         'name' => 'Astro Sphere',
+        'tagline' => 'Modern personal website to showcase your projects, articles, and more.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/astro-sphere-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-sphere-light.png',
@@ -365,6 +387,8 @@ return [
     [
         'key' => 'astro-starlog',
         'name' => 'Astro Starlog',
+        'tagline' => 'Platform for publishing written content and media powered by Astro.',
+        'score' => 5, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/astro-starlog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starlog-light.png',
@@ -384,6 +408,8 @@ return [
     [
         'key' => 'onelink',
         'name' => 'Onelink',
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/onelink-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/onelink-light.png',
@@ -405,6 +431,8 @@ return [
         'key' => 'starter-for-flutter',
         'name' => 'Flutter starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Flutter application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-flutter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-flutter-light.png',
         'frameworks' => [
@@ -448,6 +476,8 @@ return [
         'key' => 'starter-for-js',
         'name' => 'JavaScript starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple JavaScript application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
         'frameworks' => [
@@ -490,6 +520,8 @@ return [
         'key' => 'starter-for-angular',
         'name' => 'Angular starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Angular application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-angular-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-angular-light.png',
         'frameworks' => [
@@ -534,6 +566,8 @@ return [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Svelte application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-svelte-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-svelte-light.png',
         'frameworks' => [
@@ -576,6 +610,8 @@ return [
         'key' => 'starter-for-react',
         'name' => 'React starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple React application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-light.png',
         'frameworks' => [
@@ -618,6 +654,8 @@ return [
         'key' => 'starter-for-vue',
         'name' => 'Vue starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Vue application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-vue-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-vue-light.png',
         'frameworks' => [
@@ -660,6 +698,8 @@ return [
         'key' => 'starter-for-react-native',
         'name' => 'React Native starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple React Native application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
@@ -703,6 +743,8 @@ return [
         'key' => 'starter-for-nextjs',
         'name' => 'Next.js starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Next.js application integrated with Appwrite SDK.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nextjs-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nextjs-light.png',
         'frameworks' => [
@@ -745,6 +787,8 @@ return [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
         'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Nuxt application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nuxt-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nuxt-light.png',
         'frameworks' => [
@@ -786,6 +830,8 @@ return [
     [
         'key' => 'template-for-event',
         'name' => 'Event template',
+        'tagline' => 'Hackathon landing page with support for project submissions.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::EVENTS],
         'screenshotDark' => $url . '/images/sites/templates/template-for-event-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-event-light.png',
@@ -822,6 +868,8 @@ return [
     [
         'key' => 'template-for-portfolio',
         'name' => 'Portfolio template',
+        'tagline' => 'Simple personal website to showcase your projects, articles, and more.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/template-for-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-portfolio-light.png',
@@ -839,6 +887,8 @@ return [
     [
         'key' => 'template-for-store',
         'name' => 'Store template',
+        'tagline' => 'E-commerce platform for selling products with Stripe integration.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::ECOMMERCE],
         'screenshotDark' => $url . '/images/sites/templates/template-for-store-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-store-light.png',
@@ -881,6 +931,8 @@ return [
     [
         'key' => 'template-for-blog',
         'name' => 'Blog template',
+        'tagline' => 'Platform for publishing written content and media.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/template-for-blog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-blog-light.png',
@@ -898,6 +950,8 @@ return [
     [
         'key' => 'astro-starter',
         'name' => 'Astro starter',
+        'tagline' => 'Sample application built with Astro, a content-driven web framework.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
@@ -915,6 +969,8 @@ return [
     [
         'key' => 'remix-starter',
         'name' => 'Remix starter',
+        'tagline' => 'Sample application built with Remix, a React meta-framework.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
