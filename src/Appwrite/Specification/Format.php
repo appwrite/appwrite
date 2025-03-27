@@ -12,12 +12,12 @@ abstract class Format
     protected App $app;
 
     /**
-     * @var Route[]
+     * @var array<Route>
      */
     protected array $routes;
 
     /**
-     * @var Model[]
+     * @var array<Model>
      */
     protected array $models;
 
