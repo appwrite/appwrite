@@ -269,7 +269,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
-        if ($deployment->getAttribute('status') !== 'ready') {
+        $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
+        if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             if ($deployment->getAttribute('status') === 'failed') {
                 throw new AppwriteException(AppwriteException::BUILD_FAILED);
             } else {

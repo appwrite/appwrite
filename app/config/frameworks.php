@@ -138,7 +138,7 @@ return [
     'vue' => [
         'key' => 'vue',
         'name' => 'Vue.js',
-        'screenshotSleep' => 3000,
+        'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
         'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'adapters' => [
