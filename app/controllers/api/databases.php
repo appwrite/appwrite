@@ -3149,7 +3149,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 name: 'createDocuments',
                 description: '/docs/references/databases/create-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -4136,7 +4136,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         namespace: 'databases',
         name: 'updateDocuments',
         description: '/docs/references/databases/update-documents.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4425,7 +4425,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         namespace: 'databases',
         name: 'deleteDocuments',
         description: '/docs/references/databases/delete-documents.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
