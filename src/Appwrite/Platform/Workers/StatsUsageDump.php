@@ -137,7 +137,6 @@ class StatsUsageDump extends Action
 
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
-
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
             $receivedAt = $stats['receivedAt'] ?? null;
             if ($numberOfKeys === 0) {
@@ -174,6 +173,7 @@ class StatsUsageDump extends Action
                             'region' => System::getEnv('_APP_REGION', 'default'),
                         ]);
 
+
                         $this->projects[$project->getInternalId()]['project']  = new Document([
                             '$id' => $project->getId(),
                             '$internalId' => $project->getInternalId(),
@@ -196,8 +196,11 @@ class StatsUsageDump extends Action
         }
 
         if ($shouldProcessBatch || App::isDevelopment()) {
-            try {
-                foreach ($this->projects as $internalId => $projectStats) {
+            foreach ($this->projects as $internalId => $projectStats) {
+                if (empty($internalId)) {
+                    continue;
+                }
+                try {
                     /** @var \Utopia\Database\Database $dbForProject */
                     $dbForProject = $getProjectDB($projectStats['project']);
                     Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
@@ -205,12 +208,11 @@ class StatsUsageDump extends Action
                     Console::success('Batch successfully written to DB');
 
                     unset($this->projects[$internalId]);
+                } catch (Throwable $e) {
+                    Console::error('Error processing stats: ' . $e->getMessage());
                 }
-            } catch (Throwable $e) {
-                Console::error('Error processing stats: ' . $e->getMessage());
-            } finally {
-                $this->lastDispatchTime = time();
             }
+            $this->lastDispatchTime = time();
         }
         $this->writeToLogsDB();
 
@@ -219,7 +221,6 @@ class StatsUsageDump extends Action
     protected function prepareForLogsDB(Document $project, Document $stat)
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
-            Console::log('Dual Writing is disabled. Skipping...');
             return;
         }
         if (array_key_exists($stat->getAttribute('metric'), $this->skipBaseMetrics)) {
