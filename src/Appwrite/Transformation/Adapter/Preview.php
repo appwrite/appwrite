@@ -27,6 +27,13 @@ class Preview extends Adapter
         return false;
     }
 
+    /**
+     * Appends a styled preview banner to the output.
+     *
+     * This method merges the existing input HTML with a preview banner, which 
+     * includes CSS for both light and dark themes and JavaScript to hide the banner 
+     * on click.
+     */
     public function transform(): void
     {
         $this->output = $this->input;

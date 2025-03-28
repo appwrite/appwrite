@@ -45,6 +45,11 @@ use function Swoole\Coroutine\batch;
 
 class Builds extends Action
 {
+    /**
+     * Retrieves the identifier for the build action.
+     *
+     * @return string The action name "builds".
+     */
     public static function getName(): string
     {
         return 'builds';
@@ -156,26 +161,20 @@ class Builds extends Action
     }
 
     /**
-     * @param Device $deviceForFunctions
-     * @param Device $deviceForSites
-     * @param Device $deviceForFiles
-     * @param Webhook $queueForWebhooks
-     * @param Func $queueForFunctions
-     * @param Realtime $queueForRealtime
-     * @param Event $queueForEvents
-     * @param StatsUsage $queueForStatsUsage
-     * @param Database $dbForPlatform
-     * @param Database $dbForProject
-     * @param GitHub $github
-     * @param Document $project
-     * @param Document $resource
-     * @param Document $deployment
-     * @param Document $template
-     * @param Log $log
-     * @return void
-     * @throws \Utopia\Database\Exception
+     * Orchestrates the entire build deployment process for a function or site resource.
      *
-     * @throws Exception
+     * This method validates and retrieves the necessary resource and deployment documents, ensuring the resource is not blocked,
+     * and sets up real-time update channels and logging contexts. It supports two deployment flows:
+     * - A non-VCS flow that builds the resource using a template repository.
+     * - A VCS-based flow that clones the source repository (and merges templates if provided), executes build commands,
+     *   and updates source commit details.
+     *
+     * The method concurrently streams build logs from a runtime executor, verifies build size limits, and handles post-build
+     * operations such as screenshot generation for site deployments, updating deployment statuses, triggering webhooks,
+     * function events, and usage metrics, and integrating with GitHub for commit status updates.
+     *
+     * @throws \Exception If validations fail, documents are missing, cloning or build operations encounter errors,
+     *                    or deployment constraints are violated.
      */
     protected function buildDeployment(
         Device $deviceForFunctions,
