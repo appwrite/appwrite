@@ -24,6 +24,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -205,7 +206,7 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
         $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));

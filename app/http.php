@@ -14,6 +14,8 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -170,7 +172,6 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             break; // exit loop on success
         } catch (\Exception $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
-            $pools->reclaim();
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
@@ -312,11 +313,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $cache = $app->getResource('cache');
 
         foreach ($sharedTablesV2 as $hostname) {
-            $adapter = $pools
-                ->get($hostname)
-                ->pop()
-                ->getResource();
-
+            $adapter = new PoolAdapter($pools->get($hostname));
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
                 ->setSharedTables(true)
@@ -326,7 +323,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
-            } catch (Duplicate) {
+            } catch (DuplicateException) {
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
@@ -352,7 +349,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             }
         }
 
-        $pools->reclaim();
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -484,8 +480,6 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         ];
 
         $swooleResponse->end(\json_encode($output));
-    } finally {
-        $pools->reclaim();
     }
 });
 
