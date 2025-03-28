@@ -89,13 +89,6 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $database = new Database($adapter, $cache);
 
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
