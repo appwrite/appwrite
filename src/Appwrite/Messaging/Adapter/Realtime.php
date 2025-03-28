@@ -2,13 +2,14 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Messaging\Adapter;
+use Appwrite\PubSub\Adapter as PubSubAdapter;
+use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class Realtime extends Adapter
+class Realtime extends MessagingAdapter
 {
     /**
      * Connection Tree
@@ -123,11 +124,12 @@ class Realtime extends Adapter
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
-     * @param string $event
+     * @param array $events
      * @param array $channels
      * @param array $roles
      * @param array $options
      * @return void
+     * @throws \Exception
      */
     public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
@@ -139,10 +141,8 @@ class Realtime extends Adapter
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
         global $register;
-        $pubsub = $register->get('pools')->get('pubsub')->pop();
-        try {
-            /** @var \Appwrite\PubSub\Adapter $redis */
-            $redis = $pubsub->getResource();
+
+        $register->get('pools')->get('pubsub')->use(fn (PubSubAdapter $redis) =>
             $redis->publish('realtime', json_encode([
                 'project' => $projectId,
                 'roles' => $roles,
@@ -154,10 +154,8 @@ class Realtime extends Adapter
                     'timestamp' => DateTime::formatTz(DateTime::now()),
                     'payload' => $payload
                 ]
-            ]));
-        } finally {
-            $pubsub->reclaim();
-        }
+            ]))
+        );
     }
 
     /**
@@ -172,8 +170,9 @@ class Realtime extends Adapter
      *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
      *
      * @param array $event
+     * @return int[]|string[]
      */
-    public function getSubscribers(array $event)
+    public function getSubscribers(array $event): array
     {
 
         $receivers = [];
@@ -227,7 +226,7 @@ class Realtime extends Adapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case strpos($key, 'account.') === 0:
+                case \str_starts_with($key, 'account.'):
                     unset($channels[$key]);
                     break;
 
@@ -269,6 +268,7 @@ class Realtime extends Adapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'migrations':
             case 'rules':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
@@ -349,12 +349,6 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
-                break;
-            case 'migrations':
-                $channels[] = 'console';
-                $channels[] = 'projects.' . $project->getId();
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

@@ -5,6 +5,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\PubSub\Adapter as PubSubAdapter;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -19,6 +20,7 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -28,13 +30,15 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
+use Utopia\Pools\Group;
+use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 /**
- * @var \Utopia\Registry\Registry $register
+ * @var Registry $register
  */
 require_once __DIR__ . '/init.php';
 
@@ -46,17 +50,11 @@ if (!function_exists('getConsoleDB')) {
     {
         global $register;
 
-        /** @var \Utopia\Pools\Group $pools */
+        /** @var Group $pools */
         $pools = $register->get('pools');
 
-        $dbAdapter = $pools
-            ->get('console')
-            ->pop()
-            ->getResource()
-        ;
-
-        $database = new Database($dbAdapter, getCache());
-
+        $adapter = new PoolAdapter($pools->get('console'));
+        $database = new Database($adapter, getCache());
         $database
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
@@ -72,7 +70,7 @@ if (!function_exists('getProjectDB')) {
     {
         global $register;
 
-        /** @var \Utopia\Pools\Group $pools */
+        /** @var Group $pools */
         $pools = $register->get('pools');
 
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -86,11 +84,7 @@ if (!function_exists('getProjectDB')) {
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $adapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
+        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
         $database = new Database($adapter, getCache());
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -121,7 +115,7 @@ if (!function_exists('getCache')) {
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var Group $pools */
 
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
@@ -130,8 +124,7 @@ if (!function_exists('getCache')) {
             $adapters[] = $pools
                 ->get($value)
                 ->pop()
-                ->getResource()
-            ;
+                ->getResource();
         }
 
         return new Cache(new Sharding($adapters));
@@ -273,7 +266,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        $register->get('pools')->reclaim();
     });
 
     /**
@@ -299,9 +291,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
                 Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
             } catch (Throwable $th) {
-                call_user_func($logError, $th, "updateWorkerDocument");
-            } finally {
-                $register->get('pools')->reclaim();
+                $logError($th, "updateWorkerDocument");
             }
         });
     }
@@ -370,8 +360,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         'data' => $event['data']
                     ]));
                 }
-
-                $register->get('pools')->reclaim();
             }
         }
         /**
@@ -407,70 +395,66 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            /** @var \Appwrite\PubSub\Adapter $pubsub */
-            $pubsub = $register->get('pools')->get('pubsub')->pop()->getResource();
-            if ($pubsub->ping(true)) {
-                $attempts = 0;
-                Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
-            } else {
-                Console::error('Pub/sub failed (worker: ' . $workerId . ')');
-            }
+            $register->get('pools')->get('pubsub')->use(function (PubSubAdapter $pubsub) use ($server, $workerId, $stats, $register, $realtime) {
+                if ($pubsub->ping(true)) {
+                    $attempts = 0;
+                    Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
+                } else {
+                    Console::error('Pub/sub failed (worker: ' . $workerId . ')');
+                }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
-                $event = json_decode($payload, true);
+                $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+                    $event = json_decode($payload, true);
 
-                if ($event['permissionsChanged'] && isset($event['userId'])) {
-                    $projectId = $event['project'];
-                    $userId = $event['userId'];
+                    if ($event['permissionsChanged'] && isset($event['userId'])) {
+                        $projectId = $event['project'];
+                        $userId = $event['userId'];
 
-                    if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
-                        $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = getConsoleDB();
-                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = getProjectDB($project);
+                        if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
+                            $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
+                            $consoleDatabase = getConsoleDB();
+                            $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                            $database = getProjectDB($project);
 
-                        $user = $database->getDocument('users', $userId);
+                            $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user);
-                        $channels = $realtime->connections[$connection]['channels'];
+                            $roles = Auth::getRoles($user);
+                            $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels);
-
-                        $register->get('pools')->reclaim();
+                            $realtime->unsubscribe($connection);
+                            $realtime->subscribe($projectId, $connection, $roles, $channels);
+                        }
                     }
-                }
 
-                $receivers = $realtime->getSubscribers($event);
+                    $receivers = $realtime->getSubscribers($event);
 
-                if (App::isDevelopment() && !empty($receivers)) {
-                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                }
+                    if (App::isDevelopment() && !empty($receivers)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
 
-                $server->send(
-                    $receivers,
-                    json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ])
-                );
+                    $server->send(
+                        $receivers,
+                        json_encode([
+                            'type' => 'event',
+                            'data' => $event['data']
+                        ])
+                    );
 
-                if (($num = count($receivers)) > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($num);
-                    $stats->incr($event['project'], 'messages', $num);
-                }
+                    if (($num = count($receivers)) > 0) {
+                        $register->get('telemetry.messageSentCounter')->add($num);
+                        $stats->incr($event['project'], 'messages', $num);
+                    }
+                });
             });
         } catch (Throwable $th) {
-            call_user_func($logError, $th, "pubSubConnection");
+            $logError($th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
-        } finally {
-            $register->get('pools')->reclaim();
         }
     }
 
@@ -572,7 +556,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (Throwable $th) {
-        call_user_func($logError, $th, "initServer");
+        $logError($th, "initServer");
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
@@ -596,8 +580,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
-    } finally {
-        $register->get('pools')->reclaim();
     }
 });
 
@@ -696,8 +678,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         if ($th->getCode() === 1008) {
             $server->close($connection, $th->getCode());
         }
-    } finally {
-        $register->get('pools')->reclaim();
     }
 });
 
