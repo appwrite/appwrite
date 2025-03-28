@@ -1,4 +1,4 @@
-> [Get started with Appwrite](https://apwr.dev/appcloud) 
+> [Get started with Appwrite](https://apwr.dev/appcloud)
 
 <br />
 <p align="center">
