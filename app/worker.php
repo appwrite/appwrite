@@ -24,6 +24,7 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -33,6 +34,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
@@ -46,15 +48,11 @@ Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
-    $database = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
+    $adapter = new PoolAdapter($pools->get('console'));
+    $dbForPlatform = new Database($adapter, $cache);
+    $dbForPlatform->setNamespace('_console');
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_console');
-
-    return $adapter;
+    return $dbForPlatform;
 }, ['cache', 'register']);
 
 Server::setResource('project', function (Message $message, Database $dbForPlatform) {
@@ -82,11 +80,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
+    $adapter = new PoolAdapter($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -143,12 +137,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -179,16 +169,9 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             $database->setTenant($project->getInternalId());
             return $database;
         }
-
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        
+        $adapter = new PoolAdapter($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)
@@ -229,8 +212,7 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -447,7 +429,7 @@ $worker
     ->shutdown()
     ->inject('pools')
     ->action(function (Group $pools) {
-        $pools->reclaim();
+        $pools->get('consumer')->reclaim();
     });
 
 $worker
@@ -457,8 +439,9 @@ $worker
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
-        $pools->reclaim();
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
+        $pools->get('consumer')->reclaim();
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {

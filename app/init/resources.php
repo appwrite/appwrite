@@ -27,6 +27,7 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -325,12 +326,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $dbAdapter = $pools
-        ->get($dsn->getHost())
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
+    $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+    $database = new Database($adapter, $cache);
 
     $database
         ->setMetadata('host', \gethostname())
@@ -356,12 +353,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
 }, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, $cache);
+    $adapter = new PoolAdapter($pools->get('console'));
+    $database = new Database($adapter, $cache);
 
     $database
         ->setNamespace('_console')
@@ -374,7 +367,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+    $databases = [];
 
     return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -416,12 +409,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $configure($database);
 
@@ -437,15 +426,8 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        $adapter = new PoolAdapter($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)
