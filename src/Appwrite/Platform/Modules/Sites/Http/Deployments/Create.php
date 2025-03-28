@@ -241,14 +241,23 @@ class Create extends Action
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
                     'buildOutput' => $outputDirectory,
+                    'adapter' => $site->getAttribute('adapter', ''),
+                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
-                    'type' => $type
+                    'type' => $type,
                 ]));
+
+                $site = $site
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('sites', $site->getId(), $site);
 
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
@@ -299,6 +308,8 @@ class Create extends Action
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
                     'buildOutput' => $outputDirectory,
+                    'adapter' => $site->getAttribute('adapter', ''),
+                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
@@ -307,8 +318,15 @@ class Create extends Action
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
-                    'type' => $type
+                    'type' => $type,
                 ]));
+
+                $site = $site
+                    ->setAttribute('latestDeploymentId', $deployment->getId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument('sites', $site->getId(), $site);
 
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;

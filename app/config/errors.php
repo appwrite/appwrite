@@ -580,6 +580,11 @@ return [
         'description' => 'Build with the requested ID is already completed and cannot be canceled.',
         'code' => 400,
     ],
+    Exception::BUILD_FAILED => [
+        'name' => Exception::BUILD_FAILED,
+        'description' => 'Build with the requested ID failed. Please check the logs for more information.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -832,7 +837,7 @@ return [
     Exception::RULE_VERIFICATION_FAILED => [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
-        'code' => 401,
+        'code' => 400,
         'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [

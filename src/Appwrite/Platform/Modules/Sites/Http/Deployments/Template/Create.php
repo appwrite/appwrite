@@ -156,10 +156,19 @@ class Create extends Base
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'adapter' => $site->getAttribute('adapter', ''),
+            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'manual',
             'search' => implode(' ', [$deploymentId]),
             'activate' => $activate,
         ]));
+
+        $site = $site
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;

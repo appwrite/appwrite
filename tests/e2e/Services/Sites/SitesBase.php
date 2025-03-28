@@ -244,6 +244,16 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function deleteDeployment(string $siteId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        return $deployment;
+    }
+
     protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
     {
         $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);

@@ -33,6 +33,8 @@ class Preview extends Adapter
 
         $banner = <<<EOT
         <style>
+            @import url(https://fonts.bunny.net/css?family=fira-code:400|inter:400);
+            
             #appwrite-preview {
                 padding: 0;
                 margin: 0;
@@ -80,7 +82,7 @@ class Preview extends Adapter
                 padding: 0;
                 margin: 0;
                 color: var(--color-fgColor-neutral-secondary, #56565C);
-                font-family: var(--font-family-sansSerif, Inter);
+                font-family: var(--font-family-sansSerif, Inter), sans-serif;
                 font-size: var(--font-size-XS, 12px);
                 font-style: normal;
                 font-weight: 500;
@@ -97,7 +99,7 @@ class Preview extends Adapter
                 padding: var(--space-1, 2px) var(--space-2, 4px);
                 color: var(--color-fgColor-neutral-secondary, #56565C);
                 text-align: center;
-                font-family: var(--font-family-sansSerif, Inter);
+                font-family: var(--font-family-sansSerif, Inter), sans-serif;
                 font-size: var(--font-size-XS, 12px);
                 font-style: normal;
                 font-weight: 400;
@@ -120,7 +122,7 @@ class Preview extends Adapter
 
                 #appwrite-preview-text {
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
-                    font-family: var(--font-family-sansSerif, Inter);
+                    font-family: var(--font-family-sansSerif, Inter), sans-serif;
                     font-size: var(--font-size-XS, 12px);
                 }
 

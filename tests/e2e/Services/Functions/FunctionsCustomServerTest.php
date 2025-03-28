@@ -1288,8 +1288,7 @@ class FunctionsCustomServerTest extends Scope
         return [
             ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
             ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
-            // TODO: Re-enable; temporarly disabled due to OPR v5 issues
-            // ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
+            ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
             ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
             // Swift and Dart disabled on purpose, as it's very slow.
             // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
@@ -1591,7 +1590,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Scopes executions',
-            'commands' => 'sh setup.sh && composer install',
+            'commands' => 'bash setup.sh && composer install',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'scopes' => ['users.read'],
@@ -2101,11 +2100,26 @@ class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($functionId);
 
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayHasKey('latestDeploymentId', $function['body']);
+        $this->assertArrayHasKey('latestDeploymentCreatedAt', $function['body']);
+        $this->assertArrayHasKey('latestDeploymentStatus', $function['body']);
+        $this->assertEmpty($function['body']['latestDeploymentId']);
+        $this->assertEmpty($function['body']['latestDeploymentCreatedAt']);
+        $this->assertEmpty($function['body']['latestDeploymentStatus']);
+
         $deploymentId1 = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('php-cookie'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentId1);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
 
         $execution = $this->createExecution($functionId, [
             'headers' => [ 'cookie' => 'cookieName=cookieValue' ]
@@ -2120,6 +2134,11 @@ class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId2);
 
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId2, $function['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
+
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
@@ -2128,6 +2147,8 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
+        $this->assertEquals($deploymentId2, $function['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
 
         $function = $this->updateFunctionDeployment($functionId, $deploymentId1);
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -2136,6 +2157,8 @@ class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId1, $function['body']['deploymentId']);
+        $this->assertEquals($deploymentId2, $function['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
 
         $execution = $this->createExecution($functionId, [
             'headers' => [ 'cookie' => 'cookieName=cookieValue' ]
@@ -2143,6 +2166,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
+
+        $deployment = $this->deleteDeployment($functionId, $deploymentId2);
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId1, $function['body']['latestDeploymentId']);
+        $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
 
         $this->cleanupFunction($functionId);
     }

@@ -232,6 +232,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'entrypoint' => $resource->getAttribute('entrypoint', ''),
                 'buildCommands' => \implode(' && ', $commands),
                 'buildOutput' => $resource->getAttribute('outputDirectory', ''),
+                'adapter' => $resource->getAttribute('adapter', ''),
+                'fallbackFile' => $resource->getAttribute('fallbackFile', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -252,6 +254,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
             ]));
+
+            $resource = $resource
+                ->setAttribute('latestDeploymentId', $deployment->getId())
+                ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
 
             if ($resource->getCollection() === 'sites') {
                 $projectId = $project->getId();

@@ -114,6 +114,8 @@ class Create extends Action
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'adapter' => $site->getAttribute('adapter', ''),
+            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'search' => implode(' ', [$deploymentId]),
             'screenshotLight' => '',
             'screenshotDark' => '',
@@ -125,6 +127,13 @@ class Create extends Action
             'buildPath' => '',
             'buildLogs' => '',
         ]));
+
+        $site = $site
+            ->setAttribute('latestDeploymentId', $deployment->getId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+        $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         // Preview deployments for sites
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');

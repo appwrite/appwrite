@@ -55,7 +55,7 @@ class Func extends Model
             ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.',
+                'description' => 'When disabled, executions will exclude logs and errors, and will be slightly faster.',
                 'default' => true,
                 'example' => false,
             ])
@@ -76,6 +76,24 @@ class Func extends Model
                 'description' => 'Active deployment creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function\'s latest deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Latest deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Status of latest deployment. Possible values are "waiting", "processing", "building", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
             ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,

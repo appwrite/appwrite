@@ -93,6 +93,11 @@ class Update extends Action
             'status' => 'canceled'
         ]));
 
+        if ($deployment->getInternalId() === $site->getAttribute('latestDeploymentInternalId', '')) {
+            $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            $dbForProject->updateDocument('sites', $site->getId(), $site);
+        }
+
         try {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");

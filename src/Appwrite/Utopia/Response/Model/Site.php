@@ -46,6 +46,12 @@ class Site extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site framework.',
@@ -75,6 +81,24 @@ class Site extends Model
                 'description' => 'Screenshot of active deployment with dark theme preference file ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site\'s latest deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Latest deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Status of latest deployment. Possible values are "waiting", "processing", "building", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
             ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,

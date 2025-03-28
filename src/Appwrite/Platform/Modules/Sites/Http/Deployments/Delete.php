@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -94,6 +95,23 @@ class Delete extends Action
             if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
+        }
+
+        if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
+            $latestDeployment = $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['sites']),
+                Query::equal('resourceInternalId', [$site->getInternalId()]),
+                Query::orderDesc('$createdAt'),
+            ]);
+            $site = $dbForProject->updateDocument(
+                'sites',
+                $site->getId(),
+                $site
+                ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt())
+                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getInternalId())
+                ->setAttribute('latestDeploymentId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getId())
+                ->setAttribute('latestDeploymentStatus', $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''))
+            );
         }
 
         if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
