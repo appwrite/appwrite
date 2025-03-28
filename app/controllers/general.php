@@ -56,6 +56,25 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
+/**
+ * Routes an incoming HTTP request to the appropriate Appwrite resource.
+ *
+ * This function inspects the request hostname and domain rules to determine if the request should be processed as a
+ * deployment (function or site execution), API call, or redirect. It handles ACME challenges, enforces HTTPS where required,
+ * validates preview authorization (unless bypassed via the provided API key), and prepares execution parameters for deployments.
+ * It also updates metrics and logs execution details before sending the response.
+ *
+ * Returns true if the request was processed (e.g. execution triggered, redirect issued) and a response was sent, or false if
+ * the default API routing should continue.
+ *
+ * @param string $previewHostname Overrides the detected hostname for preview scenarios.
+ * @param Key|null $apiKey Optional API key that may bypass standard deployment status checks and preview authorization.
+ *
+ * @return bool True if the request was fully handled; false otherwise.
+ *
+ * @throws AppwriteException If the request violates domain restrictions, router protection, service availability,
+ *                           deployment status, authorization, or if the runtime is unsupported.
+ */
 function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');

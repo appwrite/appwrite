@@ -12,6 +12,22 @@ use Utopia\System\System;
 
 class Key
 {
+    /**
+     * Constructs a new Key instance with the specified configuration.
+     *
+     * @param string $projectId The ID of the project associated with the key.
+     * @param string $type The type of the key (e.g., standard or dynamic).
+     * @param string $role The role associated with the key.
+     * @param array $scopes An array of scopes defining the key's permissions.
+     * @param string $name The name assigned to the key.
+     * @param bool $expired Indicates whether the key is expired. Defaults to false.
+     * @param array $disabledMetrics A list of metrics disabled for this key.
+     * @param bool $hostnameOverride Indicates if hostname override is enabled.
+     * @param bool $bannerDisabled Indicates if the banner display is disabled.
+     * @param bool $projectCheckDisabled Indicates whether project checks are disabled.
+     * @param bool $previewAuthDisabled Indicates whether preview authentication is disabled.
+     * @param bool $deploymentStatusIgnored Indicates if the deployment status should be ignored. Defaults to false.
+     */
     public function __construct(
         protected string $projectId,
         protected string $type,
@@ -75,29 +91,53 @@ class Key
         return $this->bannerDisabled;
     }
 
+    /**
+     * Returns whether preview authentication is disabled.
+     *
+     * @return bool True if preview authentication is disabled, false otherwise.
+     */
     public function isPreviewAuthDisabled(): bool
     {
         return $this->previewAuthDisabled;
     }
 
+    /**
+     * Determines if the API key's deployment status is ignored.
+     *
+     * @return bool True if the deployment status is ignored; otherwise, false.
+     */
     public function isDeploymentStatusIgnored(): bool
     {
         return $this->deploymentStatusIgnored;
     }
 
+    /**
+     * Returns whether project checks are disabled.
+     *
+     * This method indicates if project-based validations are bypassed.
+     *
+     * @return bool True if project checks are disabled; false otherwise.
+     */
     public function isProjectCheckDisabled(): bool
     {
         return $this->projectCheckDisabled;
     }
 
     /**
-     * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
-     * Can be a stored API key or a dynamic key (JWT).
+     * Decodes a secret API key into a Key object.
      *
-     * @param Document $project
-     * @param string $key
-     * @return Key
-     * @throws Exception
+     * This method processes both dynamic (JWT) keys and standard API keys. For dynamic keys, it decodes the JWT payload
+     * using a secure environment key and extracts properties such as the key name, project ID, scopes, disabled metrics,
+     * hostname override, banner, project check, preview authentication, and deployment status. If decoding fails or if the
+     * project ID in the token does not match the provided project (when project checks are enabled), a guest key is returned.
+     *
+     * For standard keys, the method retrieves the key document from the project and checks for expiration, returning a guest
+     * key if the key is not found or has expired.
+     *
+     * @param Document $project The project document containing API key definitions.
+     * @param string   $key     The secret API key, either in standard format or as a dynamic JWT.
+     *
+     * @return Key A new Key instance reflecting the decoded API key or a guest key if validation fails.
      */
     public static function decode(
         Document $project,
