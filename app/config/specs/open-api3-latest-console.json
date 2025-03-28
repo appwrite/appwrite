@@ -24718,6 +24718,7 @@
                                             "sveltekit",
                                             "astro",
                                             "remix",
+                                            "lynx",
                                             "flutter",
                                             "vite",
                                             "other"
@@ -25353,6 +25354,7 @@
                                             "sveltekit",
                                             "astro",
                                             "remix",
+                                            "lynx",
                                             "flutter",
                                             "vite",
                                             "other"
@@ -37040,6 +37042,11 @@
                         "description": "Site Template Name.",
                         "x-example": "Starter site"
                     },
+                    "tagline": {
+                        "type": "string",
+                        "description": "Short description of template",
+                        "x-example": "Minimal web app integrating with Appwrite."
+                    },
                     "demoUrl": {
                         "type": "string",
                         "description": "URL hosting a template demo.",
@@ -37103,6 +37110,7 @@
                 "required": [
                     "key",
                     "name",
+                    "tagline",
                     "demoUrl",
                     "screenshotDark",
                     "screenshotLight",
