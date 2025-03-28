@@ -14,6 +14,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as PoolAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -63,12 +64,8 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
         $attempts++;
         try {
             // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
-
-            $dbForPlatform = new Database($dbAdapter, $cache);
+            $adapter = new PoolAdapter($pools->get('console'));
+            $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
                 ->setNamespace('_console')
@@ -86,7 +83,6 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
             $ready = true;
         } catch (\Throwable $err) {
             Console::warning($err->getMessage());
-            $pools->get('console')->reclaim();
             sleep($sleep);
         }
     } while ($attempts < $maxAttempts && !$ready);
@@ -136,12 +132,8 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -173,15 +165,8 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get('logs')
-            ->pop()
-            ->getResource();
-
-        $database = new Database(
-            $dbAdapter,
-            $cache
-        );
+        $adapter = new PoolAdapter($pools->get('logs'));
+        $database = new Database($adapter, $cache);
 
         $database
             ->setSharedTables(true)

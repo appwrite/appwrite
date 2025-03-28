@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
+use Utopia\Queue\Publisher;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -73,31 +74,29 @@ class ScheduleFunctions extends ScheduleBase
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('publisher')->pop();
-                $connection = $queue->getResource();
 
-                foreach ($scheduleKeys as $scheduleKey) {
-                    // Ensure schedule was not deleted
-                    if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
+                    foreach ($scheduleKeys as $scheduleKey) {
+                        // Ensure schedule was not deleted
+                        if (!\array_key_exists($scheduleKey, $this->schedules)) {
+                            return;
+                        }
+
+                        $schedule = $this->schedules[$scheduleKey];
+
+                        $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+
+                        $pools->get('publisher')->use(function(Publisher $publisher) use ($schedule) {
+                            $queueForFunctions = new Func($publisher);
+    
+                            $queueForFunctions
+                                ->setType('schedule')
+                                ->setFunction($schedule['resource'])
+                                ->setMethod('POST')
+                                ->setPath('/')
+                                ->setProject($schedule['project'])
+                                ->trigger();
+                        });
                     }
-
-                    $schedule = $this->schedules[$scheduleKey];
-
-                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
-
-                    $queueForFunctions = new Func($connection);
-
-                    $queueForFunctions
-                        ->setType('schedule')
-                        ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
-                        ->setProject($schedule['project'])
-                        ->trigger();
-                }
-
-                $queue->reclaim();
             });
         }
 

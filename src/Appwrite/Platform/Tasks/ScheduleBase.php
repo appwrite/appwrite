@@ -132,8 +132,6 @@ abstract class ScheduleBase extends Action
             $latestDocument = \end($results);
         }
 
-        $pools->reclaim();
-
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
@@ -197,8 +195,6 @@ abstract class ScheduleBase extends Action
 
                 $lastSyncUpdate = $time;
                 $timerEnd = \microtime(true);
-
-                $pools->reclaim();
 
                 Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
             });

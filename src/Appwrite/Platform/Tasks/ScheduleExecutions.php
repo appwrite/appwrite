@@ -6,6 +6,7 @@ use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Utopia\Queue\Publisher;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -29,9 +30,6 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queue = $pools->get('publisher')->pop();
-        $connection = $queue->getResource();
-        $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -59,21 +57,25 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
+            \go(function () use ($schedule, $delay, $data, $pools) {
                 Co::sleep($delay);
 
-                $queueForFunctions->setType('schedule')
-                    // Set functionId instead of function as we don't have $dbForProject
-                    // TODO: Refactor to use function instead of functionId
-                    ->setFunctionId($schedule['resource']['functionId'])
-                    ->setExecution($schedule['resource'])
-                    ->setMethod($data['method'] ?? 'POST')
-                    ->setPath($data['path'] ?? '/')
-                    ->setHeaders($data['headers'] ?? [])
-                    ->setBody($data['body'] ?? '')
-                    ->setProject($schedule['project'])
-                    ->setUserId($data['userId'] ?? '')
-                    ->trigger();
+                $pools->get('publisher')->use(function(Publisher $publisher) use ($schedule, $data) {
+                    $queueForFunctions = new Func($publisher);
+
+                    $queueForFunctions->setType('schedule')
+                        // Set functionId instead of function as we don't have $dbForProject
+                        // TODO: Refactor to use function instead of functionId
+                        ->setFunctionId($schedule['resource']['functionId'])
+                        ->setExecution($schedule['resource'])
+                        ->setMethod($data['method'] ?? 'POST')
+                        ->setPath($data['path'] ?? '/')
+                        ->setHeaders($data['headers'] ?? [])
+                        ->setBody($data['body'] ?? '')
+                        ->setProject($schedule['project'])
+                        ->setUserId($data['userId'] ?? '')
+                        ->trigger();
+                });
             });
 
             $dbForPlatform->deleteDocument(
@@ -82,8 +84,6 @@ class ScheduleExecutions extends ScheduleBase
             );
 
             unset($this->schedules[$schedule['$internalId']]);
-        }
-
-        $queue->reclaim();
+}
     }
 }
