@@ -41552,6 +41552,11 @@
                     "description": "A domain to use for site URLs.",
                     "x-example": "sites.localhost"
                 },
+                "_APP_DOMAIN_FUNCTIONS": {
+                    "type": "string",
+                    "description": "A domain to use for function URLs.",
+                    "x-example": "functions.localhost"
+                },
                 "_APP_OPTIONS_FORCE_HTTPS": {
                     "type": "string",
                     "description": "Defines if HTTPS is enforced for all requests.",
@@ -41572,6 +41577,7 @@
                 "_APP_DOMAIN_ENABLED",
                 "_APP_ASSISTANT_ENABLED",
                 "_APP_DOMAIN_SITES",
+                "_APP_DOMAIN_FUNCTIONS",
                 "_APP_OPTIONS_FORCE_HTTPS",
                 "_APP_DOMAINS_NAMESERVERS"
             ]
