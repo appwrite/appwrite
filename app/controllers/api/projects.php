@@ -2209,6 +2209,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
                 ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
+                ->setParam('{{buttonText}}', $localeObj->getText("emails.{$type}.buttonText"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
             $message = $message->render();
