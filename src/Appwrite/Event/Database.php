@@ -4,8 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Database extends Event
 {
@@ -14,9 +13,9 @@ class Database extends Event
     protected ?Document $collection = null;
     protected ?Document $document = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this->setClass(Event::DATABASE_CLASS_NAME);
     }
@@ -100,13 +99,7 @@ class Database extends Event
         return $this->document;
     }
 
-    /**
-     * Executes the event and send it to the database worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
+    public function getQueue(): string
     {
         try {
             $dsn = new DSN($this->getProject()->getAttribute('database'));
@@ -115,23 +108,25 @@ class Database extends Event
             $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
         }
 
-        $this->setQueue($dsn->getHost());
+        $this->queue = $dsn->getHost();
+        return $this->queue;
+    }
 
-        $client = new Client($this->queue, $this->connection);
-
-        try {
-            $result = $client->enqueue([
-                'project' => $this->project,
-                'user' => $this->user,
-                'type' => $this->type,
-                'collection' => $this->collection,
-                'document' => $this->document,
-                'database' => $this->database,
-                'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-            ]);
-            return $result;
-        } catch (\Throwable $th) {
-            return false;
-        }
+    /**
+     * Prepare the payload for the event
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
+            'project' => $this->project,
+            'user' => $this->user,
+            'type' => $this->type,
+            'collection' => $this->collection,
+            'document' => $this->document,
+            'database' => $this->database,
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+        ];
     }
 }

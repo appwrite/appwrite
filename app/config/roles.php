@@ -17,7 +17,6 @@ $member = [
     'files.read',
     'files.write',
     'projects.read',
-    'projects.write',
     'locale.read',
     'avatars.read',
     'execution.read',
@@ -49,6 +48,7 @@ $admins = [
     'collections.write',
     'platforms.read',
     'platforms.write',
+    'projects.write',
     'keys.read',
     'keys.write',
     'webhooks.read',
@@ -75,7 +75,7 @@ $admins = [
     'topics.write',
     'topics.read',
     'subscribers.write',
-    'subscribers.read'
+    'subscribers.read',
 ];
 
 return [

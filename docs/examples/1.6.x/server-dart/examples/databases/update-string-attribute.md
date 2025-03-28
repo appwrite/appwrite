@@ -13,6 +13,6 @@ AttributeString result = await databases.updateStringAttribute(
     key: '',
     xrequired: false,
     xdefault: '<DEFAULT>',
-    size: 0, // (optional)
+    size: 1, // (optional)
     newKey: '', // (optional)
 );

@@ -3,3 +3,4 @@ appwrite databases updateRelationshipAttribute \
         --collectionId <COLLECTION_ID> \
         --key '' \
 
+

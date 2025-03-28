@@ -41,15 +41,15 @@ class SDKs extends Action
         $this
             ->desc('Generate Appwrite SDKs')
             ->param('platform', null, new Nullable(new Text(256)), 'Selected Platform', optional: true)
-            ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional:true)
-            ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional:true)
+            ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
+            ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
-            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional:true)
-            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional:true)
+            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
+            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
             ->callback([$this, 'action']);
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message)
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
     {
         $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
         $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
@@ -275,9 +275,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
-                        git init --initial-branch=' . $gitBranch . ' && \
+                        git init && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch origin ' . $gitBranch . ' && \
+                        git fetch origin && \
+                        git checkout main || git checkout -b main && \
+                        git pull origin main && \
+                        git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
+                        git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
                         cp -r ' . $result . '/. ' . $target . '/ && \

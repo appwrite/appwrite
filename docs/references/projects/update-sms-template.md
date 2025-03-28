@@ -1,0 +1,1 @@
+Update a custom SMS template for the specified locale and type. Use this endpoint to modify the content of your SMS templates. 

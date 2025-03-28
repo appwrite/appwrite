@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.account import Account
 from appwrite.enums import AuthenticationFactor
 
 client = Client()

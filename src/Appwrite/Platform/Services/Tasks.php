@@ -6,7 +6,6 @@ use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
-use Appwrite\Platform\Tasks\QueueCount;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
@@ -14,6 +13,7 @@ use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
+use Appwrite\Platform\Tasks\StatsResources;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
@@ -29,7 +29,6 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
-            ->addAction(QueueCount::getName(), new QueueCount())
             ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
@@ -40,6 +39,7 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
+            ->addAction(StatsResources::getName(), new StatsResources())
         ;
     }
 }

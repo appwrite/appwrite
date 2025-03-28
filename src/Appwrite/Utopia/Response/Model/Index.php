@@ -49,13 +49,22 @@ class Index extends Model
                 'array' => true,
                 'required' => false,
             ])
-        ;
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Index creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Index update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ]);
     }
 
     /**
      * Get Name
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -64,8 +73,6 @@ class Index extends Model
 
     /**
      * Get Collection
-     *
-     * @return string
      */
     public function getType(): string
     {

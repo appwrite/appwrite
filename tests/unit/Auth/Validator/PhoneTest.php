@@ -31,6 +31,7 @@ class PhoneTest extends TestCase
         $this->assertEquals($this->object->isValid('+0415553452342'), false);
         $this->assertEquals($this->object->isValid('+14 155 5524564'), false);
         $this->assertEquals($this->object->isValid('+1415555245634543'), false);
+        $this->assertEquals($this->object->isValid('+8020000000'), false); // when country code is not present
         $this->assertEquals($this->object->isValid(+14155552456), false);
 
         $this->assertEquals($this->object->isValid('+1415555'), true);

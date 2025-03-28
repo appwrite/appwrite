@@ -1,4 +1,5 @@
 import Appwrite
+import AppwriteEnums
 
 let client = Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -9,8 +10,8 @@ let messaging = Messaging(client)
 
 let message = try await messaging.createPush(
     messageId: "<MESSAGE_ID>",
-    title: "<TITLE>",
-    body: "<BODY>",
+    title: "<TITLE>", // optional
+    body: "<BODY>", // optional
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
@@ -21,8 +22,11 @@ let message = try await messaging.createPush(
     sound: "<SOUND>", // optional
     color: "<COLOR>", // optional
     tag: "<TAG>", // optional
-    badge: "<BADGE>", // optional
+    badge: 0, // optional
     draft: false, // optional
-    scheduledAt: "" // optional
+    scheduledAt: "", // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: .normal // optional
 )
 

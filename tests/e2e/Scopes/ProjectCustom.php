@@ -94,6 +94,8 @@ trait ProjectCustom
                 'topics.read',
                 'subscribers.write',
                 'subscribers.read',
+                'migrations.write',
+                'migrations.read'
             ],
         ]);
 

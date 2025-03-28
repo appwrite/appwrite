@@ -1,3 +1,15 @@
+## 14.0.0
+
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 13.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+* Fixed type mismatch bug where `List<dynamic>` was incorrectly causing runtime type errors.
+* Updated return type of `updateMfaChallenge()` from raw data to properly typed `models.Session` object.
+
 ## 12.0.0
 
 * Support for Appwrite 1.6

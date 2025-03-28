@@ -1,4 +1,4 @@
-import { Client, Messaging } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Messaging, MessagePriority } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -23,5 +23,8 @@ const response = await messaging.updatePush(
     '<TAG>', // tag (optional)
     null, // badge (optional)
     false, // draft (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    MessagePriority.Normal // priority (optional)
 );

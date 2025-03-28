@@ -13,5 +13,7 @@ mutation {
         error
         attributes
         orders
+        _createdAt
+        _updatedAt
     }
 }

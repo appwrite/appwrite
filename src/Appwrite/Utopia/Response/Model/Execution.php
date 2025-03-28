@@ -84,7 +84,6 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
-                'example' => 'Developers are awesome.',
             ])
             ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
