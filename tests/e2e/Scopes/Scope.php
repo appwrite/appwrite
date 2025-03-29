@@ -35,8 +35,7 @@ abstract class Scope extends TestCase
             if ($limit === 1) {
                 return end($emails);
             } else {
-                $lastEmails = array_slice($emails, -1 * $limit);
-                return $lastEmails;
+                return array_slice($emails, -1 * $limit);
             }
         }
 
@@ -45,26 +44,34 @@ abstract class Scope extends TestCase
 
     protected function extractFromJoinLink(string $html): array
     {
-        $linkStart = strpos($html, '/join-us?');
-        $linkEnd = strpos($html, '#title', $linkStart);
-        $link = substr($html, $linkStart, $linkEnd - $linkStart);
+        foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
+            $linkStart = strpos($html, $prefix);
+            if ($linkStart !== false) {
+                $hrefStart = strrpos(substr($html, 0, $linkStart), 'href="');
+                if ($hrefStart === false) {
+                    continue;
+                }
 
-        // Extract the query part only
-        $queryStart = strpos($link, '?') + 1;
-        $queryString = substr($link, $queryStart);
+                $hrefStart += 6;
+                $hrefEnd = strpos($html, '"', $hrefStart);
+                if ($hrefEnd === false || $hrefStart >= $hrefEnd) {
+                    continue;
+                }
 
-        // Parse the query string
-        parse_str(str_replace('&amp;', '&', $queryString), $queryParams);
+                $link = substr($html, $hrefStart, $hrefEnd - $hrefStart);
+                $queryStart = strpos($link, '?');
+                if ($queryStart === false) {
+                    continue;
+                }
 
-        return [
-            'userId' => $queryParams['userId'] ?? null,
-            'secret' => $queryParams['secret'] ?? null,
-            'teamId' => $queryParams['teamId'] ?? null,
-            'teamName' => $queryParams['teamName'] ?? null,
-            'membershipId' => $queryParams['membershipId'] ?? null,
-        ];
+                $queryString = substr($link, $queryStart + 1);
+                parse_str(html_entity_decode($queryString), $queryParams);
+                return $queryParams;
+            }
+        }
+
+        return [];
     }
-
 
     protected function getLastRequest(): array
     {
