@@ -920,9 +920,11 @@ trait WebhooksBase
         $this->assertNotEmpty($team['body']['$id']);
 
         $lastEmail = $this->getLastEmail();
-        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
-        $secret = $tokens['secret'];
+        // `$isAppUser` — no email expected;
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html'] ?? '');
+
+        $secret = $tokens['secret'] ?? '';
         $membershipId = $team['body']['$id'];
 
         $webhook = $this->getLastRequest();
