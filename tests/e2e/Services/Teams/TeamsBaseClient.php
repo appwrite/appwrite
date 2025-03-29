@@ -224,7 +224,7 @@ trait TeamsBaseClient
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $this->assertEquals($teamName, $tokens['teamName']);
         $this->assertEquals($response['body']['teamId'], $tokens['teamId']);
 
@@ -291,7 +291,7 @@ trait TeamsBaseClient
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $this->assertEquals($teamName, $tokens['teamName']);
         $this->assertEquals($response['body']['teamId'], $tokens['teamId']);
 
@@ -309,7 +309,7 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $lastEmail = $this->getLastEmail();
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $membershipUid = $tokens['membershipId'];
         $userUid = $tokens['userId'];
         $secret = $tokens['secret'];
@@ -617,7 +617,7 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $lastEmail = $this->getLastEmail();
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
         $secret = $tokens['secret'];
         $membershipUid = $tokens['membershipId'];

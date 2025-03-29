@@ -779,7 +779,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verification = $tokens['secret'];
         $expectedExpire = DateTime::format(new \DateTime($response['body']['expire']));
         $this->assertEquals($expectedExpire, $tokens['expire']);
@@ -1082,7 +1082,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
         // Secret check
         $this->assertArrayHasKey('secret', $tokens);

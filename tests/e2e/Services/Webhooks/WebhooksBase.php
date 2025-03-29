@@ -920,7 +920,7 @@ trait WebhooksBase
         $this->assertNotEmpty($team['body']['$id']);
 
         $lastEmail = $this->getLastEmail();
-        $tokens = $this->extractFromJoinLink($lastEmail['html']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
         $secret = $tokens['secret'];
         $membershipId = $team['body']['$id'];

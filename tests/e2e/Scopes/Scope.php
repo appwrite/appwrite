@@ -42,7 +42,7 @@ abstract class Scope extends TestCase
         return [];
     }
 
-    protected function extractFromJoinLink(string $html): array
+    protected function extractQueryParamsFromEmailLink(string $html): array
     {
         foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
             $linkStart = strpos($html, $prefix);
