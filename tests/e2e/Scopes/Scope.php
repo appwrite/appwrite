@@ -43,6 +43,29 @@ abstract class Scope extends TestCase
         return [];
     }
 
+    protected function extractFromJoinLink(string $html): array
+    {
+        $linkStart = strpos($html, '/join-us?');
+        $linkEnd = strpos($html, '#title', $linkStart);
+        $link = substr($html, $linkStart, $linkEnd - $linkStart);
+
+        // Extract the query part only
+        $queryStart = strpos($link, '?') + 1;
+        $queryString = substr($link, $queryStart);
+
+        // Parse the query string
+        parse_str(str_replace('&amp;', '&', $queryString), $queryParams);
+
+        return [
+            'userId' => $queryParams['userId'] ?? null,
+            'secret' => $queryParams['secret'] ?? null,
+            'teamId' => $queryParams['teamId'] ?? null,
+            'teamName' => $queryParams['teamName'] ?? null,
+            'membershipId' => $queryParams['membershipId'] ?? null,
+        ];
+    }
+
+
     protected function getLastRequest(): array
     {
         sleep(2);
