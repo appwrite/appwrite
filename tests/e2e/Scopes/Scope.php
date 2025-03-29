@@ -59,6 +59,7 @@ abstract class Scope extends TestCase
                 }
 
                 $link = substr($html, $hrefStart, $hrefEnd - $hrefStart);
+                $link = strtok($link, '#'); // Remove `#title`
                 $queryStart = strpos($link, '?');
                 if ($queryStart === false) {
                     continue;
