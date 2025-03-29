@@ -1417,6 +1417,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_roles'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['roles'],
+                'lengths' => [128],
+                'orders' => [],
+            ],
         ],
     ],
 
