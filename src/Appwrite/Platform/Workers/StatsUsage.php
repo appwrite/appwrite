@@ -347,11 +347,6 @@ class StatsUsage extends Action
                         continue;
                     }
 
-                    if (str_contains($key, METRIC_DATABASES_STORAGE)) {
-                        // skip database storage calc as it's wrong and we plan to get this from StatsResources
-                        continue;
-                    }
-
                     foreach ($this->periods as $period => $format) {
                         $time = null;
 
