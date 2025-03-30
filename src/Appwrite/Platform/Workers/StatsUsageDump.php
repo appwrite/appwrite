@@ -6,7 +6,6 @@ use Appwrite\Extend\Exception;
 use Throwable;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -148,11 +147,6 @@ class StatsUsageDump extends Action
             try {
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
-                        continue;
-                    }
-
-                    if (str_contains($key, METRIC_DATABASES_STORAGE)) {
-                        // skip database storage calc as it's wrong and we plan to get this from StatsResources
                         continue;
                     }
 
