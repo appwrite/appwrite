@@ -92,9 +92,15 @@ void main() {
 }
 ```
 
-Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
+Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulator has network access to the Appwrite server hostname or IP address.
 
-When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like [ngrok](https://ngrok.com/) to proxy the Appwrite API.
+When trying to connect to Appwrite from an emulator or a mobile device, `localhost` is the hostname of the device or emulator and not your local Appwrite instance. You should replace `localhost` with your private IP. You can also use a service like [Tunnelmole](https://github.com/robbie-cahill/tunnelmole-client) or [ngrok](https://ngrok.com/) to proxy the Appwrite API.
+
+Tunnelmole is an open source tunneling tool. To use it:
+1. Install it with `curl -O https://install.tunnelmole.com/aPD4m/install && sudo bash install` (on Windows, download [tmole.exe](https://tunnelmole.com/downloads/tmole.exe) 
+2. Run it with `tmole 8000` (replacing `8000` with the port number you are listening on if it is different). In the output, you'll see two URLs, one http and a https URL. Its best to use the https url for privacy and security.
+
+Alternatively, you can use ngrok. [ngrok](https://ngrok.com/) is a popular closed-source tunnelling tool. It can be used to proxy the Appwrite API in the same way. To use it, first download and install ngrok from [https://ngrok.com/download](https://ngrok.com/download) then run `ngrok http 8000` (again, replacing `8000` with your port number). Be sure to use the https URL in the output for the best security.
 
 ### Make Your First Request
 
