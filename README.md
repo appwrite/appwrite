@@ -73,11 +73,11 @@ Before running the installation command, make sure you have [Docker](https://www
 ### Unix
 
 ```bash
-docker run -it --rm \
+docker run -it --rm \               
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:latest
 ```
 
 ### Windows
@@ -89,7 +89,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:latest
 ```
 
 #### PowerShell
@@ -99,7 +99,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.6.0
+    appwrite/appwrite:latest
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
