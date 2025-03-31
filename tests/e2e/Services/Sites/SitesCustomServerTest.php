@@ -1736,6 +1736,14 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Preview by", $response['body']);
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("Page not found", $response['body']);
+        $this->assertStringNotContainsString("Preview by", $response['body']);
+        $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -2462,6 +2470,37 @@ class SitesCustomServerTest extends Scope
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
         $this->assertStringContainsString('Sub-directory project1', $response2['body']);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testDeploymentCommandEscaping(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'A site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => "echo 'Hello two'",
+            'installCommand' => 'echo "Hello one"',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsString('Hello one', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Hello two', $deployment['body']['buildLogs']);
+
         $this->cleanupSite($siteId);
     }
 }
