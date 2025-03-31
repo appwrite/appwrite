@@ -323,7 +323,7 @@ class StatsUsage extends Action
                 default:
                     break;
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
         }
     }
