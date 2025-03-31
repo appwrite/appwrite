@@ -191,6 +191,7 @@ App::post('/v1/users')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'create',
         description: '/docs/references/users/create-user.md',
         auth: [AuthType::KEY],
@@ -225,6 +226,7 @@ App::post('/v1/users/bcrypt')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
         auth: [AuthType::KEY],
@@ -259,6 +261,7 @@ App::post('/v1/users/md5')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
         auth: [AuthType::KEY],
@@ -293,6 +296,7 @@ App::post('/v1/users/argon2')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
         auth: [AuthType::KEY],
@@ -327,6 +331,7 @@ App::post('/v1/users/sha')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
         auth: [AuthType::KEY],
@@ -368,6 +373,7 @@ App::post('/v1/users/phpass')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
         auth: [AuthType::KEY],
@@ -402,6 +408,7 @@ App::post('/v1/users/scrypt')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
         auth: [AuthType::KEY],
@@ -449,6 +456,7 @@ App::post('/v1/users/scrypt-modified')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
         auth: [AuthType::KEY],
@@ -487,6 +495,7 @@ App::post('/v1/users/:userId/targets')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'createTarget',
         description: '/docs/references/users/create-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -578,6 +587,7 @@ App::get('/v1/users')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'list',
         description: '/docs/references/users/list-users.md',
         auth: [AuthType::KEY],
@@ -643,6 +653,7 @@ App::get('/v1/users/:userId')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'get',
         description: '/docs/references/users/get-user.md',
         auth: [AuthType::KEY],
@@ -673,6 +684,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
         auth: [AuthType::KEY],
@@ -705,6 +717,7 @@ App::get('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'getTarget',
         description: '/docs/references/users/get-user-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -742,6 +755,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
         auth: [AuthType::KEY],
@@ -788,6 +802,7 @@ App::get('/v1/users/:userId/memberships')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
         auth: [AuthType::KEY],
@@ -832,6 +847,7 @@ App::get('/v1/users/:userId/logs')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
         auth: [AuthType::KEY],
@@ -928,6 +944,7 @@ App::get('/v1/users/:userId/targets')
     ->label('scope', 'targets.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'listTargets',
         description: '/docs/references/users/list-user-targets.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -993,6 +1010,7 @@ App::get('/v1/users/identities')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
         auth: [AuthType::KEY],
@@ -1062,6 +1080,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
         auth: [AuthType::KEY],
@@ -1102,6 +1121,7 @@ App::put('/v1/users/:userId/labels')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
         auth: [AuthType::KEY],
@@ -1144,6 +1164,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
         auth: [AuthType::KEY],
@@ -1185,6 +1206,7 @@ App::patch('/v1/users/:userId/name')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
         auth: [AuthType::KEY],
@@ -1227,6 +1249,7 @@ App::patch('/v1/users/:userId/password')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
         auth: [AuthType::KEY],
@@ -1309,6 +1332,7 @@ App::patch('/v1/users/:userId/email')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
         auth: [AuthType::KEY],
@@ -1408,6 +1432,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
         auth: [AuthType::KEY],
@@ -1497,6 +1522,7 @@ App::patch('/v1/users/:userId/verification')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
         auth: [AuthType::KEY],
@@ -1534,6 +1560,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
         auth: [AuthType::KEY],
@@ -1574,6 +1601,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'updateTarget',
         description: '/docs/references/users/update-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -1678,6 +1706,7 @@ App::patch('/v1/users/:userId/mfa')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'updateMfa',
         description: '/docs/references/users/update-user-mfa.md',
         auth: [AuthType::KEY],
@@ -1717,6 +1746,7 @@ App::get('/v1/users/:userId/mfa/factors')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'listMfaFactors',
         description: '/docs/references/users/list-mfa-factors.md',
         auth: [AuthType::KEY],
@@ -1755,6 +1785,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/users/get-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1799,6 +1830,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/users/create-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1850,6 +1882,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/users/update-mfa-recovery-codes.md',
         auth: [AuthType::KEY],
@@ -1900,6 +1933,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'mfa',
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/users/delete-mfa-authenticator.md',
         auth: [AuthType::KEY],
@@ -1947,6 +1981,7 @@ App::post('/v1/users/:userId/sessions')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
         auth: [AuthType::KEY],
@@ -2031,6 +2066,7 @@ App::post('/v1/users/:userId/tokens')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
         auth: [AuthType::KEY],
@@ -2093,6 +2129,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
         auth: [AuthType::KEY],
@@ -2143,6 +2180,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
         auth: [AuthType::KEY],
@@ -2192,6 +2230,7 @@ App::delete('/v1/users/:userId')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'users',
         name: 'delete',
         description: '/docs/references/users/delete.md',
         auth: [AuthType::KEY],
@@ -2241,6 +2280,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'targets',
         name: 'deleteTarget',
         description: '/docs/references/users/delete-target.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -2298,6 +2338,7 @@ App::delete('/v1/users/identities/:identityId')
     ->label('audits.resource', 'identity/{request.$identityId}')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
         auth: [AuthType::KEY],
@@ -2337,6 +2378,7 @@ App::post('/v1/users/:userId/jwts')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'auth',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
         auth: [AuthType::KEY],
@@ -2392,6 +2434,7 @@ App::get('/v1/users/usage')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
+        group: 'usage',
         name: 'getUsage',
         description: '/docs/references/users/get-usage.md',
         auth: [AuthType::ADMIN],

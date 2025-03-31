@@ -125,6 +125,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if (empty($method)) {
             $utopia->getRoute()?->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'executions',
                 name: 'createExecution',
                 description: '/docs/references/functions/create-execution.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],

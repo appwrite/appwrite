@@ -289,6 +289,7 @@ App::post('/v1/account')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'create',
         description: '/docs/references/account/create.md',
         auth: [],
@@ -432,6 +433,7 @@ App::get('/v1/account')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'get',
         description: '/docs/references/account/get.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -461,6 +463,7 @@ App::delete('/v1/account')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'delete',
         description: '/docs/references/account/delete.md',
         auth: [AuthType::ADMIN],
@@ -513,6 +516,7 @@ App::get('/v1/account/sessions')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'listSessions',
         description: '/docs/references/account/list-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -562,6 +566,7 @@ App::delete('/v1/account/sessions')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'deleteSessions',
         description: '/docs/references/account/delete-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -631,6 +636,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'getSession',
         description: '/docs/references/account/get-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -684,6 +690,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'deleteSession',
         description: '/docs/references/account/delete-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -772,6 +779,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'updateSession',
         description: '/docs/references/account/update-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -856,6 +864,7 @@ App::post('/v1/account/sessions/email')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createEmailPasswordSession',
         description: '/docs/references/account/create-session-email-password.md',
         auth: [],
@@ -996,6 +1005,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createAnonymousSession',
         description: '/docs/references/account/create-session-anonymous.md',
         auth: [],
@@ -1139,6 +1149,7 @@ App::post('/v1/account/sessions/token')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -1172,6 +1183,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createOAuth2Session',
         description: '/docs/references/account/create-session-oauth2.md',
         type: MethodType::WEBAUTH,
@@ -1769,6 +1781,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createOAuth2Token',
         description: '/docs/references/account/create-token-oauth2.md',
         auth: [],
@@ -1849,6 +1862,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createMagicURLToken',
         description: '/docs/references/account/create-token-magic-url.md',
         auth: [],
@@ -2098,6 +2112,7 @@ App::post('/v1/account/tokens/email')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createEmailToken',
         description: '/docs/references/account/create-token-email.md',
         auth: [],
@@ -2333,6 +2348,7 @@ App::put('/v1/account/sessions/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'updateMagicURLSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -2370,6 +2386,7 @@ App::put('/v1/account/sessions/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'updatePhoneSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -2408,6 +2425,7 @@ App::post('/v1/account/tokens/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createPhoneToken',
         description: '/docs/references/account/create-token-phone.md',
         auth: [],
@@ -2616,6 +2634,7 @@ App::post('/v1/account/jwts')
     ->label('auth.type', 'jwt')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'auth',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
         auth: [],
@@ -2664,6 +2683,7 @@ App::get('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'getPrefs',
         description: '/docs/references/account/get-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -2690,6 +2710,7 @@ App::get('/v1/account/logs')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/account/list-logs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -2766,6 +2787,7 @@ App::patch('/v1/account/name')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updateName',
         description: '/docs/references/account/update-name.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -2804,6 +2826,7 @@ App::patch('/v1/account/password')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updatePassword',
         description: '/docs/references/account/update-password.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -2877,6 +2900,7 @@ App::patch('/v1/account/email')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updateEmail',
         description: '/docs/references/account/update-email.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -2973,6 +2997,7 @@ App::patch('/v1/account/phone')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updatePhone',
         description: '/docs/references/account/update-phone.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3058,6 +3083,7 @@ App::patch('/v1/account/prefs')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updatePrefs',
         description: '/docs/references/account/update-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3095,6 +3121,7 @@ App::patch('/v1/account/status')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'account',
         name: 'updateStatus',
         description: '/docs/references/account/update-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3145,6 +3172,7 @@ App::post('/v1/account/recovery')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'recovery',
         name: 'createRecovery',
         description: '/docs/references/account/create-recovery.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3331,6 +3359,7 @@ App::put('/v1/account/recovery')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'recovery',
         name: 'updateRecovery',
         description: '/docs/references/account/update-recovery.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3421,6 +3450,7 @@ App::post('/v1/account/verification')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'verification',
         name: 'createVerification',
         description: '/docs/references/account/create-email-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3592,6 +3622,7 @@ App::put('/v1/account/verification')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'verification',
         name: 'updateVerification',
         description: '/docs/references/account/update-email-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3658,6 +3689,7 @@ App::post('/v1/account/verification/phone')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'verification',
         name: 'createPhoneVerification',
         description: '/docs/references/account/create-phone-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3815,6 +3847,7 @@ App::put('/v1/account/verification/phone')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'verification',
         name: 'updatePhoneVerification',
         description: '/docs/references/account/update-phone-verification.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3880,6 +3913,7 @@ App::patch('/v1/account/mfa')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'updateMFA',
         description: '/docs/references/account/update-mfa.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3933,6 +3967,7 @@ App::get('/v1/account/mfa/factors')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'listMfaFactors',
         description: '/docs/references/account/list-mfa-factors.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -3973,6 +4008,7 @@ App::post('/v1/account/mfa/authenticators/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'createMfaAuthenticator',
         description: '/docs/references/account/create-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4049,6 +4085,7 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'updateMfaAuthenticator',
         description: '/docs/references/account/update-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4118,6 +4155,7 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'createMfaRecoveryCodes',
         description: '/docs/references/account/create-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4164,6 +4202,7 @@ App::patch('/v1/account/mfa/recovery-codes')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'updateMfaRecoveryCodes',
         description: '/docs/references/account/update-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4205,6 +4244,7 @@ App::get('/v1/account/mfa/recovery-codes')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'getMfaRecoveryCodes',
         description: '/docs/references/account/get-mfa-recovery-codes.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4243,6 +4283,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'deleteMfaAuthenticator',
         description: '/docs/references/account/delete-mfa-authenticator.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4288,6 +4329,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'createMfaChallenge',
         description: '/docs/references/account/create-mfa-challenge.md',
         auth: [],
@@ -4507,6 +4549,7 @@ App::put('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'mfa',
         name: 'updateMfaChallenge',
         description: '/docs/references/account/update-mfa-challenge.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4600,6 +4643,7 @@ App::post('/v1/account/targets/push')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'pushTargets',
         name: 'createPushTarget',
         description: '/docs/references/account/create-push-target.md',
         auth: [AuthType::SESSION],
@@ -4680,6 +4724,7 @@ App::put('/v1/account/targets/:targetId/push')
     ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'pushTargets',
         name: 'updatePushTarget',
         description: '/docs/references/account/update-push-target.md',
         auth: [AuthType::SESSION],
@@ -4744,6 +4789,7 @@ App::delete('/v1/account/targets/:targetId/push')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'pushTargets',
         name: 'deletePushTarget',
         description: '/docs/references/account/delete-push-target.md',
         auth: [AuthType::SESSION],
@@ -4794,6 +4840,7 @@ App::get('/v1/account/identities')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/account/list-identities.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -4865,6 +4912,7 @@ App::delete('/v1/account/identities/:identityId')
     ->label('audits.userId', '{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
+        group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/account/delete-identity.md',
         auth: [AuthType::SESSION, AuthType::JWT],

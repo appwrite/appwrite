@@ -150,6 +150,7 @@ App::post('/v1/functions')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'create',
         description: '/docs/references/functions/create-function.md',
         auth: [AuthType::KEY],
@@ -431,6 +432,7 @@ App::get('/v1/functions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'list',
         description: '/docs/references/functions/list-functions.md',
         auth: [AuthType::KEY],
@@ -497,6 +499,7 @@ App::get('/v1/functions/runtimes')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listRuntimes',
         description: '/docs/references/functions/list-runtimes.md',
         auth: [AuthType::KEY],
@@ -536,6 +539,7 @@ App::get('/v1/functions/specifications')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listSpecifications',
         description: '/docs/references/functions/list-specifications.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -578,6 +582,7 @@ App::get('/v1/functions/:functionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'get',
         description: '/docs/references/functions/get-function.md',
         auth: [AuthType::KEY],
@@ -608,6 +613,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'usage',
         name: 'getFunctionUsage',
         description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
@@ -719,6 +725,7 @@ App::get('/v1/functions/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'usage',
         name: 'getUsage',
         description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],
@@ -828,6 +835,7 @@ App::put('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'update',
         description: '/docs/references/functions/update-function.md',
         auth: [AuthType::KEY],
@@ -1033,6 +1041,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeploymentDownload',
         description: '/docs/references/functions/get-deployment-download.md',
         auth: [AuthType::KEY, AuthType::JWT],
@@ -1129,6 +1138,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeployment',
         description: '/docs/references/functions/update-function-deployment.md',
         auth: [AuthType::KEY],
@@ -1197,6 +1207,7 @@ App::delete('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'delete',
         description: '/docs/references/functions/delete-function.md',
         auth: [AuthType::KEY],
@@ -1252,6 +1263,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createDeployment',
         description: '/docs/references/functions/create-deployment.md',
         auth: [AuthType::KEY],
@@ -1474,6 +1486,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'listDeployments',
         description: '/docs/references/functions/list-deployments.md',
         auth: [AuthType::KEY],
@@ -1563,6 +1576,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeployment',
         description: '/docs/references/functions/get-deployment.md',
         auth: [AuthType::KEY],
@@ -1615,6 +1629,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'deleteDeployment',
         description: '/docs/references/functions/delete-deployment.md',
         auth: [AuthType::KEY],
@@ -1688,6 +1703,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createBuild',
         description: '/docs/references/functions/create-build.md',
         auth: [AuthType::KEY],
@@ -1763,6 +1779,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeploymentBuild',
         description: '/docs/references/functions/update-deployment-build.md',
         auth: [AuthType::KEY],
@@ -1858,6 +1875,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'createExecution',
         description: '/docs/references/functions/create-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2266,6 +2284,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'listExecutions',
         description: '/docs/references/functions/list-executions.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2359,6 +2378,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'getExecution',
         description: '/docs/references/functions/get-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2415,6 +2435,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'deleteExecution',
         description: '/docs/references/functions/delete-execution.md',
         auth: [AuthType::KEY],
@@ -2492,6 +2513,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'createVariable',
         description: '/docs/references/functions/create-variable.md',
         auth: [AuthType::KEY],
@@ -2562,6 +2584,7 @@ App::get('/v1/functions/:functionId/variables')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'listVariables',
             description: '/docs/references/functions/list-variables.md',
             auth: [AuthType::KEY],
@@ -2598,6 +2621,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'getVariable',
             description: '/docs/references/functions/get-variable.md',
             auth: [AuthType::KEY],
@@ -2646,6 +2670,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'updateVariable',
         description: '/docs/references/functions/update-variable.md',
         auth: [AuthType::KEY],
@@ -2713,6 +2738,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'deleteVariable',
         description: '/docs/references/functions/delete-variable.md',
         auth: [AuthType::KEY],
@@ -2767,6 +2793,7 @@ App::get('/v1/functions/templates')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'listTemplates',
         description: '/docs/references/functions/list-templates.md',
         auth: [AuthType::ADMIN],
@@ -2810,6 +2837,7 @@ App::get('/v1/functions/templates/:templateId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'getTemplate',
         description: '/docs/references/functions/get-template.md',
         auth: [AuthType::ADMIN],

@@ -26,6 +26,7 @@ App::get('/v1/project/usage')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'usage',
         name: 'getUsage',
         description: '/docs/references/project/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -387,6 +388,7 @@ App::post('/v1/project/variables')
     ->label('audits.event', 'variable.create')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'variables',
         name: 'createVariable',
         description: '/docs/references/project/create-variable.md',
         auth: [AuthType::ADMIN],
@@ -446,6 +448,7 @@ App::get('/v1/project/variables')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'variables',
         name: 'listVariables',
         description: '/docs/references/project/list-variables.md',
         auth: [AuthType::ADMIN],
@@ -476,6 +479,7 @@ App::get('/v1/project/variables/:variableId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'variables',
         name: 'getVariable',
         description: '/docs/references/project/get-variable.md',
         auth: [AuthType::ADMIN],
@@ -505,6 +509,7 @@ App::put('/v1/project/variables/:variableId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'variables',
         name: 'updateVariable',
         description: '/docs/references/project/update-variable.md',
         auth: [AuthType::ADMIN],
@@ -556,6 +561,7 @@ App::delete('/v1/project/variables/:variableId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'project',
+        group: 'variables',
         name: 'deleteVariable',
         description: '/docs/references/project/delete-variable.md',
         auth: [AuthType::ADMIN],

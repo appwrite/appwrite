@@ -68,6 +68,7 @@ App::post('/v1/projects')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'create',
         description: '/docs/references/projects/create.md',
         auth: [AuthType::ADMIN],
@@ -297,6 +298,7 @@ App::get('/v1/projects')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'list',
         description: '/docs/references/projects/list.md',
         auth: [AuthType::ADMIN],
@@ -362,6 +364,7 @@ App::get('/v1/projects/:projectId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'get',
         description: '/docs/references/projects/get.md',
         auth: [AuthType::ADMIN],
@@ -394,6 +397,7 @@ App::patch('/v1/projects/:projectId')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'update',
         description: '/docs/references/projects/update.md',
         auth: [AuthType::ADMIN],
@@ -447,6 +451,7 @@ App::patch('/v1/projects/:projectId/team')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateTeam',
         description: '/docs/references/projects/update-team.md',
         auth: [AuthType::ADMIN],
@@ -521,6 +526,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateServiceStatus',
         description: '/docs/references/projects/update-service-status.md',
         auth: [AuthType::ADMIN],
@@ -558,6 +564,7 @@ App::patch('/v1/projects/:projectId/service/all')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateServiceStatusAll',
         description: '/docs/references/projects/update-service-status-all.md',
         auth: [AuthType::ADMIN],
@@ -598,6 +605,7 @@ App::patch('/v1/projects/:projectId/api')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateApiStatus',
         description: '/docs/references/projects/update-api-status.md',
         auth: [AuthType::ADMIN],
@@ -635,6 +643,7 @@ App::patch('/v1/projects/:projectId/api/all')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'updateApiStatusAll',
         description: '/docs/references/projects/update-api-status-all.md',
         auth: [AuthType::ADMIN],
@@ -675,6 +684,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateOAuth2',
         description: '/docs/references/projects/update-oauth2.md',
         auth: [AuthType::ADMIN],
@@ -725,6 +735,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateSessionAlerts',
         description: '/docs/references/projects/update-session-alerts.md',
         auth: [AuthType::ADMIN],
@@ -762,6 +773,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateMembershipsPrivacy',
         description: '/docs/references/projects/update-memberships-privacy.md',
         auth: [AuthType::ADMIN],
@@ -803,6 +815,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthLimit',
         description: '/docs/references/projects/update-auth-limit.md',
         auth: [AuthType::ADMIN],
@@ -840,6 +853,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthDuration',
         description: '/docs/references/projects/update-auth-duration.md',
         auth: [AuthType::ADMIN],
@@ -877,6 +891,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthStatus',
         description: '/docs/references/projects/update-auth-status.md',
         auth: [AuthType::ADMIN],
@@ -917,6 +932,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthPasswordHistory',
         description: '/docs/references/projects/update-auth-password-history.md',
         auth: [AuthType::ADMIN],
@@ -954,6 +970,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthPasswordDictionary',
         description: '/docs/references/projects/update-auth-password-dictionary.md',
         auth: [AuthType::ADMIN],
@@ -991,6 +1008,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updatePersonalDataCheck',
         description: '/docs/references/projects/update-personal-data-check.md',
         auth: [AuthType::ADMIN],
@@ -1028,6 +1046,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateAuthSessionsLimit',
         description: '/docs/references/projects/update-auth-sessions-limit.md',
         auth: [AuthType::ADMIN],
@@ -1065,6 +1084,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'updateMockNumbers',
         description: '/docs/references/projects/update-mock-numbers.md',
         auth: [AuthType::ADMIN],
@@ -1112,6 +1132,7 @@ App::delete('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'projects',
         name: 'delete',
         description: '/docs/references/projects/delete.md',
         auth: [AuthType::ADMIN],
@@ -1155,6 +1176,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'createWebhook',
         description: '/docs/references/projects/create-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1219,6 +1241,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'listWebhooks',
         description: '/docs/references/projects/list-webhooks.md',
         auth: [AuthType::ADMIN],
@@ -1257,6 +1280,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'getWebhook',
         description: '/docs/references/projects/get-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1297,6 +1321,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'updateWebhook',
         description: '/docs/references/projects/update-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1362,6 +1387,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'updateWebhookSignature',
         description: '/docs/references/projects/update-webhook-signature.md',
         auth: [AuthType::ADMIN],
@@ -1407,6 +1433,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'webhooks',
         name: 'deleteWebhook',
         description: '/docs/references/projects/delete-webhook.md',
         auth: [AuthType::ADMIN],
@@ -1454,6 +1481,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'createKey',
         description: '/docs/references/projects/create-key.md',
         auth: [AuthType::ADMIN],
@@ -1510,6 +1538,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'listKeys',
         description: '/docs/references/projects/list-keys.md',
         auth: [AuthType::ADMIN],
@@ -1548,6 +1577,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'getKey',
         description: '/docs/references/projects/get-key.md',
         auth: [AuthType::ADMIN],
@@ -1588,6 +1618,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'updateKey',
         description: '/docs/references/projects/update-key.md',
         auth: [AuthType::ADMIN],
@@ -1640,6 +1671,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'keys',
         name: 'deleteKey',
         description: '/docs/references/projects/delete-key.md',
         auth: [AuthType::ADMIN],
@@ -1687,6 +1719,7 @@ App::post('/v1/projects/:projectId/jwts')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'auth',
         name: 'createJWT',
         description: '/docs/references/projects/create-jwt.md',
         auth: [AuthType::ADMIN],
@@ -1730,6 +1763,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'createPlatform',
         description: '/docs/references/projects/create-platform.md',
         auth: [AuthType::ADMIN],
@@ -1786,6 +1820,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'listPlatforms',
         description: '/docs/references/projects/list-platforms.md',
         auth: [AuthType::ADMIN],
@@ -1824,6 +1859,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.read')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'getPlatform',
         description: '/docs/references/projects/get-platform.md',
         auth: [AuthType::ADMIN],
@@ -1864,6 +1900,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'updatePlatform',
         description: '/docs/references/projects/update-platform.md',
         auth: [AuthType::ADMIN],
@@ -1919,6 +1956,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'platforms',
         name: 'deletePlatform',
         description: '/docs/references/projects/delete-platform.md',
         auth: [AuthType::ADMIN],
@@ -1966,6 +2004,7 @@ App::patch('/v1/projects/:projectId/smtp')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateSmtp',
         description: '/docs/references/projects/update-smtp.md',
         auth: [AuthType::ADMIN],
@@ -2062,6 +2101,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'createSmtpTest',
         description: '/docs/references/projects/create-smtp-test.md',
         auth: [AuthType::ADMIN],
@@ -2128,6 +2168,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'getSmsTemplate',
         description: '/docs/references/projects/get-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2175,6 +2216,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'getEmailTemplate',
         description: '/docs/references/projects/get-email-template.md',
         auth: [AuthType::ADMIN],
@@ -2233,6 +2275,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateSmsTemplate',
         description: '/docs/references/projects/update-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2279,6 +2322,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'updateEmailTemplate',
         description: '/docs/references/projects/update-email-template.md',
         auth: [AuthType::ADMIN],
@@ -2335,6 +2379,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'deleteSmsTemplate',
         description: '/docs/references/projects/delete-sms-template.md',
         auth: [AuthType::ADMIN],
@@ -2385,6 +2430,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
+        group: 'templates',
         name: 'deleteEmailTemplate',
         description: '/docs/references/projects/delete-email-template.md',
         auth: [AuthType::ADMIN],

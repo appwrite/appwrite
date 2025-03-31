@@ -37,6 +37,7 @@ App::post('/v1/migrations/appwrite')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'appwrite',
         name: 'createAppwriteMigration',
         description: '/docs/references/migrations/migration-appwrite.md',
         auth: [AuthType::ADMIN],
@@ -98,6 +99,7 @@ App::post('/v1/migrations/firebase')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'firebase',
         name: 'createFirebaseMigration',
         description: '/docs/references/migrations/migration-firebase.md',
         auth: [AuthType::ADMIN],
@@ -164,6 +166,7 @@ App::post('/v1/migrations/supabase')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'supabase',
         name: 'createSupabaseMigration',
         description: '/docs/references/migrations/migration-supabase.md',
         auth: [AuthType::ADMIN],
@@ -230,6 +233,7 @@ App::post('/v1/migrations/nhost')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'nhost',
         name: 'createNHostMigration',
         description: '/docs/references/migrations/migration-nhost.md',
         auth: [AuthType::ADMIN],
@@ -296,6 +300,7 @@ App::get('/v1/migrations')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'migrations',
         name: 'list',
         description: '/docs/references/migrations/list-migrations.md',
         auth: [AuthType::ADMIN],
@@ -360,6 +365,7 @@ App::get('/v1/migrations/:migrationId')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'migrations',
         name: 'get',
         description: '/docs/references/migrations/get-migration.md',
         auth: [AuthType::ADMIN],
@@ -389,6 +395,7 @@ App::get('/v1/migrations/appwrite/report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'appwrite',
         name: 'getAppwriteReport',
         description: '/docs/references/migrations/migration-appwrite-report.md',
         auth: [AuthType::ADMIN],
@@ -436,6 +443,7 @@ App::get('/v1/migrations/firebase/report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'firebase',
         name: 'getFirebaseReport',
         description: '/docs/references/migrations/migration-firebase-report.md',
         auth: [AuthType::ADMIN],
@@ -488,6 +496,7 @@ App::get('/v1/migrations/supabase/report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'supabase',
         name: 'getSupabaseReport',
         description: '/docs/references/migrations/migration-supabase-report.md',
         auth: [AuthType::ADMIN],
@@ -536,6 +545,7 @@ App::get('/v1/migrations/nhost/report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'nhost',
         name: 'getNHostReport',
         description: '/docs/references/migrations/migration-nhost-report.md',
         auth: [AuthType::ADMIN],
@@ -587,6 +597,7 @@ App::patch('/v1/migrations/:migrationId')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'migrations',
         name: 'retry',
         description: '/docs/references/migrations/retry-migration.md',
         auth: [AuthType::ADMIN],
@@ -637,6 +648,7 @@ App::delete('/v1/migrations/:migrationId')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: 'migrations',
         name: 'delete',
         description: '/docs/references/migrations/delete-migration.md',
         auth: [AuthType::ADMIN],
