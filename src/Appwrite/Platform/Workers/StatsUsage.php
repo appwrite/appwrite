@@ -332,7 +332,7 @@ class StatsUsage extends Action
     {
 
         foreach ($this->stats as $stats) {
-            $project = new Document($stats['project'] ?? []);
+            $project = $stats['project'] ?? new Document([]);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
             $receivedAt = $stats['receivedAt'] ?? null;
             if ($numberOfKeys === 0) {
