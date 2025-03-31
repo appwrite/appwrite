@@ -405,7 +405,7 @@ class Deletes extends Action
         );
 
         $queries = [
-            Query::select($this->selects),
+            Query::select([...$this->selects, 'accessedAt']),
             Query::lessThan('accessedAt', $datetime),
             Query::orderDesc('accessedAt'),
             Query::orderDesc(),
@@ -439,9 +439,11 @@ class Deletes extends Action
         /** @var Database $dbForProject*/
         $dbForProject = $getProjectDB($project);
 
+        $selects = [...$this->selects, 'time'];
+
         // Delete Usage stats from projectDB
         $this->deleteByGroup('stats', [
-            Query::select($this->selects),
+            Query::select($selects),
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
@@ -454,7 +456,7 @@ class Deletes extends Action
 
             // Delete Usage stats from logsDB
             $this->deleteByGroup('stats', [
-                Query::select($this->selects),
+                Query::select($selects),
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
@@ -751,7 +753,7 @@ class Deletes extends Action
 
         // Delete Executions
         $this->deleteByGroup('executions', [
-            Query::select($this->selects),
+            Query::select([...$this->selects, '$createdAt']),
             Query::lessThan('$createdAt', $datetime),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -772,7 +774,7 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::select($this->selects),
+            Query::select([...$this->selects, '$createdAt']),
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
@@ -809,7 +811,7 @@ class Deletes extends Action
 
         try {
             $this->deleteByGroup(Audit::COLLECTION, [
-                Query::select($this->selects),
+                Query::select([...$this->selects, 'time']),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
                 Query::orderAsc(),
