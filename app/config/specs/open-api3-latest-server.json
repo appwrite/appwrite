@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.6.1",
+        "version": "1.6.2",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -7846,9 +7846,9 @@
             },
             "post": {
                 "summary": "Create index",
-                "operationId": "databasesCreateIndex",
+                "operationId": "indexesCreateIndex",
                 "tags": [
-                    "databases"
+                    "indexes"
                 ],
                 "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
                 "responses": {
@@ -7869,7 +7869,7 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/create-index.md",
+                    "demo": "indexes\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -7932,7 +7932,7 @@
                                             "fulltext",
                                             "unique"
                                         ],
-                                        "x-enum-name": "IndexType",
+                                        "x-enum-name": null,
                                         "x-enum-keys": []
                                     },
                                     "attributes": {
@@ -17594,6 +17594,85 @@
                             ],
                             "x-enum-name": "ImageFormat",
                             "x-enum-keys": [],
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/push": {
+            "get": {
+                "summary": "Get file for push notification",
+                "operationId": "storageGetFilePush",
+                "tags": [
+                    "storage"
+                ],
+                "description": "Get a file for push notification by its unique ID. This endpoint response returns a JSON object with the file metadata.",
+                "responses": {
+                    "200": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getFilePush",
+                    "weight": 213,
+                    "cookies": false,
+                    "type": "location",
+                    "deprecated": false,
+                    "demo": "storage\/get-file-push.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-push.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "public",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Session": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "bucketId",
+                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<BUCKET_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "fileId",
+                        "description": "File ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<FILE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "jwt",
+                        "description": "JSON Web Token to validate",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<JWT>",
                             "default": ""
                         },
                         "in": "query"

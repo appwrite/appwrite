@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.6.1",
+        "version": "1.6.2",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -99,6 +99,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "account",
                     "weight": 9,
                     "cookies": false,
                     "type": "",
@@ -148,6 +149,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "account",
                     "weight": 8,
                     "cookies": false,
                     "type": "",
@@ -231,6 +233,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "account",
                     "weight": 10,
                     "cookies": false,
                     "type": "",
@@ -280,6 +283,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "account",
                     "weight": 34,
                     "cookies": false,
                     "type": "",
@@ -358,6 +362,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
+                    "group": "identities",
                     "weight": 57,
                     "cookies": false,
                     "type": "",
@@ -418,6 +423,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
+                    "group": "identities",
                     "weight": 58,
                     "cookies": false,
                     "type": "",
@@ -479,6 +485,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "auth",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -529,6 +536,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 31,
                     "cookies": false,
                     "type": "",
@@ -594,6 +602,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMFA",
+                    "group": "mfa",
                     "weight": 44,
                     "cookies": false,
                     "type": "",
@@ -665,6 +674,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 46,
                     "cookies": false,
                     "type": "",
@@ -729,6 +739,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 47,
                     "cookies": false,
                     "type": "",
@@ -806,6 +817,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 51,
                     "cookies": false,
                     "type": "",
@@ -872,6 +884,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaChallenge",
+                    "group": "mfa",
                     "weight": 52,
                     "cookies": false,
                     "type": "",
@@ -948,6 +961,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
+                    "group": "mfa",
                     "weight": 53,
                     "cookies": false,
                     "type": "",
@@ -1026,6 +1040,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
+                    "group": "mfa",
                     "weight": 45,
                     "cookies": false,
                     "type": "",
@@ -1077,6 +1092,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 50,
                     "cookies": false,
                     "type": "",
@@ -1126,6 +1142,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 48,
                     "cookies": false,
                     "type": "",
@@ -1175,6 +1192,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 49,
                     "cookies": false,
                     "type": "",
@@ -1226,6 +1244,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "account",
                     "weight": 32,
                     "cookies": false,
                     "type": "",
@@ -1297,6 +1316,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
+                    "group": "account",
                     "weight": 33,
                     "cookies": false,
                     "type": "",
@@ -1374,6 +1394,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
+                    "group": "account",
                     "weight": 35,
                     "cookies": false,
                     "type": "",
@@ -1452,6 +1473,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "account",
                     "weight": 30,
                     "cookies": false,
                     "type": "",
@@ -1501,6 +1523,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "account",
                     "weight": 36,
                     "cookies": false,
                     "type": "",
@@ -1572,6 +1595,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRecovery",
+                    "group": "recovery",
                     "weight": 38,
                     "cookies": false,
                     "type": "",
@@ -1651,6 +1675,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRecovery",
+                    "group": "recovery",
                     "weight": 39,
                     "cookies": false,
                     "type": "",
@@ -1736,6 +1761,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
+                    "group": "auth",
                     "weight": 11,
                     "cookies": false,
                     "type": "",
@@ -1780,6 +1806,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
+                    "group": "auth",
                     "weight": 12,
                     "cookies": false,
                     "type": "",
@@ -1831,6 +1858,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAnonymousSession",
+                    "group": "auth",
                     "weight": 17,
                     "cookies": false,
                     "type": "",
@@ -1881,6 +1909,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
+                    "group": "auth",
                     "weight": 16,
                     "cookies": false,
                     "type": "",
@@ -1958,6 +1987,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
+                    "group": "auth",
                     "weight": 26,
                     "cookies": false,
                     "type": "",
@@ -2032,6 +2062,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Session",
+                    "group": "auth",
                     "weight": 19,
                     "cookies": false,
                     "type": "webAuth",
@@ -2167,6 +2198,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneSession",
+                    "group": "auth",
                     "weight": 27,
                     "cookies": false,
                     "type": "",
@@ -2244,6 +2276,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
+                    "group": "auth",
                     "weight": 18,
                     "cookies": false,
                     "type": "",
@@ -2321,6 +2354,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSession",
+                    "group": "auth",
                     "weight": 13,
                     "cookies": false,
                     "type": "",
@@ -2380,6 +2414,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSession",
+                    "group": "auth",
                     "weight": 15,
                     "cookies": false,
                     "type": "",
@@ -2434,6 +2469,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
+                    "group": "auth",
                     "weight": 14,
                     "cookies": false,
                     "type": "",
@@ -2495,6 +2531,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
+                    "group": "account",
                     "weight": 37,
                     "cookies": false,
                     "type": "",
@@ -2546,6 +2583,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPushTarget",
+                    "group": "pushTargets",
                     "weight": 54,
                     "cookies": false,
                     "type": "",
@@ -2628,6 +2666,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePushTarget",
+                    "group": "pushTargets",
                     "weight": 55,
                     "cookies": false,
                     "type": "",
@@ -2698,6 +2737,7 @@
                 },
                 "x-appwrite": {
                     "method": "deletePushTarget",
+                    "group": "pushTargets",
                     "weight": 56,
                     "cookies": false,
                     "type": "",
@@ -2757,6 +2797,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
+                    "group": "auth",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2840,6 +2881,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
+                    "group": "auth",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2929,6 +2971,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
+                    "group": "auth",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -3064,6 +3107,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
+                    "group": "auth",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
@@ -3144,6 +3188,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVerification",
+                    "group": "verification",
                     "weight": 40,
                     "cookies": false,
                     "type": "",
@@ -3213,6 +3258,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVerification",
+                    "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
@@ -3291,6 +3337,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneVerification",
+                    "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
@@ -3343,6 +3390,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
+                    "group": "verification",
                     "weight": 43,
                     "cookies": false,
                     "type": "",
@@ -3421,6 +3469,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
+                    "group": "icons",
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
@@ -3547,6 +3596,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
+                    "group": "icons",
                     "weight": 59,
                     "cookies": false,
                     "type": "location",
@@ -3679,6 +3729,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
+                    "group": "images",
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
@@ -3743,6 +3794,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
+                    "group": "icons",
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
@@ -4231,6 +4283,7 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
+                    "group": "images",
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
@@ -4315,6 +4368,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
+                    "group": "images",
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
@@ -4407,6 +4461,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
+                    "group": "images",
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
@@ -4499,6 +4554,7 @@
                 },
                 "x-appwrite": {
                     "method": "chat",
+                    "group": "console",
                     "weight": 333,
                     "cookies": false,
                     "type": "",
@@ -4568,6 +4624,7 @@
                 },
                 "x-appwrite": {
                     "method": "variables",
+                    "group": "console",
                     "weight": 332,
                     "cookies": false,
                     "type": "",
@@ -4617,6 +4674,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "databases",
                     "weight": 70,
                     "cookies": false,
                     "type": "",
@@ -4688,6 +4746,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "databases",
                     "weight": 69,
                     "cookies": false,
                     "type": "",
@@ -4771,6 +4830,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": "usage",
                     "weight": 114,
                     "cookies": false,
                     "type": "",
@@ -4842,6 +4902,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "databases",
                     "weight": 71,
                     "cookies": false,
                     "type": "",
@@ -4900,6 +4961,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "databases",
                     "weight": 73,
                     "cookies": false,
                     "type": "",
@@ -4977,6 +5039,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "databases",
                     "weight": 74,
                     "cookies": false,
                     "type": "",
@@ -5037,6 +5100,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCollections",
+                    "group": "collections",
                     "weight": 76,
                     "cookies": false,
                     "type": "",
@@ -5116,6 +5180,7 @@
                 },
                 "x-appwrite": {
                     "method": "createCollection",
+                    "group": "collections",
                     "weight": 75,
                     "cookies": false,
                     "type": "",
@@ -5222,6 +5287,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCollection",
+                    "group": "collections",
                     "weight": 77,
                     "cookies": false,
                     "type": "",
@@ -5288,6 +5354,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateCollection",
+                    "group": "collections",
                     "weight": 79,
                     "cookies": false,
                     "type": "",
@@ -5388,6 +5455,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteCollection",
+                    "group": "collections",
                     "weight": 80,
                     "cookies": false,
                     "type": "",
@@ -5456,6 +5524,7 @@
                 },
                 "x-appwrite": {
                     "method": "listAttributes",
+                    "group": "attributes",
                     "weight": 91,
                     "cookies": false,
                     "type": "",
@@ -5536,6 +5605,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBooleanAttribute",
+                    "group": "attributes",
                     "weight": 88,
                     "cookies": false,
                     "type": "",
@@ -5641,6 +5711,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateBooleanAttribute",
+                    "group": "attributes",
                     "weight": 100,
                     "cookies": false,
                     "type": "",
@@ -5748,6 +5819,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDatetimeAttribute",
+                    "group": "attributes",
                     "weight": 89,
                     "cookies": false,
                     "type": "",
@@ -5853,6 +5925,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDatetimeAttribute",
+                    "group": "attributes",
                     "weight": 101,
                     "cookies": false,
                     "type": "",
@@ -5960,6 +6033,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailAttribute",
+                    "group": "attributes",
                     "weight": 82,
                     "cookies": false,
                     "type": "",
@@ -6065,6 +6139,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailAttribute",
+                    "group": "attributes",
                     "weight": 94,
                     "cookies": false,
                     "type": "",
@@ -6172,6 +6247,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEnumAttribute",
+                    "group": "attributes",
                     "weight": 83,
                     "cookies": false,
                     "type": "",
@@ -6287,6 +6363,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEnumAttribute",
+                    "group": "attributes",
                     "weight": 95,
                     "cookies": false,
                     "type": "",
@@ -6404,6 +6481,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFloatAttribute",
+                    "group": "attributes",
                     "weight": 87,
                     "cookies": false,
                     "type": "",
@@ -6521,6 +6599,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFloatAttribute",
+                    "group": "attributes",
                     "weight": 99,
                     "cookies": false,
                     "type": "",
@@ -6640,6 +6719,7 @@
                 },
                 "x-appwrite": {
                     "method": "createIntegerAttribute",
+                    "group": "attributes",
                     "weight": 86,
                     "cookies": false,
                     "type": "",
@@ -6757,6 +6837,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateIntegerAttribute",
+                    "group": "attributes",
                     "weight": 98,
                     "cookies": false,
                     "type": "",
@@ -6876,6 +6957,7 @@
                 },
                 "x-appwrite": {
                     "method": "createIpAttribute",
+                    "group": "attributes",
                     "weight": 84,
                     "cookies": false,
                     "type": "",
@@ -6981,6 +7063,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateIpAttribute",
+                    "group": "attributes",
                     "weight": 96,
                     "cookies": false,
                     "type": "",
@@ -7088,6 +7171,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRelationshipAttribute",
+                    "group": "attributes",
                     "weight": 90,
                     "cookies": false,
                     "type": "",
@@ -7220,6 +7304,7 @@
                 },
                 "x-appwrite": {
                     "method": "createStringAttribute",
+                    "group": "attributes",
                     "weight": 81,
                     "cookies": false,
                     "type": "",
@@ -7338,6 +7423,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStringAttribute",
+                    "group": "attributes",
                     "weight": 93,
                     "cookies": false,
                     "type": "",
@@ -7451,6 +7537,7 @@
                 },
                 "x-appwrite": {
                     "method": "createUrlAttribute",
+                    "group": "attributes",
                     "weight": 85,
                     "cookies": false,
                     "type": "",
@@ -7556,6 +7643,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateUrlAttribute",
+                    "group": "attributes",
                     "weight": 97,
                     "cookies": false,
                     "type": "",
@@ -7694,6 +7782,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAttribute",
+                    "group": "attributes",
                     "weight": 92,
                     "cookies": false,
                     "type": "",
@@ -7762,6 +7851,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteAttribute",
+                    "group": "attributes",
                     "weight": 103,
                     "cookies": false,
                     "type": "",
@@ -7837,6 +7927,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRelationshipAttribute",
+                    "group": "attributes",
                     "weight": 102,
                     "cookies": false,
                     "type": "",
@@ -7940,6 +8031,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDocuments",
+                    "group": "documents",
                     "weight": 109,
                     "cookies": false,
                     "type": "",
@@ -8021,6 +8113,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDocument",
+                    "group": "documents",
                     "weight": 108,
                     "cookies": false,
                     "type": "",
@@ -8126,6 +8219,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDocument",
+                    "group": "documents",
                     "weight": 110,
                     "cookies": false,
                     "type": "",
@@ -8215,6 +8309,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDocument",
+                    "group": "documents",
                     "weight": 112,
                     "cookies": false,
                     "type": "",
@@ -8311,6 +8406,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDocument",
+                    "group": "documents",
                     "weight": 113,
                     "cookies": false,
                     "type": "",
@@ -8390,6 +8486,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDocumentLogs",
+                    "group": "logs",
                     "weight": 111,
                     "cookies": false,
                     "type": "",
@@ -8477,6 +8574,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIndexes",
+                    "group": "indexes",
                     "weight": 105,
                     "cookies": false,
                     "type": "",
@@ -8534,7 +8632,7 @@
             },
             "post": {
                 "summary": "Create index",
-                "operationId": "databasesCreateIndex",
+                "operationId": "indexesCreateIndex",
                 "consumes": [
                     "application\/json"
                 ],
@@ -8542,7 +8640,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "databases"
+                    "indexes"
                 ],
                 "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
                 "responses": {
@@ -8555,11 +8653,12 @@
                 },
                 "x-appwrite": {
                     "method": "createIndex",
+                    "group": "collections",
                     "weight": 104,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "databases\/create-index.md",
+                    "demo": "indexes\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -8618,7 +8717,7 @@
                                         "fulltext",
                                         "unique"
                                     ],
-                                    "x-enum-name": "IndexType",
+                                    "x-enum-name": null,
                                     "x-enum-keys": []
                                 },
                                 "attributes": {
@@ -8674,6 +8773,7 @@
                 },
                 "x-appwrite": {
                     "method": "getIndex",
+                    "group": "indexes",
                     "weight": 106,
                     "cookies": false,
                     "type": "",
@@ -8742,6 +8842,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIndex",
+                    "group": "indexes",
                     "weight": 107,
                     "cookies": false,
                     "type": "",
@@ -8817,6 +8918,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCollectionLogs",
+                    "group": "collections",
                     "weight": 78,
                     "cookies": false,
                     "type": "",
@@ -8896,6 +8998,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCollectionUsage",
+                    "group": "usage",
                     "weight": 116,
                     "cookies": false,
                     "type": "",
@@ -8983,6 +9086,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 72,
                     "cookies": false,
                     "type": "",
@@ -9054,6 +9158,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDatabaseUsage",
+                    "group": "usage",
                     "weight": 115,
                     "cookies": false,
                     "type": "",
@@ -9133,6 +9238,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "functions",
                     "weight": 289,
                     "cookies": false,
                     "type": "",
@@ -9204,6 +9310,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "functions",
                     "weight": 288,
                     "cookies": false,
                     "type": "",
@@ -9474,6 +9581,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
+                    "group": "runtimes",
                     "weight": 290,
                     "cookies": false,
                     "type": "",
@@ -9524,6 +9632,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
+                    "group": "runtimes",
                     "weight": 291,
                     "cookies": false,
                     "type": "",
@@ -9575,6 +9684,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
+                    "group": "templates",
                     "weight": 314,
                     "cookies": false,
                     "type": "",
@@ -9670,6 +9780,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
+                    "group": "templates",
                     "weight": 315,
                     "cookies": false,
                     "type": "",
@@ -9729,6 +9840,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": "usage",
                     "weight": 294,
                     "cookies": false,
                     "type": "",
@@ -9800,6 +9912,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "functions",
                     "weight": 292,
                     "cookies": false,
                     "type": "",
@@ -9858,6 +9971,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "functions",
                     "weight": 295,
                     "cookies": false,
                     "type": "",
@@ -10098,6 +10212,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "functions",
                     "weight": 298,
                     "cookies": false,
                     "type": "",
@@ -10158,6 +10273,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
+                    "group": "deployments",
                     "weight": 300,
                     "cookies": false,
                     "type": "",
@@ -10237,6 +10353,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
+                    "group": "deployments",
                     "weight": 299,
                     "cookies": false,
                     "type": "upload",
@@ -10328,6 +10445,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
+                    "group": "deployments",
                     "weight": 301,
                     "cookies": false,
                     "type": "",
@@ -10394,6 +10512,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeployment",
+                    "group": "deployments",
                     "weight": 297,
                     "cookies": false,
                     "type": "",
@@ -10455,6 +10574,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
+                    "group": "deployments",
                     "weight": 302,
                     "cookies": false,
                     "type": "",
@@ -10520,6 +10640,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBuild",
+                    "group": "deployments",
                     "weight": 303,
                     "cookies": false,
                     "type": "",
@@ -10601,6 +10722,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentBuild",
+                    "group": "deployments",
                     "weight": 304,
                     "cookies": false,
                     "type": "",
@@ -10669,6 +10791,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
+                    "group": "deployments",
                     "weight": 296,
                     "cookies": false,
                     "type": "location",
@@ -10739,6 +10862,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
+                    "group": "executions",
                     "weight": 306,
                     "cookies": false,
                     "type": "",
@@ -10821,6 +10945,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
+                    "group": "executions",
                     "weight": 305,
                     "cookies": false,
                     "type": "",
@@ -10939,6 +11064,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
+                    "group": "executions",
                     "weight": 307,
                     "cookies": false,
                     "type": "",
@@ -11003,6 +11129,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
+                    "group": "executions",
                     "weight": 308,
                     "cookies": false,
                     "type": "",
@@ -11071,6 +11198,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFunctionUsage",
+                    "group": "usage",
                     "weight": 293,
                     "cookies": false,
                     "type": "",
@@ -11150,6 +11278,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
+                    "group": "variables",
                     "weight": 310,
                     "cookies": false,
                     "type": "",
@@ -11208,6 +11337,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
+                    "group": "variables",
                     "weight": 309,
                     "cookies": false,
                     "type": "",
@@ -11293,6 +11423,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
+                    "group": "variables",
                     "weight": 311,
                     "cookies": false,
                     "type": "",
@@ -11359,6 +11490,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
+                    "group": "variables",
                     "weight": 312,
                     "cookies": false,
                     "type": "",
@@ -11444,6 +11576,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
+                    "group": "variables",
                     "weight": 313,
                     "cookies": false,
                     "type": "",
@@ -11512,6 +11645,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
+                    "group": "graphql",
                     "weight": 331,
                     "cookies": false,
                     "type": "graphql",
@@ -11585,6 +11719,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
+                    "group": "graphql",
                     "weight": 330,
                     "cookies": false,
                     "type": "graphql",
@@ -11658,6 +11793,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "health",
                     "weight": 125,
                     "cookies": false,
                     "type": "",
@@ -11708,6 +11844,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAntivirus",
+                    "group": "health",
                     "weight": 147,
                     "cookies": false,
                     "type": "",
@@ -11758,6 +11895,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCache",
+                    "group": "health",
                     "weight": 128,
                     "cookies": false,
                     "type": "",
@@ -11808,6 +11946,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
+                    "group": "health",
                     "weight": 133,
                     "cookies": false,
                     "type": "",
@@ -11867,6 +12006,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDB",
+                    "group": "health",
                     "weight": 127,
                     "cookies": false,
                     "type": "",
@@ -11917,6 +12057,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
+                    "group": "health",
                     "weight": 129,
                     "cookies": false,
                     "type": "",
@@ -11967,6 +12108,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
+                    "group": "queue",
                     "weight": 135,
                     "cookies": false,
                     "type": "",
@@ -12028,6 +12170,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
+                    "group": "queue",
                     "weight": 134,
                     "cookies": false,
                     "type": "",
@@ -12089,6 +12232,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
+                    "group": "queue",
                     "weight": 136,
                     "cookies": false,
                     "type": "",
@@ -12159,6 +12303,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
+                    "group": "queue",
                     "weight": 137,
                     "cookies": false,
                     "type": "",
@@ -12220,6 +12365,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFailedJobs",
+                    "group": "queue",
                     "weight": 148,
                     "cookies": false,
                     "type": "",
@@ -12306,6 +12452,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
+                    "group": "queue",
                     "weight": 141,
                     "cookies": false,
                     "type": "",
@@ -12367,6 +12514,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
+                    "group": "queue",
                     "weight": 132,
                     "cookies": false,
                     "type": "",
@@ -12428,6 +12576,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
+                    "group": "queue",
                     "weight": 138,
                     "cookies": false,
                     "type": "",
@@ -12489,6 +12638,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
+                    "group": "queue",
                     "weight": 139,
                     "cookies": false,
                     "type": "",
@@ -12550,6 +12700,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
+                    "group": "queue",
                     "weight": 140,
                     "cookies": false,
                     "type": "",
@@ -12611,6 +12762,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
+                    "group": "queue",
                     "weight": 142,
                     "cookies": false,
                     "type": "",
@@ -12672,6 +12824,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueUsage",
+                    "group": "queue",
                     "weight": 143,
                     "cookies": false,
                     "type": "",
@@ -12733,6 +12886,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueStatsUsageDump",
+                    "group": "queue",
                     "weight": 144,
                     "cookies": false,
                     "type": "",
@@ -12794,6 +12948,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
+                    "group": "queue",
                     "weight": 131,
                     "cookies": false,
                     "type": "",
@@ -12855,6 +13010,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorage",
+                    "group": "storage",
                     "weight": 146,
                     "cookies": false,
                     "type": "",
@@ -12905,6 +13061,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorageLocal",
+                    "group": "storage",
                     "weight": 145,
                     "cookies": false,
                     "type": "",
@@ -12955,6 +13112,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
+                    "group": "health",
                     "weight": 130,
                     "cookies": false,
                     "type": "",
@@ -13005,6 +13163,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "locale",
                     "weight": 117,
                     "cookies": false,
                     "type": "",
@@ -13058,6 +13217,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
+                    "group": "locale",
                     "weight": 118,
                     "cookies": false,
                     "type": "",
@@ -13111,6 +13271,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
+                    "group": "continents",
                     "weight": 122,
                     "cookies": false,
                     "type": "",
@@ -13164,6 +13325,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
+                    "group": "countries",
                     "weight": 119,
                     "cookies": false,
                     "type": "",
@@ -13217,6 +13379,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
+                    "group": "countries",
                     "weight": 120,
                     "cookies": false,
                     "type": "",
@@ -13270,6 +13433,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
+                    "group": "countries",
                     "weight": 121,
                     "cookies": false,
                     "type": "",
@@ -13323,6 +13487,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
+                    "group": "currencies",
                     "weight": 123,
                     "cookies": false,
                     "type": "",
@@ -13376,6 +13541,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
+                    "group": "languages",
                     "weight": 124,
                     "cookies": false,
                     "type": "",
@@ -13429,6 +13595,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
+                    "group": "messages",
                     "weight": 384,
                     "cookies": false,
                     "type": "",
@@ -13503,6 +13670,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
+                    "group": "messages",
                     "weight": 381,
                     "cookies": false,
                     "type": "",
@@ -13660,6 +13828,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "messages",
                     "weight": 388,
                     "cookies": false,
                     "type": "",
@@ -13814,6 +13983,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
+                    "group": "messages",
                     "weight": 383,
                     "cookies": false,
                     "type": "",
@@ -14008,6 +14178,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
+                    "group": "messages",
                     "weight": 390,
                     "cookies": false,
                     "type": "",
@@ -14201,6 +14372,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
+                    "group": "messages",
                     "weight": 382,
                     "cookies": false,
                     "type": "",
@@ -14318,6 +14490,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
+                    "group": "messages",
                     "weight": 389,
                     "cookies": false,
                     "type": "",
@@ -14433,6 +14606,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
+                    "group": "messages",
                     "weight": 387,
                     "cookies": false,
                     "type": "",
@@ -14487,6 +14661,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "messages",
                     "weight": 391,
                     "cookies": false,
                     "type": "",
@@ -14548,6 +14723,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
+                    "group": "logs",
                     "weight": 385,
                     "cookies": false,
                     "type": "",
@@ -14621,6 +14797,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
+                    "group": "messages",
                     "weight": 386,
                     "cookies": false,
                     "type": "",
@@ -14694,6 +14871,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
+                    "group": "providers",
                     "weight": 356,
                     "cookies": false,
                     "type": "",
@@ -14768,6 +14946,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
+                    "group": "providers",
                     "weight": 355,
                     "cookies": false,
                     "type": "",
@@ -14882,6 +15061,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
+                    "group": "providers",
                     "weight": 368,
                     "cookies": false,
                     "type": "",
@@ -14994,6 +15174,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
+                    "group": "providers",
                     "weight": 354,
                     "cookies": false,
                     "type": "",
@@ -15084,6 +15265,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
+                    "group": "providers",
                     "weight": 367,
                     "cookies": false,
                     "type": "",
@@ -15172,6 +15354,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
+                    "group": "providers",
                     "weight": 346,
                     "cookies": false,
                     "type": "",
@@ -15298,6 +15481,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
+                    "group": "providers",
                     "weight": 359,
                     "cookies": false,
                     "type": "",
@@ -15422,6 +15606,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
+                    "group": "providers",
                     "weight": 349,
                     "cookies": false,
                     "type": "",
@@ -15524,6 +15709,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
+                    "group": "providers",
                     "weight": 362,
                     "cookies": false,
                     "type": "",
@@ -15624,6 +15810,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
+                    "group": "providers",
                     "weight": 347,
                     "cookies": false,
                     "type": "",
@@ -15738,6 +15925,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
+                    "group": "providers",
                     "weight": 360,
                     "cookies": false,
                     "type": "",
@@ -15850,6 +16038,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
+                    "group": "providers",
                     "weight": 348,
                     "cookies": false,
                     "type": "",
@@ -16008,6 +16197,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
+                    "group": "providers",
                     "weight": 361,
                     "cookies": false,
                     "type": "",
@@ -16163,6 +16353,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
+                    "group": "providers",
                     "weight": 350,
                     "cookies": false,
                     "type": "",
@@ -16265,6 +16456,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
+                    "group": "providers",
                     "weight": 363,
                     "cookies": false,
                     "type": "",
@@ -16365,6 +16557,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
+                    "group": "providers",
                     "weight": 351,
                     "cookies": false,
                     "type": "",
@@ -16467,6 +16660,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
+                    "group": "providers",
                     "weight": 364,
                     "cookies": false,
                     "type": "",
@@ -16567,6 +16761,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
+                    "group": "providers",
                     "weight": 352,
                     "cookies": false,
                     "type": "",
@@ -16669,6 +16864,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
+                    "group": "providers",
                     "weight": 365,
                     "cookies": false,
                     "type": "",
@@ -16769,6 +16965,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
+                    "group": "providers",
                     "weight": 353,
                     "cookies": false,
                     "type": "",
@@ -16871,6 +17068,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
+                    "group": "providers",
                     "weight": 366,
                     "cookies": false,
                     "type": "",
@@ -16971,6 +17169,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
+                    "group": "providers",
                     "weight": 358,
                     "cookies": false,
                     "type": "",
@@ -17025,6 +17224,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
+                    "group": "providers",
                     "weight": 369,
                     "cookies": false,
                     "type": "",
@@ -17086,6 +17286,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
+                    "group": "providers",
                     "weight": 357,
                     "cookies": false,
                     "type": "",
@@ -17159,6 +17360,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
+                    "group": "subscribers",
                     "weight": 378,
                     "cookies": false,
                     "type": "",
@@ -17232,6 +17434,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
+                    "group": "topics",
                     "weight": 371,
                     "cookies": false,
                     "type": "",
@@ -17304,6 +17507,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
+                    "group": "topics",
                     "weight": 370,
                     "cookies": false,
                     "type": "",
@@ -17393,6 +17597,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
+                    "group": "topics",
                     "weight": 373,
                     "cookies": false,
                     "type": "",
@@ -17452,6 +17657,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
+                    "group": "topics",
                     "weight": 374,
                     "cookies": false,
                     "type": "",
@@ -17530,6 +17736,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
+                    "group": "topics",
                     "weight": 375,
                     "cookies": false,
                     "type": "",
@@ -17591,6 +17798,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
+                    "group": "topics",
                     "weight": 372,
                     "cookies": false,
                     "type": "",
@@ -17664,6 +17872,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
+                    "group": "subscribers",
                     "weight": 377,
                     "cookies": false,
                     "type": "",
@@ -17744,6 +17953,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
+                    "group": "subscribers",
                     "weight": 376,
                     "cookies": false,
                     "type": "",
@@ -17833,6 +18043,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
+                    "group": "subscribers",
                     "weight": 379,
                     "cookies": false,
                     "type": "",
@@ -17895,6 +18106,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
+                    "group": "subscribers",
                     "weight": 380,
                     "cookies": false,
                     "type": "",
@@ -17967,6 +18179,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "migrations",
                     "weight": 338,
                     "cookies": false,
                     "type": "",
@@ -18039,6 +18252,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAppwriteMigration",
+                    "group": "appwrite",
                     "weight": 334,
                     "cookies": false,
                     "type": "",
@@ -18132,6 +18346,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
+                    "group": "appwrite",
                     "weight": 340,
                     "cookies": false,
                     "type": "",
@@ -18219,6 +18434,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
+                    "group": "firebase",
                     "weight": 335,
                     "cookies": false,
                     "type": "",
@@ -18298,6 +18514,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
+                    "group": "firebase",
                     "weight": 341,
                     "cookies": false,
                     "type": "",
@@ -18368,6 +18585,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
+                    "group": "nhost",
                     "weight": 337,
                     "cookies": false,
                     "type": "",
@@ -18488,6 +18706,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
+                    "group": "nhost",
                     "weight": 343,
                     "cookies": false,
                     "type": "",
@@ -18607,6 +18826,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
+                    "group": "supabase",
                     "weight": 336,
                     "cookies": false,
                     "type": "",
@@ -18720,6 +18940,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
+                    "group": "supabase",
                     "weight": 342,
                     "cookies": false,
                     "type": "",
@@ -18832,6 +19053,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "migrations",
                     "weight": 339,
                     "cookies": false,
                     "type": "",
@@ -18889,6 +19111,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
+                    "group": "migrations",
                     "weight": 344,
                     "cookies": false,
                     "type": "",
@@ -18941,6 +19164,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "migrations",
                     "weight": 345,
                     "cookies": false,
                     "type": "",
@@ -19000,6 +19224,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": "usage",
                     "weight": 196,
                     "cookies": false,
                     "type": "",
@@ -19083,6 +19308,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
+                    "group": "variables",
                     "weight": 198,
                     "cookies": false,
                     "type": "",
@@ -19130,6 +19356,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
+                    "group": "variables",
                     "weight": 197,
                     "cookies": false,
                     "type": "",
@@ -19206,6 +19433,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
+                    "group": "variables",
                     "weight": 199,
                     "cookies": false,
                     "type": "",
@@ -19263,6 +19491,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
+                    "group": "variables",
                     "weight": 200,
                     "cookies": false,
                     "type": "",
@@ -19339,6 +19568,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
+                    "group": "variables",
                     "weight": 201,
                     "cookies": false,
                     "type": "",
@@ -19398,6 +19628,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "projects",
                     "weight": 151,
                     "cookies": false,
                     "type": "",
@@ -19468,6 +19699,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "projects",
                     "weight": 150,
                     "cookies": false,
                     "type": "",
@@ -19522,8 +19754,7 @@
                                     "default": "default",
                                     "x-example": "default",
                                     "enum": [
-                                        "default",
-                                        "fra"
+                                        "default"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -19617,6 +19848,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "projects",
                     "weight": 152,
                     "cookies": false,
                     "type": "",
@@ -19674,6 +19906,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "projects",
                     "weight": 153,
                     "cookies": false,
                     "type": "",
@@ -19798,6 +20031,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "projects",
                     "weight": 170,
                     "cookies": false,
                     "type": "",
@@ -19857,6 +20091,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApiStatus",
+                    "group": "projects",
                     "weight": 157,
                     "cookies": false,
                     "type": "",
@@ -19948,6 +20183,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApiStatusAll",
+                    "group": "projects",
                     "weight": 158,
                     "cookies": false,
                     "type": "",
@@ -20025,6 +20261,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthDuration",
+                    "group": "auth",
                     "weight": 163,
                     "cookies": false,
                     "type": "",
@@ -20102,6 +20339,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthLimit",
+                    "group": "auth",
                     "weight": 162,
                     "cookies": false,
                     "type": "",
@@ -20179,6 +20417,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthSessionsLimit",
+                    "group": "auth",
                     "weight": 168,
                     "cookies": false,
                     "type": "",
@@ -20256,6 +20495,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipsPrivacy",
+                    "group": "auth",
                     "weight": 161,
                     "cookies": false,
                     "type": "",
@@ -20347,6 +20587,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMockNumbers",
+                    "group": "auth",
                     "weight": 169,
                     "cookies": false,
                     "type": "",
@@ -20427,6 +20668,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthPasswordDictionary",
+                    "group": "auth",
                     "weight": 166,
                     "cookies": false,
                     "type": "",
@@ -20504,6 +20746,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthPasswordHistory",
+                    "group": "auth",
                     "weight": 165,
                     "cookies": false,
                     "type": "",
@@ -20581,6 +20824,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePersonalDataCheck",
+                    "group": "auth",
                     "weight": 167,
                     "cookies": false,
                     "type": "",
@@ -20658,6 +20902,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSessionAlerts",
+                    "group": "auth",
                     "weight": 160,
                     "cookies": false,
                     "type": "",
@@ -20735,6 +20980,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthStatus",
+                    "group": "auth",
                     "weight": 164,
                     "cookies": false,
                     "type": "",
@@ -20831,6 +21077,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "auth",
                     "weight": 182,
                     "cookies": false,
                     "type": "",
@@ -20917,6 +21164,7 @@
                 },
                 "x-appwrite": {
                     "method": "listKeys",
+                    "group": "keys",
                     "weight": 178,
                     "cookies": false,
                     "type": "",
@@ -20974,6 +21222,7 @@
                 },
                 "x-appwrite": {
                     "method": "createKey",
+                    "group": "keys",
                     "weight": 177,
                     "cookies": false,
                     "type": "",
@@ -21067,6 +21316,7 @@
                 },
                 "x-appwrite": {
                     "method": "getKey",
+                    "group": "keys",
                     "weight": 179,
                     "cookies": false,
                     "type": "",
@@ -21132,6 +21382,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateKey",
+                    "group": "keys",
                     "weight": 180,
                     "cookies": false,
                     "type": "",
@@ -21226,6 +21477,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteKey",
+                    "group": "keys",
                     "weight": 181,
                     "cookies": false,
                     "type": "",
@@ -21293,6 +21545,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateOAuth2",
+                    "group": "auth",
                     "weight": 159,
                     "cookies": false,
                     "type": "",
@@ -21431,6 +21684,7 @@
                 },
                 "x-appwrite": {
                     "method": "listPlatforms",
+                    "group": "platforms",
                     "weight": 184,
                     "cookies": false,
                     "type": "",
@@ -21488,6 +21742,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPlatform",
+                    "group": "platforms",
                     "weight": 183,
                     "cookies": false,
                     "type": "",
@@ -21609,6 +21864,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPlatform",
+                    "group": "platforms",
                     "weight": 185,
                     "cookies": false,
                     "type": "",
@@ -21674,6 +21930,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePlatform",
+                    "group": "platforms",
                     "weight": 186,
                     "cookies": false,
                     "type": "",
@@ -21770,6 +22027,7 @@
                 },
                 "x-appwrite": {
                     "method": "deletePlatform",
+                    "group": "platforms",
                     "weight": 187,
                     "cookies": false,
                     "type": "",
@@ -21837,6 +22095,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateServiceStatus",
+                    "group": "projects",
                     "weight": 155,
                     "cookies": false,
                     "type": "",
@@ -21936,6 +22195,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateServiceStatusAll",
+                    "group": "projects",
                     "weight": 156,
                     "cookies": false,
                     "type": "",
@@ -22013,6 +22273,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtp",
+                    "group": "templates",
                     "weight": 188,
                     "cookies": false,
                     "type": "",
@@ -22141,6 +22402,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpTest",
+                    "group": "templates",
                     "weight": 189,
                     "cookies": false,
                     "type": "",
@@ -22278,6 +22540,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTeam",
+                    "group": "projects",
                     "weight": 154,
                     "cookies": false,
                     "type": "",
@@ -22355,6 +22618,7 @@
                 },
                 "x-appwrite": {
                     "method": "getEmailTemplate",
+                    "group": "templates",
                     "weight": 191,
                     "cookies": false,
                     "type": "",
@@ -22574,6 +22838,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailTemplate",
+                    "group": "templates",
                     "weight": 193,
                     "cookies": false,
                     "type": "",
@@ -22836,6 +23101,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteEmailTemplate",
+                    "group": "templates",
                     "weight": 195,
                     "cookies": false,
                     "type": "",
@@ -23057,6 +23323,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSmsTemplate",
+                    "group": "templates",
                     "weight": 190,
                     "cookies": false,
                     "type": "",
@@ -23273,6 +23540,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmsTemplate",
+                    "group": "templates",
                     "weight": 192,
                     "cookies": false,
                     "type": "",
@@ -23507,6 +23775,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSmsTemplate",
+                    "group": "templates",
                     "weight": 194,
                     "cookies": false,
                     "type": "",
@@ -23725,6 +23994,7 @@
                 },
                 "x-appwrite": {
                     "method": "listWebhooks",
+                    "group": "webhooks",
                     "weight": 172,
                     "cookies": false,
                     "type": "",
@@ -23782,6 +24052,7 @@
                 },
                 "x-appwrite": {
                     "method": "createWebhook",
+                    "group": "webhooks",
                     "weight": 171,
                     "cookies": false,
                     "type": "",
@@ -23901,6 +24172,7 @@
                 },
                 "x-appwrite": {
                     "method": "getWebhook",
+                    "group": "webhooks",
                     "weight": 173,
                     "cookies": false,
                     "type": "",
@@ -23966,6 +24238,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateWebhook",
+                    "group": "webhooks",
                     "weight": 174,
                     "cookies": false,
                     "type": "",
@@ -24086,6 +24359,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteWebhook",
+                    "group": "webhooks",
                     "weight": 176,
                     "cookies": false,
                     "type": "",
@@ -24153,6 +24427,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateWebhookSignature",
+                    "group": "webhooks",
                     "weight": 175,
                     "cookies": false,
                     "type": "",
@@ -24220,6 +24495,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRules",
+                    "group": "rules",
                     "weight": 317,
                     "cookies": false,
                     "type": "",
@@ -24290,6 +24566,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRule",
+                    "group": "rules",
                     "weight": 316,
                     "cookies": false,
                     "type": "",
@@ -24378,6 +24655,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRule",
+                    "group": "rules",
                     "weight": 318,
                     "cookies": false,
                     "type": "",
@@ -24430,6 +24708,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteRule",
+                    "group": "rules",
                     "weight": 319,
                     "cookies": false,
                     "type": "",
@@ -24489,6 +24768,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRuleVerification",
+                    "group": "rules",
                     "weight": 320,
                     "cookies": false,
                     "type": "",
@@ -24548,6 +24828,7 @@
                 },
                 "x-appwrite": {
                     "method": "listBuckets",
+                    "group": "buckets",
                     "weight": 203,
                     "cookies": false,
                     "type": "",
@@ -24619,6 +24900,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBucket",
+                    "group": "buckets",
                     "weight": 202,
                     "cookies": false,
                     "type": "",
@@ -24757,6 +25039,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucket",
+                    "group": "buckets",
                     "weight": 204,
                     "cookies": false,
                     "type": "",
@@ -24815,6 +25098,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateBucket",
+                    "group": "buckets",
                     "weight": 205,
                     "cookies": false,
                     "type": "",
@@ -24947,6 +25231,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteBucket",
+                    "group": "buckets",
                     "weight": 206,
                     "cookies": false,
                     "type": "",
@@ -25007,6 +25292,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
+                    "group": "files",
                     "weight": 208,
                     "cookies": false,
                     "type": "",
@@ -25089,6 +25375,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
+                    "group": "files",
                     "weight": 207,
                     "cookies": false,
                     "type": "upload",
@@ -25180,6 +25467,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
+                    "group": "files",
                     "weight": 209,
                     "cookies": false,
                     "type": "",
@@ -25249,6 +25537,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
+                    "group": "files",
                     "weight": 214,
                     "cookies": false,
                     "type": "",
@@ -25337,6 +25626,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
+                    "group": "files",
                     "weight": 215,
                     "cookies": false,
                     "type": "",
@@ -25408,6 +25698,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
+                    "group": "files",
                     "weight": 211,
                     "cookies": false,
                     "type": "location",
@@ -25479,6 +25770,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
+                    "group": "files",
                     "weight": 210,
                     "cookies": false,
                     "type": "location",
@@ -25654,6 +25946,87 @@
                 ]
             }
         },
+        "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/push": {
+            "get": {
+                "summary": "Get file for push notification",
+                "operationId": "storageGetFilePush",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "*\/*"
+                ],
+                "tags": [
+                    "storage"
+                ],
+                "description": "Get a file for push notification by its unique ID. This endpoint response returns a JSON object with the file metadata.",
+                "responses": {
+                    "200": {
+                        "description": "File",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getFilePush",
+                    "group": "files",
+                    "weight": 213,
+                    "cookies": false,
+                    "type": "location",
+                    "deprecated": false,
+                    "demo": "storage\/get-file-push.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-push.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "public",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "bucketId",
+                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<BUCKET_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "fileId",
+                        "description": "File ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FILE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "jwt",
+                        "description": "JSON Web Token to validate",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<JWT>",
+                        "default": "",
+                        "in": "query"
+                    }
+                ]
+            }
+        },
         "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/view": {
             "get": {
                 "summary": "Get file for view",
@@ -25678,6 +26051,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
+                    "group": "files",
                     "weight": 212,
                     "cookies": false,
                     "type": "location",
@@ -25749,6 +26123,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": "usage",
                     "weight": 216,
                     "cookies": false,
                     "type": "",
@@ -25820,6 +26195,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucketUsage",
+                    "group": "usage",
                     "weight": 217,
                     "cookies": false,
                     "type": "",
@@ -25899,6 +26275,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "teams",
                     "weight": 219,
                     "cookies": false,
                     "type": "",
@@ -25973,6 +26350,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "teams",
                     "weight": 218,
                     "cookies": false,
                     "type": "",
@@ -26064,6 +26442,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "teams",
                     "weight": 220,
                     "cookies": false,
                     "type": "",
@@ -26125,6 +26504,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "teams",
                     "weight": 222,
                     "cookies": false,
                     "type": "",
@@ -26199,6 +26579,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "teams",
                     "weight": 224,
                     "cookies": false,
                     "type": "",
@@ -26262,6 +26643,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 231,
                     "cookies": false,
                     "type": "",
@@ -26333,6 +26715,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
+                    "group": "memberships",
                     "weight": 226,
                     "cookies": false,
                     "type": "",
@@ -26415,6 +26798,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
+                    "group": "memberships",
                     "weight": 225,
                     "cookies": false,
                     "type": "",
@@ -26529,6 +26913,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
+                    "group": "memberships",
                     "weight": 227,
                     "cookies": false,
                     "type": "",
@@ -26598,6 +26983,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
+                    "group": "memberships",
                     "weight": 228,
                     "cookies": false,
                     "type": "",
@@ -26683,6 +27069,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
+                    "group": "memberships",
                     "weight": 230,
                     "cookies": false,
                     "type": "",
@@ -26754,6 +27141,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
+                    "group": "memberships",
                     "weight": 229,
                     "cookies": false,
                     "type": "",
@@ -26848,6 +27236,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "teams",
                     "weight": 221,
                     "cookies": false,
                     "type": "",
@@ -26907,6 +27296,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "teams",
                     "weight": 223,
                     "cookies": false,
                     "type": "",
@@ -26986,6 +27376,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "users",
                     "weight": 241,
                     "cookies": false,
                     "type": "",
@@ -27057,6 +27448,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "users",
                     "weight": 232,
                     "cookies": false,
                     "type": "",
@@ -27151,6 +27543,7 @@
                 },
                 "x-appwrite": {
                     "method": "createArgon2User",
+                    "group": "users",
                     "weight": 235,
                     "cookies": false,
                     "type": "",
@@ -27241,6 +27634,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBcryptUser",
+                    "group": "users",
                     "weight": 233,
                     "cookies": false,
                     "type": "",
@@ -27331,6 +27725,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
+                    "group": "identities",
                     "weight": 249,
                     "cookies": false,
                     "type": "",
@@ -27399,6 +27794,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
+                    "group": "identities",
                     "weight": 272,
                     "cookies": false,
                     "type": "",
@@ -27459,6 +27855,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMD5User",
+                    "group": "users",
                     "weight": 234,
                     "cookies": false,
                     "type": "",
@@ -27549,6 +27946,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPHPassUser",
+                    "group": "users",
                     "weight": 237,
                     "cookies": false,
                     "type": "",
@@ -27639,6 +28037,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptUser",
+                    "group": "users",
                     "weight": 238,
                     "cookies": false,
                     "type": "",
@@ -27764,6 +28163,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
+                    "group": "users",
                     "weight": 239,
                     "cookies": false,
                     "type": "",
@@ -27875,6 +28275,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSHAUser",
+                    "group": "users",
                     "weight": 236,
                     "cookies": false,
                     "type": "",
@@ -27986,6 +28387,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": "usage",
                     "weight": 274,
                     "cookies": false,
                     "type": "",
@@ -28057,6 +28459,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "users",
                     "weight": 242,
                     "cookies": false,
                     "type": "",
@@ -28110,6 +28513,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "users",
                     "weight": 270,
                     "cookies": false,
                     "type": "",
@@ -28170,6 +28574,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "users",
                     "weight": 255,
                     "cookies": false,
                     "type": "",
@@ -28248,6 +28653,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "auth",
                     "weight": 273,
                     "cookies": false,
                     "type": "",
@@ -28329,6 +28735,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateLabels",
+                    "group": "users",
                     "weight": 251,
                     "cookies": false,
                     "type": "",
@@ -28410,6 +28817,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 247,
                     "cookies": false,
                     "type": "",
@@ -28482,6 +28890,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
+                    "group": "memberships",
                     "weight": 246,
                     "cookies": false,
                     "type": "",
@@ -28542,6 +28951,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfa",
+                    "group": "users",
                     "weight": 260,
                     "cookies": false,
                     "type": "",
@@ -28615,6 +29025,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 265,
                     "cookies": false,
                     "type": "",
@@ -28688,6 +29099,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
+                    "group": "mfa",
                     "weight": 261,
                     "cookies": false,
                     "type": "",
@@ -28748,6 +29160,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 262,
                     "cookies": false,
                     "type": "",
@@ -28806,6 +29219,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 264,
                     "cookies": false,
                     "type": "",
@@ -28864,6 +29278,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 263,
                     "cookies": false,
                     "type": "",
@@ -28924,6 +29339,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "users",
                     "weight": 253,
                     "cookies": false,
                     "type": "",
@@ -29002,6 +29418,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
+                    "group": "users",
                     "weight": 254,
                     "cookies": false,
                     "type": "",
@@ -29080,6 +29497,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
+                    "group": "users",
                     "weight": 256,
                     "cookies": false,
                     "type": "",
@@ -29158,6 +29576,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "users",
                     "weight": 243,
                     "cookies": false,
                     "type": "",
@@ -29216,6 +29635,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "users",
                     "weight": 258,
                     "cookies": false,
                     "type": "",
@@ -29294,6 +29714,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
+                    "group": "auth",
                     "weight": 245,
                     "cookies": false,
                     "type": "",
@@ -29352,6 +29773,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
+                    "group": "auth",
                     "weight": 266,
                     "cookies": false,
                     "type": "",
@@ -29405,6 +29827,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
+                    "group": "auth",
                     "weight": 269,
                     "cookies": false,
                     "type": "",
@@ -29460,6 +29883,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
+                    "group": "auth",
                     "weight": 268,
                     "cookies": false,
                     "type": "",
@@ -29528,6 +29952,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
+                    "group": "users",
                     "weight": 250,
                     "cookies": false,
                     "type": "",
@@ -29606,6 +30031,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
+                    "group": "targets",
                     "weight": 248,
                     "cookies": false,
                     "type": "",
@@ -29677,6 +30103,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTarget",
+                    "group": "targets",
                     "weight": 240,
                     "cookies": false,
                     "type": "",
@@ -29789,6 +30216,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTarget",
+                    "group": "targets",
                     "weight": 244,
                     "cookies": false,
                     "type": "",
@@ -29856,6 +30284,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTarget",
+                    "group": "targets",
                     "weight": 259,
                     "cookies": false,
                     "type": "",
@@ -29945,6 +30374,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTarget",
+                    "group": "targets",
                     "weight": 271,
                     "cookies": false,
                     "type": "",
@@ -30014,6 +30444,7 @@
                 },
                 "x-appwrite": {
                     "method": "createToken",
+                    "group": "auth",
                     "weight": 267,
                     "cookies": false,
                     "type": "",
@@ -30095,6 +30526,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailVerification",
+                    "group": "users",
                     "weight": 257,
                     "cookies": false,
                     "type": "",
@@ -30173,6 +30605,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
+                    "group": "users",
                     "weight": 252,
                     "cookies": false,
                     "type": "",
@@ -30251,6 +30684,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRepositories",
+                    "group": "repositories",
                     "weight": 279,
                     "cookies": false,
                     "type": "",
@@ -30317,6 +30751,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRepository",
+                    "group": "repositories",
                     "weight": 280,
                     "cookies": false,
                     "type": "",
@@ -30401,6 +30836,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRepository",
+                    "group": "repositories",
                     "weight": 281,
                     "cookies": false,
                     "type": "",
@@ -30468,6 +30904,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRepositoryBranches",
+                    "group": "repositories",
                     "weight": 282,
                     "cookies": false,
                     "type": "",
@@ -30535,6 +30972,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRepositoryContents",
+                    "group": "repositories",
                     "weight": 277,
                     "cookies": false,
                     "type": "",
@@ -30611,6 +31049,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRepositoryDetection",
+                    "group": "repositories",
                     "weight": 278,
                     "cookies": false,
                     "type": "",
@@ -30690,6 +31129,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateExternalDeployments",
+                    "group": "repositories",
                     "weight": 287,
                     "cookies": false,
                     "type": "",
@@ -30775,6 +31215,7 @@
                 },
                 "x-appwrite": {
                     "method": "listInstallations",
+                    "group": "installations",
                     "weight": 284,
                     "cookies": false,
                     "type": "",
@@ -30847,6 +31288,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInstallation",
+                    "group": "installations",
                     "weight": 285,
                     "cookies": false,
                     "type": "",
@@ -30899,6 +31341,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteInstallation",
+                    "group": "installations",
                     "weight": 286,
                     "cookies": false,
                     "type": "",
