@@ -2783,7 +2783,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('audits.event', 'index.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
-        namespace: 'indexes',
+        namespace: 'databases',
         group: 'collections',
         name: 'createIndex',
         description: '/docs/references/databases/create-index.md',

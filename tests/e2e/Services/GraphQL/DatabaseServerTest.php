@@ -821,6 +821,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        fwrite(STDOUT, json_encode($index, JSON_PRETTY_PRINT));
+
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
         $this->assertIsArray($index['body']['data']['databasesCreateIndex']);

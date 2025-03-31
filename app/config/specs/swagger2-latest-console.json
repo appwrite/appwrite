@@ -8632,7 +8632,7 @@
             },
             "post": {
                 "summary": "Create index",
-                "operationId": "indexesCreateIndex",
+                "operationId": "databasesCreateIndex",
                 "consumes": [
                     "application\/json"
                 ],
@@ -8640,7 +8640,7 @@
                     "application\/json"
                 ],
                 "tags": [
-                    "indexes"
+                    "databases"
                 ],
                 "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
                 "responses": {
@@ -8658,7 +8658,7 @@
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "indexes\/create-index.md",
+                    "demo": "databases\/create-index.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-index.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
@@ -8717,7 +8717,7 @@
                                         "fulltext",
                                         "unique"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "IndexType",
                                     "x-enum-keys": []
                                 },
                                 "attributes": {
