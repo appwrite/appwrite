@@ -1148,49 +1148,20 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
-        $key = match($resource->getCollection()) {
-            'functions' => 'functionInternalId',
-            'sites' => 'siteInternalId',
-            default => throw new \Exception('Invalid resource type')
-        };
-
-        $metrics = match($resource->getCollection()) {
-            'functions' => [
-                'builds' => METRIC_FUNCTION_ID_BUILDS,
-                'buildsSuccess' => METRIC_FUNCTION_ID_BUILDS_SUCCESS,
-                'buildsFailed' => METRIC_FUNCTION_ID_BUILDS_FAILED,
-                'buildsComputeSuccess' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS,
-                'buildsComputeFailed' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED,
-                'buildsStorage' => METRIC_FUNCTION_ID_BUILDS_STORAGE,
-                'buildsCompute' => METRIC_FUNCTION_ID_BUILDS_COMPUTE,
-                'buildsMbSeconds' => METRIC_FUNCTION_ID_BUILDS_MB_SECONDS
-            ],
-            'sites' => [
-                'builds' => METRIC_SITES_ID_BUILDS,
-                'buildsSuccess' => METRIC_SITES_ID_BUILDS_SUCCESS,
-                'buildsFailed' => METRIC_SITES_ID_BUILDS_FAILED,
-                'buildsComputeSuccess' => METRIC_SITES_ID_BUILDS_COMPUTE_SUCCESS,
-                'buildsComputeFailed' => METRIC_SITES_ID_BUILDS_COMPUTE_FAILED,
-                'buildsStorage' => METRIC_SITES_ID_BUILDS_STORAGE,
-                'buildsCompute' => METRIC_SITES_ID_BUILDS_COMPUTE,
-                'buildsMbSeconds' => METRIC_SITES_ID_BUILDS_MB_SECONDS
-            ]
-        };
-
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
@@ -1199,10 +1170,10 @@ class Builds extends Action
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
             ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resource->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
