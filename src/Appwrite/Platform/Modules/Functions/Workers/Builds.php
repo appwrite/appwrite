@@ -837,6 +837,14 @@ class Builds extends Action
                     $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
                     $apiKey = $jwtObj->encode([
                         'hostnameOverride' => true,
+                        'disabledMetrics' => [
+                            METRIC_EXECUTIONS,
+                            METRIC_EXECUTIONS_COMPUTE,
+                            METRIC_EXECUTIONS_MB_SECONDS,
+                            METRIC_NETWORK_REQUESTS,
+                            METRIC_NETWORK_INBOUND,
+                            METRIC_NETWORK_OUTBOUND,
+                        ],
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
                         'previewAuthDisabled' => true,
