@@ -305,7 +305,7 @@ class StatsResources extends Action
 
     protected function countForSitesAndFunctions(Database $dbForProject, string $region): void
     {
-        $deploymentsStorage = $dbForProject->sum('deployments', 'size');
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize');
         $buildsStorage = $dbForProject->sum('deployments', 'buildSize');
         $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
         $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
@@ -321,7 +321,7 @@ class StatsResources extends Action
     protected function countForFunctions(Database $dbForProject, string $region)
     {
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'size', [
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
         ]);
         $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [

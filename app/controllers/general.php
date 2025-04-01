@@ -582,6 +582,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
         }
 
+        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
+            foreach ($apiKey->getDisabledMetrics() as $key) {
+                $queueForStatsUsage->disableMetric($key);
+            }
+        }
+
         $queueForStatsUsage
             ->addMetric(METRIC_NETWORK_REQUESTS, 1)
             ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
