@@ -372,7 +372,7 @@ Server::setResource('certificates', function () {
 });
 
 Server::setResource('logError', function (Registry $register, Document $project) {
-    return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
+    return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
         $logger = $register->get('logger');
 
         if ($logger) {
