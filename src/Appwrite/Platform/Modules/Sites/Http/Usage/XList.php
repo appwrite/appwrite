@@ -61,12 +61,12 @@ class XList extends Base
         $days = $periods[$range];
         $metrics = [
             METRIC_SITES,
-            METRIC_DEPLOYMENTS,
-            METRIC_DEPLOYMENTS_STORAGE,
-            METRIC_BUILDS,
-            METRIC_BUILDS_STORAGE,
-            METRIC_BUILDS_COMPUTE,
-            METRIC_BUILDS_MB_SECONDS,
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_STORAGE),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_COMPUTE),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
