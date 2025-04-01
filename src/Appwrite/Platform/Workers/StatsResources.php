@@ -199,7 +199,7 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForFunctions($dbForProject, $dbForLogs, $region);
+                $this->countForSitesAndFunctions($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
