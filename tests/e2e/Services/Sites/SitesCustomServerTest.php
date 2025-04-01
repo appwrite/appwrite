@@ -1377,7 +1377,7 @@ class SitesCustomServerTest extends Scope
         $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]));
 
         $this->assertEquals(200, $frameworks['headers']['status-code']);
         $this->assertGreaterThan(0, $frameworks['body']['total']);
