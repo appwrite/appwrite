@@ -801,8 +801,9 @@ class Builds extends Action
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
                 $logs .= "[90m[$date] [90m[[0mappwrite[90m][37m Screenshot capturing started. [0m\n";
-                $deployment->setAttribute('buildLogs', $logs);
             }
+
+            $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
