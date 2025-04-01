@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.63.1",
+            "version": "0.63.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ad191bf34151815f716f553796a363ff2b6ef7d3"
+                "reference": "f32c48a8b94aa2e4b543947046daf59e7cbd49d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ad191bf34151815f716f553796a363ff2b6ef7d3",
-                "reference": "ad191bf34151815f716f553796a363ff2b6ef7d3",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f32c48a8b94aa2e4b543947046daf59e7cbd49d4",
+                "reference": "f32c48a8b94aa2e4b543947046daf59e7cbd49d4",
                 "shasum": ""
             },
             "require": {
@@ -3546,9 +3546,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.63.1"
+                "source": "https://github.com/utopia-php/database/tree/0.63.2"
             },
-            "time": "2025-03-27T04:58:07+00:00"
+            "time": "2025-03-31T11:53:46+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8134,7 +8134,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
