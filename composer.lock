@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c99b4733669c17013e211c7dc54a86f6",
+    "content-hash": "4a3d60901242dd2670a34763e31c399b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.63.2",
+            "version": "dev-bind-params",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f32c48a8b94aa2e4b543947046daf59e7cbd49d4"
+                "reference": "9fcaa37c092ae89680590114f3a4d6029eb02bb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f32c48a8b94aa2e4b543947046daf59e7cbd49d4",
-                "reference": "f32c48a8b94aa2e4b543947046daf59e7cbd49d4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9fcaa37c092ae89680590114f3a4d6029eb02bb2",
+                "reference": "9fcaa37c092ae89680590114f3a4d6029eb02bb2",
                 "shasum": ""
             },
             "require": {
@@ -3514,7 +3514,8 @@
                 "ext-pdo": "*",
                 "php": ">=8.1",
                 "utopia-php/cache": "0.12.*",
-                "utopia-php/framework": "0.33.*"
+                "utopia-php/framework": "0.33.*",
+                "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
                 "fakerphp/faker": "1.23.*",
@@ -3546,9 +3547,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.63.2"
+                "source": "https://github.com/utopia-php/database/tree/bind-params"
             },
-            "time": "2025-03-31T11:53:46+00:00"
+            "time": "2025-03-30T16:53:08+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4106,16 +4107,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.7.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf"
+                "reference": "60733929dc328e7ea47e800579c8bbf0d49df5ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/ad64d45afda08ec8b29e2642a8d18075964d40bf",
-                "reference": "ad64d45afda08ec8b29e2642a8d18075964d40bf",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/60733929dc328e7ea47e800579c8bbf0d49df5ba",
+                "reference": "60733929dc328e7ea47e800579c8bbf0d49df5ba",
                 "shasum": ""
             },
             "require": {
@@ -4152,9 +4153,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.7.0"
+                "source": "https://github.com/utopia-php/pools/tree/0.8.0"
             },
-            "time": "2025-03-18T03:55:33+00:00"
+            "time": "2025-03-19T10:22:03+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -8132,9 +8133,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-bind-params",
+            "alias": "0.63.2",
+            "alias_normalized": "0.63.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
