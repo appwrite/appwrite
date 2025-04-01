@@ -337,7 +337,7 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
         $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
-            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'size', [
+            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
             ]);
@@ -371,7 +371,7 @@ class StatsResources extends Action
     protected function countForSites(Database $dbForProject, string $region)
     {
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'size', [
+        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
             Query::equal('resourceType', [RESOURCE_TYPE_SITES])
         ]);
         $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
@@ -387,7 +387,7 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
         $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region) {
-            $siteDeploymentsStorage = $dbForProject->sum('deployments', 'size', [
+            $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$site->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
             ]);
@@ -405,14 +405,10 @@ class StatsResources extends Action
              */
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), $siteDeployments);
 
-            $siteBuildsStorage = 0;
-
-            $this->foreachDocument($dbForProject, 'deployments', [
+            $siteBuildsStorage = $dbForProject->sum('deployments', 'buildSize', [
                 Query::equal('resourceInternalId', [$site->getInternalId()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ], function (Document $deployment) use (&$siteBuildsStorage): void {
-                $siteBuildsStorage += $deployment->getAttribute('buildSize', 0);
-            });
+            ]);
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
         });
