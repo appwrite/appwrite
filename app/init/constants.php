@@ -241,6 +241,9 @@ const METRIC_DOMAINS = 'domains';
 const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
+const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
+const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
+const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 
 // Resource types
 

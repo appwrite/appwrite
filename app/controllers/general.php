@@ -616,6 +616,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 ->addMetric(METRIC_SITES_REQUESTS, 1)
                 ->addMetric(METRIC_SITES_INBOUND, $request->getSize() + $fileSize)
                 ->addMetric(METRIC_SITES_OUTBOUND, $response->getSize())
+                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_REQUESTS), 1)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
+                ->addMetric(str_replace('{siteInternalId}', $resource->getInternalId(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
             ;
         }
 
