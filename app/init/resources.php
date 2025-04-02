@@ -822,3 +822,13 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 
     return Key::decode($project, $key);
 }, ['request', 'project']);
+
+App::setResource('specifications', function () {
+    return Config::getParam('runtime-specifications', [
+        APP_FUNCTION_SPECIFICATION_DEFAULT => [
+            'slug ' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+            'memory' => APP_FUNCTION_MEMORY_DEFAULT,
+            'cpus' => APP_FUNCTION_CPUS_DEFAULT
+        ]
+    ]);
+});

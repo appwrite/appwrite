@@ -1048,9 +1048,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'description' => 'The maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
                 'introduction' => '0.7.0',
                 'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE',
+                'description' => 'The maximum duration (in seconds) upto which to retain console audit logs. The default value is 15778800 seconds (6 months).',
+                'introduction' => '1.6.2',
+                'default' => '15778800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
