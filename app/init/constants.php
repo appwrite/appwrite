@@ -211,7 +211,6 @@ const METRIC_RESOURCE_TYPE_ID_BUILDS  = '{resourceType}.{resourceInternalId}.bui
 const METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE = '{resourceType}.{resourceInternalId}.builds.storage';
 const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
-
 const METRIC_RESOURCE_TYPE_EXECUTIONS  = '{resourceType}.executions';
 const METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE  = '{resourceType}.executions.compute';
 const METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS = '{resourceType}.executions.mbSeconds';
@@ -239,6 +238,9 @@ const METRIC_TARGETS = 'targets';
 const METRIC_PROVIDER_TYPE_TARGETS = '{providerType}.targets';
 const METRIC_KEYS = 'keys';
 const METRIC_DOMAINS = 'domains';
+const METRIC_SITES_REQUESTS = 'sites.requests';
+const METRIC_SITES_INBOUND = 'sites.inbound';
+const METRIC_SITES_OUTBOUND = 'sites.outbound';
 
 // Resource types
 
