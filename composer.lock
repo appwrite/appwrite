@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "05e7736b10b0785ca7f9246f732461fe",
+    "content-hash": "6a54c8bc4f9f14cd3883f55880864630",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.64.0",
+            "version": "0.64.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3ec66840dc0bcd24ed1c8e0f6d90fd3a61316ff4"
+                "reference": "6530a8a6d3c1fe92d0f9a92f0f05eda698d92e0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3ec66840dc0bcd24ed1c8e0f6d90fd3a61316ff4",
-                "reference": "3ec66840dc0bcd24ed1c8e0f6d90fd3a61316ff4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6530a8a6d3c1fe92d0f9a92f0f05eda698d92e0b",
+                "reference": "6530a8a6d3c1fe92d0f9a92f0f05eda698d92e0b",
                 "shasum": ""
             },
             "require": {
@@ -3547,9 +3547,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.64.0"
+                "source": "https://github.com/utopia-php/database/tree/0.64.1"
             },
-            "time": "2025-03-28T01:35:56+00:00"
+            "time": "2025-04-02T00:35:29+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4212,16 +4212,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "dev-feat-expose-consumer",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "85315b9da9be1b119158d759185db59761f84401"
+                "reference": "32b6f84c55aae761db5a5ae76cc91ca8dbc8bc32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/85315b9da9be1b119158d759185db59761f84401",
-                "reference": "85315b9da9be1b119158d759185db59761f84401",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/32b6f84c55aae761db5a5ae76cc91ca8dbc8bc32",
+                "reference": "32b6f84c55aae761db5a5ae76cc91ca8dbc8bc32",
                 "shasum": ""
             },
             "require": {
@@ -4271,9 +4271,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/feat-expose-consumer"
+                "source": "https://github.com/utopia-php/queue/tree/0.9.1"
             },
-            "time": "2025-03-28T03:38:19+00:00"
+            "time": "2025-03-28T19:49:36+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8124,18 +8124,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/queue",
-            "version": "dev-feat-expose-consumer",
-            "alias": "0.9.0",
-            "alias_normalized": "0.9.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/queue": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
