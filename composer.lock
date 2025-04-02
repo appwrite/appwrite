@@ -3660,16 +3660,16 @@
         },
         {
             "name": "utopia-php/fetch",
-            "version": "0.3.1",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "524dd50afa8c64670c4fb18f1df4db9b5bb4b3d0"
+                "reference": "46e791ff6a95864517750b9df6bbf4a17e3c9c4e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/524dd50afa8c64670c4fb18f1df4db9b5bb4b3d0",
-                "reference": "524dd50afa8c64670c4fb18f1df4db9b5bb4b3d0",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/46e791ff6a95864517750b9df6bbf4a17e3c9c4e",
+                "reference": "46e791ff6a95864517750b9df6bbf4a17e3c9c4e",
                 "shasum": ""
             },
             "require": {
@@ -3693,9 +3693,9 @@
             "description": "A simple library that provides an interface for making HTTP Requests.",
             "support": {
                 "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.3.1"
+                "source": "https://github.com/utopia-php/fetch/tree/0.4.0"
             },
-            "time": "2025-03-05T18:08:55+00:00"
+            "time": "2025-03-11T21:06:56+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -4228,7 +4228,7 @@
                 "php": ">=8.3",
                 "php-amqplib/php-amqplib": "^3.7",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/fetch": "^0.3.0",
+                "utopia-php/fetch": "0.4.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/telemetry": "0.1.*"
             },
@@ -4593,27 +4593,28 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "0.1.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5"
+                "reference": "629e53640b108eab43c7cc9ab375efade8622d43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/51fcb86171400d8aa40d76c54593481fd273dab5",
-                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/629e53640b108eab43c7cc9ab375efade8622d43",
+                "reference": "629e53640b108eab43c7cc9ab375efade8622d43",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "^1.15",
+                "phpstan/phpstan": "^1.12",
                 "phpunit/phpunit": "^9.5.5",
-                "swoole/ide-helper": "4.6.6",
+                "swoole/ide-helper": "5.1.2",
                 "textalk/websocket": "1.5.2",
-                "vimeo/psalm": "^4.8.1",
-                "workerman/workerman": "^4.0"
+                "workerman/workerman": "4.1.*"
             },
             "type": "library",
             "autoload": {
@@ -4625,16 +4626,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
             "description": "A simple abstraction for WebSocket servers.",
             "keywords": [
                 "framework",
@@ -4645,9 +4636,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/0.1.0"
+                "source": "https://github.com/utopia-php/websocket/tree/0.3.0"
             },
-            "time": "2021-12-20T10:50:09+00:00"
+            "time": "2025-03-28T01:11:13+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -7155,16 +7146,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.2.1",
+            "version": "v7.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "fefcc18c0f5d0efe3ab3152f15857298868dc2c3"
+                "reference": "e51498ea18570c062e7df29d05a7003585b19b88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/fefcc18c0f5d0efe3ab3152f15857298868dc2c3",
-                "reference": "fefcc18c0f5d0efe3ab3152f15857298868dc2c3",
+                "url": "https://api.github.com/repos/symfony/console/zipball/e51498ea18570c062e7df29d05a7003585b19b88",
+                "reference": "e51498ea18570c062e7df29d05a7003585b19b88",
                 "shasum": ""
             },
             "require": {
@@ -7228,7 +7219,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.2.1"
+                "source": "https://github.com/symfony/console/tree/v7.2.5"
             },
             "funding": [
                 {
@@ -7244,7 +7235,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-11T03:49:26+00:00"
+            "time": "2025-03-12T08:11:12+00:00"
         },
         {
             "name": "symfony/filesystem",
@@ -7759,16 +7750,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.2.4",
+            "version": "v7.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf"
+                "reference": "87b7c93e57df9d8e39a093d32587702380ff045d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
-                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
+                "url": "https://api.github.com/repos/symfony/process/zipball/87b7c93e57df9d8e39a093d32587702380ff045d",
+                "reference": "87b7c93e57df9d8e39a093d32587702380ff045d",
                 "shasum": ""
             },
             "require": {
@@ -7800,7 +7791,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.2.4"
+                "source": "https://github.com/symfony/process/tree/v7.2.5"
             },
             "funding": [
                 {
@@ -7816,7 +7807,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-05T08:33:46+00:00"
+            "time": "2025-03-13T12:21:46+00:00"
         },
         {
             "name": "symfony/string",
