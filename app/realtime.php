@@ -41,8 +41,8 @@ require_once __DIR__ . '/init.php';
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Allows overriding
-if (!function_exists('getConsoleDB')) {
-    function getConsoleDB(): Database
+if (!function_exists('dbForPlatform')) {
+    function dbForPlatform(): Database
     {
         global $register;
 
@@ -56,11 +56,7 @@ if (!function_exists('getConsoleDB')) {
         ;
 
         $database = new Database($dbAdapter, getCache());
-
-        $database
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
+        $database->setNamespace('_console');
 
         return $database;
     }
@@ -76,7 +72,7 @@ if (!function_exists('getProjectDB')) {
         $pools = $register->get('pools');
 
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return getConsoleDB();
+            return dbForPlatform();
         }
 
         try {
@@ -121,7 +117,8 @@ if (!function_exists('getCache')) {
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
@@ -175,6 +172,64 @@ if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
         return new NoTelemetry();
+    }
+}
+
+if (!function_exists('broadcastConnectionStats')) {
+    /**
+     * Broadcasts per-project connection stats to console dashboard subscribers.
+     *
+     * Sends a `stats.connections` event for each project with recent activity.
+     */
+    function broadcastConnectionStats(Realtime $realtime, Table $stats, Server $server): void
+    {
+        if (!$realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
+            return;
+        }
+
+        $payload = [];
+        $database = dbForPlatform();
+
+        $list = Authorization::skip(fn () => $database->find('realtime', [
+            Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
+        ]));
+
+        // Aggregate stats across containers
+        foreach ($list as $document) {
+            foreach (json_decode($document->getAttribute('value'), true) as $projectId => $value) {
+                $payload[$projectId] = ($payload[$projectId] ?? 0) + $value;
+            }
+        }
+
+        foreach ($stats as $projectId => $value) {
+            if ($projectId === 'console') {
+                continue;
+            }
+
+            if (!array_key_exists($projectId, $payload)) {
+                continue;
+            }
+
+            $event = [
+                'project' => 'console',
+                'roles' => ['team:' . $stats->get($projectId, 'teamId')],
+                'data' => [
+                    'events' => ['stats.connections'],
+                    'channels' => ['project'],
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
+                    'payload' => [
+                        $projectId => $payload[$projectId]
+                    ]
+                ]
+            ];
+
+            $encodedEvent = json_encode([
+                'type' => 'event',
+                'data' => $event['data']
+            ]);
+
+            $server->send($realtime->getSubscribers($event), $encodedEvent);
+        }
     }
 }
 
@@ -252,7 +307,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
-        $database = getConsoleDB();
+        $database = dbForPlatform();
 
         do {
             try {
@@ -291,7 +346,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             }
 
             try {
-                $database = getConsoleDB();
+                $database = dbForPlatform();
 
                 $statsDocument
                     ->setAttribute('timestamp', DateTime::now())
@@ -320,60 +375,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $start = time();
 
     Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
-        /**
-         * Sending current connections to project channels on the console project every 5 seconds.
-         */
-        // TODO: Remove this if check once it doesn't cause issues for cloud
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-            if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-                $database = getConsoleDB();
-
-                $payload = [];
-
-                $list = Authorization::skip(fn () => $database->find('realtime', [
-                    Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
-                ]));
-
-                /**
-                 * Aggregate stats across containers.
-                 */
-                foreach ($list as $document) {
-                    foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
-                        if (array_key_exists($projectId, $payload)) {
-                            $payload[$projectId] += $value;
-                        } else {
-                            $payload[$projectId] = $value;
-                        }
-                    }
-                }
-
-                foreach ($stats as $projectId => $value) {
-                    if (!array_key_exists($projectId, $payload)) {
-                        continue;
-                    }
-
-                    $event = [
-                        'project' => 'console',
-                        'roles' => ['team:' . $stats->get($projectId, 'teamId')],
-                        'data' => [
-                            'events' => ['stats.connections'],
-                            'channels' => ['project'],
-                            'timestamp' => DateTime::formatTz(DateTime::now()),
-                            'payload' => [
-                                $projectId => $payload[$projectId]
-                            ]
-                        ]
-                    ];
-
-                    $server->send($realtime->getSubscribers($event), json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ]));
-                }
-
-                $register->get('pools')->reclaim();
-            }
-        }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
@@ -425,8 +426,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = getConsoleDB();
-                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                        $platformDatabase = dbForPlatform();
+                        $project = Authorization::skip(fn () => $platformDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
                         $user = $database->getDocument('users', $userId);
@@ -571,6 +572,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
+
+        broadcastConnectionStats($realtime, $stats, $server);
     } catch (Throwable $th) {
         call_user_func($logError, $th, "initServer");
 
@@ -605,7 +608,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
-        $database = getConsoleDB();
+        $database = dbForPlatform();
 
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
@@ -701,11 +704,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats, $register) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register, $server) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
         $register->get('telemetry.connectionCounter')->add(-1);
     }
+
+    broadcastConnectionStats($realtime, $stats, $server);
     $realtime->unsubscribe($connection);
 
     Console::info('Connection close: ' . $connection);
