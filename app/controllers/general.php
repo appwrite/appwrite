@@ -83,7 +83,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) || \str_ends_with($host, System::getEnv('_APP_DOMAIN_SITES', ''))) {
-            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
+            throw new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.');
         }
 
         if (System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
