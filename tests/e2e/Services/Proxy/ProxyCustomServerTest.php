@@ -346,7 +346,7 @@ class ProxyCustomServerTest extends Scope
         $ruleId = $rule['body']['$id'];
 
         $rule = $this->updateRuleVerification($ruleId);
-        $this->assertEquals(401, $rule['headers']['status-code']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
 
         $this->cleanupRule($ruleId);
     }

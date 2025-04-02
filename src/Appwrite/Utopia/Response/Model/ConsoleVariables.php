@@ -58,6 +58,12 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => 'sites.localhost',
             ])
+            ->addRule('_APP_DOMAIN_FUNCTIONS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A domain to use for function URLs.',
+                'default' => '',
+                'example' => 'functions.localhost',
+            ])
             ->addRule(
                 '_APP_OPTIONS_FORCE_HTTPS',
                 [

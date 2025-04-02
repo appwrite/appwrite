@@ -39,7 +39,7 @@ class Create extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/sites/:siteId/deployments/template')
-            ->desc('Create deployment')
+            ->desc('Create template deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
