@@ -648,7 +648,11 @@ class Builds extends Action
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
+                        if ($version === 'v2') {
+                            $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
+                        } else {
+                            $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
+                        }
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
@@ -793,7 +797,12 @@ class Builds extends Action
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
-            $logs .= "[37mCapturing screenshots ...[0m\n";
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][37m Screenshot capturing started. [0m\n";
+            }
+
             $deployment->setAttribute('buildLogs', $logs);
 
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
@@ -858,8 +867,8 @@ class Builds extends Action
                     ]);
 
                     $screenshotError = null;
-                    $screenshots = batch(\array_map(function ($key) use ($configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform, &$screenshotError) {
-                        return function () use ($key, $configs, $deviceForFiles, $apiKey, $resource, $client, $bucket, $project, $dbForPlatform, &$screenshotError) {
+                    $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $resource, $client, &$screenshotError) {
+                        return function () use ($key, $configs, $apiKey, $resource, $client, &$screenshotError) {
                             try {
                                 $config = $configs[$key];
 
@@ -886,44 +895,7 @@ class Builds extends Action
 
                                 $screenshot = $fetchResponse->getBody();
 
-                                $fileId = ID::unique();
-                                $fileName = $fileId . '.png';
-                                $path = $deviceForFiles->getPath($fileName);
-                                $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                                $success = $deviceForFiles->write($path, $screenshot, "image/png");
-
-                                if (!$success) {
-                                    throw new \Exception("Screenshot failed to save");
-                                }
-
-                                $teamId = $project->getAttribute('teamId', '');
-                                $file = new Document([
-                                    '$id' => $fileId,
-                                    '$permissions' => [
-                                        Permission::read(Role::team(ID::custom($teamId))),
-                                    ],
-                                    'bucketId' => $bucket->getId(),
-                                    'bucketInternalId' => $bucket->getInternalId(),
-                                    'name' => $fileName,
-                                    'path' => $path,
-                                    'signature' => $deviceForFiles->getFileHash($path),
-                                    'mimeType' => $deviceForFiles->getFileMimeType($path),
-                                    'sizeOriginal' => \strlen($screenshot),
-                                    'sizeActual' => $deviceForFiles->getFileSize($path),
-                                    'algorithm' => Compression::GZIP,
-                                    'comment' => '',
-                                    'chunksTotal' => 1,
-                                    'chunksUploaded' => 1,
-                                    'openSSLVersion' => null,
-                                    'openSSLCipher' => null,
-                                    'openSSLTag' => null,
-                                    'openSSLIV' => null,
-                                    'search' => implode(' ', [$fileId, $fileName]),
-                                    'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
-                                ]);
-                                $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
-
-                                return [ 'key' => $key, 'fileId' => $fileId ];
+                                return ['key' => $key, 'screenshot' => $screenshot];
                             } catch (\Throwable $th) {
                                 $screenshotError = $th->getMessage();
                                 return;
@@ -935,11 +907,56 @@ class Builds extends Action
                         throw new \Exception($screenshotError);
                     }
 
-                    foreach ($screenshots as $screenshot) {
-                        $deployment->setAttribute($screenshot['key'], $screenshot['fileId']);
+                    foreach ($screenshots as $data) {
+                        $key = $data['key'];
+                        $screenshot = $data['screenshot'];
+
+                        $fileId = ID::unique();
+                        $fileName = $fileId . '.png';
+                        $path = $deviceForFiles->getPath($fileName);
+                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+                        $success = $deviceForFiles->write($path, $screenshot, "image/png");
+
+                        if (!$success) {
+                            throw new \Exception("Screenshot failed to save");
+                        }
+
+                        $teamId = $project->getAttribute('teamId', '');
+                        $file = new Document([
+                            '$id' => $fileId,
+                            '$permissions' => [
+                                Permission::read(Role::team(ID::custom($teamId))),
+                            ],
+                            'bucketId' => $bucket->getId(),
+                            'bucketInternalId' => $bucket->getInternalId(),
+                            'name' => $fileName,
+                            'path' => $path,
+                            'signature' => $deviceForFiles->getFileHash($path),
+                            'mimeType' => $deviceForFiles->getFileMimeType($path),
+                            'sizeOriginal' => \strlen($screenshot),
+                            'sizeActual' => $deviceForFiles->getFileSize($path),
+                            'algorithm' => Compression::GZIP,
+                            'comment' => '',
+                            'chunksTotal' => 1,
+                            'chunksUploaded' => 1,
+                            'openSSLVersion' => null,
+                            'openSSLCipher' => null,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                            'search' => implode(' ', [$fileId, $fileName]),
+                            'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
+                        ]);
+
+                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+
+                        $deployment->setAttribute($key, $fileId);
                     }
 
-                    $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $logs = $deployment->getAttribute('buildLogs', '');
+                    $date = \date('H:i:s');
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][37m Screenshot capturing finished. [0m\n";
+
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -948,8 +965,19 @@ class Builds extends Action
                     Console::warning("Screenshot failed to generate:");
                     Console::warning($th->getMessage());
                     Console::warning($th->getTraceAsString());
+
+                    $logs = $deployment->getAttribute('buildLogs', '');
+                    $date = \date('H:i:s');
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
+
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             }
+
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $date = \date('H:i:s');
+            $logs .= "[90m[$date] [90m[[0mappwrite[90m][32m Deployment finished. [0m\n";
+            $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
@@ -1365,15 +1393,9 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
-                $previweQrCode = match($resource->getCollection()) {
-                    'functions' => '',
-                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
-                    default => throw new \Exception('Invalid resource type')
-                };
-
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);

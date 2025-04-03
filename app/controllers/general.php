@@ -478,24 +478,28 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             );
 
             // Branded 404 override
+            $isResponseBranded = false;
             if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
                 $layout = new View(__DIR__ . '/../views/general/404.phtml');
                 $executionResponse['body'] = $layout->render();
                 $executionResponse['headers']['content-length'] = \strlen($executionResponse['body']);
+                $isResponseBranded = true;
             }
 
             // Branded banner for previews
-            if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
-                $transformation = new Transformation();
-                $transformation->addAdapter(new Preview());
-                $transformation->setInput($executionResponse['body']);
-                $transformation->setTraits($executionResponse['headers']);
-                if ($isPreview && $transformation->transform()) {
-                    $executionResponse['body'] = $transformation->getOutput();
+            if (!$isResponseBranded) {
+                if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
+                    $transformation = new Transformation();
+                    $transformation->addAdapter(new Preview());
+                    $transformation->setInput($executionResponse['body']);
+                    $transformation->setTraits($executionResponse['headers']);
+                    if ($isPreview && $transformation->transform()) {
+                        $executionResponse['body'] = $transformation->getOutput();
 
-                    foreach ($executionResponse['headers'] as $key => $value) {
-                        if (\strtolower($key) === 'content-length') {
-                            $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                        foreach ($executionResponse['headers'] as $key => $value) {
+                            if (\strtolower($key) === 'content-length') {
+                                $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                            }
                         }
                     }
                 }
