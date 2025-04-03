@@ -580,6 +580,11 @@ return [
         'description' => 'Build with the requested ID is already completed and cannot be canceled.',
         'code' => 400,
     ],
+    Exception::BUILD_CANCELED => [
+        'name' => Exception::BUILD_CANCELED,
+        'description' => 'Build with the requested ID has been canceled.',
+        'code' => 400,
+    ],
     Exception::BUILD_FAILED => [
         'name' => Exception::BUILD_FAILED,
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',

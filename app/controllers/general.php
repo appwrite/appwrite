@@ -139,12 +139,17 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
+        /** @var Document $deployment */
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
         } elseif ($deployment->getAttribute('resourceType', '') === 'sites') {
             $type = 'site';
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND);
         }
 
         $resource = $type === 'function' ?
@@ -239,7 +244,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $requestHeaders = $request->getHeaders();
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
-            throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
+            if ($type === 'functions') {
+                throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
+            } else {
+                throw new AppwriteException(AppwriteException::SITE_NOT_FOUND);
+            }
         }
 
         if ($isResourceBlocked($project, $type === 'function' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
@@ -273,6 +282,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             if ($deployment->getAttribute('status') === 'failed') {
                 throw new AppwriteException(AppwriteException::BUILD_FAILED);
+            } elseif ($deployment->getAttribute('status') === 'canceled') {
+                throw new AppwriteException(AppwriteException::BUILD_CANCELED);
             } else {
                 throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
             }

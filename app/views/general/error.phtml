@@ -9,7 +9,7 @@ $projectName = $this->getParam('projectName', '');
 $projectURL = $this->getParam('projectURL', '');
 $title = $this->getParam('title', 'Error'); 
 
-$knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found'];
+$knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found', 'deployment_not_found', 'build_canceled'];
 $label = '';
 $labelClass = '';
 $buttons = [];
@@ -50,6 +50,28 @@ switch ($type) {
         $buttons = [
             [
                 'text' => 'Start with this domain',
+                'url' => '/',
+                'class' => 'bordered-button'
+            ],
+        ];
+        break;
+    case 'deployment_not_found':
+        $label = 'No deployments available';
+        $message = 'This page is empty, deploy your site to make it live.';
+        $buttons = [
+            [
+                'text' => 'View deployments',
+                'url' => '/',
+                'class' => 'bordered-button'
+            ],
+        ];
+        break;
+    case 'build_canceled':
+        $label = 'Deployment build cancelled';
+        $message = 'The build process was cancelled.';
+        $buttons = [
+            [
+                'text' => 'View deployments',
                 'url' => '/',
                 'class' => 'bordered-button'
             ],
@@ -316,7 +338,7 @@ switch ($type) {
                         </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                <?php if (!in_array($type, ['build_not_ready', 'build_failed', 'rule_not_found'])): ?>
+                <?php if (!in_array($type, $knownTypes)): ?>
                     <span class='type'><?php echo $this->print($type); ?></span>
                 <?php endif; ?>
             </div>
