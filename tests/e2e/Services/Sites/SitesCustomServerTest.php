@@ -2503,4 +2503,74 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testErrorPages(): void
+    {
+        // non-existent domain page
+        $domain = 'non-existent-page.sites.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro SSR site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'cd random',
+            'installCommand' => 'npm install',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertNotEmpty($deploymentId);
+
+        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($delpoymentDomain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $apiKey = $jwtObj->encode([
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
+
+        // deployment is still building error page
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals('failed', $deployment['body']['status']);
+        }, 50000, 500);
+
+        // deployment failed error page
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment build failed", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
 }
