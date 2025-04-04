@@ -132,6 +132,11 @@ class Create extends Base
             return;
         }
 
+        $entrypoint = $function->getAttribute('entrypoint', '');
+        if (empty($entrypoint)) {
+            throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
+        }
+
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -143,10 +148,10 @@ class Create extends Base
             'resourceId' => $function->getId(),
             'resourceInternalId' => $function->getInternalId(),
             'resourceType' => 'functions',
-            'entrypoint' => $function->getAttribute('entrypoint', ''),
+            'entrypoint' => $entrypoint,
             'buildCommands' => $function->getAttribute('commands', ''),
             'type' => 'manual',
-            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
+            'search' => implode(' ', [$deploymentId, $entrypoint]),
             'activate' => $activate,
         ]));
 
