@@ -438,7 +438,7 @@ class Event
         $action = $parsed['action'];
         $attribute = $parsed['attribute'];
 
-        if ($resource && !\in_array(\trim($resource, "\[\]"), $paramKeys)) {
+        if ($resource && !\in_array(\trim((string) $resource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$resource} is missing from the params.");
         }
 
