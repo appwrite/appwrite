@@ -1077,9 +1077,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
                 max: 2
             );
 
-            // If there's only one owner,
-            // and the requester is that owner, prevent role change
-            if ($ownersCount === 1 && $isOwner) {
+            // Prevent role change if there's only one owner left,
+            // the requester is that owner, and the new `$roles` no longer include 'owner'!
+            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
             }
         }
