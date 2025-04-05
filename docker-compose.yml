@@ -37,6 +37,7 @@ services:
       - appwrite-certificates:/storage/certificates:ro
     depends_on:
       - appwrite
+      - postgres
     networks:
       - gateway
       - appwrite
@@ -84,15 +85,14 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - mariadb
-      - redis
+      - postgres
       # - clamav
     entrypoint:
       - php
       - -e
       - app/http.php
     environment:
-      - _APP_ENV
+      - _APP_ENV=production
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
@@ -114,15 +114,12 @@ services:
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_DOMAIN_FUNCTIONS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
+      - _APP_DB_HOST=postgres
+      - _APP_DB_PORT=5432
       - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
+      - _APP_DB_USER=appwrite_user
+      - _APP_DB_PASS=8bpAW38Crkh2KFnXM6w2EMTWWOGFS08G
+      - _APP_REDIS_HOST=embedded 
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -192,6 +189,16 @@ services:
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
+      postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: appwrite_user
+      POSTGRES_PASSWORD: 8bpAW38Crkh2KFnXM6w2EMTWWOGFS08G               
+      POSTGRES_DB: appwrite
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
 
   appwrite-console:
     <<: *x-logging
@@ -1046,7 +1053,7 @@ networks:
     name: runtimes
 
 volumes:
-  appwrite-mariadb:
+   postgres_data: 
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
