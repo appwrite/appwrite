@@ -155,6 +155,25 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
+        'key' => 'template-for-documentation',
+        'name' => 'Documentation template',
+        'tagline' => 'Modern site to store your knowledge with a clean design, full-text search, dark mode, and more.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/template-for-documentation-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-documentation-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-documentation',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
+    [
         'key' => 'lynx-starter',
         'name' => 'Lynx Starter',
         'tagline' => 'Sample application built with Lynx, a cross-platform framework focused on performance.',
