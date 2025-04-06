@@ -2965,16 +2965,16 @@
         },
         {
             "name": "tbachert/spi",
-            "version": "v1.0.2",
+            "version": "v1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Nevay/spi.git",
-                "reference": "2ddfaf815dafb45791a61b08170de8d583c16062"
+                "reference": "506a79c98e1a51522e76ee921ccb6c62d52faf3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Nevay/spi/zipball/2ddfaf815dafb45791a61b08170de8d583c16062",
-                "reference": "2ddfaf815dafb45791a61b08170de8d583c16062",
+                "url": "https://api.github.com/repos/Nevay/spi/zipball/506a79c98e1a51522e76ee921ccb6c62d52faf3a",
+                "reference": "506a79c98e1a51522e76ee921ccb6c62d52faf3a",
                 "shasum": ""
             },
             "require": {
@@ -3011,9 +3011,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Nevay/spi/issues",
-                "source": "https://github.com/Nevay/spi/tree/v1.0.2"
+                "source": "https://github.com/Nevay/spi/tree/v1.0.3"
             },
-            "time": "2024-10-04T16:36:12+00:00"
+            "time": "2025-04-02T19:38:14+00:00"
         },
         {
             "name": "thecodingmachine/safe",
@@ -3746,16 +3746,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.8.0",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "dcae5b1c6deb3ff6865f4e68f012b3709c289bca"
+                "reference": "e8cc7dd14f423270a1b7570ec0dae88a66195b63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/dcae5b1c6deb3ff6865f4e68f012b3709c289bca",
-                "reference": "dcae5b1c6deb3ff6865f4e68f012b3709c289bca",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/e8cc7dd14f423270a1b7570ec0dae88a66195b63",
+                "reference": "e8cc7dd14f423270a1b7570ec0dae88a66195b63",
                 "shasum": ""
             },
             "require": {
@@ -3789,9 +3789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.8.0"
+                "source": "https://github.com/utopia-php/image/tree/0.8.1"
             },
-            "time": "2025-02-20T11:49:03+00:00"
+            "time": "2025-04-04T18:55:20+00:00"
         },
         {
             "name": "utopia-php/locale",
