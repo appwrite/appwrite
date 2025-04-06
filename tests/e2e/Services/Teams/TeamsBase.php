@@ -37,6 +37,31 @@ trait TeamsBase
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];
 
+        /**
+         * Test: Attempt to downgrade the only OWNER in a team (should fail)
+         */
+        // Step 1: Fetch all team memberships — only one exists at this point
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        // Step 2: Extract the membership ID of the only member (also the only OWNER)
+        $membershipID = $response['body']['memberships'][0]['$id'];
+
+        // Step 3: Attempt to downgrade the member's role to 'developer'
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipID, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => ['developer']
+        ]);
+
+        // Step 4: Assert failure — cannot remove the only OWNER from a team
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
+
         $teamId = ID::unique();
         $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
