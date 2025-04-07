@@ -2177,4 +2177,71 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testErrorPages(): void
+    {
+        // non-existent domain
+        $domain = 'non-existent-page.functions.localhost';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+
+        // failed deployment
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Cookie executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'commands' => 'cd random',
+            'execute' => ['any']
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+
+        $deployment = $this->createDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php-cookie'),
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+
+        // canceled deployment
+        $deployment = $this->createDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php-cookie'),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deployment = $this->cancelDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
 }
