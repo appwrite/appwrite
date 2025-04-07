@@ -12,6 +12,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Tests\E2E\Services\Sites\SitesBase;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -25,6 +26,57 @@ class UsageTest extends Scope
     use ProjectCustom;
     use SideServer;
     use FunctionsBase;
+    use SitesBase {
+        FunctionsBase::createDeployment insteadof SitesBase;
+        FunctionsBase::setupDeployment insteadof SitesBase;
+        FunctionsBase::createVariable insteadof SitesBase;
+        FunctionsBase::getVariable insteadof SitesBase;
+        FunctionsBase::listVariables insteadof SitesBase;
+        FunctionsBase::updateVariable insteadof SitesBase;
+        FunctionsBase::deleteVariable insteadof SitesBase;
+        FunctionsBase::getDeployment insteadof SitesBase;
+        FunctionsBase::listDeployments insteadof SitesBase;
+        FunctionsBase::deleteDeployment insteadof SitesBase;
+        FunctionsBase::setupDuplicateDeployment insteadof SitesBase;
+        FunctionsBase::createDuplicateDeployment insteadof SitesBase;
+        FunctionsBase::createTemplateDeployment insteadof SitesBase;
+        FunctionsBase::getUsage insteadof SitesBase;
+        FunctionsBase::getTemplate insteadof SitesBase;
+        FunctionsBase::getDeploymentDownload insteadof SitesBase;
+        FunctionsBase::cancelDeployment insteadof SitesBase;
+        FunctionsBase::listSpecifications insteadof SitesBase;
+        SitesBase::createDeployment as createDeploymentSite;
+        SitesBase::setupDeployment as setupDeploymentSite;
+        SitesBase::createVariable as createVariableSite;
+        SitesBase::getVariable as getVariableSite;
+        SitesBase::listVariables as listVariablesSite;
+        SitesBase::listVariables as listVariablesSite;
+        SitesBase::updateVariable as updateVariableSite;
+        SitesBase::updateVariable as updateVariableSite;
+        SitesBase::deleteVariable as deleteVariableSite;
+        SitesBase::deleteVariable as deleteVariableSite;
+        SitesBase::getDeployment as getDeploymentSite;
+        SitesBase::getDeployment as getDeploymentSite;
+        SitesBase::listDeployments as listDeploymentsSite;
+        SitesBase::listDeployments as listDeploymentsSite;
+        SitesBase::deleteDeployment as deleteDeploymentSite;
+        SitesBase::deleteDeployment as deleteDeploymentSite;
+        SitesBase::setupDuplicateDeployment as setupDuplicateDeploymentSite;
+        SitesBase::setupDuplicateDeployment as setupDuplicateDeploymentSite;
+        SitesBase::createDuplicateDeployment as createDuplicateDeploymentSite;
+        SitesBase::createDuplicateDeployment as createDuplicateDeploymentSite;
+        SitesBase::createTemplateDeployment as createTemplateDeploymentSite;
+        SitesBase::createTemplateDeployment as createTemplateDeploymentSite;
+        SitesBase::getUsage as getUsageSite;
+        SitesBase::getUsage as getUsageSite;
+        SitesBase::getTemplate as getTemplateSite;
+        SitesBase::getTemplate as getTemplateSite;
+        SitesBase::getDeploymentDownload as getDeploymentDownloadSite;
+        SitesBase::getDeploymentDownload as getDeploymentDownloadSite;
+        SitesBase::cancelDeployment as cancelDeploymentSite;
+        SitesBase::cancelDeployment as cancelDeploymentSite;
+        SitesBase::listSpecifications as listSpecificationsSite;
+    }
 
     private const WAIT = 5;
     private const CREATE = 20;
@@ -1059,44 +1111,6 @@ class UsageTest extends Scope
         return $data;
     }
 
-    protected function packageSite(string $site): CURLFile
-    {
-        $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
-
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
-
-        if (filesize($tarPath) > 1024 * 1024 * 5) {
-            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
-        }
-
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
-    }
-
-    protected function setupSite(mixed $params): string
-    {
-        $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
-
-        $this->assertEquals($site['headers']['status-code'], 201, 'Setup site failed with status code: ' . $site['headers']['status-code'] . ' and response: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-
-        $siteId = $site['body']['$id'];
-
-        return $siteId;
-    }
-
-    protected function getSite(string $siteId): mixed
-    {
-        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $site;
-    }
 
     public function testPrepareSitesStats(): array
     {
@@ -1115,7 +1129,7 @@ class UsageTest extends Scope
 
         $this->assertNotNull($siteId);
 
-        $deployment = $this->createDeployment($siteId, [
+        $deployment = $this->createDeploymentSite($siteId, [
             'siteId' => $siteId,
             'code' => $this->packageSite('static'),
             'activate' => true,
@@ -1134,7 +1148,7 @@ class UsageTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
 
-        $deployment = $this->createDeployment($siteId, [
+        $deployment = $this->createDeploymentSite($siteId, [
             'code' => $this->packageSite('static'),
             'activate' => 'false'
         ]);
