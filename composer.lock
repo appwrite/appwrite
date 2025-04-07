@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a54c8bc4f9f14cd3883f55880864630",
+    "content-hash": "564d7f4aef781cc9ec3e9082997b9826",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3900,16 +3900,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.16.0",
+            "version": "dev-feat-inforu-adapter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "5f3083697102b1821d6624938186761b1e09c54e"
+                "reference": "c5eab46c1b9d23227135c8efe1793003a07d5f4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/5f3083697102b1821d6624938186761b1e09c54e",
-                "reference": "5f3083697102b1821d6624938186761b1e09c54e",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c5eab46c1b9d23227135c8efe1793003a07d5f4d",
+                "reference": "c5eab46c1b9d23227135c8efe1793003a07d5f4d",
                 "shasum": ""
             },
             "require": {
@@ -3945,9 +3945,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.16.0"
+                "source": "https://github.com/utopia-php/messaging/tree/feat-inforu-adapter"
             },
-            "time": "2025-02-18T08:27:00+00:00"
+            "time": "2025-04-07T05:21:46+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8126,7 +8126,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/messaging": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
