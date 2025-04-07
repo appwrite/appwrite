@@ -1206,7 +1206,7 @@ class UsageTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(21, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
-        $this->assertIsArray($response['body']['functions']);
+        $this->assertIsArray($response['body']['sites']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsArray($response['body']['builds']);
