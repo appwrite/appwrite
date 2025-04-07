@@ -3904,12 +3904,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "c5eab46c1b9d23227135c8efe1793003a07d5f4d"
+                "reference": "f1ea63c698806effbada520455fd892ed47f4221"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/c5eab46c1b9d23227135c8efe1793003a07d5f4d",
-                "reference": "c5eab46c1b9d23227135c8efe1793003a07d5f4d",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/f1ea63c698806effbada520455fd892ed47f4221",
+                "reference": "f1ea63c698806effbada520455fd892ed47f4221",
                 "shasum": ""
             },
             "require": {
@@ -3947,7 +3947,7 @@
                 "issues": "https://github.com/utopia-php/messaging/issues",
                 "source": "https://github.com/utopia-php/messaging/tree/feat-inforu-adapter"
             },
-            "time": "2025-04-07T05:21:46+00:00"
+            "time": "2025-04-07T08:27:18+00:00"
         },
         {
             "name": "utopia-php/migration",
