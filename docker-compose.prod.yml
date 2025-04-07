@@ -21,24 +21,8 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports:
-      - 9501:80
     networks:
       - appwrite
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_api.loadbalancer.server.port=80"
-      #http
-      - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
-      - traefik.http.routers.appwrite_api_http.service=appwrite_api
-      # https
-      - traefik.http.routers.appwrite_api_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
-      - traefik.http.routers.appwrite_api_https.service=appwrite_api
-      - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -178,20 +162,6 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
-      #ws
-      - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
-      - traefik.http.routers.appwrite_console_http.service=appwrite_console
-      # wss
-      - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
-      - traefik.http.routers.appwrite_console_https.service=appwrite_console
-      - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
     entrypoint: realtime
@@ -199,22 +169,6 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports:
-      - 9505:80
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
-      #ws
-      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
-      - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
-      # wss
-      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
-      - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
-      - traefik.http.routers.appwrite_realtime_wss.tls=true
     networks:
       - appwrite
     volumes:
