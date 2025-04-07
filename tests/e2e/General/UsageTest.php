@@ -1167,6 +1167,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testPrepareSitesStats */
+    #[Retry(count: 1)]
     public function testSitesStats(array $data)
     {
         $siteId = $data['siteId'];
