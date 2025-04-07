@@ -1706,8 +1706,8 @@ class SitesCustomServerTest extends Scope
         $siteDomain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($siteDomain);
 
-        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($delpoymentDomain);
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $siteDomain);
@@ -1718,7 +1718,7 @@ class SitesCustomServerTest extends Scope
         $contentLength = $response['headers']['content-length'];
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
@@ -2540,8 +2540,8 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
 
-        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($delpoymentDomain);
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -2555,7 +2555,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('canceled', $deployment['body']['status']);
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -2571,6 +2571,12 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build canceled", $response['body']);
 
+        // check site domain for no active deployments
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("No deployments available", $response['body']);
+
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('astro'),
             'activate' => 'true'
@@ -2579,10 +2585,10 @@ class SitesCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertNotEmpty($deploymentId);
 
-        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($delpoymentDomain);
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
 
-        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
 

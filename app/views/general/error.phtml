@@ -57,7 +57,7 @@ switch ($type) {
         break;
     case 'deployment_not_found':
         $label = 'No deployments available';
-        $message = 'This page is empty, deploy your site to make it live.';
+        $message = 'This page is empty, activate a deployment to make it live.';
         $buttons = [
             [
                 'text' => 'View deployments',
@@ -68,7 +68,7 @@ switch ($type) {
         break;
     case 'build_canceled':
         $label = 'Deployment build canceled';
-        $message = 'The build process was canceled.';
+        $message = 'This build was canceled and won\'t be deployed.';
         $buttons = [
             [
                 'text' => 'View deployments',
