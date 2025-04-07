@@ -77,7 +77,9 @@ class Get extends Base
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS)
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -129,8 +131,11 @@ class Get extends Base
             'deploymentsTotal' => $usage[$metrics[0]]['total'],
             'deploymentsStorageTotal' => $usage[$metrics[1]]['total'],
             'buildsTotal' => $usage[$metrics[2]]['total'],
+            'buildsSuccess' => $usage[$metrics[9]]['total'],
+            'buildsFailed' => $usage[$metrics[10]]['total'],
             'buildsStorageTotal' => $usage[$metrics[3]]['total'],
             'buildsTimeTotal' => $usage[$metrics[4]]['total'],
+            'buildsTimeAverage' => $usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total'],
             'executionsTotal' => $usage[$metrics[5]]['total'],
             'executionsTimeTotal' => $usage[$metrics[6]]['total'],
             'deployments' => $usage[$metrics[0]]['data'],
