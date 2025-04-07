@@ -13,7 +13,6 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Tests\E2E\Services\Sites\SitesBase;
-use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -1114,8 +1113,6 @@ class UsageTest extends Scope
 
     public function testPrepareSitesStats(): array
     {
-        $data = [];
-
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
@@ -1143,7 +1140,7 @@ class UsageTest extends Scope
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
         $this->assertEventually(function () use ($siteId, $deploymentIdActive) {
-            $deployment = $this->getDeployment($siteId, $deploymentIdActive);
+            $deployment = $this->getDeploymentSite($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
@@ -1159,7 +1156,7 @@ class UsageTest extends Scope
         $deploymentIdInactive = $deployment['body']['$id'] ?? '';
 
         $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
-            $deployment = $this->getDeployment($siteId, $deploymentIdInactive);
+            $deployment = $this->getDeploymentSite($siteId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
