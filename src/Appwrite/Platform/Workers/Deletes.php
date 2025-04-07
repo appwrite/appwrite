@@ -55,12 +55,13 @@ class Deletes extends Action
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
             ->inject('certificates')
+            ->inject('executor')
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $getLogsDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executionRetention, $auditRetention, $log)
+                fn ($message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Executor $executor, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $project, $dbForPlatform, $getProjectDB, $getLogsDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $executor, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -68,7 +69,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, callable $getProjectDB, callable $getLogsDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Executor $executor, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -93,10 +94,10 @@ class Deletes extends Action
                         $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
+                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
+                        $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project, $executor);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -828,10 +829,11 @@ class Deletes extends Action
      * @param Device $deviceForBuilds
      * @param Document $document function document
      * @param Document $project
+     * @param Executor $executor
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project): void
+    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project, Executor $executor): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -923,7 +925,7 @@ class Deletes extends Action
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $this->deleteRuntimes($getProjectDB, $document, $project);
+        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
     }
 
     /**
@@ -994,10 +996,11 @@ class Deletes extends Action
      * @param Device $deviceForBuilds
      * @param Document $document
      * @param Document $project
+     * @param Executor $executor
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
+    private function deleteDeployment(callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project, Executor $executor): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1025,7 +1028,7 @@ class Deletes extends Action
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($getProjectDB, $document, $project);
+        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
     }
 
     /**
@@ -1051,7 +1054,8 @@ class Deletes extends Action
         try {
             $documents = $database->deleteDocuments($collection, $queries);
         } catch (Throwable $th) {
-            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
+            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
             return;
         }
 
@@ -1180,13 +1184,12 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param ?Document $function
      * @param Document $project
+     * @param Executor $executor
      * @return void
      * @throws Exception
      */
-    private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
+    private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project, Executor $executor): void
     {
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
-
         $deleteByFunction = function (Document $function) use ($getProjectDB, $project, $executor) {
             $this->listByGroup(
                 'deployments',
