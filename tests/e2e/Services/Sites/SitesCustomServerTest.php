@@ -2529,16 +2529,30 @@ class SitesCustomServerTest extends Scope
 
         $domain = $this->setupSiteDomain($siteId);
 
+        // test canceled deployment error page
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('astro'),
             'activate' => 'true'
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertNotEmpty($deploymentId);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
 
         $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
         $this->assertNotEmpty($delpoymentDomain);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('building', $deployment['body']['status']);
+        }, 100000, 250);
+
+        $deployment = $this->cancelDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $delpoymentDomain);
@@ -2550,6 +2564,27 @@ class SitesCustomServerTest extends Scope
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment build canceled", $response['body']);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertNotEmpty($deploymentId);
+
+        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($delpoymentDomain);
+
+        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
 
         // deployment is still building error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
