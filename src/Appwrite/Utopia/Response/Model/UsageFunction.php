@@ -34,6 +34,18 @@ class UsageFunction extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('buildsSuccess', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of successful function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsFailed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of failed function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('buildsStorageTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'total aggregated sum of function builds storage.',
@@ -43,6 +55,12 @@ class UsageFunction extends Model
             ->addRule('buildsTimeTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of function builds compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsTimeAverage', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Average builds compute time.',
                 'default' => 0,
                 'example' => 0,
             ])

@@ -135,7 +135,7 @@ class Get extends Base
             'buildsFailed' => $usage[$metrics[10]]['total'],
             'buildsStorageTotal' => $usage[$metrics[3]]['total'],
             'buildsTimeTotal' => $usage[$metrics[4]]['total'],
-            'buildsTimeAverage' => $usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total'],
+            'buildsTimeAverage' => (int) ($usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total']),
             'executionsTotal' => $usage[$metrics[5]]['total'],
             'executionsTimeTotal' => $usage[$metrics[6]]['total'],
             'deployments' => $usage[$metrics[0]]['data'],

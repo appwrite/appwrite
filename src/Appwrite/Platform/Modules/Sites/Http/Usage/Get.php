@@ -78,7 +78,12 @@ class Get extends Base
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS),
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE),
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE),
-            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS)
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $site->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -130,16 +135,24 @@ class Get extends Base
             'deploymentsTotal' => $usage[$metrics[0]]['total'],
             'deploymentsStorageTotal' => $usage[$metrics[1]]['total'],
             'buildsTotal' => $usage[$metrics[2]]['total'],
+            'buildsSuccess' => $usage[$metrics[9]]['total'],
+            'buildsFailed' => $usage[$metrics[10]]['total'],
             'buildsStorageTotal' => $usage[$metrics[3]]['total'],
             'buildsTimeTotal' => $usage[$metrics[4]]['total'],
+            'buildsTimeAverage' => (int) ($usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total']),
+            'executionsTotal' => $usage[$metrics[5]]['total'],
+            'executionsTimeTotal' => $usage[$metrics[6]]['total'],
             'deployments' => $usage[$metrics[0]]['data'],
             'deploymentsStorage' => $usage[$metrics[1]]['data'],
             'builds' => $usage[$metrics[2]]['data'],
             'buildsStorage' => $usage[$metrics[3]]['data'],
             'buildsTime' => $usage[$metrics[4]]['data'],
+            'executions' => $usage[$metrics[5]]['data'],
+            'executionsTime' => $usage[$metrics[6]]['data'],
             'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
-            'buildsMbSeconds' => $usage[$metrics[7]]['data']
-            // TODO: Add more metrics for requests, bandwidth, etc.
+            'buildsMbSeconds' => $usage[$metrics[7]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
         ]), Response::MODEL_USAGE_SITE);
     }
 }
