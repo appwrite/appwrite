@@ -1172,6 +1172,8 @@ class UsageTest extends Scope
         $siteId = $data['siteId'];
         $executionTime = $data['executionTime'] ?? 0;
         $executions = $data['executions'] ?? 0;
+        $deploymentsSuccess = $data['deploymentsSucces'];
+        $deploymentsFailed = $data['deploymentsFailed'];
         $response = $this->client->call(
             Client::METHOD_GET,
             '/sites/' . $siteId . '/usage?range=30d',
@@ -1182,6 +1184,8 @@ class UsageTest extends Scope
         $this->assertEquals(19, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
+        $this->assertEquals($deploymentsSuccess, $response['body']['buildsSuccess']);
+        $this->assertEquals($deploymentsFailed, $response['body']['buildsFailed']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
         $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
