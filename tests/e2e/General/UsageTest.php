@@ -1184,7 +1184,7 @@ class UsageTest extends Scope
         $siteId = $data['siteId'];
         $executionTime = $data['executionTime'] ?? 0;
         $executions = $data['executions'] ?? 0;
-        $deploymentsSuccess = $data['deploymentsSucces'];
+        $deploymentsSuccess = $data['deploymentsSuccess'];
         $deploymentsFailed = $data['deploymentsFailed'];
         $response = $this->client->call(
             Client::METHOD_GET,
