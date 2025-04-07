@@ -1170,8 +1170,8 @@ class UsageTest extends Scope
         $data = [
             'siteId' => $siteId,
             'deployments' => 2,
-            'deploymentsSuccess' => 1,
-            'deploymentsFailed' => 1
+            'deploymentsSuccess' => 2,
+            'deploymentsFailed' => 0
         ];
 
         return $data;
