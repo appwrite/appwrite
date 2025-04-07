@@ -1050,7 +1050,8 @@ class Deletes extends Action
         try {
             $documents = $database->deleteDocuments($collection, $queries);
         } catch (Throwable $th) {
-            Console::error('Failed to delete documents for collection ' . $collection . ': ' . $th->getMessage());
+            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
+            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
             return;
         }
 

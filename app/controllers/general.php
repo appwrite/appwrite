@@ -871,17 +871,18 @@ App::error()
         if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             try {
-                $loggingProvider = new DSN($providerConfig ?? '');
+                $loggingProvider = new DSN($providerConfig);
                 $providerName = $loggingProvider->getScheme();
 
                 if (!empty($providerName) && $providerName === 'sentry') {
                     $key = $loggingProvider->getPassword();
                     $projectId = $loggingProvider->getUser() ?? '';
                     $host = 'https://' . $loggingProvider->getHost();
+                    $sampleRate = $loggingProvider->getParam('sample', 0.01);
 
                     $adapter = new Sentry($projectId, $key, $host);
                     $logger = new Logger($adapter);
-                    $logger->setSample(0.01);
+                    $logger->setSample($sampleRate);
                     $publish = true;
                 } else {
                     throw new \Exception('Invalid experimental logging provider');
