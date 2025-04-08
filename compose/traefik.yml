@@ -1,0 +1,29 @@
+services:
+    traefik:
+        image: traefik:2.11
+        container_name: appwrite-traefik
+        command:
+            - --log.level=DEBUG
+            - --api.insecure=true
+            - --providers.file.directory=/storage/config
+            - --providers.file.watch=true
+            - --providers.docker=true
+            - --providers.docker.exposedByDefault=false
+            - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
+            - --entrypoints.appwrite_web.address=:80
+            - --entrypoints.appwrite_websecure.address=:443
+            - --accesslog=true
+        ports:
+            - 80:80
+            - 8080:80
+            - 443:443
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - appwrite-config:/storage/config:ro
+            - appwrite-certificates:/storage/certificates:ro
+        depends_on:
+            - appwrite
+        networks:
+            - gateway
+            - appwrite
+            - runtimes
