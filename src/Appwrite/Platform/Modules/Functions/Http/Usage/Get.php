@@ -126,6 +126,8 @@ class Get extends Base
             }
         }
 
+        $buildsTimeTotal = $usage[$metrics[4]]['total'] ?? 0;
+        $buildsTotal = $usage[$metrics[2]]['total'] ?? 0;
         $response->dynamic(new Document([
             'range' => $range,
             'deploymentsTotal' => $usage[$metrics[0]]['total'],
@@ -135,7 +137,7 @@ class Get extends Base
             'buildsFailedTotal' => $usage[$metrics[10]]['total'],
             'buildsStorageTotal' => $usage[$metrics[3]]['total'],
             'buildsTimeTotal' => $usage[$metrics[4]]['total'],
-            'buildsTimeAverage' => (int) ($usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total']),
+            'buildsTimeAverage' => $buildsTotal === 0 ? 0 : (int) ($buildsTimeTotal / $buildsTotal),
             'executionsTotal' => $usage[$metrics[5]]['total'],
             'executionsTimeTotal' => $usage[$metrics[6]]['total'],
             'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
