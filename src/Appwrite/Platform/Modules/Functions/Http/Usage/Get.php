@@ -131,13 +131,15 @@ class Get extends Base
             'deploymentsTotal' => $usage[$metrics[0]]['total'],
             'deploymentsStorageTotal' => $usage[$metrics[1]]['total'],
             'buildsTotal' => $usage[$metrics[2]]['total'],
-            'buildsSuccess' => $usage[$metrics[9]]['total'],
-            'buildsFailed' => $usage[$metrics[10]]['total'],
+            'buildsSuccessTotal' => $usage[$metrics[9]]['total'],
+            'buildsFailedTotal' => $usage[$metrics[10]]['total'],
             'buildsStorageTotal' => $usage[$metrics[3]]['total'],
             'buildsTimeTotal' => $usage[$metrics[4]]['total'],
             'buildsTimeAverage' => (int) ($usage[$metrics[4]]['total'] / $usage[$metrics[2]]['total']),
             'executionsTotal' => $usage[$metrics[5]]['total'],
             'executionsTimeTotal' => $usage[$metrics[6]]['total'],
+            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total'],
             'deployments' => $usage[$metrics[0]]['data'],
             'deploymentsStorage' => $usage[$metrics[1]]['data'],
             'builds' => $usage[$metrics[2]]['data'],
@@ -145,10 +147,10 @@ class Get extends Base
             'buildsTime' => $usage[$metrics[4]]['data'],
             'executions' => $usage[$metrics[5]]['data'],
             'executionsTime' => $usage[$metrics[6]]['data'],
-            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
             'buildsMbSeconds' => $usage[$metrics[7]]['data'],
             'executionsMbSeconds' => $usage[$metrics[8]]['data'],
-            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
+            'buildsSuccess' => $usage[$metrics[9]]['data'],
+            'buildsFailed' => $usage[$metrics[10]]['data'],
         ]), Response::MODEL_USAGE_FUNCTION);
     }
 }

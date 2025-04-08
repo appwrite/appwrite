@@ -21,8 +21,8 @@ class UsageSites extends UsageFunctions
             ->addRule('sites', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of sites per period.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
             ->addRule('requestsTotal', [
@@ -34,8 +34,8 @@ class UsageSites extends UsageFunctions
             ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of sites per period.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
             ->addRule('inboundTotal', [
@@ -47,8 +47,8 @@ class UsageSites extends UsageFunctions
             ->addRule('inbound', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of sites per period.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
             ->addRule('outboundTotal', [
@@ -60,8 +60,8 @@ class UsageSites extends UsageFunctions
             ->addRule('outbound', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of sites per period.',
-                'default' => 0,
-                'example' => 0,
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
         ;
