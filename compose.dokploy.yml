@@ -1,10 +1,10 @@
-# created with `docker compose -f compose.yml config`
+# created with `docker compose -f compose.yml config --no-path-resolution`
 
 name: appwrite
 services:
   appwrite:
     build:
-      context: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite
+      context: .
       dockerfile: Dockerfile
       args:
         DEBUG: "false"
@@ -175,37 +175,37 @@ services:
         target: /storage/builds
         volume: {}
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/phpunit.xml
+        source: phpunit.xml
         target: /usr/src/code/phpunit.xml
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/tests
+        source: tests
         target: /usr/src/code/tests
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/docs
+        source: docs
         target: /usr/src/code/docs
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/public
+        source: public
         target: /usr/src/code/public
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/dev
+        source: dev
         target: /usr/src/code/dev
         bind:
           create_host_path: true
@@ -286,12 +286,12 @@ services:
     restart: unless-stopped
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -333,12 +333,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -371,12 +371,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -410,12 +410,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -449,12 +449,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -489,12 +489,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -581,12 +581,12 @@ services:
         target: /storage/uploads
         volume: {}
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -633,12 +633,12 @@ services:
         target: /storage/certificates
         volume: {}
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -675,12 +675,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -765,12 +765,12 @@ services:
         target: /storage/certificates
         volume: {}
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -820,12 +820,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -861,12 +861,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -928,12 +928,12 @@ services:
         target: /storage/uploads
         volume: {}
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -971,12 +971,12 @@ services:
     restart: unless-stopped
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -1013,12 +1013,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -1055,12 +1055,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -1098,12 +1098,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
@@ -1140,12 +1140,12 @@ services:
       appwrite: null
     volumes:
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        source: app
         target: /usr/src/code/app
         bind:
           create_host_path: true
       - type: bind
-        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        source: src
         target: /usr/src/code/src
         bind:
           create_host_path: true
