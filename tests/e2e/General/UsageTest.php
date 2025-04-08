@@ -1290,7 +1290,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals(24, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
 
         $functionsMetrics = $response['body'];

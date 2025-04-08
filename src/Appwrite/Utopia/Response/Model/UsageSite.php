@@ -12,39 +12,39 @@ class UsageSite extends UsageFunction
         $this
             ->addRule('requestsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of sites.',
+                'description' => 'Total aggregated number of requests.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of sites per period.',
+                'description' => 'Aggregated number of requests per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('inboundTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of sites.',
+                'description' => 'Total aggregated inbound bandwidth.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('inbound', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of sites per period.',
+                'description' => 'Aggregated number of inbound bandwidth per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('outboundTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of sites.',
+                'description' => 'Total aggregated outbound bandwidth.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('outbound', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of sites per period.',
+                'description' => 'Aggregated number of outbound bandwidth per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

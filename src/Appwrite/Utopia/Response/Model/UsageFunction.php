@@ -153,14 +153,14 @@ class UsageFunction extends Model
             ])
             ->addRule('buildsSuccess', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of function mbSeconds per period.',
+                'description' => 'Aggregated number of successful builds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('buildsFailed', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of function mbSeconds per period.',
+                'description' => 'Aggregated number of failed builds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
