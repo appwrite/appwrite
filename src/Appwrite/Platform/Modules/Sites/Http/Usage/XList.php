@@ -70,6 +70,11 @@ class XList extends Base
             str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
             str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS),
             str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_SUCCESS),
+            str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_FAILED),
+            METRIC_SITES_REQUESTS,
+            METRIC_SITES_INBOUND,
+            METRIC_SITES_OUTBOUND,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -125,6 +130,13 @@ class XList extends Base
             'buildsTimeTotal' => $usage[$metrics[5]]['total'],
             'executionsTotal' => $usage[$metrics[6]]['total'],
             'executionsTimeTotal' => $usage[$metrics[7]]['total'],
+            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
+            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
+            'buildsSuccessTotal' => $usage[$metrics[10]]['total'],
+            'buildsFailedTotal' => $usage[$metrics[11]]['total'],
+            'requestsTotal' => $usage[$metrics[12]]['total'],
+            'inboundTotal' => $usage[$metrics[13]]['total'],
+            'outboundTotal' => $usage[$metrics[14]]['total'],
             'sites' => $usage[$metrics[0]]['data'],
             'deployments' => $usage[$metrics[1]]['data'],
             'deploymentsStorage' => $usage[$metrics[2]]['data'],
@@ -133,10 +145,13 @@ class XList extends Base
             'buildsTime' => $usage[$metrics[5]]['data'],
             'executions' => $usage[$metrics[6]]['data'],
             'executionsTime' => $usage[$metrics[7]]['data'],
-            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
             'buildsMbSeconds' => $usage[$metrics[8]]['data'],
             'executionsMbSeconds' => $usage[$metrics[9]]['data'],
-            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
+            'buildsSuccess' => $usage[$metrics[10]]['data'],
+            'buildsFailed' => $usage[$metrics[11]]['data'],
+            'requests' => $usage[$metrics[12]]['data'],
+            'inbound' => $usage[$metrics[13]]['data'],
+            'outbound' => $usage[$metrics[14]]['data'],
         ]), Response::MODEL_USAGE_SITES);
     }
 }

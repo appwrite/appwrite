@@ -34,13 +34,13 @@ class UsageFunction extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('buildsSuccess', [
+            ->addRule('buildsSuccessTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of successful function builds.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('buildsFailed', [
+            ->addRule('buildsFailedTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of failed function builds.',
                 'default' => 0,
@@ -145,6 +145,20 @@ class UsageFunction extends Model
                 'array' => true
             ])
             ->addRule('executionsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsSuccess', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsFailed', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of function mbSeconds per period.',
                 'default' => [],

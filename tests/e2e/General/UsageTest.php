@@ -1064,7 +1064,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals(22, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -1089,7 +1089,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(21, count($response['body']));
+        $this->assertEquals(31, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
@@ -1193,11 +1193,11 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(30, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
-        $this->assertEquals($deploymentsSuccess, $response['body']['buildsSuccess']);
-        $this->assertEquals($deploymentsFailed, $response['body']['buildsFailed']);
+        $this->assertEquals($deploymentsSuccess, $response['body']['buildsSuccessTotal']);
+        $this->assertEquals($deploymentsFailed, $response['body']['buildsFailedTotal']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
         $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
@@ -1208,6 +1208,11 @@ class UsageTest extends Scope
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
         $this->assertIsArray($response['body']['executionsMbSeconds']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsFailed']);
+        $this->assertIsArray($response['body']['requests']);
+        $this->assertIsArray($response['body']['inbound']);
+        $this->assertIsArray($response['body']['outbound']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
@@ -1220,7 +1225,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(21, count($response['body']));
+        $this->assertEquals(31, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['sites']);
         $this->assertIsArray($response['body']['deployments']);
@@ -1231,6 +1236,11 @@ class UsageTest extends Scope
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
         $this->assertIsArray($response['body']['executionsMbSeconds']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsFailed']);
+        $this->assertIsArray($response['body']['requests']);
+        $this->assertIsArray($response['body']['inbound']);
+        $this->assertIsArray($response['body']['outbound']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
