@@ -1,0 +1,6 @@
+services:
+    appwrite-browser:
+        container_name: appwrite-browser
+        image: appwrite/browser:0.2.2
+        networks:
+            - appwrite

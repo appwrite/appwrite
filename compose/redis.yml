@@ -1,0 +1,13 @@
+services:
+    redis:
+        image: redis:7.2.4-alpine
+        container_name: appwrite-redis
+        command: >
+            redis-server
+            --maxmemory            512mb
+            --maxmemory-policy     allkeys-lru
+            --maxmemory-samples    5
+        networks:
+            - appwrite
+        volumes:
+            - appwrite-redis:/data:rw

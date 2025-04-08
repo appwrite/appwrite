@@ -1,0 +1,34 @@
+services:
+    appwrite-worker-certificates:
+        entrypoint: worker-certificates
+        container_name: appwrite-worker-certificates
+        image: appwrite-dev
+        networks:
+            - appwrite
+        depends_on:
+            - redis
+            - mariadb
+        volumes:
+            - appwrite-config:/storage/config:rw
+            - appwrite-certificates:/storage/certificates:rw
+            - ../app:/usr/src/code/app
+            - ../src:/usr/src/code/src
+        environment:
+            - _APP_ENV
+            - _APP_WORKER_PER_CORE
+            - _APP_OPENSSL_KEY_V1
+            - _APP_DOMAIN
+            - _APP_DOMAIN_TARGET
+            - _APP_DOMAIN_FUNCTIONS
+            - _APP_EMAIL_CERTIFICATES
+            - _APP_REDIS_HOST
+            - _APP_REDIS_PORT
+            - _APP_REDIS_USER
+            - _APP_REDIS_PASS
+            - _APP_DB_HOST
+            - _APP_DB_PORT
+            - _APP_DB_SCHEMA
+            - _APP_DB_USER
+            - _APP_DB_PASS
+            - _APP_LOGGING_CONFIG
+            - _APP_DATABASE_SHARED_TABLES

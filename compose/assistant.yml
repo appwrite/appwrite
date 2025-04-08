@@ -1,0 +1,8 @@
+services:
+    appwrite-assistant:
+        container_name: appwrite-assistant
+        image: appwrite/assistant:0.7.0
+        networks:
+            - appwrite
+        environment:
+            - _APP_ASSISTANT_OPENAI_API_KEY

@@ -1,0 +1,55 @@
+# WARNING!
+# This is a development version of THE Appwrite docker-compose.yml file.
+# Avoid using this file in your production environment.
+# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
+
+include:
+    - ./compose/appwrite.yml
+    - ./compose/assistant.yml
+    - ./compose/browser.yml
+    - ./compose/console.yml
+    - ./compose/mariadb.yml
+    - ./compose/realtime.yml
+    - ./compose/redis.yml
+    - ./compose/traefik.yml
+
+    - ./compose/openruntimes-proxy.yml
+    - ./compose/openruntimes-executor.yml
+
+    - ./compose/task-scheduler-executions.yml
+    - ./compose/task-scheduler-functions.yml
+    - ./compose/task-scheduler-messages.yml
+
+    - ./compose/worker-audits.yml
+    - ./compose/worker-builds.yml
+    - ./compose/worker-certificates.yml
+    - ./compose/worker-databases.yml
+    - ./compose/worker-deletes.yml
+    - ./compose/worker-functions.yml
+    - ./compose/worker-mails.yml
+    - ./compose/worker-maintenance.yml
+    - ./compose/worker-messaging.yml
+    - ./compose/worker-migrations.yml
+    - ./compose/worker-stats-resources.yml
+    - ./compose/worker-stats-usage.yml
+    - ./compose/worker-stats-usage-dump.yml
+    - ./compose/worker-webhooks.yml
+
+networks:
+    gateway:
+        name: gateway
+    appwrite:
+        name: appwrite
+    runtimes:
+        name: runtimes
+
+volumes:
+    appwrite-mariadb:
+    appwrite-redis:
+    appwrite-cache:
+    appwrite-uploads:
+    appwrite-certificates:
+    appwrite-functions:
+    appwrite-sites:
+    appwrite-builds:
+    appwrite-config:
