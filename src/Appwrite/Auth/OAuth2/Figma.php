@@ -24,7 +24,7 @@ class Figma extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'file_read'
+        'current_user:read'
     ];
 
     /**
@@ -44,7 +44,7 @@ class Figma extends OAuth2
             'response_type' => 'code',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => \implode(',', $this->getScopes()),
+            'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state)
         ]);
     }
@@ -57,14 +57,15 @@ class Figma extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $headers = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)
+            ];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://www.figma.com/api/oauth/token',
+                'https://api.figma.com/v1/oauth/token',
                 $headers,
                 \http_build_query([
-                    'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
                     'redirect_uri' => $this->callback,
                     'code' => $code,
                     'grant_type' => 'authorization_code'
@@ -82,14 +83,15 @@ class Figma extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $headers = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)
+        ];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://www.figma.com/api/oauth/refresh',
+            'https://api.figma.com/v1/oauth/refresh',
             $headers,
             \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken
             ])
         ), true);
@@ -162,7 +164,7 @@ class Figma extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . $accessToken];
             $user = $this->request(
                 'GET',
                 'https://api.figma.com/v1/me',
