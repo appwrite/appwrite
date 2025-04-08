@@ -21,17 +21,19 @@ class Executor
 
     private bool $selfSigned = false;
 
-    private string $endpoint;
+    /**
+     * @var callable(string, string): string  $endpoint
+     */
+    private $endpointSelector;
 
     protected array $headers;
 
-    public function __construct(string $endpoint)
+    /**
+     * @param callable(string, string): string $endpointSelector
+     */
+    public function __construct(callable $endpointSelector)
     {
-        if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
-            throw new Exception('Unsupported endpoint');
-        }
-
-        $this->endpoint = $endpoint;
+        $this->endpointSelector = $endpointSelector;
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
@@ -94,7 +96,8 @@ class Executor
             'outputDirectory' => $outputDirectory
         ];
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
+        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -124,7 +127,8 @@ class Executor
             'timeout' => $timeout
         ];
 
-        $this->call(self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
+        $this->call($endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
     }
 
     /**
@@ -140,7 +144,8 @@ class Executor
         $runtimeId = "$projectId-$deploymentId" . $suffix;
         $route = "/runtimes/$runtimeId";
 
-        $response = $this->call(self::METHOD_DELETE, $route, [
+        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
+        $response = $this->call($endpoint, self::METHOD_DELETE, $route, [
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
 
@@ -233,7 +238,8 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
+        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
+        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -241,7 +247,11 @@ class Executor
             throw new \Exception($message, $status);
         }
 
-        $response['body']['headers'] = \json_decode($response['body']['headers'] ?? '{}', true);
+        $headers = $response['body']['headers'] ?? [];
+        if (is_string($headers)) {
+            $headers = \json_decode($headers, true);
+        }
+        $response['body']['headers'] = $headers;
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
@@ -287,10 +297,10 @@ class Executor
      * @return array|string
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
     {
         $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
+        $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
         $responseStatus     = -1;
         $responseType       = '';
@@ -452,5 +462,10 @@ class Executor
         }
 
         return $output;
+    }
+
+    private function selectEndpoint(string $projectId, string $deploymentId): string
+    {
+        return call_user_func($this->endpointSelector, $projectId, $deploymentId);
     }
 }
