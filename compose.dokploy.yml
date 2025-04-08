@@ -1,0 +1,1348 @@
+name: appwrite
+services:
+  appwrite:
+    build:
+      context: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite
+      dockerfile: Dockerfile
+      args:
+        DEBUG: "false"
+        TESTING: "false"
+        VERSION: dev
+    container_name: appwrite
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - php
+      - -e
+      - app/http.php
+    environment:
+      _APP_ASSISTANT_OPENAI_API_KEY: ""
+      _APP_COMPRESSION_MIN_SIZE_BYTES: "1024"
+      _APP_COMPUTE_BUILD_TIMEOUT: "900"
+      _APP_COMPUTE_CPUS: "8"
+      _APP_COMPUTE_MEMORY: "8192"
+      _APP_COMPUTE_SIZE_LIMIT: "30000000"
+      _APP_COMPUTE_TIMEOUT: "900"
+      _APP_CONSOLE_COUNTRIES_DENYLIST: AQ
+      _APP_CONSOLE_HOSTNAMES: localhost,appwrite.io,*.appwrite.io
+      _APP_CONSOLE_SESSION_ALERTS: enabled
+      _APP_CONSOLE_WHITELIST_EMAILS: ""
+      _APP_CONSOLE_WHITELIST_IPS: ""
+      _APP_CONSOLE_WHITELIST_ROOT: disabled
+      _APP_DATABASE_SHARED_NAMESPACE: null
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DATABASE_SHARED_TABLES_V1: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOMAIN: traefik
+      _APP_DOMAIN_FUNCTIONS: functions.localhost
+      _APP_DOMAIN_SITES: sites.localhost
+      _APP_DOMAIN_TARGET: test.appwrite.io
+      _APP_EDITION: self-hosted
+      _APP_EMAIL_SECURITY: security@appwrite.io
+      _APP_ENV: development
+      _APP_EXECUTOR_HOST: http://exc1/v1
+      _APP_EXECUTOR_SECRET: your-secret-key
+      _APP_EXPERIMENT_LOGGING_CONFIG: null
+      _APP_EXPERIMENT_LOGGING_PROVIDER: null
+      _APP_FUNCTIONS_CREATION_ABUSE_LIMIT: "5000"
+      _APP_FUNCTIONS_RUNTIMES: php-8.0,node-18.0,python-3.9,ruby-3.1
+      _APP_GRAPHQL_MAX_BATCH_SIZE: "10"
+      _APP_GRAPHQL_MAX_COMPLEXITY: "250"
+      _APP_GRAPHQL_MAX_DEPTH: "4"
+      _APP_LOCALE: en
+      _APP_LOGGING_CONFIG: ""
+      _APP_MAINTENANCE_INTERVAL: "86400"
+      _APP_MAINTENANCE_RETENTION_ABUSE: "86400"
+      _APP_MAINTENANCE_RETENTION_AUDIT: "1209600"
+      _APP_MAINTENANCE_RETENTION_CACHE: "2592000"
+      _APP_MAINTENANCE_RETENTION_EXECUTION: "1209600"
+      _APP_MAINTENANCE_RETENTION_SCHEDULES: "86400"
+      _APP_MAINTENANCE_RETENTION_USAGE_HOURLY: "8640000"
+      _APP_MESSAGE_EMAIL_TEST_DSN: ""
+      _APP_MESSAGE_PUSH_TEST_DSN: ""
+      _APP_MESSAGE_SMS_TEST_DSN: ""
+      _APP_MIGRATIONS_FIREBASE_CLIENT_ID: ""
+      _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_OPTIONS_ABUSE: disabled
+      _APP_OPTIONS_COMPUTE_FORCE_HTTPS: disabled
+      _APP_OPTIONS_FORCE_HTTPS: disabled
+      _APP_OPTIONS_ROUTER_PROTECTION: disabled
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_SITES_RUNTIMES: static-1,node-22,flutter-3.29
+      _APP_SMS_FROM: "+123456789"
+      _APP_SMS_PROVIDER: sms://username:password@mock
+      _APP_SMTP_HOST: maildev
+      _APP_SMTP_PASSWORD: ""
+      _APP_SMTP_PORT: "1025"
+      _APP_SMTP_SECURE: ""
+      _APP_SMTP_USERNAME: ""
+      _APP_STORAGE_ANTIVIRUS: disabled
+      _APP_STORAGE_ANTIVIRUS_HOST: clamav
+      _APP_STORAGE_ANTIVIRUS_PORT: "3310"
+      _APP_STORAGE_BACKBLAZE_ACCESS_KEY: ""
+      _APP_STORAGE_BACKBLAZE_BUCKET: ""
+      _APP_STORAGE_BACKBLAZE_REGION: us-west-004
+      _APP_STORAGE_BACKBLAZE_SECRET: ""
+      _APP_STORAGE_DEVICE: Local
+      _APP_STORAGE_DO_SPACES_ACCESS_KEY: ""
+      _APP_STORAGE_DO_SPACES_BUCKET: ""
+      _APP_STORAGE_DO_SPACES_REGION: us-east-1
+      _APP_STORAGE_DO_SPACES_SECRET: ""
+      _APP_STORAGE_LIMIT: "30000000"
+      _APP_STORAGE_LINODE_ACCESS_KEY: ""
+      _APP_STORAGE_LINODE_BUCKET: ""
+      _APP_STORAGE_LINODE_REGION: eu-central-1
+      _APP_STORAGE_LINODE_SECRET: ""
+      _APP_STORAGE_PREVIEW_LIMIT: "20000000"
+      _APP_STORAGE_S3_ACCESS_KEY: ""
+      _APP_STORAGE_S3_BUCKET: ""
+      _APP_STORAGE_S3_ENDPOINT: ""
+      _APP_STORAGE_S3_REGION: us-east-1
+      _APP_STORAGE_S3_SECRET: ""
+      _APP_STORAGE_WASABI_ACCESS_KEY: ""
+      _APP_STORAGE_WASABI_BUCKET: ""
+      _APP_STORAGE_WASABI_REGION: eu-central-1
+      _APP_STORAGE_WASABI_SECRET: ""
+      _APP_SYSTEM_EMAIL_ADDRESS: noreply@appwrite.io
+      _APP_SYSTEM_EMAIL_NAME: Appwrite
+      _APP_SYSTEM_RESPONSE_FORMAT: ""
+      _APP_SYSTEM_TEAM_EMAIL: team@appwrite.io
+      _APP_USAGE_STATS: enabled
+      _APP_VCS_GITHUB_APP_ID: ""
+      _APP_VCS_GITHUB_APP_NAME: ""
+      _APP_VCS_GITHUB_CLIENT_ID: ""
+      _APP_VCS_GITHUB_CLIENT_SECRET: ""
+      _APP_VCS_GITHUB_PRIVATE_KEY: disabled
+      _APP_VCS_GITHUB_WEBHOOK_SECRET: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    labels:
+      traefik.constraint-label-stack: appwrite
+      traefik.docker.network: appwrite
+      traefik.enable: "true"
+      traefik.http.routers.appwrite_api_http.entrypoints: appwrite_web
+      traefik.http.routers.appwrite_api_http.rule: PathPrefix(`/`)
+      traefik.http.routers.appwrite_api_http.service: appwrite_api
+      traefik.http.routers.appwrite_api_https.entrypoints: appwrite_websecure
+      traefik.http.routers.appwrite_api_https.rule: PathPrefix(`/`)
+      traefik.http.routers.appwrite_api_https.service: appwrite_api
+      traefik.http.routers.appwrite_api_https.tls: "true"
+      traefik.http.services.appwrite_api.loadbalancer.server.port: "80"
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-uploads
+        target: /storage/uploads
+        volume: {}
+      - type: volume
+        source: appwrite-cache
+        target: /storage/cache
+        volume: {}
+      - type: volume
+        source: appwrite-config
+        target: /storage/config
+        volume: {}
+      - type: volume
+        source: appwrite-certificates
+        target: /storage/certificates
+        volume: {}
+      - type: volume
+        source: appwrite-functions
+        target: /storage/functions
+        volume: {}
+      - type: volume
+        source: appwrite-sites
+        target: /storage/sites
+        volume: {}
+      - type: volume
+        source: appwrite-builds
+        target: /storage/builds
+        volume: {}
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/phpunit.xml
+        target: /usr/src/code/phpunit.xml
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/tests
+        target: /usr/src/code/tests
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/docs
+        target: /usr/src/code/docs
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/public
+        target: /usr/src/code/public
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/dev
+        target: /usr/src/code/dev
+        bind:
+          create_host_path: true
+  appwrite-assistant:
+    container_name: appwrite-assistant
+    environment:
+      _APP_ASSISTANT_OPENAI_API_KEY: ""
+    image: appwrite/assistant:0.7.0
+    networks:
+      appwrite: null
+  appwrite-browser:
+    container_name: appwrite-browser
+    image: appwrite/browser:0.2.2
+    networks:
+      appwrite: null
+  appwrite-console:
+    container_name: appwrite-console
+    image: appwrite/console:5.3.0-sites-rc.36
+    labels:
+      traefik.constraint-label-stack: appwrite
+      traefik.docker.network: appwrite
+      traefik.enable: "true"
+      traefik.http.routers.appwrite_console_http.entrypoints: appwrite_web
+      traefik.http.routers.appwrite_console_http.rule: PathPrefix(`/console`)
+      traefik.http.routers.appwrite_console_http.service: appwrite_console
+      traefik.http.routers.appwrite_console_https.entrypoints: appwrite_websecure
+      traefik.http.routers.appwrite_console_https.rule: PathPrefix(`/console`)
+      traefik.http.routers.appwrite_console_https.service: appwrite_console
+      traefik.http.routers.appwrite_console_https.tls: "true"
+      traefik.http.services.appwrite_console.loadbalancer.server.port: "80"
+    networks:
+      appwrite: null
+    restart: unless-stopped
+  appwrite-realtime:
+    container_name: appwrite-realtime
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - realtime
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_OPTIONS_ABUSE: disabled
+      _APP_OPTIONS_ROUTER_PROTECTION: disabled
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_USAGE_STATS: enabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    labels:
+      traefik.constraint-label-stack: appwrite
+      traefik.docker.network: appwrite
+      traefik.enable: "true"
+      traefik.http.routers.appwrite_realtime_ws.entrypoints: appwrite_web
+      traefik.http.routers.appwrite_realtime_ws.rule: PathPrefix(`/v1/realtime`)
+      traefik.http.routers.appwrite_realtime_ws.service: appwrite_realtime
+      traefik.http.routers.appwrite_realtime_wss.entrypoints: appwrite_websecure
+      traefik.http.routers.appwrite_realtime_wss.rule: PathPrefix(`/v1/realtime`)
+      traefik.http.routers.appwrite_realtime_wss.service: appwrite_realtime
+      traefik.http.routers.appwrite_realtime_wss.tls: "true"
+      traefik.http.services.appwrite_realtime.loadbalancer.server.port: "80"
+    networks:
+      appwrite: null
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-task-maintenance:
+    container_name: appwrite-task-maintenance
+    depends_on:
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - maintenance
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOMAIN: traefik
+      _APP_DOMAIN_FUNCTIONS: functions.localhost
+      _APP_DOMAIN_TARGET: test.appwrite.io
+      _APP_ENV: development
+      _APP_MAINTENANCE_DELAY: ""
+      _APP_MAINTENANCE_INTERVAL: "86400"
+      _APP_MAINTENANCE_RETENTION_ABUSE: "86400"
+      _APP_MAINTENANCE_RETENTION_AUDIT: "1209600"
+      _APP_MAINTENANCE_RETENTION_CACHE: "2592000"
+      _APP_MAINTENANCE_RETENTION_EXECUTION: "1209600"
+      _APP_MAINTENANCE_RETENTION_SCHEDULES: "86400"
+      _APP_MAINTENANCE_RETENTION_USAGE_HOURLY: "8640000"
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-task-scheduler-executions:
+    container_name: appwrite-task-scheduler-executions
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - schedule-executions
+    environment:
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-task-scheduler-functions:
+    container_name: appwrite-task-scheduler-functions
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - schedule-functions
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-task-scheduler-messages:
+    container_name: appwrite-task-scheduler-messages
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - schedule-messages
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-audits:
+    container_name: appwrite-worker-audits
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-audits
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-builds:
+    container_name: appwrite-worker-builds
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-builds
+    environment:
+      _APP_COMPUTE_BUILD_TIMEOUT: "900"
+      _APP_COMPUTE_CPUS: "8"
+      _APP_COMPUTE_MEMORY: "8192"
+      _APP_COMPUTE_SIZE_LIMIT: "30000000"
+      _APP_COMPUTE_TIMEOUT: "900"
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOMAIN: traefik
+      _APP_DOMAIN_SITES: sites.localhost
+      _APP_ENV: development
+      _APP_EXECUTOR_HOST: http://exc1/v1
+      _APP_EXECUTOR_SECRET: your-secret-key
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_OPTIONS_COMPUTE_FORCE_HTTPS: disabled
+      _APP_OPTIONS_FORCE_HTTPS: disabled
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_STORAGE_BACKBLAZE_ACCESS_KEY: ""
+      _APP_STORAGE_BACKBLAZE_BUCKET: ""
+      _APP_STORAGE_BACKBLAZE_REGION: us-west-004
+      _APP_STORAGE_BACKBLAZE_SECRET: ""
+      _APP_STORAGE_DEVICE: Local
+      _APP_STORAGE_DO_SPACES_ACCESS_KEY: ""
+      _APP_STORAGE_DO_SPACES_BUCKET: ""
+      _APP_STORAGE_DO_SPACES_REGION: us-east-1
+      _APP_STORAGE_DO_SPACES_SECRET: ""
+      _APP_STORAGE_LINODE_ACCESS_KEY: ""
+      _APP_STORAGE_LINODE_BUCKET: ""
+      _APP_STORAGE_LINODE_REGION: eu-central-1
+      _APP_STORAGE_LINODE_SECRET: ""
+      _APP_STORAGE_S3_ACCESS_KEY: ""
+      _APP_STORAGE_S3_BUCKET: ""
+      _APP_STORAGE_S3_ENDPOINT: ""
+      _APP_STORAGE_S3_REGION: us-east-1
+      _APP_STORAGE_S3_SECRET: ""
+      _APP_STORAGE_WASABI_ACCESS_KEY: ""
+      _APP_STORAGE_WASABI_BUCKET: ""
+      _APP_STORAGE_WASABI_REGION: eu-central-1
+      _APP_STORAGE_WASABI_SECRET: ""
+      _APP_VCS_GITHUB_APP_ID: ""
+      _APP_VCS_GITHUB_APP_NAME: ""
+      _APP_VCS_GITHUB_PRIVATE_KEY: disabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-functions
+        target: /storage/functions
+        volume: {}
+      - type: volume
+        source: appwrite-sites
+        target: /storage/sites
+        volume: {}
+      - type: volume
+        source: appwrite-builds
+        target: /storage/builds
+        volume: {}
+      - type: volume
+        source: appwrite-uploads
+        target: /storage/uploads
+        volume: {}
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-certificates:
+    container_name: appwrite-worker-certificates
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-certificates
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOMAIN: traefik
+      _APP_DOMAIN_FUNCTIONS: functions.localhost
+      _APP_DOMAIN_TARGET: test.appwrite.io
+      _APP_EMAIL_CERTIFICATES: certificates@appwrite.io
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-config
+        target: /storage/config
+        volume: {}
+      - type: volume
+        source: appwrite-certificates
+        target: /storage/certificates
+        volume: {}
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-databases:
+    container_name: appwrite-worker-databases
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-databases
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_QUEUE_NAME: null
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+      _APP_WORKERS_NUM: null
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-deletes:
+    container_name: appwrite-worker-deletes
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-deletes
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DATABASE_SHARED_TABLES_V1: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_EMAIL_CERTIFICATES: certificates@appwrite.io
+      _APP_ENV: development
+      _APP_EXECUTOR_HOST: http://exc1/v1
+      _APP_EXECUTOR_SECRET: your-secret-key
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_STORAGE_BACKBLAZE_ACCESS_KEY: ""
+      _APP_STORAGE_BACKBLAZE_BUCKET: ""
+      _APP_STORAGE_BACKBLAZE_REGION: us-west-004
+      _APP_STORAGE_BACKBLAZE_SECRET: ""
+      _APP_STORAGE_DEVICE: Local
+      _APP_STORAGE_DO_SPACES_ACCESS_KEY: ""
+      _APP_STORAGE_DO_SPACES_BUCKET: ""
+      _APP_STORAGE_DO_SPACES_REGION: us-east-1
+      _APP_STORAGE_DO_SPACES_SECRET: ""
+      _APP_STORAGE_LINODE_ACCESS_KEY: ""
+      _APP_STORAGE_LINODE_BUCKET: ""
+      _APP_STORAGE_LINODE_REGION: eu-central-1
+      _APP_STORAGE_LINODE_SECRET: ""
+      _APP_STORAGE_S3_ACCESS_KEY: ""
+      _APP_STORAGE_S3_BUCKET: ""
+      _APP_STORAGE_S3_ENDPOINT: ""
+      _APP_STORAGE_S3_REGION: us-east-1
+      _APP_STORAGE_S3_SECRET: ""
+      _APP_STORAGE_WASABI_ACCESS_KEY: ""
+      _APP_STORAGE_WASABI_BUCKET: ""
+      _APP_STORAGE_WASABI_REGION: eu-central-1
+      _APP_STORAGE_WASABI_SECRET: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-uploads
+        target: /storage/uploads
+        volume: {}
+      - type: volume
+        source: appwrite-cache
+        target: /storage/cache
+        volume: {}
+      - type: volume
+        source: appwrite-functions
+        target: /storage/functions
+        volume: {}
+      - type: volume
+        source: appwrite-sites
+        target: /storage/sites
+        volume: {}
+      - type: volume
+        source: appwrite-builds
+        target: /storage/builds
+        volume: {}
+      - type: volume
+        source: appwrite-certificates
+        target: /storage/certificates
+        volume: {}
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-functions:
+    container_name: appwrite-worker-functions
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      openruntimes-executor:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-functions
+    environment:
+      _APP_COMPUTE_BUILD_TIMEOUT: "900"
+      _APP_COMPUTE_CPUS: "8"
+      _APP_COMPUTE_MEMORY: "8192"
+      _APP_COMPUTE_TIMEOUT: "900"
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOCKER_HUB_PASSWORD: ""
+      _APP_DOCKER_HUB_USERNAME: ""
+      _APP_DOMAIN: traefik
+      _APP_ENV: development
+      _APP_EXECUTOR_HOST: http://exc1/v1
+      _APP_EXECUTOR_SECRET: your-secret-key
+      _APP_LOGGING_CONFIG: ""
+      _APP_LOGGING_PROVIDER: null
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_OPTIONS_FORCE_HTTPS: disabled
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_USAGE_STATS: enabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-mails:
+    container_name: appwrite-worker-mails
+    depends_on:
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-mails
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DOMAIN: traefik
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_OPTIONS_FORCE_HTTPS: disabled
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_SMTP_HOST: maildev
+      _APP_SMTP_PASSWORD: ""
+      _APP_SMTP_PORT: "1025"
+      _APP_SMTP_SECURE: ""
+      _APP_SMTP_USERNAME: ""
+      _APP_SYSTEM_EMAIL_ADDRESS: noreply@appwrite.io
+      _APP_SYSTEM_EMAIL_NAME: Appwrite
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-messaging:
+    container_name: appwrite-worker-messaging
+    depends_on:
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-messaging
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_SMS_FROM: "+123456789"
+      _APP_SMS_PROJECTS_DENY_LIST: ""
+      _APP_SMS_PROVIDER: sms://username:password@mock
+      _APP_STORAGE_BACKBLAZE_ACCESS_KEY: ""
+      _APP_STORAGE_BACKBLAZE_BUCKET: ""
+      _APP_STORAGE_BACKBLAZE_REGION: us-west-004
+      _APP_STORAGE_BACKBLAZE_SECRET: ""
+      _APP_STORAGE_DEVICE: Local
+      _APP_STORAGE_DO_SPACES_ACCESS_KEY: ""
+      _APP_STORAGE_DO_SPACES_BUCKET: ""
+      _APP_STORAGE_DO_SPACES_REGION: us-east-1
+      _APP_STORAGE_DO_SPACES_SECRET: ""
+      _APP_STORAGE_LINODE_ACCESS_KEY: ""
+      _APP_STORAGE_LINODE_BUCKET: ""
+      _APP_STORAGE_LINODE_REGION: eu-central-1
+      _APP_STORAGE_LINODE_SECRET: ""
+      _APP_STORAGE_S3_ACCESS_KEY: ""
+      _APP_STORAGE_S3_BUCKET: ""
+      _APP_STORAGE_S3_ENDPOINT: ""
+      _APP_STORAGE_S3_REGION: us-east-1
+      _APP_STORAGE_S3_SECRET: ""
+      _APP_STORAGE_WASABI_ACCESS_KEY: ""
+      _APP_STORAGE_WASABI_BUCKET: ""
+      _APP_STORAGE_WASABI_REGION: eu-central-1
+      _APP_STORAGE_WASABI_SECRET: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: appwrite-uploads
+        target: /storage/uploads
+        volume: {}
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-migrations:
+    container_name: appwrite-worker-migrations
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-migrations
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_DOMAIN: traefik
+      _APP_DOMAIN_TARGET: test.appwrite.io
+      _APP_EMAIL_SECURITY: security@appwrite.io
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_MIGRATIONS_FIREBASE_CLIENT_ID: ""
+      _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-stats-resources:
+    container_name: appwrite-worker-stats-resources
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-stats-resources
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_USAGE_AGGREGATION_INTERVAL: "30"
+      _APP_USAGE_STATS: enabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-stats-usage:
+    container_name: appwrite-worker-stats-usage
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-stats-usage
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_USAGE_AGGREGATION_INTERVAL: "30"
+      _APP_USAGE_STATS: enabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-stats-usage-dump:
+    container_name: appwrite-worker-stats-usage-dump
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-stats-usage-dump
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_STATS_USAGE_DUAL_WRITING_DBS: database_db_main
+      _APP_USAGE_AGGREGATION_INTERVAL: "30"
+      _APP_USAGE_STATS: enabled
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  appwrite-worker-webhooks:
+    container_name: appwrite-worker-webhooks
+    depends_on:
+      mariadb:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    entrypoint:
+      - worker-webhooks
+    environment:
+      _APP_DATABASE_SHARED_TABLES: null
+      _APP_DB_HOST: mariadb
+      _APP_DB_PASS: password
+      _APP_DB_PORT: "3306"
+      _APP_DB_SCHEMA: appwrite
+      _APP_DB_USER: user
+      _APP_EMAIL_SECURITY: security@appwrite.io
+      _APP_ENV: development
+      _APP_LOGGING_CONFIG: ""
+      _APP_OPENSSL_KEY_V1: your-secret-key
+      _APP_REDIS_HOST: redis
+      _APP_REDIS_PASS: ""
+      _APP_REDIS_PORT: "6379"
+      _APP_REDIS_USER: ""
+      _APP_WEBHOOK_MAX_FAILED_ATTEMPTS: "10"
+      _APP_WORKER_PER_CORE: "6"
+    image: appwrite-dev
+    networks:
+      appwrite: null
+    volumes:
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/app
+        target: /usr/src/code/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/torstendittmann/Documents/GitHub/appwrite/appwrite/src
+        target: /usr/src/code/src
+        bind:
+          create_host_path: true
+  mariadb:
+    command:
+      - mysqld
+      - --innodb-flush-method=fsync
+    container_name: appwrite-mariadb
+    environment:
+      MARIADB_AUTO_UPGRADE: "1"
+      MYSQL_DATABASE: appwrite
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootsecretpassword
+      MYSQL_USER: user
+    image: mariadb:10.11
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-mariadb
+        target: /var/lib/mysql
+        volume: {}
+  openruntimes-executor:
+    container_name: openruntimes-executor
+    environment:
+      OPR_EXECUTOR_DOCKER_HUB_PASSWORD: ""
+      OPR_EXECUTOR_DOCKER_HUB_USERNAME: ""
+      OPR_EXECUTOR_ENV: development
+      OPR_EXECUTOR_IMAGE_PULL: enabled
+      OPR_EXECUTOR_INACTIVE_TRESHOLD: "600"
+      OPR_EXECUTOR_LOGGING_CONFIG: ""
+      OPR_EXECUTOR_MAINTENANCE_INTERVAL: "600"
+      OPR_EXECUTOR_NETWORK: runtimes
+      OPR_EXECUTOR_RUNTIME_VERSIONS: v2,v5
+      OPR_EXECUTOR_RUNTIMES: php-8.0,node-18.0,python-3.9,ruby-3.1,static-1,node-22,flutter-3.29
+      OPR_EXECUTOR_SECRET: your-secret-key
+      OPR_EXECUTOR_STORAGE_BACKBLAZE_ACCESS_KEY: ""
+      OPR_EXECUTOR_STORAGE_BACKBLAZE_BUCKET: ""
+      OPR_EXECUTOR_STORAGE_BACKBLAZE_REGION: us-west-004
+      OPR_EXECUTOR_STORAGE_BACKBLAZE_SECRET: ""
+      OPR_EXECUTOR_STORAGE_DEVICE: Local
+      OPR_EXECUTOR_STORAGE_DO_SPACES_ACCESS_KEY: ""
+      OPR_EXECUTOR_STORAGE_DO_SPACES_BUCKET: ""
+      OPR_EXECUTOR_STORAGE_DO_SPACES_REGION: us-east-1
+      OPR_EXECUTOR_STORAGE_DO_SPACES_SECRET: ""
+      OPR_EXECUTOR_STORAGE_LINODE_ACCESS_KEY: ""
+      OPR_EXECUTOR_STORAGE_LINODE_BUCKET: ""
+      OPR_EXECUTOR_STORAGE_LINODE_REGION: eu-central-1
+      OPR_EXECUTOR_STORAGE_LINODE_SECRET: ""
+      OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY: ""
+      OPR_EXECUTOR_STORAGE_S3_BUCKET: ""
+      OPR_EXECUTOR_STORAGE_S3_ENDPOINT: ""
+      OPR_EXECUTOR_STORAGE_S3_REGION: us-east-1
+      OPR_EXECUTOR_STORAGE_S3_SECRET: ""
+      OPR_EXECUTOR_STORAGE_WASABI_ACCESS_KEY: ""
+      OPR_EXECUTOR_STORAGE_WASABI_BUCKET: ""
+      OPR_EXECUTOR_STORAGE_WASABI_REGION: eu-central-1
+      OPR_EXECUTOR_STORAGE_WASABI_SECRET: ""
+    hostname: exc1
+    image: openruntimes/executor:0.7.13
+    networks:
+      appwrite: null
+      runtimes: null
+    restart: unless-stopped
+    stop_signal: SIGINT
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+      - type: volume
+        source: appwrite-builds
+        target: /storage/builds
+        volume: {}
+      - type: volume
+        source: appwrite-functions
+        target: /storage/functions
+        volume: {}
+      - type: volume
+        source: appwrite-sites
+        target: /storage/sites
+        volume: {}
+      - type: bind
+        source: /tmp
+        target: /tmp
+        bind:
+          create_host_path: true
+  openruntimes-proxy:
+    container_name: openruntimes-proxy
+    environment:
+      OPR_PROXY_ALGORITHM: random
+      OPR_PROXY_ENV: development
+      OPR_PROXY_EXECUTOR_SECRET: your-secret-key
+      OPR_PROXY_EXECUTORS: exc1
+      OPR_PROXY_HEALTHCHECK: enabled
+      OPR_PROXY_HEALTHCHECK_INTERVAL: "10000"
+      OPR_PROXY_LOGGING_CONFIG: ""
+      OPR_PROXY_MAX_TIMEOUT: "600"
+      OPR_PROXY_SECRET: your-secret-key
+      OPR_PROXY_WORKER_PER_CORE: "6"
+    hostname: proxy
+    image: openruntimes/proxy:0.5.5
+    networks:
+      appwrite: null
+      runtimes: null
+    stop_signal: SIGINT
+  redis:
+    command:
+      - redis-server
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --maxmemory-samples
+      - "5"
+    container_name: appwrite-redis
+    image: redis:7.2.4-alpine
+    networks:
+      appwrite: null
+    volumes:
+      - type: volume
+        source: appwrite-redis
+        target: /data
+        volume: {}
+  traefik:
+    command:
+      - --log.level=DEBUG
+      - --api.insecure=true
+      - --providers.file.directory=/storage/config
+      - --providers.file.watch=true
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
+      - --entrypoints.appwrite_web.address=:80
+      - --entrypoints.appwrite_websecure.address=:443
+      - --accesslog=true
+    container_name: appwrite-traefik
+    depends_on:
+      appwrite:
+        condition: service_started
+        required: true
+    image: traefik:2.11
+    networks:
+      appwrite: null
+      gateway: null
+      runtimes: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "80"
+        protocol: tcp
+      - mode: ingress
+        target: 80
+        published: "8080"
+        protocol: tcp
+      - mode: ingress
+        target: 443
+        published: "443"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+      - type: volume
+        source: appwrite-config
+        target: /storage/config
+        read_only: true
+        volume: {}
+      - type: volume
+        source: appwrite-certificates
+        target: /storage/certificates
+        read_only: true
+        volume: {}
+networks:
+  appwrite:
+    name: appwrite
+  gateway:
+    name: gateway
+  runtimes:
+    name: runtimes
+volumes:
+  appwrite-builds:
+    name: appwrite_appwrite-builds
+  appwrite-cache:
+    name: appwrite_appwrite-cache
+  appwrite-certificates:
+    name: appwrite_appwrite-certificates
+  appwrite-config:
+    name: appwrite_appwrite-config
+  appwrite-functions:
+    name: appwrite_appwrite-functions
+  appwrite-mariadb:
+    name: appwrite_appwrite-mariadb
+  appwrite-redis:
+    name: appwrite_appwrite-redis
+  appwrite-sites:
+    name: appwrite_appwrite-sites
+  appwrite-uploads:
+    name: appwrite_appwrite-uploads
