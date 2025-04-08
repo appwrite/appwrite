@@ -72,6 +72,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -90,6 +91,7 @@ class Builds extends Action
      * @param Device $deviceForSites
      * @param Device $deviceForFiles
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      */
@@ -108,7 +110,8 @@ class Builds extends Action
         Device $deviceForSites,
         callable $isResourceBlocked,
         Device $deviceForFiles,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -146,7 +149,8 @@ class Builds extends Action
                     $deployment,
                     $template,
                     $isResourceBlocked,
-                    $log
+                    $log,
+                    $executor
                 );
                 break;
 
@@ -172,6 +176,7 @@ class Builds extends Action
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      *
@@ -194,7 +199,8 @@ class Builds extends Action
         Document $deployment,
         Document $template,
         callable $isResourceBlocked,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -206,8 +212,6 @@ class Builds extends Action
             'sites' => $deviceForSites,
             'functions' => $deviceForFunctions,
         };
-
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $log->addTag($resourceKey, $resource->getId());
 

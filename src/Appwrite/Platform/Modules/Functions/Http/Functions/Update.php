@@ -103,6 +103,7 @@ class Update extends Base
             ->inject('queueForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -132,7 +133,8 @@ class Update extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         Database $dbForPlatform,
-        GitHub $github
+        GitHub $github,
+        Executor $executor
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -234,7 +236,6 @@ class Update extends Base
 
         // Enforce Cold Start if spec limits change.
         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
             } catch (\Throwable $th) {
