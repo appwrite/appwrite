@@ -2189,12 +2189,12 @@ class FunctionsCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+        $this->assertStringContainsString('This page is empty, but you can make it yours.', $response['body']);
 
         // failed deployment
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'Test PHP Cookie executions',
+            'name' => 'Test Error Pages',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'timeout' => 15,
@@ -2203,10 +2203,11 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient->setEndpoint('http://' . $domain);
 
         $deployment = $this->createDeployment($functionId, [
             'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-cookie'),
+            'code' => $this->packageFunction('php'),
             'activate' => true
         ]);
 
@@ -2218,12 +2219,12 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
 
         // canceled deployment
         $deployment = $this->createDeployment($functionId, [
             'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php-cookie'),
+            'code' => $this->packageFunction('php'),
             'activate' => true
         ]);
 
@@ -2240,7 +2241,38 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
+
+        $this->cleanupFunction($functionId);
+
+        // no execute permission
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'execute' => [],
+            'timeout' => 15,
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('user_unauthorized', $response['body']);
 
         $this->cleanupFunction($functionId);
     }
