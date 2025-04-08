@@ -74,7 +74,11 @@ class Audits extends Action
         Console::info('Aggregating audit logs');
 
         $event = $payload['event'] ?? '';
-        $auditPayload = $payload['payload'] ?? '';
+
+        $auditPayload = '';
+        if ($project->getId() === 'console') {
+            $auditPayload = $payload['payload'] ?? '';
+        }
         $mode = $payload['mode'] ?? '';
         $resource = $payload['resource'] ?? '';
         $userAgent = $payload['userAgent'] ?? '';
