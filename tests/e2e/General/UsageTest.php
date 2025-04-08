@@ -1064,7 +1064,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(22, count($response['body']));
+        $this->assertEquals(24, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -1089,7 +1089,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(31, count($response['body']));
+        $this->assertEquals(25, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
