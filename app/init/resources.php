@@ -50,6 +50,8 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 // Runtime Execution
 App::setResource('log', fn () => new Log());
@@ -464,7 +466,9 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('telemetry', fn () => new NoTelemetry());
+
+App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -472,12 +476,15 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
+    $cache = new Cache(new Sharding($adapters));
+
+    $cache->setTelemetry($telemetry);
+
+    return $cache;
+}, ['pools', 'telemetry']);
 
 App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
