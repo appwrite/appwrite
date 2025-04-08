@@ -273,7 +273,8 @@ class Executor
             'timeout' => $timeout
         ];
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
+        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
