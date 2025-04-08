@@ -93,6 +93,7 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -113,7 +114,8 @@ class Create extends Base
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
-        Reader $geodb
+        Reader $geodb,
+        Executor $executor
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -381,7 +383,6 @@ class Create extends Base
         ]);
 
         /** Execute function */
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];

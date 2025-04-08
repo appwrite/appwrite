@@ -26442,7 +26442,7 @@
         },
         "\/sites\/{siteId}\/deployments\/template": {
             "post": {
-                "summary": "Create deployment",
+                "summary": "Create template deployment",
                 "operationId": "sitesCreateTemplateDeployment",
                 "consumes": [
                     "application\/json"

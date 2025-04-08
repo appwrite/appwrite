@@ -17792,7 +17792,7 @@
         },
         "\/sites\/{siteId}\/deployments\/template": {
             "post": {
-                "summary": "Create deployment",
+                "summary": "Create template deployment",
                 "operationId": "sitesCreateTemplateDeployment",
                 "tags": [
                     "sites"

@@ -71,12 +71,18 @@ class Base extends Queries
             'array' => false,
         ]);
 
+        $internalId = new Document([
+            'key' => '$internalId',
+            'type' => Database::VAR_STRING,
+            'array' => false,
+        ]);
+
         $validators = [
             new Limit(),
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order($attributes),
+            new Order([...$attributes, $internalId]),
         ];
 
         parent::__construct($validators);
