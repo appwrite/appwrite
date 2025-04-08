@@ -48,10 +48,10 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
-use Utopia\Validator\Hostname;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Validator\Hostname;
+use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 // Runtime Execution
 App::setResource('log', fn () => new Log());
