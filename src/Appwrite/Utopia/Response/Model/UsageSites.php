@@ -8,6 +8,7 @@ class UsageSites extends UsageFunctions
 {
     public function __construct()
     {
+        parent::__construct();
         $this
             ->removeRule('functionsTotal')
             ->removeRule('functions')
