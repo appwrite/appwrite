@@ -11,7 +11,6 @@ services:
         depends_on:
             - redis
             - mariadb
-            - request-catcher
         environment:
             - _APP_ENV
             - _APP_WORKER_PER_CORE

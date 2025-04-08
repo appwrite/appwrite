@@ -10,8 +10,6 @@ services:
             - ../src:/usr/src/code/src
         depends_on:
             - redis
-            - maildev
-            # - smtp
         environment:
             - _APP_ENV
             - _APP_WORKER_PER_CORE
