@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -8,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -15,12 +17,15 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Storage\Device;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -88,7 +93,6 @@ App::post('/v1/migrations/appwrite')
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
-
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
@@ -288,6 +292,90 @@ App::post('/v1/migrations/nhost')
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/csv')
+    ->groups(['api', 'migrations'])
+    ->desc('Import documents from a CSV')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createCsvMigration',
+        description: '/docs/references/migrations/migration-csv.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('resourceId', null, new UID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('deviceForFiles')
+    ->inject('deviceForLocal')
+    ->inject('$queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Request $request, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Migration $queueForEvents, Migration $queueForMigrations) {
+
+        // TODO: Check if there's already a migrations worker process running for CSV Import for the same collection.
+        // If so, short-circuit and cancel the task early on because console may not allow it but API will.
+        // if (inProgress(resourceId)) {
+        //     throw some exception.
+        //}
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $path = $file->getAttribute('path', '');
+
+        if (!$deviceForFiles->exists($path)) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+        }
+
+        // TODO: send path migrations/csv worker
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            // TODO: add stuff to migration library
+            'source' => SourcesCSV::getName(),
+            'destination' => DestinationsCSV::getName(),
+            'resources' => [Resource::TYPE_DOCUMENT],
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => [],
+            'resourceData' => [],
+            'errors' => [],
+            'credentials' => [],
+        ]));
+
+        // TODO: use migrationId or importId?
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        // Trigger Import
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
+            ->trigger();
     });
 
 App::get('/v1/migrations')
