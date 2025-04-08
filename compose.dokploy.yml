@@ -1,3 +1,5 @@
+# created with `docker compose -f compose.yml config`
+
 name: appwrite
 services:
   appwrite:
