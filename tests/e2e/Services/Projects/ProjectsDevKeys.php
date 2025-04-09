@@ -145,7 +145,7 @@ trait ProjectsDevKeys
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Searching by attribute "name" requires a fulltext index.', $response['body']['message']);
+        $this->assertEquals('Invalid `queries` param: Invalid query: Attribute not found in schema: name', $response['body']['message']);
 
         return $data;
     }
