@@ -2434,7 +2434,7 @@ class SitesCustomServerTest extends Scope
         }, 100000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertStringContainsString('build_failed', $response['body']);
+        $this->assertStringContainsString('Deployment build failed', $response['body']);
 
         $this->cleanupSite($siteId);
     }
