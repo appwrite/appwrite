@@ -39,7 +39,7 @@ class Delete extends Action
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
+                        code: Response::STATUS_CODE_NOCONTENT,
                         model: Response::MODEL_NONE
                     )
                 ],
@@ -49,7 +49,7 @@ class Delete extends Action
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $keyId, $response, $dbForPlatform) => $this->action($projectId, $keyId, $response, $dbForPlatform));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)

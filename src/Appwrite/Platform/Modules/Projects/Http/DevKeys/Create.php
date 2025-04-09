@@ -55,7 +55,7 @@ class Create extends Action
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', false)
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $name, $expire, $response, $dbForPlatform) => $this->action($projectId, $name, $expire, $response, $dbForPlatform));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $projectId, string $name, ?string $expire, Response $response, Database $dbForPlatform)

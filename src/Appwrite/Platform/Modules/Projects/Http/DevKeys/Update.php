@@ -40,7 +40,7 @@ class Update extends Action
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
+                        code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_DEV_KEY
                     )
                 ],
@@ -52,7 +52,7 @@ class Update extends Action
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForPlatform) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForPlatform));
+            ->callback([$this, 'action']);
     }
     public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
     {

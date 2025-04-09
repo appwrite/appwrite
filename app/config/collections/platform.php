@@ -722,7 +722,7 @@ return [
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => 0,
                 'array' => false,
                 'filters' => [],

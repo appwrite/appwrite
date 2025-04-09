@@ -37,7 +37,7 @@ class DevKey extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Key name.',
                 'default' => '',
-                'example' => 'My API Key',
+                'example' => 'Dev API Key',
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,

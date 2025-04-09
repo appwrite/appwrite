@@ -40,7 +40,7 @@ class XList extends Action
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
+                        code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_DEV_KEY_LIST
                     )
                 ],
@@ -49,7 +49,7 @@ class XList extends Action
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $response, $dbForPlatform) => $this->action($projectId, $response, $dbForPlatform));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $projectId, Response $response, Database $dbForPlatform)
@@ -63,7 +63,7 @@ class XList extends Action
 
         $keys = $dbForPlatform->find('devKeys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
+            Query::limit(APP_LIMIT_DEV_KEYS),
         ]);
 
         $response->dynamic(new Document([

@@ -49,7 +49,7 @@ class Get extends Action
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback(fn ($projectId, $keyId, $response, $dbForPlatform) => $this->action($projectId, $keyId, $response, $dbForPlatform));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)
