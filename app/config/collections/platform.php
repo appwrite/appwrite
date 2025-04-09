@@ -356,7 +356,14 @@ return [
                 'attributes' => ['pingedAt'],
                 'lengths' => [],
                 'orders' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_teamInternalId'), // Todo: index move to Appwrite!
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['teamInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -573,6 +580,13 @@ return [
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_project_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId'],
+                'lengths' => [],
+                'orders' => [],
             ],
         ],
     ],
@@ -834,6 +848,13 @@ return [
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_project_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId'],
+                'lengths' => [],
+                'orders' => [],
             ]
         ],
     ],
