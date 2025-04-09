@@ -259,6 +259,63 @@ trait ProjectsDevKeys
     }
 
     /**
+     * @depends testCreateProjectDevKey
+     * @group devKeys
+     */
+    public function testCorsWithDevKey($data): void
+    {
+        $projectId = $data['projectId'] ?? '';
+
+        $id = $data['projectId'] ?? '';
+
+        /** Create a dev key */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $devKey = $response['body']['secret'];
+        $origin = 'http://example.com';
+
+        /**
+         * Test CORS without Dev Key (should fail due to origin)
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => $origin,
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+
+        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertNotEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin'] ?? null);
+
+
+        /**
+         * Test CORS with Dev Key (should bypass origin check)
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => $origin,
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-dev-key' => $devKey
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('*', $response['headers']['access-control-allow-origin'] ?? null);
+    }
+
+    /**
      * @depends testCreateProject
      * @group devKeys
      */
