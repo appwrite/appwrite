@@ -16,10 +16,9 @@ use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
-/** remove */
-/** /remove */
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -215,15 +214,18 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
 
-Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
-});
+Server::setResource('auditRetention', function (Document $project) {
+    if ($project->getId() === 'console') {
+        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+    }
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+}, ['project']);
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {
@@ -411,6 +413,8 @@ Server::setResource('logError', function (Registry $register, Document $project)
         Console::warning($error->getTraceAsString());
     };
 }, ['register', 'project']);
+
+Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

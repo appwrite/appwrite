@@ -615,7 +615,10 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                 $dbForProject->createDocument('memberships', $membership);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            if ($isPrivilegedUser || $isAppUser) {
+                Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            }
 
         } elseif ($membership->getAttribute('confirm') === false) {
             $membership->setAttribute('secret', Auth::hash($secret));
@@ -1031,7 +1034,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
@@ -1043,9 +1045,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -1065,6 +1068,21 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
+
+        if ($project->getId() === 'console') {
+            // Quick check: fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [Query::contains('roles', ['owner'])],
+                max: 2
+            );
+
+            // Prevent role change if there's only one owner left,
+            // the requester is that owner, and the new `$roles` no longer include 'owner'!
+            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+            }
+        }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
