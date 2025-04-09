@@ -8,74 +8,45 @@ $trace = $this->getParam('trace', []);
 $projectName = $this->getParam('projectName', '');
 $projectURL = $this->getParam('projectURL', '');
 $title = $this->getParam('title', 'Error'); 
+$exception = $this->getParam('exception', null);
 
 $knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found', 'deployment_not_found', 'build_canceled'];
 $label = '';
 $labelClass = '';
 $buttons = [];
 
+foreach ($exception->getCTAs() as $index => $cta) {
+    $class = ($index === 0) ? 'bordered-button' : 'button';
+
+    $buttons[] = [
+        'text' => $cta['label'],
+        'url' => $cta['url'],
+        'class' => $class
+    ];
+}
+
 switch ($type) {
     case 'build_not_ready':
         $label = 'Deployment is still building';
         $message = 'The page will update after the build completes.';
         $labelClass = 'warning';
-        $buttons = [
-            [
-                'text' => 'Reload',
-                'url' => '/',
-                'class' => 'bordered-button'
-            ],
-            [
-                'text' => 'View logs',
-                'url' => $projectURL,
-                'class' => 'button'
-            ],
-        ];
         break;
     case 'build_failed':
         $label = 'Deployment build failed';
         $message = 'An error occurred during the build process.';
         $labelClass = 'error';
-        $buttons = [
-            [
-                'text' => 'View logs',
-                'url' => '/',
-                'class' => 'bordered-button'
-            ],
-        ];
         break;
     case 'rule_not_found':
         $label = 'Nothing is here yet';
         $message = 'This page is empty, but you can make it yours.';
-        $buttons = [
-            [
-                'text' => 'Start with this domain',
-                'url' => '/',
-                'class' => 'bordered-button'
-            ],
-        ];
         break;
     case 'deployment_not_found':
         $label = 'No deployments available';
         $message = 'This page is empty, activate a deployment to make it live.';
-        $buttons = [
-            [
-                'text' => 'View deployments',
-                'url' => '/',
-                'class' => 'bordered-button'
-            ],
-        ];
         break;
     case 'build_canceled':
         $label = 'Deployment build canceled';
         $message = 'This build was canceled and won\'t be deployed.';
-        $buttons = [
-            [
-                'text' => 'View deployments',
-                'url' => '/',
-                'class' => 'bordered-button'
-            ],
-        ];
         break;
     default:
         $label = 'Error ' . $code;

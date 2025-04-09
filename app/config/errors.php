@@ -546,6 +546,11 @@ return [
         'description' => 'Function runtime could not be detected.',
         'code' => 400,
     ],
+    Exception::FUNCTION_EXECUTE_PERMISSION_DENIED => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_DENIED,
+        'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
+        'code' => 403,
+    ],
 
     /** Sites */
     Exception::SITE_NOT_FOUND => [
