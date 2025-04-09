@@ -9,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -61,10 +60,11 @@ class Delete extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForPlatform->findOne('devKeys', [
-            Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
+        $key = $dbForPlatform->getDocument('devKeys', $keyId);
+
+        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getInternalId()) {
+            throw new Exception(Exception::KEY_NOT_FOUND);
+        }
 
         if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
