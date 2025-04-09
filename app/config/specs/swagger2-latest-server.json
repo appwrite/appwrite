@@ -17308,7 +17308,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -17738,7 +17738,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
