@@ -152,8 +152,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         if ($deployment->isEmpty()) {
+            $resourceType = $rule->getAttribute('deploymentResourceType', '');
+            $resourceId = $rule->getAttribute('deploymentResourceId', '');
+            $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console'); // TODO: fix this URL
+            $exception->addCTA('View deployments', $url . '/console/project-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
             throw $exception;
         }
 
@@ -1459,7 +1462,8 @@ App::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
     ->action(function () {
-        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        $errorView = __DIR__ . '/../views/general/error.phtml';
+        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, view: $errorView);
     });
 
 foreach (Config::getParam('services', []) as $service) {

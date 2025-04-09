@@ -1655,7 +1655,7 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
 
         $site = $this->createSite([
             'siteId' => ID::unique(),
