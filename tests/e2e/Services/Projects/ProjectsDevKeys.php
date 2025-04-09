@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
 trait ProjectsDevKeys
@@ -193,6 +194,74 @@ trait ProjectsDevKeys
      * @depends testCreateProject
      * @group devKeys
      */
+    public function testNoHostValidationWithDevKey($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        /** Create a dev key */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $devKey = $response['body']['secret'];
+
+        /** Test oauth2 and get invalid `success` URL */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/google', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id
+        ], [
+            'success' => 'https://example.com',
+            'failure' => 'https://example.com'
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
+
+        /** Test oauth2 with devKey and now get oauth2 is disabled */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/google', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $devKey
+        ], [
+            'success' => 'https://example.com',
+            'failure' => 'https://example.com'
+        ]);
+        $this->assertEquals(412, $response['headers']['status-code']);
+        $this->assertEquals('This provider is disabled. Please enable the provider from your Appwrite console to continue.', $response['body']['message']);
+
+        /** Test hostname in Magic URL */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'user@appwrite.io',
+            'url' => 'https://example.com',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `url` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
+
+        /** Test hostname in Magic URL with devKey */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $devKey
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'user@appwrite.io',
+            'url' => 'https://example.com',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateProject
+     * @group devKeys
+     */
     public function testNoRateLimitWithDevKey($data): void
     {
         $id = $data['projectId'] ?? '';
@@ -295,7 +364,6 @@ trait ProjectsDevKeys
         ]);
         $this->assertEquals(429, $res['headers']['status-code']);
     }
-
 
     /**
      * @depends testCreateProjectDevKey
