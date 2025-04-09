@@ -1736,7 +1736,7 @@ class FunctionsCustomServerTest extends Scope
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(19, count($response['body']));
+            $this->assertEquals(2419, count($response['body']));
             $this->assertEquals('24h', $response['body']['range']);
             $this->assertEquals(1, $response['body']['executionsTotal']);
         }, 25000, 1000);
