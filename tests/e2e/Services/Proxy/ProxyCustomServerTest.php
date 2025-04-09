@@ -339,7 +339,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create + update
-        $domain = \uniqid() . '-cname-api.custom.localhost';
+        $domain = \uniqid() . '-cname-api.custom.com';
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
