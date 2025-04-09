@@ -20352,7 +20352,7 @@
                 ],
                 "description": "",
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Dev Keys List",
                         "content": {
                             "application\/json": {
@@ -20398,6 +20398,27 @@
                             "x-example": "<PROJECT_ID>"
                         },
                         "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit, offset and cursor",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -20560,7 +20581,7 @@
                 ],
                 "description": "",
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "DevKey",
                         "content": {
                             "application\/json": {
@@ -20652,8 +20673,8 @@
                 ],
                 "description": "",
                 "responses": {
-                    "201": {
-                        "description": "File"
+                    "204": {
+                        "description": "No content"
                     }
                 },
                 "x-appwrite": {
@@ -31497,13 +31518,13 @@
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Total number of keys documents that matched your query.",
+                        "description": "Total number of devKeys documents that matched your query.",
                         "x-example": 5,
                         "format": "int32"
                     },
-                    "keys": {
+                    "devKeys": {
                         "type": "array",
-                        "description": "List of keys.",
+                        "description": "List of devKeys.",
                         "items": {
                             "$ref": "#\/components\/schemas\/devKey"
                         },
@@ -31512,7 +31533,7 @@
                 },
                 "required": [
                     "total",
-                    "keys"
+                    "devKeys"
                 ]
             },
             "platformList": {
@@ -35626,7 +35647,7 @@
                     "name": {
                         "type": "string",
                         "description": "Key name.",
-                        "x-example": "My API Key"
+                        "x-example": "Dev API Key"
                     },
                     "expire": {
                         "type": "string",

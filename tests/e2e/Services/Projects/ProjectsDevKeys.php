@@ -119,6 +119,17 @@ trait ProjectsDevKeys
         $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals('Dev Key Test', $response['body']['devKeys'][0]['name']);
 
+        /** List dev keys with querying `expire` */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString()]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']); // No dev keys expired
+
         /**
          * Test for FAILURE
          */
