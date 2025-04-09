@@ -90,12 +90,39 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET',
-                'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
+                'description' => 'Deprecated since 1.7.0. A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
                 'filter' => 'domainTarget'
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_CNAME',
+                'description' => 'A domain that can be used as DNS CNAME record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => 'localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_AAAA',
+                'description' => 'An IPv6 that can be used as DNS AAAA record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => '::1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_A',
+                'description' => 'An IPV4 that can be used as DNS A record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => '127.0.0.1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',

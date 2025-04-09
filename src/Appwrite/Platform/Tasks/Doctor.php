@@ -15,6 +15,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Validator\IP;
 
 class Doctor extends Action
 {
@@ -43,19 +44,31 @@ class Doctor extends Action
         Console::log('[Settings]');
 
         $domain = new Domain(System::getEnv('_APP_DOMAIN'));
-
         if (!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 Hostname has no public suffix (' . $domain->get() . ')');
+            Console::log('🔴 Hostname is not valid (' . $domain->get() . ')');
         } else {
-            Console::log('🟢 Hostname has a public suffix (' . $domain->get() . ')');
+            Console::log('🟢 Hostname is valid (' . $domain->get() . ')');
         }
 
-        $domain = new Domain(System::getEnv('_APP_DOMAIN_TARGET'));
-
+        $domain = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         if (!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 CNAME target has no public suffix (' . $domain->get() . ')');
+            Console::log('🔴 CNAME record target is not valid (' . $domain->get() . ')');
         } else {
-            Console::log('🟢 CNAME target has a public suffix (' . $domain->get() . ')');
+            Console::log('🟢 CNAME record target is valid (' . $domain->get() . ')');
+        }
+
+        $ipv4 = new IP(IP::V4);
+        if (!$ipv4->isValid(System::getEnv('_APP_DOMAIN_TARGET_A'))) {
+            Console::log('🔴 A record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+        } else {
+            Console::log('🟢 A record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+        }
+
+        $ipv6 = new IP(IP::V6);
+        if (!$ipv6->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'))) {
+            Console::log('🔴 AAAA record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
+        } else {
+            Console::log('🟢 AAAA record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
         }
 
         if (System::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
