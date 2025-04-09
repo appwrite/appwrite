@@ -53,12 +53,13 @@ class Create extends Action
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', false)
+            ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $projectId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, string $name, ?string $expire, Document $user, Response $response, Database $dbForPlatform)
     {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -69,9 +70,9 @@ class Create extends Action
         $key = new Document([
             '$id' => ID::unique(),
             '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
