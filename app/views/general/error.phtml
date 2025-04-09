@@ -10,7 +10,7 @@ $projectURL = $this->getParam('projectURL', '');
 $title = $this->getParam('title', 'Error'); 
 $exception = $this->getParam('exception', null);
 
-$knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found', 'deployment_not_found', 'build_canceled'];
+$knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found', 'deployment_not_found', 'build_canceled', 'general_route_not_found'];
 $label = '';
 $labelClass = '';
 $buttons = [];
@@ -47,6 +47,10 @@ switch ($type) {
     case 'build_canceled':
         $label = 'Deployment build canceled';
         $message = 'This build was canceled and won\'t be deployed.';
+        break;
+    case 'general_route_not_found':
+        $label = 'Page not found';
+        $message = 'The page you\'re looking for doesn\'t exist.';
         break;
     default:
         $label = 'Error ' . $code;

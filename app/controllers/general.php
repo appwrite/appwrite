@@ -1463,7 +1463,11 @@ App::wildcard()
     ->label('scope', 'global')
     ->action(function () {
         $errorView = __DIR__ . '/../views/general/error.phtml';
-        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, view: $errorView);
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $url = $protocol . '://' . System::getEnv('_APP_DOMAIN', '');
+        $exception = new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, view: $errorView);
+        $exception->addCTA('Go to homepage', $url);
+        throw $exception;
     });
 
 foreach (Config::getParam('services', []) as $service) {
