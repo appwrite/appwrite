@@ -549,7 +549,7 @@ return [
     Exception::FUNCTION_EXECUTE_PERMISSION_DENIED => [
         'name' => Exception::FUNCTION_EXECUTE_PERMISSION_DENIED,
         'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
-        'code' => 403,
+        'code' => 401,
     ],
 
     /** Sites */
