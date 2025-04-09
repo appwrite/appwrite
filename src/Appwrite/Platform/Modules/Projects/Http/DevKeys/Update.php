@@ -70,7 +70,8 @@ class Update extends Action
 
         $key
             ->setAttribute('name', $name)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('expire', $expire)
+            ->setAttribute('search', implode('', [$name, $project->getId(), $key->getId()]));
 
         $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
 

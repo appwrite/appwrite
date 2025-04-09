@@ -782,6 +782,17 @@ return [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -795,6 +806,13 @@ return [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
             ],

@@ -67,8 +67,9 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        $devKeyId = ID::unique();
         $key = new Document([
-            '$id' => ID::unique(),
+            '$id' => $devKeyId,
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
@@ -79,6 +80,7 @@ class Create extends Action
             'name' => $name,
             'expire' => $expire,
             'sdks' => [],
+            'search' => implode('', [$name, $project->getId(), $devKeyId]),
             'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);

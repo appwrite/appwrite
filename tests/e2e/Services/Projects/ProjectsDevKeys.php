@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
+use Utopia\Database\Query;
 
 trait ProjectsDevKeys
 {
@@ -13,6 +14,9 @@ trait ProjectsDevKeys
      */
     public function testCreateProjectDevKey($data): array
     {
+        /**
+         * Test for SUCCESS
+         */
         $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
@@ -29,6 +33,26 @@ trait ProjectsDevKeys
         $this->assertNotEmpty($response['body']['secret']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
+
+        /** Create a second dev key */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Dev Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Dev Key Test', $response['body']['name']);
+        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
+
+        /**
+         * Test for FAILURE
+         */
 
         /** TEST expiry date is required */
         $res = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
@@ -55,6 +79,11 @@ trait ProjectsDevKeys
      */
     public function testListProjectDevKey($data): array
     {
+        /**
+         * Test for SUCCESS
+         */
+
+        /** List all dev keys */
         $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
@@ -62,9 +91,50 @@ trait ProjectsDevKeys
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        /** List dev keys with limit */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
+
+        /** List dev keys with search */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Dev'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals('Dev Key Test', $response['body']['devKeys'][0]['name']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        /** Test for search with invalid query */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::search('name', 'Invalid')->toString()
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `queries` param: Invalid query method: search', $response['body']['message']);
 
         return $data;
     }
@@ -76,6 +146,9 @@ trait ProjectsDevKeys
      */
     public function testGetProjectDevKey($data): array
     {
+        /**
+         * Test for SUCCESS
+         */
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
 
@@ -87,7 +160,7 @@ trait ProjectsDevKeys
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($keyId, $response['body']['$id']);
-        $this->assertEquals('Key Test', $response['body']['name']);
+        $this->assertEquals('Dev Key Test', $response['body']['name']);
         $this->assertNotEmpty($response['body']['secret']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);

@@ -10,10 +10,16 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
 class XList extends Action
 {
@@ -47,12 +53,14 @@ class XList extends Action
                 contentType: ContentType::JSON
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
+            ->param('queries', [], new Queries([new Limit(), new Offset(), new Cursor()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset and cursor', true)
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $projectId, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, ?array $queries, ?string $search, Response $response, Database $dbForPlatform)
     {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -61,13 +69,22 @@ class XList extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForPlatform->find('devKeys', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(APP_LIMIT_DEV_KEYS),
-        ]);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+
+        $keys = $dbForPlatform->find('devKeys', $queries);
 
         $response->dynamic(new Document([
-            'keys' => $keys,
+            'devKeys' => $keys,
             'total' => count($keys),
         ]), Response::MODEL_DEV_KEY_LIST);
     }
