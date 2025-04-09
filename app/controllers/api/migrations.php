@@ -4,12 +4,12 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -22,10 +22,16 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\Csv;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Transfer;
+use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
+use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -314,27 +320,37 @@ App::post('/v1/migrations/csv')
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
-    ->param('resourceId', null, new UID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
-    ->inject('request')
+    ->param('resourceId', null, new Text(75), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('deviceForFiles')
-    ->inject('deviceForLocal')
-    ->inject('$queueForEvents')
+    ->inject('deviceForCsvImports')
+    ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, Request $request, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Migration $queueForEvents, Migration $queueForMigrations) {
-
-        // TODO: Check if there's already a migrations worker process running for CSV Import for the same collection.
-        // If so, short-circuit and cancel the task early on because console may not allow it but API will.
-        // if (inProgress(resourceId)) {
-        //     throw some exception.
-        //}
-
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForCsvImports, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        // Check if migration/import is already in progress!
+        // if for some reason the worker crashes, the stage will always be `init`, what do we do?
+        $isInProgress = Authorization::skip(function () use ($dbForProject, $resourceId) {
+            $exists = $dbForProject->findOne(
+                'migrations',
+                [
+                    Query::notEqual('stage', 'finished'),
+                    Query::equal('resourceId', [$resourceId]),
+                ]
+            );
+
+            return !$exists->isEmpty();
+        });
+
+        if ($isInProgress || (!$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'An import is already in progress for this collection.');
+        }
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -346,36 +362,72 @@ App::post('/v1/migrations/csv')
         }
 
         $path = $file->getAttribute('path', '');
-
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        // TODO: send path migrations/csv worker
+        // read file content.
+        $source = $deviceForFiles->read($path);
+
+        // decrypt
+        if (!empty($file->getAttribute('openSSLCipher'))) {
+            $source = OpenSSL::decrypt(
+                $source,
+                $file->getAttribute('openSSLCipher'),
+                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                0,
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
+            );
+        }
+
+        // decompress
+        switch ($file->getAttribute('algorithm', Compression::NONE)) {
+            case Compression::ZSTD:
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case Compression::GZIP:
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
+        }
+
+        // copy to temporary folder
+        $migrationId = ID::unique();
+        $path = $deviceForCsvImports->getRoot() . '/' . $migrationId . '_' . $fileId . '.csv';
+        $deviceForCsvImports->write($path, $source, 'text/csv');
+        $fileSize = $deviceForCsvImports->getFileSize($path);
+        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => $migrationId,
             'status' => 'pending',
             'stage' => 'init',
-            // TODO: add stuff to migration library
-            'source' => SourcesCSV::getName(),
-            'destination' => DestinationsCSV::getName(),
-            'resources' => [Resource::TYPE_DOCUMENT],
+            'source' => Csv::getName(),
+            'destination' => Appwrite::class::getName(),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => [],
             'resourceData' => [],
             'errors' => [],
-            'credentials' => [],
+            'credentials' => [
+                'path' => $path,
+                'size' => $fileSize,
+            ],
         ]));
 
-        // TODO: use migrationId or importId?
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        // Trigger Import
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
 App::get('/v1/migrations')

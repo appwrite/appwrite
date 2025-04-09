@@ -4,10 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
+use Appwrite\ID;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
@@ -18,12 +20,14 @@ use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Sources\Csv;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 
 class Migrations extends Action
@@ -31,6 +35,8 @@ class Migrations extends Action
     protected Database $dbForProject;
 
     protected Database $dbForPlatform;
+
+    protected Device $deviceForCsvImports;
 
     protected Document $project;
 
@@ -57,15 +63,17 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForRealtime')
-            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime));
+            ->inject('deviceForCsvImports')
+            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForCsvImports) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime, $deviceForCsvImports));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForCsvImports): void
     {
         $payload = $message->getPayload() ?? [];
+        $this->deviceForCsvImports = $deviceForCsvImports;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -99,6 +107,7 @@ class Migrations extends Action
     protected function processSource(Document $migration): Source
     {
         $source = $migration->getAttribute('source');
+        $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
 
         return match ($source) {
@@ -127,6 +136,11 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+            ),
+            Csv::getName() => new Csv(
+                $resourceId,
+                $credentials['path'],
+                $this->deviceForCsvImports
             ),
             default => throw new \Exception('Invalid source type'),
         };
@@ -222,7 +236,22 @@ class Migrations extends Action
         $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
+        $importDocument = null;
         $transfer = $source = $destination = null;
+
+        if ($migration->getAttribute('source') === Csv::getName()) {
+            $fileSize = $migration->getAttribute('credentials', [])['size'] ?? 0;
+            $importDocument = new Document([
+                '$id' => ID::unique(),
+                'size' => $fileSize, // uncompressed and decrypted file size
+                'startedAt' => DateTime::now(),
+                'migrationId' => $migration->getId(),
+                'migrationInternalId' => $migration->getInternalId(),
+                'resourceId' => $migration->getAttribute('resourceId', ''),
+                'resourceType' => $migration->getAttribute('resourceType', ''),
+                'errors' => [],
+            ]);
+        }
 
         try {
             if (
@@ -337,6 +366,7 @@ class Migrations extends Action
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
+                $importDocument?->setAttribute('errors', $errorMessages);
             }
         } finally {
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
@@ -378,6 +408,12 @@ class Migrations extends Action
             if ($migration->getAttribute('status', '') === 'completed') {
                 $destination?->success();
                 $source?->success();
+            }
+
+            if ($migration->getAttribute('source') === Csv::getName()) {
+                // make and save the import document to database
+                $importDocument->setAttribute('status', $migration->getAttribute('status', ''));
+                $this->dbForProject->createDocument('imports', $importDocument);
             }
         }
     }
