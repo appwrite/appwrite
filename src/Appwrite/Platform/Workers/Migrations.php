@@ -140,7 +140,8 @@ class Migrations extends Action
             Csv::getName() => new Csv(
                 $resourceId,
                 $credentials['path'],
-                $this->deviceForCsvImports
+                $this->deviceForCsvImports,
+                $this->dbForProject
             ),
             default => throw new \Exception('Invalid source type'),
         };
