@@ -53,8 +53,10 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRuleApex(): void
     {
-        $rule = $this->createAPIRule('myapp.com');
-        $this->assertEquals(400, $rule['headers']['status-code']);
+        $domain = \uniqid() . '.com';
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
     }
 
     public function testCreateRuleVcs(): void
