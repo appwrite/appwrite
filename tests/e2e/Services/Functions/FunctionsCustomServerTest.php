@@ -2272,7 +2272,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertStringContainsString('user_unauthorized', $response['body']);
+        $this->assertStringContainsString('function_execute_permission_denied', $response['body']);
 
         $this->cleanupFunction($functionId);
     }
