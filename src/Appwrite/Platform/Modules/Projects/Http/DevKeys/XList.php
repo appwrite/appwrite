@@ -12,15 +12,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
-
+use Appwrite\Utopia\Database\Validator\Queries\DevKeys;
 class XList extends Action
 {
     use HTTP;
@@ -53,7 +49,7 @@ class XList extends Action
                 contentType: ContentType::JSON
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('queries', [], new Queries([new Limit(), new Offset(), new Cursor()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset and cursor', true)
+            ->param('queries', [], new DevKeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset and cursor', true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')

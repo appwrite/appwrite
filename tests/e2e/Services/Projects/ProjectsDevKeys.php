@@ -134,7 +134,7 @@ trait ProjectsDevKeys
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `queries` param: Invalid query method: search', $response['body']['message']);
+        $this->assertEquals('Searching by attribute "name" requires a fulltext index.', $response['body']['message']);
 
         return $data;
     }
