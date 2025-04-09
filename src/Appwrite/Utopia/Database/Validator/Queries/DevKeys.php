@@ -5,9 +5,8 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class DevKeys extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'name',
         'accessedAt',
-        'expire'
+        'expire',
     ];
 
     /**
