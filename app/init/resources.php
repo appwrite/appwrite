@@ -19,8 +19,8 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
-use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
+use Appwrite\Network\Client;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
@@ -30,7 +30,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -116,57 +115,43 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('clients', function ($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => ID::custom('platforms'),
-        'name' => 'Current Host',
-        'type' => Origin::CLIENT_TYPE_WEB,
-        'hostname' => $request->getHostname(),
-    ], Document::SET_TYPE_APPEND);
 
+App::setResource('hostnames', function (Request $request, Document $console, Document $project) {
+    // Database configured platforms
+    $platforms = [
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', [])
+    ];
+    $platforms = array_filter($platforms, fn ($platform) => in_array($platform['type'], [
+        Client::TYPE_WEB,
+        Client::TYPE_FLUTTER_WEB,
+    ]));
+    $platforms = array_filter($platforms, fn ($platform) => !empty($platform['hostname']));
+
+    // Environment variable configured hostnames
     $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $hostnames = array_map(fn ($hostname) => trim($hostname), $hostnames);
     $validator = new Hostname();
-    foreach ($hostnames as $hostname) {
-        $hostname = trim($hostname);
-        if (!$validator->isValid($hostname)) {
-            continue;
-        }
-        $console->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Origin::CLIENT_TYPE_WEB,
-            'name' => $hostname,
-            'hostname' => $hostname,
-        ], Document::SET_TYPE_APPEND);
+    $hostnames = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
+
+    // Combine request hostname, environment hostnames, and platforms
+    return \array_unique([
+        $request->getHostname(),
+        ...array_map(fn ($node) => $node['hostname'], $platforms),
+        ...$hostnames
+    ]);
+}, ['request','console', 'project']);
+
+App::setResource('schemes', function (Document $project) {
+    // `exp` is allowed for all hostnames, for expo development
+    $schemes = ['exp'];
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $schemes[] = 'appwrite-callback-' . $project->getId();
     }
 
-    /**
-     * Get All verified client URLs for both console and current projects
-     * + Filter for duplicated entries
-     */
-    $clientsConsole = \array_map(
-        fn ($node) => $node['hostname'],
-        \array_filter(
-            $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
-        )
-    );
-
-    $clients = $clientsConsole;
-    $platforms = $project->getAttribute('platforms', []);
-
-    foreach ($platforms as $node) {
-        if (
-            isset($node['type']) &&
-            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
-        ) {
-            $clients[] = $node['hostname'];
-        }
-    }
-
-    return \array_unique($clients);
-}, ['request', 'console', 'project']);
+    return $schemes;
+}, ['project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
