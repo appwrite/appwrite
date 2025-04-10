@@ -534,7 +534,7 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
-                $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
+                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {

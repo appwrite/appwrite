@@ -54,8 +54,6 @@ class Webhooks extends Action
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
 
-
-
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
