@@ -555,6 +555,35 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', $executionResponse['duration']);
+            if ($executionResponse['statusCode'] >= 500) { //TODO: if body is empty
+                $errorView = __DIR__ . '/../views/general/error.phtml';
+                $layout = new View($errorView);
+                $layout
+                    ->setParam('title', $project->getAttribute('name') . ' - Error')
+                    ->setParam('development', App::isDevelopment())
+                    ->setParam('message', empty($executionResponse['body']) ? 'A server error occurred.' : $executionResponse['body'])
+                    ->setParam('type', 'general_server_error')
+                    ->setParam('code', $executionResponse['statusCode'])
+                    ->setParam('trace', [])
+                    ->setParam('exception', null);
+
+                $response->html($layout->render());
+                return;
+            } elseif ($executionResponse['statusCode'] >= 400) {
+                $errorView = __DIR__ . '/../views/general/error.phtml';
+                $layout = new View($errorView);
+                $layout
+                    ->setParam('title', $project->getAttribute('name') . ' - Error')
+                    ->setParam('development', App::isDevelopment())
+                    ->setParam('message', empty($executionResponse['body']) ? 'A client error occurred.' : $executionResponse['body'])
+                    ->setParam('type', 'client_error')
+                    ->setParam('code', $executionResponse['statusCode'])
+                    ->setParam('trace', [])
+                    ->setParam('exception', null);
+
+                $response->html($layout->render());
+                return;
+            }
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 

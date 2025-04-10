@@ -15,13 +15,24 @@ $label = '';
 $labelClass = '';
 $buttons = [];
 
-foreach ($exception->getCTAs() as $index => $cta) {
-    $class = ($index === 0) ? 'bordered-button' : 'button';
+if($exception !== null && $exception instanceof AppwriteException) {
+    foreach ($exception->getCTAs() as $index => $cta) {
+        $class = ($index === 0) ? 'bordered-button' : 'button';
+    
+        $buttons[] = [
+            'text' => $cta['label'],
+            'url' => $cta['url'],
+            'class' => $class
+        ];
+    }
+}
 
+if ($development && !empty($buttons)) {
     $buttons[] = [
-        'text' => $cta['label'],
-        'url' => $cta['url'],
-        'class' => $class
+        'text' => 'View error trace',
+        'url' => '#',
+        'class' => 'button',
+        'x-on:click' => "page = 'trace'"
     ];
 }
 
@@ -65,6 +76,7 @@ switch ($type) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link
         rel="preload"
         href="/fonts/inter/inter-v8-latin-600.woff2"
@@ -231,6 +243,85 @@ switch ($type) {
             letter-spacing: 0px;
         }
 
+        .error-trace {
+            max-width: 800px;
+            padding: 20px;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+        }
+
+        .back-button {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 500;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+        }
+
+        .back-button:before {
+            content: "<";
+            font-size: 16px;
+        }
+
+        .trace-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            background: var(--color-bgColor-neutral-secondary, #FFFFFF);
+            padding: 10px 12px;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #EDEDF0);
+        }
+
+        .trace-grid-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--color-bgColor-neutral-secondary, #FAFAFB);
+            border-radius: 8px 8px 0 0;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #EDEDF0);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .trace-label {
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .trace-value {
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: 0px;
+        }
+
+        .trace-args {
+            /* grid-column: 1 / -1; */
+            padding: 10px 12px;
+            /* white-space: pre-wrap; */
+            overflow-x: auto;
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
         @media (max-width: 768px) {
             .content {
                 margin-left: 16px;
@@ -298,16 +389,19 @@ switch ($type) {
     </style>
 </head>
 
-<body>
+<body x-data="{ page: 'error' }">
     <div class="main">
-        <div class="content<?php echo !in_array($type, $knownTypes) ? ' default-error' : ''; ?>">
+        <div x-show="page === 'error'" class="content<?php echo !in_array($type, $knownTypes) ? ' default-error' : ''; ?>">
             <div class="center"><span class=<?php echo $this->print($labelClass); ?>><?php echo $this->print($label); ?></span></div>
             <h1><?php echo $this->print($message); ?></h1>
             <div class="center">
                 <?php if (!empty($buttons)): ?>
                     <?php foreach ($buttons as $button): ?>
                         <a href="<?php echo htmlspecialchars($button['url']); ?>">
-                            <button class="<?php echo htmlspecialchars($button['class']); ?>">
+                            <button class="<?php echo htmlspecialchars($button['class']); ?>"
+                                <?php if (isset($button['x-on:click'])): ?>
+                                    x-on:click="<?php echo htmlspecialchars($button['x-on:click']); ?>"
+                                <?php endif; ?>>
                                 <?php echo htmlspecialchars($button['text']); ?>
                             </button>
                         </a>
@@ -317,6 +411,39 @@ switch ($type) {
                     <span class='type'><?php echo $this->print($type); ?></span>
                 <?php endif; ?>
             </div>
+            <?php if ($development && empty($buttons)) : ?>
+                <div class="center" style="margin-top: 20px;">
+                    <button class="bordered-button" x-on:click="page = 'trace'">View error trace</button>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div x-show="page === 'trace'" class="error-trace">
+            <button class="back-button" x-on:click="page = 'error'">Back</button>
+            <div class="trace-grid-header">Error trace</div>
+            <?php foreach ($trace as $index => $traceItem): ?>
+                <div class="trace-grid">
+                    <?php if (isset($traceItem['file'])): ?>
+                        <div class="trace-label">file</div>
+                        <div class="trace-value"><?php echo $this->print($traceItem['file']); ?></div>
+                    <?php endif; ?>
+
+                    <?php if (isset($traceItem['line'])): ?>
+                        <div class="trace-label">line</div>
+                        <div class="trace-value"><?php echo $this->print($traceItem['line']); ?></div>
+                    <?php endif; ?>
+
+                    <?php if (isset($traceItem['function'])): ?>
+                        <div class="trace-label">function</div>
+                        <div class="trace-value"><?php echo $this->print($traceItem['function']); ?></div>
+                    <?php endif; ?>
+
+                    <?php if (isset($traceItem['args'])): ?>
+                        <div class="trace-label">args</div>
+                        <div class="trace-args"><?php echo $this->print(json_encode($traceItem['args'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)); ?></div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
 
