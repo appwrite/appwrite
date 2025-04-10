@@ -47,18 +47,22 @@ class Maintenance extends Action
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            $dbForPlatform->foreach('projects', [
+            $dbForPlatform->foreach(
+                'projects',
+                [
                     Query::equal('region', System::getEnv('_APP_REGION', 'default'))
                 ],
                 function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_MAINTENANCE)
-                    ->setProject($project)
-                    ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                    ->trigger();
-            }, [
-                Query::limit(100),
-            ]);
+                    $queueForDeletes
+                        ->setType(DELETE_TYPE_MAINTENANCE)
+                        ->setProject($project)
+                        ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                        ->trigger();
+                },
+                [
+                    Query::limit(100),
+                ]
+            );
 
             $queueForDeletes
                 ->setType(DELETE_TYPE_MAINTENANCE)

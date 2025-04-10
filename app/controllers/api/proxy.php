@@ -62,13 +62,13 @@ App::post('/v1/proxy/rules')
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
-        $denyListString = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST');
+        $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST');
 
-        if (!empty($functionsDomain)) {
-            $denyListString .= ',' . $functionsDomain;
+        if (!empty($denyListDomains)) {
+            $functionsDomain .= ',' . $denyListDomains;
         }
 
-        $deniedDomains = array_map('trim', explode(',', $denyListString));
+        $deniedDomains = array_map('trim', explode(',', $functionsDomain));
 
         foreach ($deniedDomains as $deniedDomain) {
             if (str_ends_with($domain, $deniedDomain)) {
