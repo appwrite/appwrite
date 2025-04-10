@@ -9,6 +9,7 @@ use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Executor\Executor;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -25,7 +26,7 @@ use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-// overwriting runtimes to be architectur agnostic for CLI
+// Overwriting runtimes to be architecture agnostic for CLI
 Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes
@@ -43,8 +44,7 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -187,7 +187,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
@@ -255,6 +255,8 @@ CLI::setResource('logError', function (Registry $register) {
         Console::warning($error->getTraceAsString());
     };
 }, ['register']);
+
+CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $platform = new Appwrite();
 $platform->init(Service::TYPE_TASK);

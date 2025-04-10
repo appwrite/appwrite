@@ -47,13 +47,15 @@ class Maintenance extends Action
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            $this->foreachProject($dbForPlatform, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+            $dbForPlatform->foreach('projects', function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes
                     ->setType(DELETE_TYPE_MAINTENANCE)
                     ->setProject($project)
                     ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                     ->trigger();
-            });
+            }, [
+                Query::limit(100),
+            ]);
 
             $queueForDeletes
                 ->setType(DELETE_TYPE_MAINTENANCE)
@@ -66,33 +68,6 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval, $delay);
-    }
-
-    protected function foreachProject(Database $dbForPlatform, callable $callback): void
-    {
-        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
-        $executionStart = \microtime(true);
-
-        while ($sum === $limit) {
-            $projects = $dbForPlatform->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
-
-            $chunk++;
-
-            /** @var string[] $projectIds */
-            $sum = count($projects);
-
-            foreach ($projects as $project) {
-                $callback($project);
-                $count++;
-            }
-        }
-
-        $executionEnd = \microtime(true);
-        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void

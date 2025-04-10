@@ -27,6 +27,7 @@ $console = [
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],
+    'region' => 'fra',
     'legalName' => '',
     'legalCountry' => '',
     'legalState' => '',
