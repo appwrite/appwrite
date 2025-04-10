@@ -563,8 +563,7 @@ App::get('/v1/databases')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {

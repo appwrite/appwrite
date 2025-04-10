@@ -61,7 +61,13 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
 
-        $denyListString = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $denyListString = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST');
+
+        if (!empty($functionsDomain)) {
+            $denyListString .= ',' . $functionsDomain;
+        }
+
         $deniedDomains = array_map('trim', explode(',', $denyListString));
 
         foreach ($deniedDomains as $deniedDomain) {
