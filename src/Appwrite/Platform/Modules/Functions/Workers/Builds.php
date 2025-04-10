@@ -565,6 +565,10 @@ class Builds extends Action
             // Some runtimes/frameworks can't compile with less memory than this
             $minMemory = $resource->getCollection() === 'sites' ? 2048 : 1024;
 
+            if ($resource->getAttribute('framework', '') === 'analog') {
+                $minMemory = 4096;
+            }
+
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
