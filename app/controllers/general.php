@@ -719,7 +719,7 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin($hostnames);
+        $originValidator = new Origin($clients);
 
         if (
             !empty($origin)
