@@ -2,9 +2,9 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator\Host;
-use Utopia\Database\Document;
 use Appwrite\Network\Client;
+use Utopia\Database\Document;
+use Utopia\Validator\Host;
 
 /**
  * Origin
@@ -33,17 +33,17 @@ class Origin extends Host
     {
         $platforms = array_filter(
             $this->platforms,
-            fn($platform) => in_array($platform["type"], [
+            fn ($platform) => in_array($platform["type"], [
                 Client::TYPE_WEB,
                 Client::TYPE_FLUTTER_WEB,
             ])
         );
         $platforms = array_filter(
             $platforms,
-            fn($platform) => !empty($platform["hostname"])
+            fn ($platform) => !empty($platform["hostname"])
         );
         $hostnames = array_map(
-            fn($platform) => $platform["hostname"],
+            fn ($platform) => $platform["hostname"],
             $platforms
         );
 
@@ -54,15 +54,15 @@ class Origin extends Host
     {
         $platforms = array_filter(
             $this->platforms,
-            fn($platform) => in_array($platform["type"], [
+            fn ($platform) => in_array($platform["type"], [
                 Client::TYPE_CUSTOM_SCHEME,
             ])
         );
         $platforms = array_filter(
             $platforms,
-            fn($platform) => !empty($platform["key"])
+            fn ($platform) => !empty($platform["key"])
         );
-        $schemes = array_map(fn($platform) => $platform["key"], $platforms);
+        $schemes = array_map(fn ($platform) => $platform["key"], $platforms);
 
         return array_unique($schemes);
     }
@@ -74,17 +74,17 @@ class Origin extends Host
      *
      * @return string
      */
-     public function getDescription(): string
-     {
-         $parsed = $this->parseUrl($this->origin);
-         $platform = !empty($parsed["scheme"]) ? Client::getName($parsed["scheme"]) : "";
+    public function getDescription(): string
+    {
+        $parsed = $this->parseUrl($this->origin);
+        $platform = !empty($parsed["scheme"]) ? Client::getName($parsed["scheme"]) : "";
 
-         if (empty($this->origin) || empty($parsed["scheme"]) || empty($platform)) {
-             return "Unsupported platform";
-         }
+        if (empty($this->origin) || empty($parsed["scheme"]) || empty($platform)) {
+            return "Unsupported platform";
+        }
 
-         return "Invalid Origin. Register your new client ({$this->origin}) as a new {$platform} platform on your project console dashboard";
-     }
+        return "Invalid Origin. Register your new client ({$this->origin}) as a new {$platform} platform on your project console dashboard";
+    }
 
     /**
      * Is valid

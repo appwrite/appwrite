@@ -20,8 +20,8 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\ID;
-use Appwrite\Utopia\Request;
 use Appwrite\Network\Client;
+use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
@@ -120,10 +120,10 @@ App::setResource('queueForMigrations', function (Publisher $publisher) {
 App::setResource('clients', function (Request $request, Document $console, Document $project) {
     // Always allow current host
     $console->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'name' => 'Current Host',
-            'type' => Client::TYPE_WEB,
-            'hostname' => $request->getHostname(),
+        '$collection' => ID::custom('platforms'),
+        'name' => 'Current Host',
+        'type' => Client::TYPE_WEB,
+        'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
     // Environment variable configured hostnames
@@ -159,10 +159,10 @@ App::setResource('clients', function (Request $request, Document $console, Docum
     }
 
     // Database configured platforms
-    return array_unique([
+    return [
         ...$console->getAttribute('platforms', []),
         ...$project->getAttribute('platforms', [])
-    ]);
+    ];
 }, ['request','console', 'project']);
 
 App::setResource('schemes', function (Document $project) {
