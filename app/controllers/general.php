@@ -627,11 +627,22 @@ App::init()
         $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
+        Console::log('Referer: ' . $referrer);
+        Console::log('Origin: ' . $origin);
+        Console::log('Protocol: ' . $protocol);
+        Console::log('Port: ' . $port);
+
+
         $refDomainOrigin = 'localhost';
         $validator = new Origin($clients);
-        if ($validator->isValid($origin)) {
+
+        $result = $validator->isValid($origin);
+        if ($result) {
             $refDomainOrigin = $origin;
         }
+
+        Console::log('isValid: ' . $result);
+        Console::log('RefDomainOrigin: ' . $refDomainOrigin);
 
         $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
 

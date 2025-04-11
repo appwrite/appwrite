@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Client;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Validator\Host;
 
@@ -13,12 +14,12 @@ use Utopia\Validator\Host;
  *
  * @package Utopia\Validator
  */
-class Origin extends Host
+class Redirect extends Origin
 {
     /** @var array<Document> */
     protected array $platforms = [];
 
-    private string $origin = '';
+    private string $redirect = '';
 
     /**
      * @param array<Document>|null $platforms
@@ -26,28 +27,24 @@ class Origin extends Host
     public function __construct(?array $platforms = [])
     {
         $this->platforms = $platforms ?? [];
-        parent::__construct($this->getHostnames());
+        parent::__construct($platforms);
     }
 
-    private function getHostnames(): array
+    private function getSchemes(): array
     {
         $platforms = array_filter(
             $this->platforms,
             fn ($platform) => in_array($platform['type'], [
-                Client::TYPE_WEB,
-                Client::TYPE_FLUTTER_WEB,
+                Client::TYPE_CUSTOM_SCHEME,
             ])
         );
         $platforms = array_filter(
             $platforms,
-            fn ($platform) => !empty($platform['hostname'])
+            fn ($platform) => !empty($platform['key'])
         );
-        $hostnames = array_map(
-            fn ($platform) => $platform['hostname'],
-            $platforms
-        );
+        $schemes = array_map(fn ($platform) => $platform['key'], $platforms);
 
-        return array_unique($hostnames);
+        return array_unique($schemes);
     }
 
     /**
@@ -59,14 +56,14 @@ class Origin extends Host
      */
     public function getDescription(): string
     {
-        $parsed = $this->parseUrl($this->origin);
+        $parsed = $this->parseUrl($this->redirect);
         $platform = !empty($parsed['scheme']) ? Client::getName($parsed['scheme']) : '';
 
-        if (empty($this->origin) || empty($parsed['scheme']) || empty($platform)) {
+        if (empty($this->redirect) || empty($parsed['scheme']) || empty($platform)) {
             return 'Unsupported platform';
         }
 
-        return "Invalid Origin. Register your new client ({$this->origin}) as a new {$platform} platform on your project console dashboard";
+        return "Invalid URI. Register your new client ({$this->redirect}) as a new {$platform} platform on your project console dashboard";
     }
 
     /**
@@ -79,39 +76,31 @@ class Origin extends Host
      */
     public function isValid($value): bool
     {
-        $this->origin = $value ?? '';
+        $this->redirect = $value ?? '';
         if (empty($value)) {
+            Console::log('False because origin is empty.');
             return false;
         }
-        $parsed = $this->parseUrl($value);
 
-        if (!in_array($parsed['scheme'], ['http', 'https'])) {
+        $parsed = $this->parseUrl($value);
+        if (empty($parsed['scheme'])) {
             return false;
         }
 
         if (
-            empty($parsed['host']) ||
-            !\in_array($parsed['host'], $this->getHostnames())
+            !empty($parsed['scheme']) &&
+            \in_array($parsed['scheme'], $this->getSchemes())
         ) {
+            Console::log('True because scheme present and in allow list.');
+            return true;
+        }
 
+        if (!in_array($parsed['scheme'], ['http', 'https'])) {
+            Console::log('False because scheme is not valid or http(s).');
             return false;
         }
 
         return parent::isValid($value);
-    }
-
-    protected function parseUrl($value): array
-    {
-        $parsed = \parse_url($value);
-        $matches = [];
-
-        $parsed['scheme'] =
-            $parsed['scheme'] ??
-            (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches)
-                ? $matches[1]
-                : null);
-
-        return $parsed;
     }
 
     /**
