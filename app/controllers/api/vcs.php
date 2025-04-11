@@ -288,8 +288,8 @@ App::get('/v1/vcs/github/authorize')
         type: MethodType::WEBAUTH,
         hide: true,
     ))
-    ->param('success', '', fn ($clients) => new Origin($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['hostnames'])
-    ->param('failure', '', fn ($clients) => new Origin($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['hostnames'])
+    ->param('success', '', fn ($clients) => new Origin($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Origin($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
