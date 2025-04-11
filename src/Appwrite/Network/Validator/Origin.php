@@ -3,6 +3,8 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator\Host;
+use Utopia\Database\Document;
+use Appwrite\Network\Client;
 
 /**
  * Origin
@@ -13,19 +15,56 @@ use Utopia\Validator\Host;
  */
 class Origin extends Host
 {
-    protected $hostnames = [];
-    protected $schemes = [];
+    /** @var array<Document> */
+    protected array $platforms = [];
+
+    private string $origin = "";
 
     /**
-     * @param array $hostnames
-     * @param array $schemes
+     * @param array<Document> $platforms
      */
-    public function __construct(array $hostnames = [], array $schemes = [])
+    public function __construct(array $platforms)
     {
-        $this->hostnames = $hostnames;
-        $this->schemes = $schemes;
+        $this->platforms = $platforms;
+        parent::__construct($this->getHostnames());
+    }
 
-        parent::__construct($hostnames);
+    private function getHostnames(): array
+    {
+        $platforms = array_filter(
+            $this->platforms,
+            fn($platform) => in_array($platform["type"], [
+                Client::TYPE_WEB,
+                Client::TYPE_FLUTTER_WEB,
+            ])
+        );
+        $platforms = array_filter(
+            $platforms,
+            fn($platform) => !empty($platform["hostname"])
+        );
+        $hostnames = array_map(
+            fn($platform) => $platform["hostname"],
+            $platforms
+        );
+
+        return array_unique($hostnames);
+    }
+
+    private function getSchemes(): array
+    {
+        $platforms = array_filter(
+            $this->platforms,
+            fn($platform) => in_array($platform["type"], [
+                Client::TYPE_CUSTOM_SCHEME,
+            ])
+        );
+        $platforms = array_filter(
+            $platforms,
+            fn($platform) => !empty($platform["key"])
+        );
+        $schemes = array_map(fn($platform) => $platform["key"], $platforms);
+
+        return array_unique($schemes);
     }
 
     /**
@@ -35,22 +74,17 @@ class Origin extends Host
      *
      * @return string
      */
-    public function getDescription(): string
-    {
-        $messages = [];
+     public function getDescription(): string
+     {
+         $parsed = $this->parseUrl($this->origin);
+         $platform = !empty($parsed["scheme"]) ? Client::getName($parsed["scheme"]) : "";
 
-        if (!empty($this->hostnames)) {
-            $messages[] = 'URL host must be one of: ' . \implode(', ', $this->hostnames);
-        }
+         if (empty($this->origin) || empty($parsed["scheme"]) || empty($platform)) {
+             return "Unsupported platform";
+         }
 
-        if (!empty($this->schemes)) {
-            $messages[] = 'URL scheme must be one of: ' . \implode(', ', $this->schemes);
-        }
-
-        return empty($messages)
-            ? 'URL host and scheme constraints not configured'
-            : \implode(' or ', $messages);
-    }
+         return "Invalid Origin. Register your new client ({$this->origin}) as a new {$platform} platform on your project console dashboard";
+     }
 
     /**
      * Is valid
@@ -62,20 +96,27 @@ class Origin extends Host
      */
     public function isValid($value): bool
     {
+        $this->origin = $value;
         if (empty($value)) {
             return false;
         }
         $parsed = $this->parseUrl($value);
 
-        if (!empty($parsed['scheme']) && \in_array($parsed['scheme'], $this->schemes)) {
+        if (
+            !empty($parsed["scheme"]) &&
+            \in_array($parsed["scheme"], $this->getSchemes())
+        ) {
             return true;
         }
 
-        if (!in_array($parsed['scheme'], ['http', 'https'])) {
+        if (!in_array($parsed["scheme"], ["http", "https"])) {
             return false;
         }
 
-        if (!empty($parsed['host']) && \in_array($parsed['host'], $this->hostnames)) {
+        if (
+            !empty($parsed["host"]) &&
+            \in_array($parsed["host"], $this->getHostnames())
+        ) {
             return parent::isValid($value);
         }
 
@@ -87,12 +128,14 @@ class Origin extends Host
         $parsed = \parse_url($value);
         $matches = [];
 
-        $parsed['scheme'] = $parsed['scheme'] ??
-            (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches) ? $matches[1] : null);
+        $parsed["scheme"] =
+            $parsed["scheme"] ??
+            (preg_match("/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//", $value, $matches)
+                ? $matches[1]
+                : null);
 
         return $parsed;
     }
-
 
     /**
      * Is array

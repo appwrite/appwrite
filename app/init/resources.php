@@ -19,6 +19,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\ID;
 use Appwrite\Utopia\Request;
 use Appwrite\Network\Client;
 use Executor\Executor;
@@ -116,17 +117,14 @@ App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
 
-App::setResource('hostnames', function (Request $request, Document $console, Document $project) {
-    // Database configured platforms
-    $platforms = [
-        ...$console->getAttribute('platforms', []),
-        ...$project->getAttribute('platforms', [])
-    ];
-    $platforms = array_filter($platforms, fn ($platform) => in_array($platform['type'], [
-        Client::TYPE_WEB,
-        Client::TYPE_FLUTTER_WEB,
-    ]));
-    $platforms = array_filter($platforms, fn ($platform) => !empty($platform['hostname']));
+App::setResource('clients', function (Request $request, Document $console, Document $project) {
+    // Always allow current host
+    $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'name' => 'Current Host',
+            'type' => Client::TYPE_WEB,
+            'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
 
     // Environment variable configured hostnames
     $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
@@ -134,11 +132,36 @@ App::setResource('hostnames', function (Request $request, Document $console, Doc
     $validator = new Hostname();
     $hostnames = array_filter($hostnames, fn ($hostname) => $validator->isValid($hostname));
 
-    // Combine request hostname, environment hostnames, and platforms
-    return \array_unique([
-        $request->getHostname(),
-        ...array_map(fn ($node) => $node['hostname'], $platforms),
-        ...$hostnames
+    foreach ($hostnames as $hostname) {
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'name' => $hostname,
+            'type' => Client::TYPE_WEB,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
+
+    // Schemes, add exp and appwrite-callback-projectId
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'name' => $hostname,
+            'type' => Client::TYPE_CUSTOM_SCHEME,
+            'key' => 'exp'
+        ], Document::SET_TYPE_APPEND);
+
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'name' => $hostname,
+            'type' => Client::TYPE_CUSTOM_SCHEME,
+            'key' => 'appwrite-callback-' . $project->getId()
+        ], Document::SET_TYPE_APPEND);
+    }
+
+    // Database configured platforms
+    return array_unique([
+        ...$console->getAttribute('platforms', []),
+        ...$project->getAttribute('platforms', [])
     ]);
 }, ['request','console', 'project']);
 

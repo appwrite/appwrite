@@ -496,7 +496,7 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
-    ->inject('hostnames')
+    ->inject('clients')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -505,7 +505,7 @@ App::init()
     ->inject('executor')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Document $console, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $hostnames, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Document $console, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname) {
         /*
         * Appwrite Router
         */
@@ -629,7 +629,7 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
-        $validator = new Hostname($hostnames);
+        $validator = new Origin($clients);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
         }
