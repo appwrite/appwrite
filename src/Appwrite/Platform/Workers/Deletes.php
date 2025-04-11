@@ -494,21 +494,22 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param Document $document
-     * @return void
-     * @throws Authorization
-     * @throws DatabaseException
-     * @throws Conflict
-     * @throws Restricted
-     * @throws Structure
-     * @throws Exception
-     */
-    private function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
+    * @param Database $dbForPlatform
+    * @param Document $document
+    * @return void
+    * @throws Authorization
+    * @throws DatabaseException
+    * @throws Conflict
+    * @throws Restricted
+    * @throws Structure
+    * @throws Exception
+    */
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
 
         $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId()])
+            Query::equal('teamInternalId', [$document->getInternalId()]),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
         ]);
 
         foreach ($projects as $project) {
