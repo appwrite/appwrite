@@ -43,7 +43,6 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
