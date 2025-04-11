@@ -165,17 +165,6 @@ App::setResource('clients', function (Request $request, Document $console, Docum
     ];
 }, ['request','console', 'project']);
 
-App::setResource('schemes', function (Document $project) {
-    // `exp` is allowed for all hostnames, for expo development
-    $schemes = ['exp'];
-
-    if (!$project->isEmpty() && $project->getId() !== 'console') {
-        $schemes[] = 'appwrite-callback-' . $project->getId();
-    }
-
-    return $schemes;
-}, ['project']);
-
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
