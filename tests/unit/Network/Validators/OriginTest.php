@@ -2,15 +2,37 @@
 
 namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Client;
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
 
 class OriginTest extends TestCase
 {
+    private function buildClients($hostnames = [], $schemes = []): array
+    {
+        $clients = [];
+
+        foreach ($hostnames as $hostname) {
+            $clients[] = [
+                'type' => Client::TYPE_WEB,
+                'hostname' => $hostname,
+            ];
+        }
+
+        foreach ($schemes as $scheme) {
+            $clients[] = [
+                'type' => Client::TYPE_CUSTOM_SCHEME,
+                'key' => $scheme,
+            ];
+        }
+
+        return $clients;
+    }
+
     public function testHostnameValidation(): void
     {
         $validator = new Origin(
-            ['appwrite.io', 'localhost', 'example.com'], // allowed hostnames
+            $this->buildClients(['appwrite.io', 'localhost', 'example.com']), // allowed hostnames
         );
 
         // Valid hostnames
@@ -33,7 +55,7 @@ class OriginTest extends TestCase
     public function testSchemeValidation(): void
     {
         $validator = new Origin(
-            schemes: ['appwrite-ios', 'exp', 'exps'] // allowed schemes
+            $this->buildClients(schemes: ['appwrite-ios', 'exp', 'exps']) // allowed schemes
         );
 
         // Valid schemes
@@ -55,8 +77,10 @@ class OriginTest extends TestCase
     public function testCombinedValidation(): void
     {
         $validator = new Origin(
-            ['appwrite.io', 'localhost'], // allowed hostnames
-            ['appwrite-ios', 'exp'] // allowed schemes
+            $this->buildClients(
+                ['appwrite.io', 'localhost'], // allowed hostnames
+                ['appwrite-ios', 'exp'] // allowed schemes
+            )
         );
 
         // Valid hostnames
@@ -75,8 +99,10 @@ class OriginTest extends TestCase
     public function testEdgeCases(): void
     {
         $validator = new Origin(
-            ['appwrite.io', 'empty.host'],
-            ['exp', 'appwrite-ios']
+            $this->buildClients(
+                ['appwrite.io', 'empty.host'],
+                ['exp', 'appwrite-ios']
+            )
         );
 
         // Empty values
