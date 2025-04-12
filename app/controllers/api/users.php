@@ -755,7 +755,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
         auth: [AuthType::KEY],
@@ -1981,7 +1981,7 @@ App::post('/v1/users/:userId/sessions')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
         auth: [AuthType::KEY],
@@ -2066,7 +2066,7 @@ App::post('/v1/users/:userId/tokens')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
         auth: [AuthType::KEY],
@@ -2129,7 +2129,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
         auth: [AuthType::KEY],
@@ -2180,7 +2180,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
         auth: [AuthType::KEY],
@@ -2378,7 +2378,7 @@ App::post('/v1/users/:userId/jwts')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'auth',
+        group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
         auth: [AuthType::KEY],

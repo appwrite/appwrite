@@ -28575,7 +28575,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 273,
                     "cookies": false,
                     "type": "",
@@ -29636,7 +29636,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 245,
                     "cookies": false,
                     "type": "",
@@ -29695,7 +29695,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 266,
                     "cookies": false,
                     "type": "",
@@ -29749,7 +29749,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 269,
                     "cookies": false,
                     "type": "",
@@ -29805,7 +29805,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 268,
                     "cookies": false,
                     "type": "",
@@ -30366,7 +30366,7 @@
                 },
                 "x-appwrite": {
                     "method": "createToken",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 267,
                     "cookies": false,
                     "type": "",
