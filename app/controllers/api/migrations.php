@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -320,7 +321,7 @@ App::post('/v1/migrations/csv')
     ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
-    ->param('resourceId', null, new Text(75), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -331,24 +332,6 @@ App::post('/v1/migrations/csv')
     ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForCsvImports, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-        // Check if migration/import is already in progress!
-        // if for some reason the worker crashes, the stage will always be `init`, what do we do?
-        $isInProgress = Authorization::skip(function () use ($dbForProject, $resourceId) {
-            $exists = $dbForProject->findOne(
-                'migrations',
-                [
-                    Query::notEqual('stage', 'finished'),
-                    Query::equal('resourceId', [$resourceId]),
-                ]
-            );
-
-            return !$exists->isEmpty();
-        });
-
-        if ($isInProgress || (!$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'An import is already in progress for this collection.');
-        }
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
