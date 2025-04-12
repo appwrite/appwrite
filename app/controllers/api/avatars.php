@@ -171,7 +171,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('cache.resource', 'avatar/credit-card')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'icons',
+        group: null,
         name: 'getCreditCard',
         description: '/docs/references/avatars/get-credit-card.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -199,7 +199,7 @@ App::get('/v1/avatars/browsers/:code')
     ->label('cache.resource', 'avatar/browser')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'icons',
+        group: null,
         name: 'getBrowser',
         description: '/docs/references/avatars/get-browser.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -227,7 +227,7 @@ App::get('/v1/avatars/flags/:code')
     ->label('cache.resource', 'avatar/flag')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'icons',
+        group: null,
         name: 'getFlag',
         description: '/docs/references/avatars/get-flag.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -255,7 +255,7 @@ App::get('/v1/avatars/image')
     ->label('cache.resource', 'avatar/image')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'images',
+        group: null,
         name: 'getImage',
         description: '/docs/references/avatars/get-image.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -326,7 +326,7 @@ App::get('/v1/avatars/favicon')
     ->label('cache.resource', 'avatar/favicon')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'images',
+        group: null,
         name: 'getFavicon',
         description: '/docs/references/avatars/get-favicon.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -477,7 +477,7 @@ App::get('/v1/avatars/qr')
     ->label('scope', 'avatars.read')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'images',
+        group: null,
         name: 'getQR',
         description: '/docs/references/avatars/get-qr.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -526,7 +526,7 @@ App::get('/v1/avatars/initials')
     ->label('cache.resource', 'avatar/initials')
     ->label('sdk', new Method(
         namespace: 'avatars',
-        group: 'images',
+        group: null,
         name: 'getInitials',
         description: '/docs/references/avatars/get-initials.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],

@@ -3280,7 +3280,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
-                    "group": "icons",
+                    "group": null,
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
@@ -3406,7 +3406,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
-                    "group": "icons",
+                    "group": null,
                     "weight": 59,
                     "cookies": false,
                     "type": "location",
@@ -3538,7 +3538,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
-                    "group": "images",
+                    "group": null,
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
@@ -3596,7 +3596,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
-                    "group": "icons",
+                    "group": null,
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
@@ -4084,7 +4084,7 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
-                    "group": "images",
+                    "group": null,
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
@@ -4166,7 +4166,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
-                    "group": "images",
+                    "group": null,
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
@@ -4258,7 +4258,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
-                    "group": "images",
+                    "group": null,
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
@@ -4617,7 +4617,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 114,
                     "cookies": false,
                     "type": "",
@@ -8842,7 +8842,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCollectionUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 116,
                     "cookies": false,
                     "type": "",
@@ -9007,7 +9007,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDatabaseUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 115,
                     "cookies": false,
                     "type": "",
@@ -9668,7 +9668,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 294,
                     "cookies": false,
                     "type": "",
@@ -11017,7 +11017,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFunctionUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 293,
                     "cookies": false,
                     "type": "",
@@ -12932,7 +12932,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "group": "locale",
+                    "group": null,
                     "weight": 117,
                     "cookies": false,
                     "type": "",
@@ -12984,7 +12984,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
-                    "group": "locale",
+                    "group": null,
                     "weight": 118,
                     "cookies": false,
                     "type": "",
@@ -13036,7 +13036,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
-                    "group": "continents",
+                    "group": null,
                     "weight": 122,
                     "cookies": false,
                     "type": "",
@@ -13088,7 +13088,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
-                    "group": "countries",
+                    "group": null,
                     "weight": 119,
                     "cookies": false,
                     "type": "",
@@ -13140,7 +13140,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
-                    "group": "countries",
+                    "group": null,
                     "weight": 120,
                     "cookies": false,
                     "type": "",
@@ -13192,7 +13192,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
-                    "group": "countries",
+                    "group": null,
                     "weight": 121,
                     "cookies": false,
                     "type": "",
@@ -13244,7 +13244,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
-                    "group": "currencies",
+                    "group": null,
                     "weight": 123,
                     "cookies": false,
                     "type": "",
@@ -13296,7 +13296,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
-                    "group": "languages",
+                    "group": null,
                     "weight": 124,
                     "cookies": false,
                     "type": "",
@@ -17721,7 +17721,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "group": "migrations",
+                    "group": null,
                     "weight": 338,
                     "cookies": false,
                     "type": "",
@@ -17795,7 +17795,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAppwriteMigration",
-                    "group": "appwrite",
+                    "group": null,
                     "weight": 334,
                     "cookies": false,
                     "type": "",
@@ -17883,7 +17883,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
-                    "group": "appwrite",
+                    "group": null,
                     "weight": 340,
                     "cookies": false,
                     "type": "",
@@ -17976,7 +17976,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
-                    "group": "firebase",
+                    "group": null,
                     "weight": 335,
                     "cookies": false,
                     "type": "",
@@ -18052,7 +18052,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
-                    "group": "firebase",
+                    "group": null,
                     "weight": 341,
                     "cookies": false,
                     "type": "",
@@ -18124,7 +18124,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
-                    "group": "nhost",
+                    "group": null,
                     "weight": 337,
                     "cookies": false,
                     "type": "",
@@ -18235,7 +18235,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
-                    "group": "nhost",
+                    "group": null,
                     "weight": 343,
                     "cookies": false,
                     "type": "",
@@ -18368,7 +18368,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
-                    "group": "supabase",
+                    "group": null,
                     "weight": 336,
                     "cookies": false,
                     "type": "",
@@ -18473,7 +18473,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
-                    "group": "supabase",
+                    "group": null,
                     "weight": 342,
                     "cookies": false,
                     "type": "",
@@ -18597,7 +18597,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "group": "migrations",
+                    "group": null,
                     "weight": 339,
                     "cookies": false,
                     "type": "",
@@ -18655,7 +18655,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
-                    "group": "migrations",
+                    "group": null,
                     "weight": 344,
                     "cookies": false,
                     "type": "",
@@ -18706,7 +18706,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "group": "migrations",
+                    "group": null,
                     "weight": 345,
                     "cookies": false,
                     "type": "",
@@ -18766,7 +18766,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 196,
                     "cookies": false,
                     "type": "",
@@ -18854,7 +18854,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "group": "variables",
+                    "group": null,
                     "weight": 198,
                     "cookies": false,
                     "type": "",
@@ -18900,7 +18900,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "group": "variables",
+                    "group": null,
                     "weight": 197,
                     "cookies": false,
                     "type": "",
@@ -18973,7 +18973,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "group": "variables",
+                    "group": null,
                     "weight": 199,
                     "cookies": false,
                     "type": "",
@@ -19031,7 +19031,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "group": "variables",
+                    "group": null,
                     "weight": 200,
                     "cookies": false,
                     "type": "",
@@ -19106,7 +19106,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "group": "variables",
+                    "group": null,
                     "weight": 201,
                     "cookies": false,
                     "type": "",
@@ -24021,7 +24021,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRules",
-                    "group": "rules",
+                    "group": null,
                     "weight": 317,
                     "cookies": false,
                     "type": "",
@@ -24093,7 +24093,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRule",
-                    "group": "rules",
+                    "group": null,
                     "weight": 316,
                     "cookies": false,
                     "type": "",
@@ -24177,7 +24177,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRule",
-                    "group": "rules",
+                    "group": null,
                     "weight": 318,
                     "cookies": false,
                     "type": "",
@@ -24228,7 +24228,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteRule",
-                    "group": "rules",
+                    "group": null,
                     "weight": 319,
                     "cookies": false,
                     "type": "",
@@ -24288,7 +24288,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRuleVerification",
-                    "group": "rules",
+                    "group": null,
                     "weight": 320,
                     "cookies": false,
                     "type": "",
@@ -25473,84 +25473,6 @@
                 ]
             }
         },
-        "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/push": {
-            "get": {
-                "summary": "Get file for push notification",
-                "operationId": "storageGetFilePush",
-                "tags": [
-                    "storage"
-                ],
-                "description": "Get a file for push notification by its unique ID. This endpoint response returns a JSON object with the file metadata.",
-                "responses": {
-                    "200": {
-                        "description": "File"
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getFilePush",
-                    "group": "files",
-                    "weight": 213,
-                    "cookies": false,
-                    "type": "location",
-                    "deprecated": false,
-                    "demo": "storage\/get-file-push.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-push.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "public",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<BUCKET_ID>"
-                        },
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File ID.",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<FILE_ID>"
-                        },
-                        "in": "path"
-                    },
-                    {
-                        "name": "jwt",
-                        "description": "JSON Web Token to validate",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<JWT>",
-                            "default": ""
-                        },
-                        "in": "query"
-                    }
-                ]
-            }
-        },
         "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/view": {
             "get": {
                 "summary": "Get file for view",
@@ -25640,7 +25562,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 216,
                     "cookies": false,
                     "type": "",
@@ -25712,7 +25634,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucketUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 217,
                     "cookies": false,
                     "type": "",
@@ -27849,7 +27771,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "group": "usage",
+                    "group": null,
                     "weight": 274,
                     "cookies": false,
                     "type": "",

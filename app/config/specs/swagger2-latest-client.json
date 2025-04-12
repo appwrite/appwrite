@@ -3448,7 +3448,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
-                    "group": "icons",
+                    "group": null,
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
@@ -3575,7 +3575,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
-                    "group": "icons",
+                    "group": null,
                     "weight": 59,
                     "cookies": false,
                     "type": "location",
@@ -3708,7 +3708,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
-                    "group": "images",
+                    "group": null,
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
@@ -3773,7 +3773,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
-                    "group": "icons",
+                    "group": null,
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
@@ -4262,7 +4262,7 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
-                    "group": "images",
+                    "group": null,
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
@@ -4347,7 +4347,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
-                    "group": "images",
+                    "group": null,
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
@@ -4440,7 +4440,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
-                    "group": "images",
+                    "group": null,
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
@@ -5410,7 +5410,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "group": "locale",
+                    "group": null,
                     "weight": 117,
                     "cookies": false,
                     "type": "",
@@ -5464,7 +5464,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
-                    "group": "locale",
+                    "group": null,
                     "weight": 118,
                     "cookies": false,
                     "type": "",
@@ -5518,7 +5518,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
-                    "group": "continents",
+                    "group": null,
                     "weight": 122,
                     "cookies": false,
                     "type": "",
@@ -5572,7 +5572,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
-                    "group": "countries",
+                    "group": null,
                     "weight": 119,
                     "cookies": false,
                     "type": "",
@@ -5626,7 +5626,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
-                    "group": "countries",
+                    "group": null,
                     "weight": 120,
                     "cookies": false,
                     "type": "",
@@ -5680,7 +5680,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
-                    "group": "countries",
+                    "group": null,
                     "weight": 121,
                     "cookies": false,
                     "type": "",
@@ -5734,7 +5734,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
-                    "group": "currencies",
+                    "group": null,
                     "weight": 123,
                     "cookies": false,
                     "type": "",
@@ -5788,7 +5788,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
-                    "group": "languages",
+                    "group": null,
                     "weight": 124,
                     "cookies": false,
                     "type": "",
@@ -6648,87 +6648,6 @@
                         ],
                         "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
-                        "default": "",
-                        "in": "query"
-                    }
-                ]
-            }
-        },
-        "\/storage\/buckets\/{bucketId}\/files\/{fileId}\/push": {
-            "get": {
-                "summary": "Get file for push notification",
-                "operationId": "storageGetFilePush",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "*\/*"
-                ],
-                "tags": [
-                    "storage"
-                ],
-                "description": "Get a file for push notification by its unique ID. This endpoint response returns a JSON object with the file metadata.",
-                "responses": {
-                    "200": {
-                        "description": "File",
-                        "schema": {
-                            "type": "file"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getFilePush",
-                    "group": "files",
-                    "weight": 213,
-                    "cookies": false,
-                    "type": "location",
-                    "deprecated": false,
-                    "demo": "storage\/get-file-push.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-push.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "public",
-                    "platforms": [
-                        "client",
-                        "server",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Session": [],
-                        "JWT": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "bucketId",
-                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<BUCKET_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "fileId",
-                        "description": "File ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<FILE_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "jwt",
-                        "description": "JSON Web Token to validate",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<JWT>",
                         "default": "",
                         "in": "query"
                     }

@@ -2434,7 +2434,7 @@ App::get('/v1/users/usage')
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
         namespace: 'users',
-        group: 'usage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/users/get-usage.md',
         auth: [AuthType::ADMIN],

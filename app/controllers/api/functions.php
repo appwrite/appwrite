@@ -613,7 +613,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
-        group: 'usage',
+        group: null,
         name: 'getFunctionUsage',
         description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
@@ -725,7 +725,7 @@ App::get('/v1/functions/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
-        group: 'usage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],

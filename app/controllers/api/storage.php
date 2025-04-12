@@ -1407,21 +1407,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->groups(['api', 'storage'])
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk', new Method(
-        namespace: 'storage',
-        group: 'files',
-        name: 'getFilePush',
-        description: '/docs/references/storage/get-file-push.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        type: MethodType::LOCATION,
-        contentType: ContentType::ANY,
-    ))
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('jwt', '', new Text(2048, 0), 'JSON Web Token to validate', true)
@@ -1797,7 +1782,7 @@ App::get('/v1/storage/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
-        group: 'usage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/storage/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -1884,7 +1869,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
-        group: 'usage',
+        group: null,
         name: 'getBucketUsage',
         description: '/docs/references/storage/get-bucket-usage.md',
         auth: [AuthType::ADMIN],

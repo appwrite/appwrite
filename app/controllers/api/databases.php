@@ -4217,7 +4217,7 @@ App::get('/v1/databases/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'usage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/databases/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -4313,7 +4313,7 @@ App::get('/v1/databases/:databaseId/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'usage',
+        group: null,
         name: 'getDatabaseUsage',
         description: '/docs/references/databases/get-database-usage.md',
         auth: [AuthType::ADMIN],
@@ -4415,7 +4415,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'usage',
+        group: null,
         name: 'getCollectionUsage',
         description: '/docs/references/databases/get-collection-usage.md',
         auth: [AuthType::ADMIN],
