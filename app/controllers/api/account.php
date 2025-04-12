@@ -516,7 +516,7 @@ App::get('/v1/account/sessions')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/account/list-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -566,7 +566,7 @@ App::delete('/v1/account/sessions')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/account/delete-sessions.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -636,7 +636,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->label('scope', 'account')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'getSession',
         description: '/docs/references/account/get-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -690,7 +690,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/account/delete-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -779,7 +779,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'updateSession',
         description: '/docs/references/account/update-session.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -864,7 +864,7 @@ App::post('/v1/account/sessions/email')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createEmailPasswordSession',
         description: '/docs/references/account/create-session-email-password.md',
         auth: [],
@@ -1005,7 +1005,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createAnonymousSession',
         description: '/docs/references/account/create-session-anonymous.md',
         auth: [],
@@ -1149,7 +1149,7 @@ App::post('/v1/account/sessions/token')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -1183,7 +1183,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createOAuth2Session',
         description: '/docs/references/account/create-session-oauth2.md',
         type: MethodType::WEBAUTH,
@@ -1781,7 +1781,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createOAuth2Token',
         description: '/docs/references/account/create-token-oauth2.md',
         auth: [],
@@ -1862,7 +1862,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createMagicURLToken',
         description: '/docs/references/account/create-token-magic-url.md',
         auth: [],
@@ -2112,7 +2112,7 @@ App::post('/v1/account/tokens/email')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createEmailToken',
         description: '/docs/references/account/create-token-email.md',
         auth: [],
@@ -2348,7 +2348,7 @@ App::put('/v1/account/sessions/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'updateMagicURLSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -2386,7 +2386,7 @@ App::put('/v1/account/sessions/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'updatePhoneSession',
         description: '/docs/references/account/create-session.md',
         auth: [],
@@ -2425,7 +2425,7 @@ App::post('/v1/account/tokens/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createPhoneToken',
         description: '/docs/references/account/create-token-phone.md',
         auth: [],
@@ -2634,7 +2634,7 @@ App::post('/v1/account/jwts')
     ->label('auth.type', 'jwt')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'auth',
+        group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
         auth: [],

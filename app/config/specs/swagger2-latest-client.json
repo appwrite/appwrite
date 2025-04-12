@@ -434,7 +434,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -1727,7 +1727,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 11,
                     "cookies": false,
                     "type": "",
@@ -1773,7 +1773,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 12,
                     "cookies": false,
                     "type": "",
@@ -1826,7 +1826,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAnonymousSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 17,
                     "cookies": false,
                     "type": "",
@@ -1877,7 +1877,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 16,
                     "cookies": false,
                     "type": "",
@@ -1955,7 +1955,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 26,
                     "cookies": false,
                     "type": "",
@@ -2030,7 +2030,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Session",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 19,
                     "cookies": false,
                     "type": "webAuth",
@@ -2166,7 +2166,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 27,
                     "cookies": false,
                     "type": "",
@@ -2244,7 +2244,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 18,
                     "cookies": false,
                     "type": "",
@@ -2322,7 +2322,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 13,
                     "cookies": false,
                     "type": "",
@@ -2383,7 +2383,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 15,
                     "cookies": false,
                     "type": "",
@@ -2439,7 +2439,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 14,
                     "cookies": false,
                     "type": "",
@@ -2772,7 +2772,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2856,7 +2856,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2946,7 +2946,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -3082,7 +3082,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "group": "auth",
+                    "group": "sessions",
                     "weight": 28,
                     "cookies": false,
                     "type": "",

@@ -275,7 +275,7 @@ App::get('/v1/vcs/github/authorize')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk', new Method(
         namespace: 'vcs',
-        group: 'auth',
+        group: 'installations',
         name: 'createGitHubInstallation',
         description: '/docs/references/vcs/create-github-installation.md',
         auth: [AuthType::ADMIN],
