@@ -340,6 +340,7 @@ class Event
      */
     public function trigger(): string|bool
     {
+
         if ($this->paused) {
             return false;
         }
@@ -349,6 +350,7 @@ class Event
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
+
         return $this->publisher->enqueue($queue, $payload);
     }
 
