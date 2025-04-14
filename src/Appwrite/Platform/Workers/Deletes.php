@@ -1051,7 +1051,7 @@ class Deletes extends Action
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
         try {
-            $count =$database->deleteDocuments(
+            $count = $database->deleteDocuments(
                 $collection,
                 $queries,
                 Database::DELETE_BATCH_SIZE,
