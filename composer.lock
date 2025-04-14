@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a54c8bc4f9f14cd3883f55880864630",
+    "content-hash": "b5844f87eec4cd045d791d0a8e54965e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3497,16 +3497,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.64.2",
+            "version": "dev-feat-bulk-callbacks",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "dc9c4a68c93e8bea2dfaa76d1ba308be539998bd"
+                "reference": "b6456ac11c4b00adea874f5dcba49f9904203563"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/dc9c4a68c93e8bea2dfaa76d1ba308be539998bd",
-                "reference": "dc9c4a68c93e8bea2dfaa76d1ba308be539998bd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b6456ac11c4b00adea874f5dcba49f9904203563",
+                "reference": "b6456ac11c4b00adea874f5dcba49f9904203563",
                 "shasum": ""
             },
             "require": {
@@ -3547,9 +3547,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.64.2"
+                "source": "https://github.com/utopia-php/database/tree/feat-bulk-callbacks"
             },
-            "time": "2025-04-09T07:53:05+00:00"
+            "time": "2025-04-14T05:53:57+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8124,9 +8124,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-bulk-callbacks",
+            "alias": "0.64.2",
+            "alias_normalized": "0.64.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
