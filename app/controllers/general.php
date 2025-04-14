@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -504,7 +505,7 @@ App::init()
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
-    ->inject('clients')
+    ->inject('platforms')
     ->inject('geodb')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
@@ -513,7 +514,7 @@ App::init()
     ->inject('executor')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname) {
         /*
         * Appwrite Router
         */
@@ -637,7 +638,9 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
-        $validator = new Hostname($clients);
+
+        $hostnames = Platform::getHostnames($platforms);
+        $validator = new Hostname($hostnames);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
         }
@@ -728,7 +731,7 @@ App::init()
         *  Skip this check for non-web platforms which are not required to send an origin header
         */
         $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin($platforms);
 
         if (
             !$originValidator->isValid($origin)

@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -288,8 +289,8 @@ App::get('/v1/vcs/github/authorize')
         type: MethodType::WEBAUTH,
         hide: true,
     ))
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
+    ->param('success', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a successful installation attempt.', true, ['platforms'])
+    ->param('failure', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a failed installation attempt.', true, ['platforms'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
