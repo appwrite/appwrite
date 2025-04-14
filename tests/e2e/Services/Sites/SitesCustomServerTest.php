@@ -2535,7 +2535,66 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString('Error', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testOutputDirectoryEmpty(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Empty output directory',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './empty-directory',
+            'buildCommand' => 'mkdir -p ./empty-directory'
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testOutputDirectoryMissing(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Empty output directory',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './non-existing-directory',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         $this->cleanupSite($siteId);
