@@ -3705,16 +3705,16 @@
         },
         {
             "name": "utopia-php/fetch",
-            "version": "0.4.0",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "46e791ff6a95864517750b9df6bbf4a17e3c9c4e"
+                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/46e791ff6a95864517750b9df6bbf4a17e3c9c4e",
-                "reference": "46e791ff6a95864517750b9df6bbf4a17e3c9c4e",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/65095dac14037db0c822fb5e209e5bd3187a0303",
+                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303",
                 "shasum": ""
             },
             "require": {
@@ -3738,9 +3738,9 @@
             "description": "A simple library that provides an interface for making HTTP Requests.",
             "support": {
                 "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.4.0"
+                "source": "https://github.com/utopia-php/fetch/tree/0.4.1"
             },
-            "time": "2025-03-11T21:06:56+00:00"
+            "time": "2025-04-14T07:34:27+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -3996,16 +3996,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.8.5",
+            "version": "0.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0dd95b148c581579ec05d2abbbdc13c2b4702331"
+                "reference": "84163e16edc0b2e64c34ad7b7c4cc5f05d762daf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0dd95b148c581579ec05d2abbbdc13c2b4702331",
-                "reference": "0dd95b148c581579ec05d2abbbdc13c2b4702331",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/84163e16edc0b2e64c34ad7b7c4cc5f05d762daf",
+                "reference": "84163e16edc0b2e64c34ad7b7c4cc5f05d762daf",
                 "shasum": ""
             },
             "require": {
@@ -4046,9 +4046,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.8.5"
+                "source": "https://github.com/utopia-php/migration/tree/0.8.6"
             },
-            "time": "2025-04-09T05:21:09+00:00"
+            "time": "2025-04-14T08:22:09+00:00"
         },
         {
             "name": "utopia-php/orchestration",
