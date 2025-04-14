@@ -1872,7 +1872,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::put('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Regenerate MFA recovery codes')
+    ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')

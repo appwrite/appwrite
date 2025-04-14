@@ -1255,7 +1255,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     });
 
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 callback')
+    ->desc('Get OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -1285,7 +1285,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 callback')
+    ->desc('Create OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -1316,7 +1316,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
-    ->desc('OAuth2 redirect')
+    ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1781,7 +1781,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'sessions',
+        group: 'tokens',
         name: 'createOAuth2Token',
         description: '/docs/references/account/create-token-oauth2.md',
         auth: [],
@@ -1862,7 +1862,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'sessions',
+        group: 'tokens',
         name: 'createMagicURLToken',
         description: '/docs/references/account/create-token-magic-url.md',
         auth: [],
@@ -2112,7 +2112,7 @@ App::post('/v1/account/tokens/email')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'sessions',
+        group: 'tokens',
         name: 'createEmailToken',
         description: '/docs/references/account/create-token-email.md',
         auth: [],
@@ -2425,7 +2425,7 @@ App::post('/v1/account/tokens/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'sessions',
+        group: 'tokens',
         name: 'createPhoneToken',
         description: '/docs/references/account/create-token-phone.md',
         auth: [],
@@ -2634,7 +2634,7 @@ App::post('/v1/account/jwts')
     ->label('auth.type', 'jwt')
     ->label('sdk', new Method(
         namespace: 'account',
-        group: 'sessions',
+        group: 'tokens',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
         auth: [],
@@ -3350,7 +3350,7 @@ App::post('/v1/account/recovery')
     });
 
 App::put('/v1/account/recovery')
-    ->desc('Create password recovery (confirmation)')
+    ->desc('Update password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
     ->label('event', 'users.[userId].recovery.[tokenId].update')
@@ -3614,7 +3614,7 @@ App::post('/v1/account/verification')
     });
 
 App::put('/v1/account/verification')
-    ->desc('Create email verification (confirmation)')
+    ->desc('Update email verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -4076,7 +4076,7 @@ App::post('/v1/account/mfa/authenticators/:type')
     });
 
 App::put('/v1/account/mfa/authenticators/:type')
-    ->desc('Verify authenticator')
+    ->desc('Update authenticator (confirmation)')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -4193,7 +4193,7 @@ App::post('/v1/account/mfa/recovery-codes')
     });
 
 App::patch('/v1/account/mfa/recovery-codes')
-    ->desc('Regenerate MFA recovery codes')
+    ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -4239,7 +4239,7 @@ App::patch('/v1/account/mfa/recovery-codes')
     });
 
 App::get('/v1/account/mfa/recovery-codes')
-    ->desc('Get MFA recovery codes')
+    ->desc('List MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
     ->label('sdk', new Method(
@@ -4540,7 +4540,7 @@ App::post('/v1/account/mfa/challenge')
     });
 
 App::put('/v1/account/mfa/challenge')
-    ->desc('Create MFA challenge (confirmation)')
+    ->desc('Update MFA challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].create')

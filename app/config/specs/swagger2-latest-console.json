@@ -485,7 +485,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -717,7 +717,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify authenticator",
+                "summary": "Update authenticator (confirmation)",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -939,7 +939,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA challenge (confirmation)",
+                "summary": "Update MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -1070,7 +1070,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA recovery codes",
+                "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1170,7 +1170,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1653,7 +1653,7 @@
                 ]
             },
             "put": {
-                "summary": "Create password recovery (confirmation)",
+                "summary": "Update password recovery (confirmation)",
                 "operationId": "accountUpdateRecovery",
                 "consumes": [
                     "application\/json"
@@ -2798,7 +2798,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2882,7 +2882,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2972,7 +2972,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -3109,7 +3109,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
@@ -3238,7 +3238,7 @@
                 ]
             },
             "put": {
-                "summary": "Create email verification (confirmation)",
+                "summary": "Update email verification (confirmation)",
                 "operationId": "accountUpdateVerification",
                 "consumes": [
                     "application\/json"
@@ -4534,7 +4534,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask query",
+                "summary": "Create assistant query",
                 "operationId": "assistantChat",
                 "consumes": [
                     "application\/json"
@@ -10623,7 +10623,7 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/build": {
             "post": {
-                "summary": "Rebuild deployment",
+                "summary": "Create deployment build",
                 "operationId": "functionsCreateBuild",
                 "consumes": [
                     "application\/json"
@@ -10771,7 +10771,7 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/download": {
             "get": {
-                "summary": "Download deployment",
+                "summary": "Get deployment download",
                 "operationId": "functionsGetDeploymentDownload",
                 "consumes": [
                     "application\/json"
@@ -18232,7 +18232,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite data",
+                "summary": "Create Appwrite migration",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "consumes": [
                     "application\/json"
@@ -18326,7 +18326,7 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite data",
+                "summary": "Get Appwrite migration report",
                 "operationId": "migrationsGetAppwriteReport",
                 "consumes": [
                     "application\/json"
@@ -18414,7 +18414,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase data",
+                "summary": "Create Firebase migration",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18494,7 +18494,7 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase data",
+                "summary": "Get Firebase migration report",
                 "operationId": "migrationsGetFirebaseReport",
                 "consumes": [
                     "application\/json"
@@ -18565,7 +18565,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost data",
+                "summary": "Create NHost migration",
                 "operationId": "migrationsCreateNHostMigration",
                 "consumes": [
                     "application\/json"
@@ -18686,7 +18686,7 @@
         },
         "\/migrations\/nhost\/report": {
             "get": {
-                "summary": "Generate a report on NHost Data",
+                "summary": "Get NHost migration report",
                 "operationId": "migrationsGetNHostReport",
                 "consumes": [
                     "application\/json"
@@ -18806,7 +18806,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase data",
+                "summary": "Create Supabase migration",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18920,7 +18920,7 @@
         },
         "\/migrations\/supabase\/report": {
             "get": {
-                "summary": "Generate a report on Supabase Data",
+                "summary": "Get Supabase migration report",
                 "operationId": "migrationsGetSupabaseReport",
                 "consumes": [
                     "application\/json"
@@ -19091,7 +19091,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry migration",
+                "summary": "Update retry migration",
                 "operationId": "migrationsRetry",
                 "consumes": [
                     "application\/json"
@@ -20804,7 +20804,7 @@
         },
         "\/projects\/{projectId}\/auth\/personal-data": {
             "patch": {
-                "summary": "Enable or disable checking user passwords for similarity with their personal data.",
+                "summary": "Update personal data check",
                 "operationId": "projectsUpdatePersonalDataCheck",
                 "consumes": [
                     "application\/json"
@@ -23082,7 +23082,7 @@
                 ]
             },
             "delete": {
-                "summary": "Reset custom email template",
+                "summary": "Delete custom email template",
                 "operationId": "projectsDeleteEmailTemplate",
                 "consumes": [
                     "application\/json"
@@ -29119,7 +29119,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -30949,7 +30949,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/detection": {
             "post": {
-                "summary": "Detect runtime settings from source code",
+                "summary": "Create runtime settings detection",
                 "operationId": "vcsCreateRepositoryDetection",
                 "consumes": [
                     "application\/json"
@@ -31032,7 +31032,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/repositories\/{repositoryId}": {
             "patch": {
-                "summary": "Authorize external deployment",
+                "summary": "Update external deployment (authorize)",
                 "operationId": "vcsUpdateExternalDeployments",
                 "consumes": [
                     "application\/json"

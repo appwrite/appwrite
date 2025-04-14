@@ -410,7 +410,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -638,7 +638,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify authenticator",
+                "summary": "Update authenticator (confirmation)",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -856,7 +856,7 @@
                 }
             },
             "put": {
-                "summary": "Create MFA challenge (confirmation)",
+                "summary": "Update MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "tags": [
                     "account"
@@ -981,7 +981,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA recovery codes",
+                "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1077,7 +1077,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1538,7 +1538,7 @@
                 }
             },
             "put": {
-                "summary": "Create password recovery (confirmation)",
+                "summary": "Update password recovery (confirmation)",
                 "operationId": "accountUpdateRecovery",
                 "tags": [
                     "account"
@@ -2643,7 +2643,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2722,7 +2722,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2802,7 +2802,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -2944,7 +2944,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
@@ -3068,7 +3068,7 @@
                 }
             },
             "put": {
-                "summary": "Create email verification (confirmation)",
+                "summary": "Update email verification (confirmation)",
                 "operationId": "accountUpdateVerification",
                 "tags": [
                     "account"
@@ -4339,7 +4339,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask query",
+                "summary": "Create assistant query",
                 "operationId": "assistantChat",
                 "tags": [
                     "assistant"
@@ -10447,7 +10447,7 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/build": {
             "post": {
-                "summary": "Rebuild deployment",
+                "summary": "Create deployment build",
                 "operationId": "functionsCreateBuild",
                 "tags": [
                     "functions"
@@ -10596,7 +10596,7 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/download": {
             "get": {
-                "summary": "Download deployment",
+                "summary": "Get deployment download",
                 "operationId": "functionsGetDeploymentDownload",
                 "tags": [
                     "functions"
@@ -17777,7 +17777,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite data",
+                "summary": "Create Appwrite migration",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "tags": [
                     "migrations"
@@ -17865,7 +17865,7 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite data",
+                "summary": "Get Appwrite migration report",
                 "operationId": "migrationsGetAppwriteReport",
                 "tags": [
                     "migrations"
@@ -17958,7 +17958,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase data",
+                "summary": "Create Firebase migration",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "tags": [
                     "migrations"
@@ -18034,7 +18034,7 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase data",
+                "summary": "Get Firebase migration report",
                 "operationId": "migrationsGetFirebaseReport",
                 "tags": [
                     "migrations"
@@ -18106,7 +18106,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost data",
+                "summary": "Create NHost migration",
                 "operationId": "migrationsCreateNHostMigration",
                 "tags": [
                     "migrations"
@@ -18217,7 +18217,7 @@
         },
         "\/migrations\/nhost\/report": {
             "get": {
-                "summary": "Generate a report on NHost Data",
+                "summary": "Get NHost migration report",
                 "operationId": "migrationsGetNHostReport",
                 "tags": [
                     "migrations"
@@ -18350,7 +18350,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase data",
+                "summary": "Create Supabase migration",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "tags": [
                     "migrations"
@@ -18455,7 +18455,7 @@
         },
         "\/migrations\/supabase\/report": {
             "get": {
-                "summary": "Generate a report on Supabase Data",
+                "summary": "Get Supabase migration report",
                 "operationId": "migrationsGetSupabaseReport",
                 "tags": [
                     "migrations"
@@ -18637,7 +18637,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry migration",
+                "summary": "Update retry migration",
                 "operationId": "migrationsRetry",
                 "tags": [
                     "migrations"
@@ -20326,7 +20326,7 @@
         },
         "\/projects\/{projectId}\/auth\/personal-data": {
             "patch": {
-                "summary": "Enable or disable checking user passwords for similarity with their personal data.",
+                "summary": "Update personal data check",
                 "operationId": "projectsUpdatePersonalDataCheck",
                 "tags": [
                     "projects"
@@ -22597,7 +22597,7 @@
                 }
             },
             "delete": {
-                "summary": "Reset custom email template",
+                "summary": "Delete custom email template",
                 "operationId": "projectsDeleteEmailTemplate",
                 "tags": [
                     "projects"
@@ -28588,7 +28588,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -30434,7 +30434,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/detection": {
             "post": {
-                "summary": "Detect runtime settings from source code",
+                "summary": "Create runtime settings detection",
                 "operationId": "vcsCreateRepositoryDetection",
                 "tags": [
                     "vcs"
@@ -30520,7 +30520,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/repositories\/{repositoryId}": {
             "patch": {
-                "summary": "Authorize external deployment",
+                "summary": "Update external deployment (authorize)",
                 "operationId": "vcsUpdateExternalDeployments",
                 "tags": [
                     "vcs"

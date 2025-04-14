@@ -269,7 +269,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub app')
+    ->desc('Create GitHub app installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -319,7 +319,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub app')
+    ->desc('Get installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -519,7 +519,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
-    ->desc('Detect runtime settings from source code')
+    ->desc('Create runtime settings detection')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
@@ -1208,7 +1208,7 @@ App::delete('/v1/vcs/installations/:installationId')
     });
 
 App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
-    ->desc('Authorize external deployment')
+    ->desc('Update external deployment (authorize)')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(

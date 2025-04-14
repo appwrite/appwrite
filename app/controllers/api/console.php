@@ -68,7 +68,7 @@ App::get('/v1/console/variables')
     });
 
 App::post('/v1/console/assistant')
-    ->desc('Ask query')
+    ->desc('Create assistant query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
     ->label('sdk', new Method(

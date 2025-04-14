@@ -1011,7 +1011,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     });
 
 App::patch('/v1/projects/:projectId/auth/personal-data')
-    ->desc('Enable or disable checking user passwords for similarity with their personal data.')
+    ->desc('Update personal data check')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
@@ -2433,7 +2433,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     });
 
 App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
-    ->desc('Reset custom email template')
+    ->desc('Delete custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(

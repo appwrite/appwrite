@@ -31,7 +31,7 @@ include_once __DIR__ . '/../shared/api.php';
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Appwrite data')
+    ->desc('Create Appwrite migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -93,7 +93,7 @@ App::post('/v1/migrations/appwrite')
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase data')
+    ->desc('Create Firebase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -160,7 +160,7 @@ App::post('/v1/migrations/firebase')
 
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Supabase data')
+    ->desc('Create Supabase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -227,7 +227,7 @@ App::post('/v1/migrations/supabase')
 
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate NHost data')
+    ->desc('Create NHost migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -391,7 +391,7 @@ App::get('/v1/migrations/:migrationId')
 
 App::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Appwrite data')
+    ->desc('Get Appwrite migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
@@ -440,7 +440,7 @@ App::get('/v1/migrations/appwrite/report')
 
 App::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Firebase data')
+    ->desc('Get Firebase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
@@ -493,7 +493,7 @@ App::get('/v1/migrations/firebase/report')
 
 App::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Supabase Data')
+    ->desc('Get Supabase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
@@ -542,7 +542,7 @@ App::get('/v1/migrations/supabase/report')
 
 App::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on NHost Data')
+    ->desc('Get NHost migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
@@ -591,7 +591,7 @@ App::get('/v1/migrations/nhost/report')
 
 App::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Retry migration')
+    ->desc('Update retry migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')

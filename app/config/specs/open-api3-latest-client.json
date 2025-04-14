@@ -375,7 +375,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -606,7 +606,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify authenticator",
+                "summary": "Update authenticator (confirmation)",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -826,7 +826,7 @@
                 }
             },
             "put": {
-                "summary": "Create MFA challenge (confirmation)",
+                "summary": "Update MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "tags": [
                     "account"
@@ -953,7 +953,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA recovery codes",
+                "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1051,7 +1051,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1519,7 +1519,7 @@
                 }
             },
             "put": {
-                "summary": "Create password recovery (confirmation)",
+                "summary": "Update password recovery (confirmation)",
                 "operationId": "accountUpdateRecovery",
                 "tags": [
                     "account"
@@ -2634,7 +2634,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2713,7 +2713,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2793,7 +2793,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -2935,7 +2935,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "group": "sessions",
+                    "group": "tokens",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
@@ -3060,7 +3060,7 @@
                 }
             },
             "put": {
-                "summary": "Create email verification (confirmation)",
+                "summary": "Update email verification (confirmation)",
                 "operationId": "accountUpdateVerification",
                 "tags": [
                     "account"
