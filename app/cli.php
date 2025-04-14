@@ -219,6 +219,13 @@ CLI::setResource('queueForCertificates', function (Publisher $publisher) {
 }, ['publisher']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
+        Console::error('[Error] Timestamp: ' . date('c', time()));
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
+        Console::error('Trace: ' . $error->getTraceAsString());
+
         $logger = $register->get('logger');
 
         if ($logger) {
@@ -237,6 +244,7 @@ CLI::setResource('logError', function (Registry $register) {
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
 
             $log->setAction($action);
 
@@ -250,24 +258,34 @@ CLI::setResource('logError', function (Registry $register) {
                 Console::error('Error pushing log: ' . $th->getMessage());
             }
         }
-
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
     };
 }, ['register']);
 
 CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_TASK);
+$args = $platform->getEnv('argv');
 
+if (!isset($args[0])) {
+    Console::error('Missing task name');
+    Console::exit(1);
+}
+
+\array_shift($args);
+$taskName = $args[0];
+$platform->init(Service::TYPE_TASK);
 $cli = $platform->getCli();
 
 $cli
     ->error()
     ->inject('error')
-    ->action(function (Throwable $error) {
-        Console::error($error->getMessage());
+    ->inject('logError')
+    ->action(function (Throwable $error, callable $logError) use ($taskName) {
+        call_user_func_array($logError, [
+            $error,
+            'Task',
+            $taskName,
+        ]);
     });
 
 $cli->run();
