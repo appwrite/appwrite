@@ -50,7 +50,7 @@ class Maintenance extends Action
             $dbForPlatform->foreach(
                 'projects',
                 [
-                    Query::equal('region', System::getEnv('_APP_REGION', 'default'))
+                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
                 ],
                 function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                     $queueForDeletes
