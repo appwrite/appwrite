@@ -48,12 +48,12 @@ class Origin extends Validator
         }
 
         if (empty($host)) {
-             return true;
+            return true;
         } else {
-             $validator = new Hostname($this->hostnames);
-             if ($validator->isValid($host)) {
-                 return true;
-             }
+            $validator = new Hostname($this->hostnames);
+            if ($validator->isValid($host)) {
+                return true;
+            }
         }
 
         return false;

@@ -20,7 +20,6 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
-use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
