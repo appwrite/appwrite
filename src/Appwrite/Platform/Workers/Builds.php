@@ -405,9 +405,9 @@ class Builds extends Action
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
 
-                $functionsSizeLimit = (int) (System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT') ?: 30000000);
+                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
 
-                if (!empty($plan['functionSize'])) {
+                if (isset($plan['functionSize'])) {
                     $functionsSizeLimit = (int) $plan['functionSize'] * 1000 * 1000;
                 }
 

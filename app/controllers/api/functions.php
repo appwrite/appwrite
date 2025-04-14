@@ -1312,14 +1312,14 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
-        $functionFileSize = (System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT') ?: 30000000);
+        $functionSizeLimit = System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
 
         if (isset($plan['functionSize'])) {
-            $functionFileSize = $plan['functionSize'] * 1000 * 1000;
+            $functionSizeLimit = $plan['functionSize'] * 1000 * 1000;
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize($functionFileSize);
+        $fileSizeValidator = new FileSize($functionSizeLimit);
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
