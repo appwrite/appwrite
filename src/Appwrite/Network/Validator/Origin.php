@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Platform;
+use Utopia\CLI\Console;
 use Utopia\Validator;
 use Utopia\Validator\Hostname;
 
@@ -26,37 +27,32 @@ class Origin extends Validator
 
 
     /**
-     * Check if Redirect URI is valid.
-     * @param mixed $redirect The redirect URI.
+     * Check if Origin is valid.
+     * @param mixed $origin The Origin URI.
      * @return bool
      */
-    public function isValid($redirect): bool
+    public function isValid($origin): bool
     {
         $this->scheme = null;
         $this->host = null;
 
-        if (!is_string($redirect) || empty($redirect)) {
+        if (!is_string($origin) || empty($origin)) {
             return false;
         }
 
-        $parts = $this->parseUrl($redirect);
-        $scheme = $parts['scheme'];
-        $host = $parts['host'];
+        $this->scheme = $this->parseScheme($origin);
+        $this->host = parse_url($origin, PHP_URL_HOST);
 
-        if (!empty($scheme) && in_array($scheme, $this->schemes, true)) {
+        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
             return true;
         }
 
-        if (empty($host)) {
-            return true;
-        } else {
-            $validator = new Hostname($this->hostnames);
-            if ($validator->isValid($host)) {
-                return true;
-            }
+        if (!in_array($this->scheme, ['http', 'https'])) {
+            return false;
         }
 
-        return false;
+        $validator = new Hostname($this->hostnames);
+        return $validator->isValid($this->host);
     }
 
     /**
@@ -66,7 +62,7 @@ class Origin extends Validator
     public function getDescription(): string
     {
         $platform = $this->scheme ? Platform::getNameByScheme($this->scheme) : null;
-        $host = $this->host ? '(' . htmlspecialchars($this->host) . ')' : '';
+        $host = $this->host ? '(' . $this->host . ')' : '';
 
         if (empty($this->host) && empty($this->scheme)) {
             return 'Invalid Origin.';
@@ -95,20 +91,26 @@ class Origin extends Validator
     }
 
     /**
-     * Parses a URI string to extract scheme and host.
-     * Stores extracted parts in $this->scheme and $this->host.
-     * @param string $uri
-     * @return array{scheme: string|null, host: string|null}
+     * Parses the scheme from a URI string.
+     *
+     * @param string $uri The URI string to parse.
+     * @return string|null The extracted scheme string (e.g., "http", "exp", "mailto")
      */
-    protected function parseUrl(string $uri): array
-    {
-        if (str_ends_with($uri, '://')) {
-            $uri .= 'placeholder';
+    function parseScheme(string $uri): ?string {
+        $uri = trim($uri);
+        if ($uri === '') {
+            return null; // No scheme in empty string
         }
-        $scheme = \parse_url($uri, PHP_URL_SCHEME);
-        $host = \parse_url($uri, PHP_URL_HOST);
-        $this->scheme = $scheme ?: null;
-        $this->host = $host ?: null;
-        return ['scheme' => $this->scheme,'host' => $this->host];
+
+        $scheme = parse_url($uri, PHP_URL_SCHEME);
+        if ($scheme === false) {
+            if (preg_match('/^([a-z][a-z0-9+.-]*):/i', $uri, $matches)) {
+                return $matches[1];
+            } else {
+                return null;
+            }
+        } else {
+            return $scheme;
+        }
     }
 }
