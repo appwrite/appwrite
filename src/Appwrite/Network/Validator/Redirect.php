@@ -3,9 +3,8 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Client;
-use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Validator\Host;
+use Utopia\Validator;
 
 /**
  * Origin
@@ -14,7 +13,7 @@ use Utopia\Validator\Host;
  *
  * @package Utopia\Validator
  */
-class Redirect extends Origin
+class Redirect extends Validator
 {
     /** @var array<Document> */
     protected array $platforms = [];
@@ -27,7 +26,6 @@ class Redirect extends Origin
     public function __construct(?array $platforms = [])
     {
         $this->platforms = $platforms ?? [];
-        parent::__construct($platforms);
     }
 
     private function getSchemes(): array
@@ -78,7 +76,6 @@ class Redirect extends Origin
     {
         $this->redirect = $value ?? '';
         if (empty($value)) {
-            Console::log('False because origin is empty.');
             return false;
         }
 
@@ -91,12 +88,10 @@ class Redirect extends Origin
             !empty($parsed['scheme']) &&
             \in_array($parsed['scheme'], $this->getSchemes())
         ) {
-            Console::log('True because scheme present and in allow list.');
             return true;
         }
 
         if (!in_array($parsed['scheme'], ['http', 'https'])) {
-            Console::log('False because scheme is not valid or http(s).');
             return false;
         }
 

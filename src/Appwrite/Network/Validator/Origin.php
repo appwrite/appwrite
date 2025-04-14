@@ -4,7 +4,8 @@ namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Client;
 use Utopia\Database\Document;
-use Utopia\Validator\Host;
+use Utopia\Validator;
+use Utopia\Validator\Hostname;
 
 /**
  * Origin
@@ -13,7 +14,7 @@ use Utopia\Validator\Host;
  *
  * @package Utopia\Validator
  */
-class Origin extends Host
+class Origin extends Validator
 {
     /** @var array<Document> */
     protected array $platforms = [];
@@ -26,7 +27,6 @@ class Origin extends Host
     public function __construct(?array $platforms = [])
     {
         $this->platforms = $platforms ?? [];
-        parent::__construct($this->getHostnames());
     }
 
     private function getHostnames(): array
@@ -81,37 +81,11 @@ class Origin extends Host
     {
         $this->origin = $value ?? '';
         if (empty($value)) {
-            return false;
-        }
-        $parsed = $this->parseUrl($value);
-
-        if (!in_array($parsed['scheme'], ['http', 'https'])) {
-            return false;
+            return true;
         }
 
-        if (
-            empty($parsed['host']) ||
-            !\in_array($parsed['host'], $this->getHostnames())
-        ) {
-
-            return false;
-        }
-
-        return parent::isValid($value);
-    }
-
-    protected function parseUrl($value): array
-    {
-        $parsed = \parse_url($value);
-        $matches = [];
-
-        $parsed['scheme'] =
-            $parsed['scheme'] ??
-            (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//', $value, $matches)
-                ? $matches[1]
-                : null);
-
-        return $parsed;
+        $validator = new Hostname($this->getHostnames());
+        return $validator->isValid($value);
     }
 
     /**
