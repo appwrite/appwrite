@@ -27,9 +27,9 @@ class XList extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/runtimes')
-            ->groups(['api', 'functions'])
+            ->groups(['api'])
             ->desc('List runtimes')
-            ->label('scope', 'functions.read')
+            ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',

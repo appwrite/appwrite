@@ -241,13 +241,15 @@ class Create extends Action
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
                     'buildOutput' => $outputDirectory,
+                    'adapter' => $site->getAttribute('adapter', ''),
+                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
-                    'type' => $type
+                    'type' => $type,
                 ]));
 
                 $site = $site
@@ -306,6 +308,8 @@ class Create extends Action
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
                     'buildOutput' => $outputDirectory,
+                    'adapter' => $site->getAttribute('adapter', ''),
+                    'fallbackFile' => $site->getAttribute('fallbackFile', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
@@ -314,7 +318,7 @@ class Create extends Action
                     'search' => implode(' ', [$deploymentId]),
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
-                    'type' => $type
+                    'type' => $type,
                 ]));
 
                 $site = $site

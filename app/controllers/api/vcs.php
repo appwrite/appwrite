@@ -134,12 +134,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
@@ -176,7 +176,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }
@@ -219,7 +219,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $commands[] = $resource->getAttribute('commands', '');
             }
 
-            $deployment = $dbForProject->createDocument('deployments', new Document([
+            $deployment = Authorization::skip(fn () => $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -232,6 +232,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'entrypoint' => $resource->getAttribute('entrypoint', ''),
                 'buildCommands' => \implode(' && ', $commands),
                 'buildOutput' => $resource->getAttribute('outputDirectory', ''),
+                'adapter' => $resource->getAttribute('adapter', ''),
+                'fallbackFile' => $resource->getAttribute('fallbackFile', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -251,14 +253,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerBranch' => $providerBranch,
                 'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
-            ]));
+            ])));
 
             $resource = $resource
                 ->setAttribute('latestDeploymentId', $deployment->getId())
                 ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
                 ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                 ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
 
             if ($resource->getCollection() === 'sites') {
                 $projectId = $project->getId();

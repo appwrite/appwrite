@@ -321,7 +321,16 @@ class FunctionsCustomClientTest extends Scope
             $this->assertContains($template['useCases'][0], ['starter', 'ai']);
         }
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-        $this->assertContains('bun-1.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+
+        foreach ($templates['body']['templates'] as $template) {
+            $this->assertThat(
+                \array_column($template['runtimes'], 'name'),
+                $this->logicalOr(
+                    $this->containsEqual('bun-1.0'),
+                    $this->containsEqual('dart-2.16'),
+                ),
+            );
+        }
 
         // List templates with pagination and filters
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([

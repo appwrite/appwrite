@@ -51,6 +51,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('log')
+            ->inject('executor')
             ->inject('isResourceBlocked')
             ->callback([$this, 'action']);
     }
@@ -65,6 +66,7 @@ class Functions extends Action
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         Log $log,
+        Executor $executor,
         callable $isResourceBlocked
     ): void {
         $payload = $message->getPayload() ?? [];
@@ -156,6 +158,7 @@ class Functions extends Action
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
+                        executor:  $executor,
                         trigger: 'event',
                         path: '/',
                         method: 'POST',
@@ -198,6 +201,7 @@ class Functions extends Action
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'http',
                     path: $path,
                     method: $method,
@@ -222,6 +226,7 @@ class Functions extends Action
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'schedule',
                     path: $path,
                     method: $method,
@@ -308,6 +313,7 @@ class Functions extends Action
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
+     * @param Executor $executor
      * @param string $trigger
      * @param string $path
      * @param string $method
@@ -334,6 +340,7 @@ class Functions extends Action
         Event $queueForEvents,
         Document $project,
         Document $function,
+        Executor $executor,
         string $trigger,
         string $path,
         string $method,
@@ -512,7 +519,6 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),

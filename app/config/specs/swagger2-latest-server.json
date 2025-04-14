@@ -8509,7 +8509,7 @@
                                 },
                                 "logging": {
                                     "type": "boolean",
-                                    "description": "Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.",
+                                    "description": "When disabled, executions will exclude logs and errors, and will be slightly faster.",
                                     "default": true,
                                     "x-example": false
                                 },
@@ -8614,7 +8614,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "functions.read",
+                    "scope": "public",
                     "platforms": [
                         "server"
                     ],
@@ -8924,7 +8924,7 @@
                                 },
                                 "logging": {
                                     "type": "boolean",
-                                    "description": "Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.",
+                                    "description": "When disabled, executions will exclude logs and errors, and will be slightly faster.",
                                     "default": true,
                                     "x-example": false
                                 },
@@ -17285,6 +17285,7 @@
                                         "sveltekit",
                                         "astro",
                                         "remix",
+                                        "lynx",
                                         "flutter",
                                         "vite",
                                         "other"
@@ -17298,10 +17299,16 @@
                                     "default": true,
                                     "x-example": false
                                 },
+                                "logging": {
+                                    "type": "boolean",
+                                    "description": "When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.",
+                                    "default": true,
+                                    "x-example": false
+                                },
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -17494,7 +17501,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "sites.read",
+                    "scope": "public",
                     "platforms": [
                         "server"
                     ],
@@ -17708,6 +17715,7 @@
                                         "sveltekit",
                                         "astro",
                                         "remix",
+                                        "lynx",
                                         "flutter",
                                         "vite",
                                         "other"
@@ -17721,10 +17729,16 @@
                                     "default": true,
                                     "x-example": false
                                 },
+                                "logging": {
+                                    "type": "boolean",
+                                    "description": "When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.",
+                                    "default": true,
+                                    "x-example": false
+                                },
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -18276,7 +18290,7 @@
         },
         "\/sites\/{siteId}\/deployments\/template": {
             "post": {
-                "summary": "Create deployment",
+                "summary": "Create template deployment",
                 "operationId": "sitesCreateTemplateDeployment",
                 "consumes": [
                     "application\/json"
@@ -21009,7 +21023,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, teamId, invited, joined, confirm",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, teamId, invited, joined, confirm, roles",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -23113,6 +23127,27 @@
                         "type": "string",
                         "x-example": "<USER_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, teamId, invited, joined, confirm, roles",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
                     }
                 ]
             }
@@ -27964,6 +27999,11 @@
                     "description": "Is the site deployed with the latest configuration? This is set to false if you've changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the site to update it with the latest configuration.",
                     "x-example": false
                 },
+                "logging": {
+                    "type": "boolean",
+                    "description": "When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.",
+                    "x-example": false
+                },
                 "framework": {
                     "type": "string",
                     "description": "Site framework.",
@@ -28087,6 +28127,7 @@
                 "name",
                 "enabled",
                 "live",
+                "logging",
                 "framework",
                 "deploymentId",
                 "deploymentCreatedAt",
@@ -28155,7 +28196,7 @@
                 },
                 "logging": {
                     "type": "boolean",
-                    "description": "Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.",
+                    "description": "When disabled, executions will exclude logs and errors, and will be slightly faster.",
                     "x-example": false
                 },
                 "runtime": {

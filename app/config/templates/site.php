@@ -16,6 +16,16 @@ if (System::getEnv('_APP_ENV') === 'development') {
 
 $url = $protocol . '://' . $hostname;
 
+class UseCases
+{
+    public const PORTFOLIO = 'portfolio';
+    public const STARTER = 'starter';
+    public const EVENTS = 'events';
+    public const ECOMMERCE = 'ecommerce';
+    public const DOCUMENTATION = 'documentation';
+    public const BLOG = 'blog';
+}
+
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
         'key' => 'sveltekit',
@@ -77,15 +87,6 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
-    'OTHER' => [
-        'key' => 'other',
-        'name' => 'Other',
-        'installCommand' => 'npm install',
-        'buildCommand' => 'npm run build',
-        'buildRuntime' => 'node-22',
-        'adapter' => 'static',
-        'fallbackFile' => 'index.html',
-    ],
     'VITE' => [
         'key' => 'vite',
         'name' => 'Vite',
@@ -115,6 +116,15 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist/angular/browser',
         'fallbackFile' => 'index.html',
     ],
+    'ANALOG' => [
+        'key' => 'analog',
+        'name' => 'Analog',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'ssr',
+        'outputDirectory' => './dist/analog',
+    ],
     'VUE' => [
         'key' => 'vue',
         'name' => 'Vue.js',
@@ -134,6 +144,16 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'outputDirectory' => './',
     ],
+    'LYNX' => [
+        'key' => 'lynx',
+        'name' => 'Lynx',
+        'installCommand' => 'npm install && cd web && npm install && cd ..',
+        'buildCommand' => 'npm run build && cd web && npm run build && cd ..',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'static',
+        'outputDirectory' => './web/dist',
+        'fallbackFile' => 'index.html',
+    ],
 ];
 
 function getFramework(string $frameworkEnum, array $overrides)
@@ -144,9 +164,118 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
+        'key' => 'template-for-documentation',
+        'name' => 'Documentation template',
+        'tagline' => 'Modern site to store your knowledge with a clean design, full-text search, dark mode, and more.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/template-for-documentation-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/template-for-documentation-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'template-for-documentation',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'lynx-starter',
+        'name' => 'Lynx Starter',
+        'tagline' => 'Sample application built with Lynx, a cross-platform framework focused on performance.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/lynx-starter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/lynx-starter-light.png',
+        'frameworks' => [
+            getFramework('LYNX', [
+                'providerRootDirectory' => './lynx/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'vitepress',
+        'name' => 'Vitepress',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Vite.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/vitepress-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/vitepress-light.png',
+        'frameworks' => [
+            getFramework('VITE', [
+                'providerRootDirectory' => './vite/vitepress',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm i vitepress && npm install',
+                'buildCommand' => 'npm run docs:build',
+                'outputDirectory' => './.vitepress/dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'vuepress',
+        'name' => 'Vuepress',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Vue.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/vuepress-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/vuepress-light.png',
+        'frameworks' => [
+            getFramework('VUE', [
+                'providerRootDirectory' => './vue/vuepress',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'outputDirectory' => './src/.vuepress/dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
+        'key' => 'docusaurus',
+        'name' => 'Docusaurus',
+        'tagline' => 'Platform for documentation and knowledge sharing powered by React.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
+        'screenshotDark' => $url . '/images/sites/templates/docusaurus-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/docusaurus-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/docusaurus',
+                'outputDirectory' => '404.html',
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'outputDirectory' => './build',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => []
+    ],
+    [
         'key' => 'nxt-lnk',
         'name' => 'Nxt Lnk',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/nxt-lnk-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/nxt-lnk-light.png',
         'frameworks' => [
@@ -160,11 +289,12 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => []
     ],
-
     [
         'key' => 'magic-portfolio',
         'name' => 'Magic Portfolio',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Complex personal website to showcase your projects, articles, and more.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/magic-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/magic-portfolio-light.png',
         'frameworks' => [
@@ -178,11 +308,12 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => []
     ],
-
     [
         'key' => 'littlelink',
         'name' => 'LittleLink',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/littlelink-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/littlelink-light.png',
         'frameworks' => [
@@ -196,11 +327,12 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => []
     ],
-
     [
         'key' => 'logspot',
         'name' => 'Logspot',
-        'useCases' => ['blog'],
+        'tagline' => 'Website to publish changelogs of your application.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/logspot-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/logspot-light.png',
         'frameworks' => [
@@ -220,7 +352,9 @@ return [
     [
         'key' => 'astro-nano',
         'name' => 'Astro Nano',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Minimal personal website to showcase your projects, articles, and more.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/astro-nano-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-nano-light.png',
         'frameworks' => [
@@ -239,7 +373,9 @@ return [
     [
         'key' => 'astro-starlight',
         'name' => 'Astro Starlight',
-        'useCases' => ['documentation'],
+        'tagline' => 'Platform for documentation and knowledge sharing powered by Astro.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DOCUMENTATION],
         'screenshotDark' => $url . '/images/sites/templates/astro-starlight-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starlight-light.png',
         'frameworks' => [
@@ -258,7 +394,9 @@ return [
     [
         'key' => 'astro-sphere',
         'name' => 'Astro Sphere',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Modern personal website to showcase your projects, articles, and more.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/astro-sphere-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-sphere-light.png',
         'frameworks' => [
@@ -277,7 +415,9 @@ return [
     [
         'key' => 'astro-starlog',
         'name' => 'Astro Starlog',
-        'useCases' => ['blog'],
+        'tagline' => 'Platform for publishing written content and media powered by Astro.',
+        'score' => 5, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/astro-starlog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starlog-light.png',
         'frameworks' => [
@@ -296,7 +436,9 @@ return [
     [
         'key' => 'onelink',
         'name' => 'Onelink',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Personal website for creators to merge all URLs to social profiles.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/onelink-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/onelink-light.png',
         'frameworks' => [
@@ -316,13 +458,15 @@ return [
     [
         'key' => 'starter-for-flutter',
         'name' => 'Flutter starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Flutter application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-flutter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-flutter-light.png',
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'sh build.sh',
+                'buildCommand' => 'bash build.sh',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -359,7 +503,9 @@ return [
     [
         'key' => 'starter-for-js',
         'name' => 'JavaScript starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple JavaScript application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-js-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-js-light.png',
         'frameworks' => [
@@ -401,14 +547,16 @@ return [
     [
         'key' => 'starter-for-angular',
         'name' => 'Angular starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Angular application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-angular-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-angular-light.png',
         'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './',
                 'outputDirectory' => './dist/angular-starter-kit-for-appwrite/browser',
-                'buildCommand' => 'sh prepare-env.sh && npm run build'
+                'buildCommand' => 'bash prepare-env.sh && npm run build'
             ]),
         ],
         'vcsProvider' => 'github',
@@ -443,9 +591,144 @@ return [
         ]
     ],
     [
+        'key' => 'starter-for-astro',
+        'name' => 'Astro starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Astro application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-astro-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-astro-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-astro',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-analog',
+        'name' => 'Analog starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Analog application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-analog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-analog-light.png',
+        'frameworks' => [
+            getFramework('ANALOG', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-analog',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-remix',
+        'name' => 'Remix starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Remix application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-remix-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-remix-light.png',
+        'frameworks' => [
+            getFramework('REMIX', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-remix',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Svelte application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-svelte-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-svelte-light.png',
         'frameworks' => [
@@ -487,7 +770,9 @@ return [
     [
         'key' => 'starter-for-react',
         'name' => 'React starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple React application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-light.png',
         'frameworks' => [
@@ -529,7 +814,9 @@ return [
     [
         'key' => 'starter-for-vue',
         'name' => 'Vue starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Vue application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-vue-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-vue-light.png',
         'frameworks' => [
@@ -571,7 +858,9 @@ return [
     [
         'key' => 'starter-for-react-native',
         'name' => 'React Native starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple React Native application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-react-native-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-react-native-light.png',
         'frameworks' => [
@@ -614,7 +903,9 @@ return [
     [
         'key' => 'starter-for-nextjs',
         'name' => 'Next.js starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Next.js application integrated with Appwrite SDK.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nextjs-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nextjs-light.png',
         'frameworks' => [
@@ -656,7 +947,9 @@ return [
     [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
-        'useCases' => ['starter'],
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Nuxt application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-nuxt-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-nuxt-light.png',
         'frameworks' => [
@@ -698,7 +991,9 @@ return [
     [
         'key' => 'template-for-event',
         'name' => 'Event template',
-        'useCases' => ['events'],
+        'tagline' => 'Hackathon landing page with support for project submissions.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::EVENTS],
         'screenshotDark' => $url . '/images/sites/templates/template-for-event-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-event-light.png',
         'frameworks' => [
@@ -734,7 +1029,9 @@ return [
     [
         'key' => 'template-for-portfolio',
         'name' => 'Portfolio template',
-        'useCases' => ['portfolio'],
+        'tagline' => 'Simple personal website to showcase your projects, articles, and more.',
+        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::PORTFOLIO],
         'screenshotDark' => $url . '/images/sites/templates/template-for-portfolio-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-portfolio-light.png',
         'frameworks' => [
@@ -751,7 +1048,9 @@ return [
     [
         'key' => 'template-for-store',
         'name' => 'Store template',
-        'useCases' => ['ecommerce'],
+        'tagline' => 'E-commerce platform for selling products with Stripe integration.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::ECOMMERCE],
         'screenshotDark' => $url . '/images/sites/templates/template-for-store-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-store-light.png',
         'frameworks' => [
@@ -793,7 +1092,9 @@ return [
     [
         'key' => 'template-for-blog',
         'name' => 'Blog template',
-        'useCases' => ['blog'],
+        'tagline' => 'Platform for publishing written content and media.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::BLOG],
         'screenshotDark' => $url . '/images/sites/templates/template-for-blog-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/template-for-blog-light.png',
         'frameworks' => [
@@ -807,10 +1108,13 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => []
     ],
+    // TODO: Remove astro starter eventually, or add all frameworks's starters
     [
         'key' => 'astro-starter',
         'name' => 'Astro starter',
-        'useCases' => ['starter'],
+        'tagline' => 'Sample application built with Astro, a content-driven web framework.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
         'frameworks' => [
@@ -827,7 +1131,9 @@ return [
     [
         'key' => 'remix-starter',
         'name' => 'Remix starter',
-        'useCases' => ['starter'],
+        'tagline' => 'Sample application built with Remix, a React meta-framework.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
         'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
         'frameworks' => [

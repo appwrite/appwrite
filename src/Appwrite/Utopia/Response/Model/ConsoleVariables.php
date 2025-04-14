@@ -10,12 +10,24 @@ class ConsoleVariables extends Model
     public function __construct()
     {
         $this
-            ->addRule('_APP_DOMAIN_TARGET', [
-                'type' => self::TYPE_STRING,
-                'description' => 'CNAME target for your Appwrite custom domains.',
-                'default' => '',
-                'example' => 'appwrite.io',
-            ])
+        ->addRule('_APP_DOMAIN_TARGET_CNAME', [
+            'type' => self::TYPE_STRING,
+            'description' => 'CNAME target for your Appwrite custom domains.',
+            'default' => '',
+            'example' => 'appwrite.io',
+        ])
+        ->addRule('_APP_DOMAIN_TARGET_A', [
+            'type' => self::TYPE_STRING,
+            'description' => 'A target for your Appwrite custom domains.',
+            'default' => '',
+            'example' => '127.0.0.1',
+        ])
+        ->addRule('_APP_DOMAIN_TARGET_AAAA', [
+            'type' => self::TYPE_STRING,
+            'description' => 'AAAA target for your Appwrite custom domains.',
+            'default' => '',
+            'example' => '::1',
+        ])
             ->addRule('_APP_STORAGE_LIMIT', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum file size allowed for file upload in bytes.',
@@ -57,6 +69,12 @@ class ConsoleVariables extends Model
                 'description' => 'A domain to use for site URLs.',
                 'default' => '',
                 'example' => 'sites.localhost',
+            ])
+            ->addRule('_APP_DOMAIN_FUNCTIONS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A domain to use for function URLs.',
+                'default' => '',
+                'example' => 'functions.localhost',
             ])
             ->addRule(
                 '_APP_OPTIONS_FORCE_HTTPS',

@@ -4,24 +4,22 @@ namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
 
-class CNAME extends Validator
+class DNS extends Validator
 {
+    public const RECORD_A = 'a';
+    public const RECORD_AAAA = 'aaaa';
+    public const RECORD_CNAME = 'cname';
+
     /**
      * @var mixed
      */
     protected mixed $logs;
 
     /**
-     * @var string
-     */
-    protected $target;
-
-    /**
      * @param string $target
      */
-    public function __construct($target)
+    public function __construct(protected $target, protected string $type = self::RECORD_CNAME)
     {
-        $this->target = $target;
     }
 
     /**
@@ -29,7 +27,7 @@ class CNAME extends Validator
      */
     public function getDescription(): string
     {
-        return 'Invalid CNAME record';
+        return 'Invalid DNS record';
     }
 
     /**
@@ -41,20 +39,34 @@ class CNAME extends Validator
     }
 
     /**
-     * Check if CNAME record target value matches selected target
+     * Check if DNS record value matches specific value
      *
      * @param mixed $domain
      *
      * @return bool
      */
-    public function isValid($domain): bool
+    public function isValid($value): bool
     {
-        if (!is_string($domain)) {
+        $typeNative = match ($this->type) {
+            self::RECORD_A => DNS_A,
+            self::RECORD_AAAA => DNS_AAAA,
+            self::RECORD_CNAME => DNS_CNAME,
+            default => throw new \Exception('Record type not supported.')
+        };
+
+        $dnsKey = match ($this->type) {
+            self::RECORD_A => 'ip',
+            self::RECORD_AAAA => 'ipv6',
+            self::RECORD_CNAME => 'target',
+            default => throw new \Exception('Record type not supported.')
+        };
+
+        if (!is_string($value)) {
             return false;
         }
 
         try {
-            $records = \dns_get_record($domain, DNS_CNAME);
+            $records = \dns_get_record($value, $typeNative);
             $this->logs = $records;
         } catch (\Throwable $th) {
             return false;
@@ -65,7 +77,7 @@ class CNAME extends Validator
         }
 
         foreach ($records as $record) {
-            if (isset($record['target']) && $record['target'] === $this->target) {
+            if (isset($record[$dnsKey]) && $record[$dnsKey] === $this->target) {
                 return true;
             }
         }
