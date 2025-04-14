@@ -36195,6 +36195,14 @@
                     "type": "string",
                     "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "sdks": {
+                    "type": "array",
+                    "description": "List of SDK user agents that used this key.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": "appwrite:flutter"
                 }
             },
             "required": [
@@ -36204,7 +36212,8 @@
                 "name",
                 "expire",
                 "secret",
-                "accessedAt"
+                "accessedAt",
+                "sdks"
             ]
         },
         "mockNumber": {
