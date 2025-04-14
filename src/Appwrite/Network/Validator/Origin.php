@@ -3,7 +3,6 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Platform;
-use Utopia\CLI\Console;
 use Utopia\Validator;
 use Utopia\Validator\Hostname;
 
@@ -96,7 +95,8 @@ class Origin extends Validator
      * @param string $uri The URI string to parse.
      * @return string|null The extracted scheme string (e.g., "http", "exp", "mailto")
      */
-    function parseScheme(string $uri): ?string {
+    public function parseScheme(string $uri): ?string
+    {
         $uri = trim($uri);
         if ($uri === '') {
             return null; // No scheme in empty string
