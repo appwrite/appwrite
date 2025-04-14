@@ -630,7 +630,7 @@ class Builds extends Action
 
             $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
             if (isset($plan['buildSize'])) {
-                $buildSizeLimit = $plan['buildSize'] * 1000 * 1000 * 1000;
+                $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
