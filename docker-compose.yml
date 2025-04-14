@@ -115,7 +115,9 @@ services:
       - _APP_OPTIONS_COMPUTE_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -160,7 +162,8 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_COMPUTE_SIZE_LIMIT
-      - _APP_COMPUTE_TIMEOUT
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -175,6 +178,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
@@ -201,11 +205,13 @@ services:
       - _APP_DATABASE_SHARED_TABLES_V1
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.3.0-sites-rc.38
+    image: appwrite/console:5.3.0-sites-rc.40
     restart: unless-stopped
     networks:
       - appwrite
@@ -394,6 +400,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DATABASE_SHARED_TABLES_V1
       - _APP_EMAIL_CERTIFICATES
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -462,7 +470,8 @@ services:
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
-      - _APP_COMPUTE_TIMEOUT
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -494,6 +503,8 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DOMAIN_SITES
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -515,7 +526,9 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
@@ -559,7 +572,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_COMPUTE_TIMEOUT
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -680,7 +694,9 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -712,7 +728,9 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -729,6 +747,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_DELAY

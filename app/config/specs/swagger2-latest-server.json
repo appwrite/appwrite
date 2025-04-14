@@ -17308,7 +17308,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -17738,7 +17738,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -18290,7 +18290,7 @@
         },
         "\/sites\/{siteId}\/deployments\/template": {
             "post": {
-                "summary": "Create deployment",
+                "summary": "Create template deployment",
                 "operationId": "sitesCreateTemplateDeployment",
                 "consumes": [
                     "application\/json"

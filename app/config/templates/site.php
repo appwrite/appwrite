@@ -116,6 +116,15 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist/angular/browser',
         'fallbackFile' => 'index.html',
     ],
+    'ANALOG' => [
+        'key' => 'analog',
+        'name' => 'Analog',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'ssr',
+        'outputDirectory' => './dist/analog',
+    ],
     'VUE' => [
         'key' => 'vue',
         'name' => 'Vue.js',
@@ -582,6 +591,139 @@ return [
         ]
     ],
     [
+        'key' => 'starter-for-astro',
+        'name' => 'Astro starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Astro application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-astro-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-astro-light.png',
+        'frameworks' => [
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './',
+                'adapter' => 'static',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-astro',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'PUBLIC_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'PUBLIC_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-analog',
+        'name' => 'Analog starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Analog application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-analog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-analog-light.png',
+        'frameworks' => [
+            getFramework('ANALOG', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-analog',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'starter-for-remix',
+        'name' => 'Remix starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple Remix application integrated with Appwrite SDK.',
+        'score' => 3, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-remix-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-remix-light.png',
+        'frameworks' => [
+            getFramework('REMIX', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-remix',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-svelte',
         'name' => 'Svelte starter',
         'useCases' => [UseCases::STARTER],
@@ -966,6 +1108,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => []
     ],
+    // TODO: Remove astro starter eventually, or add all frameworks's starters
     [
         'key' => 'astro-starter',
         'name' => 'Astro starter',

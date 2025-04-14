@@ -25244,7 +25244,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -25895,7 +25895,7 @@
                                 "timeout": {
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
-                                    "default": 15,
+                                    "default": 30,
                                     "x-example": 1
                                 },
                                 "installCommand": {
@@ -26442,7 +26442,7 @@
         },
         "\/sites\/{siteId}\/deployments\/template": {
             "post": {
-                "summary": "Create deployment",
+                "summary": "Create template deployment",
                 "operationId": "sitesCreateTemplateDeployment",
                 "consumes": [
                     "application\/json"
@@ -41531,10 +41531,20 @@
             "description": "Console Variables",
             "type": "object",
             "properties": {
-                "_APP_DOMAIN_TARGET": {
+                "_APP_DOMAIN_TARGET_CNAME": {
                     "type": "string",
                     "description": "CNAME target for your Appwrite custom domains.",
                     "x-example": "appwrite.io"
+                },
+                "_APP_DOMAIN_TARGET_A": {
+                    "type": "string",
+                    "description": "A target for your Appwrite custom domains.",
+                    "x-example": "127.0.0.1"
+                },
+                "_APP_DOMAIN_TARGET_AAAA": {
+                    "type": "string",
+                    "description": "AAAA target for your Appwrite custom domains.",
+                    "x-example": "::1"
                 },
                 "_APP_STORAGE_LIMIT": {
                     "type": "integer",
@@ -41590,7 +41600,9 @@
                 }
             },
             "required": [
-                "_APP_DOMAIN_TARGET",
+                "_APP_DOMAIN_TARGET_CNAME",
+                "_APP_DOMAIN_TARGET_A",
+                "_APP_DOMAIN_TARGET_AAAA",
                 "_APP_STORAGE_LIMIT",
                 "_APP_COMPUTE_SIZE_LIMIT",
                 "_APP_USAGE_STATS",
