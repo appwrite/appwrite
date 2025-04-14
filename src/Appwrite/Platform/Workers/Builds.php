@@ -412,7 +412,7 @@ class Builds extends Action
                 }
 
                 if ($directorySize > $functionsSizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -630,7 +630,7 @@ class Builds extends Action
 
             $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             /** Update the build document */
