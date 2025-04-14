@@ -2575,7 +2575,7 @@ class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
-            'name' => 'Empty output directory',
+            'name' => 'Missing output directory',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
             'outputDirectory' => './non-existing-directory',
