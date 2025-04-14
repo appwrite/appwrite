@@ -1312,7 +1312,7 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
-        $functionSizeLimit = System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+        $functionSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
 
         if (isset($plan['functionSize'])) {
             $functionSizeLimit = $plan['functionSize'] * 1000 * 1000;
