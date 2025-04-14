@@ -4,12 +4,10 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
-use Appwrite\ID;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
@@ -109,6 +107,7 @@ class Migrations extends Action
         $source = $migration->getAttribute('source');
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
+        $migrationOptions = $migration->getAttribute('options');
 
         return match ($source) {
             Firebase::getName() => new Firebase(
@@ -139,7 +138,7 @@ class Migrations extends Action
             ),
             Csv::getName() => new Csv(
                 $resourceId,
-                $credentials['path'],
+                $migrationOptions['path'],
                 $this->deviceForCsvImports,
                 $this->dbForProject
             ),
@@ -237,22 +236,7 @@ class Migrations extends Action
         $projectDocument = $this->dbForPlatform->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
-        $importDocument = null;
         $transfer = $source = $destination = null;
-
-        if ($migration->getAttribute('source') === Csv::getName()) {
-            $fileSize = $migration->getAttribute('credentials', [])['size'] ?? 0;
-            $importDocument = new Document([
-                '$id' => ID::unique(),
-                'size' => $fileSize, // uncompressed and decrypted file size
-                'startedAt' => DateTime::now(),
-                'migrationId' => $migration->getId(),
-                'migrationInternalId' => $migration->getInternalId(),
-                'resourceId' => $migration->getAttribute('resourceId', ''),
-                'resourceType' => $migration->getAttribute('resourceType', ''),
-                'errors' => [],
-            ]);
-        }
 
         try {
             if (
@@ -367,7 +351,6 @@ class Migrations extends Action
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $importDocument?->setAttribute('errors', $errorMessages);
             }
         } finally {
             $this->updateMigrationDocument($migration, $projectDocument, $queueForRealtime);
@@ -409,12 +392,6 @@ class Migrations extends Action
             if ($migration->getAttribute('status', '') === 'completed') {
                 $destination?->success();
                 $source?->success();
-            }
-
-            if ($migration->getAttribute('source') === Csv::getName()) {
-                // make and save the import document to database
-                $importDocument->setAttribute('status', $migration->getAttribute('status', ''));
-                $this->dbForProject->createDocument('imports', $importDocument);
             }
         }
     }

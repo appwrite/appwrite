@@ -4,7 +4,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -28,11 +27,8 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -349,37 +345,17 @@ App::post('/v1/migrations/csv')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        // read file content.
-        $source = $deviceForFiles->read($path);
-
-        // decrypt
-        if (!empty($file->getAttribute('openSSLCipher'))) {
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        // decompress
-        switch ($file->getAttribute('algorithm', Compression::NONE)) {
-            case Compression::ZSTD:
-                $compressor = new Zstd();
-                $source = $compressor->decompress($source);
-                break;
-            case Compression::GZIP:
-                $compressor = new GZIP();
-                $source = $compressor->decompress($source);
-                break;
+        if (!empty($file->getAttribute('openSSLCipher')) || $file->getAttribute('algorithm', Compression::NONE) !== Compression::NONE) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, "Only uncompressed, unencrypted CSV files can be used for document import.");
         }
 
         // copy to temporary folder
         $migrationId = ID::unique();
-        $path = $deviceForCsvImports->getRoot() . '/' . $migrationId . '_' . $fileId . '.csv';
-        $deviceForCsvImports->write($path, $source, 'text/csv');
+        $newPath = $deviceForCsvImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
+        if (!$deviceForFiles->transfer($path, $newPath, $deviceForCsvImports)) {
+            throw new \Exception("Unable to copy file");
+        }
+
         $fileSize = $deviceForCsvImports->getFileSize($path);
         $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
 
@@ -395,8 +371,8 @@ App::post('/v1/migrations/csv')
             'statusCounters' => [],
             'resourceData' => [],
             'errors' => [],
-            'credentials' => [
-                'path' => $path,
+            'options' => [
+                'path' => $newPath,
                 'size' => $fileSize,
             ],
         ]));
