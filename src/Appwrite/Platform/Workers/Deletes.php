@@ -1050,24 +1050,20 @@ class Deletes extends Action
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
-
         try {
-            $documents = $database->deleteDocuments($collection, $queries);
+            $count =$database->deleteDocuments(
+                $collection,
+                $queries,
+                Database::DELETE_BATCH_SIZE,
+                $callback
+            );
         } catch (Throwable $th) {
             $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
             Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
             return;
         }
 
-        if (\is_callable($callback)) {
-            foreach ($documents as $document) {
-                $callback($document);
-            }
-        }
-
         $end = \microtime(true);
-        $count = \count($documents);
-
         Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
