@@ -57,6 +57,13 @@ class DevKey extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE
             ])
+            ->addRule('sdks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of SDK user agents that used this key.',
+                'default' => null,
+                'example' => 'appwrite:flutter',
+                'array' => true
+            ])
         ;
     }
 

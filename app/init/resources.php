@@ -802,7 +802,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
     $accessedAt = $key->getAttribute('accessedAt', '');
     if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
         $key->setAttribute('accessedAt', DatabaseDateTime::now());
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $key));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
     }
 
@@ -819,7 +819,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
             /** Update access time as well */
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $key));
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }

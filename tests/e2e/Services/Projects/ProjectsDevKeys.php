@@ -191,24 +191,62 @@ trait ProjectsDevKeys
     }
 
     /**
-     * @depends testCreateProject
+     * @depends testCreateProjectDevKey
+     * @group devKeys
+     */
+    public function testGetDevKeyWithSdks($data): array
+    {
+        $id = $data['projectId'] ?? '';
+        $keyId = $data['keyId'] ?? '';
+        $devKey = $data['secret'] ?? '';
+
+        /** Use dev key with python sdk */
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $devKey,
+            'x-sdk-name' => 'python'
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(401, $res['headers']['status-code']);
+
+        /** Use dev key with php sdk */
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $devKey,
+            'x-sdk-name' => 'php'
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(401, $res['headers']['status-code']);
+
+        /** Get the dev key */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertCount(2, $response['body']['sdks']);
+        $this->assertContains('python', $response['body']['sdks']);
+        $this->assertContains('php', $response['body']['sdks']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectDevKey
      * @group devKeys
      */
     public function testNoHostValidationWithDevKey($data): void
     {
         $id = $data['projectId'] ?? '';
-
-        /** Create a dev key */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $devKey = $response['body']['secret'];
+        $devKey = $data['secret'] ?? '';
 
         /** Test oauth2 and get invalid `success` URL */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/google', [
@@ -265,20 +303,7 @@ trait ProjectsDevKeys
     public function testCorsWithDevKey($data): void
     {
         $projectId = $data['projectId'] ?? '';
-
-        $id = $data['projectId'] ?? '';
-
-        /** Create a dev key */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $devKey = $response['body']['secret'];
+        $devKey = $data['secret'] ?? '';
         $origin = 'http://example.com';
 
         /**
@@ -316,26 +341,17 @@ trait ProjectsDevKeys
     }
 
     /**
-     * @depends testCreateProject
+     * @depends testCreateProjectDevKey
      * @group devKeys
      */
     public function testNoRateLimitWithDevKey($data): void
     {
         $id = $data['projectId'] ?? '';
+        $devKey = $data['secret'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
-
-        $devKey = $response['body']['secret'];
-
         for ($i = 0; $i < 10; $i++) {
             $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
@@ -364,7 +380,6 @@ trait ProjectsDevKeys
             'password' => 'password'
         ]);
         $this->assertEquals(401, $res['headers']['status-code']);
-
 
         /**
          * Test for FAILURE
@@ -444,7 +459,7 @@ trait ProjectsDevKeys
         $this->assertEquals($keyId, $response['body']['$id']);
         $this->assertEquals('Key Test Update', $response['body']['name']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
+        $this->assertNotEmpty($response['body']['accessedAt']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -456,7 +471,7 @@ trait ProjectsDevKeys
         $this->assertEquals($keyId, $response['body']['$id']);
         $this->assertEquals('Key Test Update', $response['body']['name']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
+        $this->assertNotEmpty($response['body']['accessedAt']);
 
         return $data;
     }
