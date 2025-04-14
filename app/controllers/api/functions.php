@@ -1278,7 +1278,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceForFunctions')
     ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
+    ->inject('plan')
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds, array $plan) {
 
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -1311,8 +1312,9 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
+        $functionFileSize = isset($plan['functionSize']) ? $plan['functionSize'] * 1000 * 1000 : (System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT') ?: 30000000);
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize($functionFileSize);
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
