@@ -405,9 +405,11 @@ class Builds extends Action
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
 
-                $functionsSizeLimit = empty($plan['functionSize'])
-                    ? (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 30000000)
-                    : (int) $plan['functionSize'] * 1000 * 1000;
+                $functionsSizeLimit = (int) (System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT') ?: 30000000);
+
+                if (!empty($plan['functionSize'])) {
+                    $functionsSizeLimit = (int) $plan['functionSize'] * 1000 * 1000;
+                }
 
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
