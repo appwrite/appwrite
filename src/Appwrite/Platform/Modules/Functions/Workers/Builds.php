@@ -41,6 +41,8 @@ use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
+use function Swoole\Coroutine\batch;
+
 class Builds extends Action
 {
     public static function getName(): string
@@ -70,6 +72,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -88,6 +91,7 @@ class Builds extends Action
      * @param Device $deviceForSites
      * @param Device $deviceForFiles
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      */
@@ -106,7 +110,8 @@ class Builds extends Action
         Device $deviceForSites,
         callable $isResourceBlocked,
         Device $deviceForFiles,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -144,7 +149,8 @@ class Builds extends Action
                     $deployment,
                     $template,
                     $isResourceBlocked,
-                    $log
+                    $log,
+                    $executor
                 );
                 break;
 
@@ -170,6 +176,7 @@ class Builds extends Action
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      *
@@ -192,7 +199,8 @@ class Builds extends Action
         Document $deployment,
         Document $template,
         callable $isResourceBlocked,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -204,8 +212,6 @@ class Builds extends Action
             'sites' => $deviceForSites,
             'functions' => $deviceForFunctions,
         };
-
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $log->addTag($resourceKey, $resource->getId());
 
@@ -559,6 +565,10 @@ class Builds extends Action
             // Some runtimes/frameworks can't compile with less memory than this
             $minMemory = $resource->getCollection() === 'sites' ? 2048 : 1024;
 
+            if ($resource->getAttribute('framework', '') === 'analog') {
+                $minMemory = 4096;
+            }
+
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
@@ -646,7 +656,11 @@ class Builds extends Action
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
+                        if ($version === 'v2') {
+                            $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
+                        } else {
+                            $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
+                        }
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
@@ -768,6 +782,10 @@ class Builds extends Action
                     $resource->setAttribute('adapter', $detection->getName());
                     $resource->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
                     $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+
+                    $deployment->setAttribute('adapter', $detection->getName());
+                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                     throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
@@ -779,7 +797,6 @@ class Builds extends Action
             $deployment->setAttribute('buildStartAt', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $deployment->setAttribute('buildEndAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment->setAttribute('status', 'ready');
             $deployment->setAttribute('buildPath', $response['path']);
             $deployment->setAttribute('buildSize', $response['size']);
             $deployment->setAttribute('totalSize', $deployment->getAttribute('buildSize', 0) + $deployment->getAttribute('sourceSize', 0));
@@ -788,25 +805,21 @@ class Builds extends Action
             foreach ($response['output'] as $log) {
                 $logs .= $log['content'];
             }
+
+            if ($resource->getCollection() === 'sites') {
+                $date = \date('H:i:s');
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
+            }
+
             $deployment->setAttribute('buildLogs', $logs);
 
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-
-            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
-            }
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
-            }
-
-            Console::success("Build id: $deploymentId created");
-
+            /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
                 try {
                     $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
@@ -844,33 +857,53 @@ class Builds extends Action
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
                         'previewAuthDisabled' => true,
+                        'deploymentStatusIgnored' => true
                     ]);
 
-                    // TODO: @Meldiron if becomes too slow, do concurrently
-                    foreach ($configs as $key => $config) {
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
-                        ]);
+                    $screenshotError = null;
+                    $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $resource, $client, &$screenshotError) {
+                        return function () use ($key, $configs, $apiKey, $resource, $client, &$screenshotError) {
+                            try {
+                                $config = $configs[$key];
 
-                        $config['sleep'] = 3000;
+                                $config['headers'] = \array_merge($config['headers'] ?? [], [
+                                    'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                                ]);
+                                $config['sleep'] = 3000;
 
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
+                                $frameworks = Config::getParam('frameworks', []);
+                                $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                                if (!is_null($framework)) {
+                                    $config['sleep'] = $framework['screenshotSleep'];
+                                }
 
-                        $response = $client->fetch(
-                            url: 'http://appwrite-browser:3000/v1/screenshots',
-                            method: 'POST',
-                            body: $config
-                        );
+                                $fetchResponse = $client->fetch(
+                                    url: 'http://appwrite-browser:3000/v1/screenshots',
+                                    method: 'POST',
+                                    body: $config
+                                );
 
-                        if ($response->getStatusCode() >= 400) {
-                            throw new \Exception($response->getBody());
-                        }
+                                if ($fetchResponse->getStatusCode() >= 400) {
+                                    throw new \Exception($fetchResponse->getBody());
+                                }
 
-                        $screenshot = $response->getBody();
+                                $screenshot = $fetchResponse->getBody();
+
+                                return ['key' => $key, 'screenshot' => $screenshot];
+                            } catch (\Throwable $th) {
+                                $screenshotError = $th->getMessage();
+                                return;
+                            }
+                        };
+                    }, \array_keys($configs)));
+
+                    if (!\is_null($screenshotError)) {
+                        throw new \Exception($screenshotError);
+                    }
+
+                    foreach ($screenshots as $data) {
+                        $key = $data['key'];
+                        $screenshot = $data['screenshot'];
 
                         $fileId = ID::unique();
                         $fileName = $fileId . '.png';
@@ -907,12 +940,17 @@ class Builds extends Action
                             'search' => implode(' ', [$fileId, $fileName]),
                             'metadata' => ['content_type' => $deviceForFiles->getFileMimeType($path)],
                         ]);
-                        $file = Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
+
+                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getInternalId(), $file));
 
                         $deployment->setAttribute($key, $fileId);
                     }
 
-                    $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $logs = $deployment->getAttribute('buildLogs', '');
+                    $date = \date('H:i:s');
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
+
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -921,8 +959,38 @@ class Builds extends Action
                     Console::warning("Screenshot failed to generate:");
                     Console::warning($th->getMessage());
                     Console::warning($th->getTraceAsString());
+
+                    $logs = $deployment->getAttribute('buildLogs', '');
+                    $date = \date('H:i:s');
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
+
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
                 }
             }
+
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $date = \date('H:i:s');
+            $logs .= "[90m[$date] [90m[[0mappwrite[90m][32m Deployment finished. [0m\n";
+            $deployment->setAttribute('buildLogs', $logs);
+
+            /** Update the status */
+            $deployment->setAttribute('status', 'ready');
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+
+            if ($deployment->getInternalId() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $resource->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+                $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource);
+            }
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
+            if ($isVcsEnabled) {
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform);
+            }
+
+            Console::success("Build id: $deploymentId created");
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
@@ -1062,6 +1130,12 @@ class Builds extends Action
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         } catch (\Throwable $th) {
+            Console::warning('Build failed:');
+            Console::error($th->getMessage());
+            Console::error($th->getFile());
+            Console::error($th->getLine());
+            Console::error($th->getTraceAsString());
+
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
                 return;
@@ -1334,15 +1408,9 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
-                $previweQrCode = match($resource->getCollection()) {
-                    'functions' => '',
-                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
-                    default => throw new \Exception('Invalid resource type')
-                };
-
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);

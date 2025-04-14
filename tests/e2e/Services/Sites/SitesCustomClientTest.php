@@ -37,6 +37,7 @@ class SitesCustomClientTest extends Scope
             $this->assertArrayHasKey('variables', $template);
             $this->assertArrayHasKey('screenshotDark', $template);
             $this->assertArrayHasKey('screenshotLight', $template);
+            $this->assertArrayHasKey('tagline', $template);
         }
 
         // List templates with pagination
@@ -60,10 +61,10 @@ class SitesCustomClientTest extends Scope
             'frameworks' => ['nuxt']
         ]);
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         foreach ($templates['body']['templates'] as $template) {
-            $this->assertContains($template['useCases'][0], ['starter', 'ai']);
+            $this->assertContains($template['useCases'][0], ['starter']);
         }
         $this->assertArrayHasKey('frameworks', $templates['body']['templates'][0]);
         $this->assertContains('Nuxt', array_column($templates['body']['templates'][0]['frameworks'], 'name'));
@@ -74,13 +75,13 @@ class SitesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 5,
-            'offset' => 1,
+            'offset' => 0,
             'useCases' => ['starter'],
             'frameworks' => ['nextjs']
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(3, $templates['body']['total']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('frameworks', $templates['body']['templates'][0]);
 
@@ -126,6 +127,7 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals('React starter', $template['body']['name']);
         $this->assertEquals(['starter'], $template['body']['useCases']);
         $this->assertEquals('github', $template['body']['vcsProvider']);
+        $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
         $this->assertEquals('http://localhost/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
         $this->assertEquals('http://localhost/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);

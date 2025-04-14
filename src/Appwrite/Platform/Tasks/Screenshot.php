@@ -37,8 +37,6 @@ class Screenshot extends Action
             throw new \Exception("Template {$templateId} not found. Find correct ID in app/config/templates/site.php");
         }
 
-        Console::warning('Make sure to override $config[\'sleep\'] in Builds.php worker to high number, like 10000 (10 seconds)');
-
         Console::info("Found: " . $template['name']);
 
         $client = new Client();
@@ -149,7 +147,7 @@ class Screenshot extends Action
             'installCommand' => $framework['installCommand'] ?? '',
             'outputDirectory' => $framework['outputDirectory'] ?? '',
             'providerRootDirectory' => $framework['providerRootDirectory'],
-            'timeout' => 60
+            'timeout' => 30
         ]);
 
         if ($site['headers']['status-code'] !== 201) {

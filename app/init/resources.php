@@ -21,6 +21,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
+use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -38,6 +39,7 @@ use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
@@ -544,7 +546,12 @@ function getDevice(string $root, string $connection = ''): Device
 
         switch ($device) {
             case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl, $url);
+                if (!empty($url)) {
+                    return new S3($root, $accessKey, $accessSecret, $url, $region, $acl);
+                } else {
+                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                }
+                // no break
             case STORAGE::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
@@ -571,7 +578,12 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
                 $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
-                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
+                if (!empty($s3EndpointUrl)) {
+                    return new S3($root, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
+                } else {
+                    return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                }
+                // no break
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
                 $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
@@ -834,3 +846,5 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 
     return Key::decode($project, $key);
 }, ['request', 'project']);
+
+App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));

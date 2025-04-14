@@ -56,7 +56,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -261,7 +261,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
 
         // Static site enforced runtime
-        if ($resource->getAttribute('adapter', '') === 'static') {
+        if ($deployment->getAttribute('adapter', '') === 'static') {
             $runtime = $runtimes['static-1'] ?? null;
         }
 
@@ -269,8 +269,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
-        if ($deployment->getAttribute('status') !== 'ready') {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
+        $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
+        if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
+            if ($deployment->getAttribute('status') === 'failed') {
+                throw new AppwriteException(AppwriteException::BUILD_FAILED);
+            } else {
+                throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
+            }
         }
 
         if ($type === 'function') {
@@ -410,12 +415,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         ]);
 
         // SPA fallbackFile override
-        if ($resource->getAttribute('adapter', '') === 'static' && $resource->getAttribute('fallbackFile', '') !== '') {
-            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $resource->getAttribute('fallbackFile', '');
+        if ($deployment->getAttribute('adapter', '') === 'static' && $deployment->getAttribute('fallbackFile', '') !== '') {
+            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $deployment->getAttribute('fallbackFile', '');
         }
 
         /** Execute function */
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = match ($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
@@ -438,7 +442,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $startCommand = $runtime['startCommand'];
 
                 if (!is_null($framework)) {
-                    $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                    $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? null;
                     if (!is_null($adapter) && isset($adapter['startCommand'])) {
                         $startCommand = $adapter['startCommand'];
                     }
@@ -473,24 +477,28 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             );
 
             // Branded 404 override
-            if ($executionResponse['statusCode'] === 404 && $resource->getAttribute('adapter', '') === 'static') {
+            $isResponseBranded = false;
+            if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
                 $layout = new View(__DIR__ . '/../views/general/404.phtml');
                 $executionResponse['body'] = $layout->render();
                 $executionResponse['headers']['content-length'] = \strlen($executionResponse['body']);
+                $isResponseBranded = true;
             }
 
             // Branded banner for previews
-            if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
-                $transformation = new Transformation();
-                $transformation->addAdapter(new Preview());
-                $transformation->setInput($executionResponse['body']);
-                $transformation->setTraits($executionResponse['headers']);
-                if ($isPreview && $transformation->transform()) {
-                    $executionResponse['body'] = $transformation->getOutput();
+            if (!$isResponseBranded) {
+                if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
+                    $transformation = new Transformation();
+                    $transformation->addAdapter(new Preview());
+                    $transformation->setInput($executionResponse['body']);
+                    $transformation->setTraits($executionResponse['headers']);
+                    if ($isPreview && $transformation->transform()) {
+                        $executionResponse['body'] = $transformation->getOutput();
 
-                    foreach ($executionResponse['headers'] as $key => $value) {
-                        if (\strtolower($key) === 'content-length') {
-                            $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                        foreach ($executionResponse['headers'] as $key => $value) {
+                            if (\strtolower($key) === 'content-length') {
+                                $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                            }
                         }
                     }
                 }
@@ -653,10 +661,11 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->inject('queueForFunctions')
+    ->inject('executor')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -664,7 +673,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -917,12 +926,13 @@ App::options()
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
+    ->inject('executor')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('project')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -930,7 +940,7 @@ App::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1047,17 +1057,18 @@ App::error()
         if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             try {
-                $loggingProvider = new DSN($providerConfig ?? '');
+                $loggingProvider = new DSN($providerConfig);
                 $providerName = $loggingProvider->getScheme();
 
                 if (!empty($providerName) && $providerName === 'sentry') {
                     $key = $loggingProvider->getPassword();
                     $projectId = $loggingProvider->getUser() ?? '';
                     $host = 'https://' . $loggingProvider->getHost();
+                    $sampleRate = $loggingProvider->getParam('sample', 0.01);
 
                     $adapter = new Sentry($projectId, $key, $host);
                     $logger = new Logger($adapter);
-                    $logger->setSample(0.01);
+                    $logger->setSample($sampleRate);
                     $publish = true;
                 } else {
                     throw new \Exception('Invalid experimental logging provider');
@@ -1238,11 +1249,12 @@ App::get('/robots.txt')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
+    ->inject('executor')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1250,7 +1262,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1269,11 +1281,12 @@ App::get('/humans.txt')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
+    ->inject('executor')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1281,7 +1294,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }

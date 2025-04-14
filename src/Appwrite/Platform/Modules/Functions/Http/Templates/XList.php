@@ -30,7 +30,7 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/templates')
             ->desc('List templates')
-            ->groups(['api', 'functions'])
+            ->groups(['api'])
             ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
@@ -71,10 +71,14 @@ class XList extends Base
             });
         }
 
-        $responseTemplates = \array_slice($templates, $offset, $limit);
+        \usort($templates, function ($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+
+        $templates = \array_slice($templates, $offset, $limit);
         $response->dynamic(new Document([
-            'templates' => $responseTemplates,
-            'total' => \count($responseTemplates),
+            'templates' => $templates,
+            'total' => \count($templates),
         ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     }
 }

@@ -68,8 +68,9 @@ class Update extends Base
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
-            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
-            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
+            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
+            ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
+            ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
@@ -95,6 +96,7 @@ class Update extends Base
             ->inject('queueForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -103,6 +105,7 @@ class Update extends Base
         string $name,
         string $framework,
         bool $enabled,
+        bool $logging,
         int $timeout,
         string $installCommand,
         string $buildCommand,
@@ -123,7 +126,8 @@ class Update extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         Database $dbForPlatform,
-        GitHub $github
+        GitHub $github,
+        Executor $executor
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -231,7 +235,6 @@ class Update extends Base
 
         // Enforce Cold Start if spec limits change.
         if ($site->getAttribute('specification') !== $specification && !empty($site->getAttribute('deploymentId'))) {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
             } catch (\Throwable $th) {
@@ -246,6 +249,7 @@ class Update extends Base
             'name' => $name,
             'framework' => $framework,
             'enabled' => $enabled,
+            'logging' => $logging,
             'live' => $live,
             'timeout' => $timeout,
             'installCommand' => $installCommand,
