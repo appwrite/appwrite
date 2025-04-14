@@ -50,6 +50,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 // Runtime Execution
@@ -782,26 +783,48 @@ App::setResource('smsRates', function () {
     return [];
 });
 
-App::setResource('devKey', function (Request $request, Document $project, Database $dbForPlatform) {
+App::setResource('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform) {
     $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+
     // Check if given key match project's development keys
     $key = $project->find('secret', $devKey, 'devKeys');
-    if ($key) {
-        $expire = $key->getAttribute('expire');
-        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
+    if (!$key) {
+        return new Document([]);
+    }
 
-        $accessedAt = $key->getAttribute('accessedAt', '');
-        if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+    // check expiration
+    $expire = $key->getAttribute('expire');
+    if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+        return new Document([]);
+    }
+
+    // update access time
+    $accessedAt = $key->getAttribute('accessedAt', '');
+    if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+        $key->setAttribute('accessedAt', DatabaseDateTime::now());
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $key));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+    }
+
+    // add sdk to key
+    $sdkValidator = new WhiteList($servers, true);
+    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
+    if ($sdkValidator->isValid($sdk)) {
+        $sdks = $key->getAttribute('sdks', []);
+
+        if (!in_array($sdk, $sdks)) {
+            $sdks[] = $sdk;
+            $key->setAttribute('sdks', $sdks);
+
+            /** Update access time as well */
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $key));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
-        return $key;
     }
-    return new Document([]);
-}, ['request', 'project', 'dbForPlatform']);
+    return $key;
+}, ['request', 'project', 'servers', 'dbForPlatform']);
 
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
