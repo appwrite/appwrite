@@ -224,7 +224,7 @@ CLI::setResource('logError', function (Registry $register) {
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
-        Console::error('Trace: ' . $error->getTraceAsString());
+        Console::error('[Error] Trace: ' . $error->getTraceAsString());
 
         $logger = $register->get('logger');
 
