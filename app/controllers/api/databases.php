@@ -3097,9 +3097,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-        catch(DatabaseException $e){
-            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND,$e->getMessage());
+        } catch (DatabaseException $e) {
+            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, $e->getMessage());
         }
 
         // Add $collectionId and $databaseId for all documents
