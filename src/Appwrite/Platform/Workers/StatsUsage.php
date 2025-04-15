@@ -330,7 +330,6 @@ class StatsUsage extends Action
 
     public function commitToDb(callable $getProjectDB): void
     {
-
         foreach ($this->stats as $stats) {
             $project = $stats['project'] ?? new Document([]);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
