@@ -134,7 +134,7 @@ return [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.7.1',
+                'version' => '0.7.2',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '6.2.2',
+                'version' => '6.2.3',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -299,7 +299,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '9.0.2',
+                'version' => '9.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
