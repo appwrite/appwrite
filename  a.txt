@@ -1,8 +1,0 @@
-PHPUnit 9.6.22 by Sebastian Bergmann and contributors.
-
-Tests\E2E\Services\Sites\SitesCustomServerTest::testErrorPages ended in 7904.421256 milliseconds
-.                                                                   1 / 1 (100%)
-
-Time: 00:07.907, Memory: 30.16 MB
-
-OK (1 test, 67 assertions)
