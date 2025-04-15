@@ -420,7 +420,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
 App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
-    return function (?Document $project = null) use ($pools, $cache, $database) {
+
+    return function (?Document $project = null) use ($pools, $cache, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getInternalId());
             return $database;
