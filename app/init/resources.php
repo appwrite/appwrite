@@ -819,7 +819,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
             /** Update access time as well */
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+            $key = Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }

@@ -4519,8 +4519,24 @@ class ProjectsConsoleClientTest extends Scope
             'expire' => DateTime::addSeconds(new \DateTime(), 36000)
         ]);
 
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
         /** Test oauth2 and get invalid `success` URL */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/google', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
@@ -4531,7 +4547,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
 
         /** Test oauth2 with devKey and now get oauth2 is disabled */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/google', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-dev-key' => $devKey['secret']
@@ -4539,8 +4555,7 @@ class ProjectsConsoleClientTest extends Scope
             'success' => 'https://example.com',
             'failure' => 'https://example.com'
         ]);
-        $this->assertEquals(412, $response['headers']['status-code']);
-        $this->assertEquals('This provider is disabled. Please enable the provider from your Appwrite console to continue.', $response['body']['message']);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /** Test hostname in Magic URL */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
