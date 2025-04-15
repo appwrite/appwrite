@@ -165,7 +165,7 @@ class Exception extends \Exception
     public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
     public const FUNCTION_TEMPLATE_NOT_FOUND       = 'function_template_not_found';
     public const FUNCTION_RUNTIME_NOT_DETECTED     = 'function_runtime_not_detected';
-    public const FUNCTION_EXECUTE_PERMISSION_DENIED = 'function_execute_permission_denied';
+    public const FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -323,9 +323,9 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
     private array $ctas = [];
-    private string $view = '';
+    private ?string $view = null;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null, string $view = '')
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null, ?string $view = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -380,7 +380,7 @@ class Exception extends \Exception
         return $this->publish;
     }
 
-    public function addCTA(string $label, string $url): self
+    public function addCTA(string $label, ?string $url = null): self
     {
         $this->ctas[] = [
             'label' => $label,
@@ -394,7 +394,7 @@ class Exception extends \Exception
         return $this->ctas;
     }
 
-    public function getView(): string
+    public function getView(): ?string
     {
         return $this->view;
     }

@@ -546,8 +546,8 @@ return [
         'description' => 'Function runtime could not be detected.',
         'code' => 400,
     ],
-    Exception::FUNCTION_EXECUTE_PERMISSION_DENIED => [
-        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_DENIED,
+    Exception::FUNCTION_EXECUTE_PERMISSION_MISSING => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_MISSING,
         'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
         'code' => 401,
     ],

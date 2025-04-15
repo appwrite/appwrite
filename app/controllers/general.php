@@ -74,10 +74,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ])
         )[0] ?? new Document();
     }
-
-    $protocol = $request->getProtocol();
+    
     $errorView = __DIR__ . '/../views/general/error.phtml';
-    $url = $protocol . '://' . System::getEnv('_APP_DOMAIN', '');
+    $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
 
     if ($rule->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '') || $host === System::getEnv('_APP_DOMAIN_SITES', '')) {
@@ -288,9 +287,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
-            $errorView = __DIR__ . '/../views/general/error.phtml';
             $status = $deployment->getAttribute('status');
-            $ctaUrl = '';
 
             switch ($status) {
                 case 'failed':
@@ -316,7 +313,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if ($type === 'function') {
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
-                throw new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_DENIED, view: $errorView);
+                throw new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
             }
         }
 
@@ -538,6 +535,22 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     }
                 }
             }
+            
+            // Branded error pages (when developer left body empty)
+            if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
+                $layout = new View($errorView);
+                $layout
+                    ->setParam('title', $project->getAttribute('name') . ' - Error')
+                    ->setParam('type', 'empty_proxy_error')
+                    ->setParam('code', $executionResponse['statusCode']);
+
+                $executionResponse['body'] = $layout->render();
+                foreach ($executionResponse['headers'] as $key => $value) {
+                    if (\strtolower($key) === 'content-length') {
+                        $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                    }
+                }
+            }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
@@ -554,35 +567,6 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', $executionResponse['duration']);
-            if ($executionResponse['statusCode'] >= 500) { //TODO: if body is empty
-                $errorView = __DIR__ . '/../views/general/error.phtml';
-                $layout = new View($errorView);
-                $layout
-                    ->setParam('title', $project->getAttribute('name') . ' - Error')
-                    ->setParam('development', App::isDevelopment())
-                    ->setParam('message', empty($executionResponse['body']) ? 'A server error occurred.' : $executionResponse['body'])
-                    ->setParam('type', 'general_server_error')
-                    ->setParam('code', $executionResponse['statusCode'])
-                    ->setParam('trace', [])
-                    ->setParam('exception', null);
-
-                $response->html($layout->render());
-                return;
-            } elseif ($executionResponse['statusCode'] >= 400) {
-                $errorView = __DIR__ . '/../views/general/error.phtml';
-                $layout = new View($errorView);
-                $layout
-                    ->setParam('title', $project->getAttribute('name') . ' - Error')
-                    ->setParam('development', App::isDevelopment())
-                    ->setParam('message', empty($executionResponse['body']) ? 'A client error occurred.' : $executionResponse['body'])
-                    ->setParam('type', 'client_error')
-                    ->setParam('code', $executionResponse['statusCode'])
-                    ->setParam('trace', [])
-                    ->setParam('exception', null);
-
-                $response->html($layout->render());
-                return;
-            }
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -1273,10 +1257,15 @@ App::error()
             ->addHeader('Pragma', 'no-cache')
             ->setStatusCode($code);
 
-        $view = $error->getView();
+        $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
+        
+        // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
+        if(!\str_starts_with($route->getPath(), '/v1')) {
+            $template = __DIR__ . '/../views/general/error.phtml';
+        }
 
-        if ($view) {
-            $layout = new View($view);
+        if (!empty($template)) {
+            $layout = new View($template);
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
@@ -1495,12 +1484,7 @@ App::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
     ->action(function () {
-        $errorView = __DIR__ . '/../views/general/error.phtml';
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $url = $protocol . '://' . System::getEnv('_APP_DOMAIN', '');
-        $exception = new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, view: $errorView);
-        $exception->addCTA('Go to homepage', $url);
-        throw $exception;
+        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
 foreach (Config::getParam('services', []) as $service) {

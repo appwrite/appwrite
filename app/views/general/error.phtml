@@ -2,20 +2,17 @@
 $development = $this->getParam('development', false);
 $type = $this->getParam('type', 'general_server_error');
 $code = $this->getParam('code', 500);
-$errorID = $this->getParam('errorID', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 $message = $this->getParam('message', '');
 $trace = $this->getParam('trace', []);
-$projectName = $this->getParam('projectName', '');
-$projectURL = $this->getParam('projectURL', '');
 $title = $this->getParam('title', 'Error'); 
 $exception = $this->getParam('exception', null);
 
-$knownTypes = ['build_not_ready', 'build_failed', 'rule_not_found', 'deployment_not_found', 'build_canceled', 'general_route_not_found'];
+$isSimpleMessage = true;
 $label = '';
 $labelClass = '';
 $buttons = [];
 
-if($exception !== null && $exception instanceof AppwriteException) {
+if($exception !== null && method_exists($exception, 'getCTAs')) {
     foreach ($exception->getCTAs() as $index => $cta) {
         $class = ($index === 0) ? 'bordered-button' : 'button';
     
@@ -25,15 +22,6 @@ if($exception !== null && $exception instanceof AppwriteException) {
             'class' => $class
         ];
     }
-}
-
-if ($development && !empty($buttons)) {
-    $buttons[] = [
-        'text' => 'View error trace',
-        'url' => '#',
-        'class' => 'button',
-        'x-on:click' => "page = 'trace'"
-    ];
 }
 
 switch ($type) {
@@ -66,6 +54,7 @@ switch ($type) {
     default:
         $label = 'Error ' . $code;
         $message = $message;
+        $isSimpleMessage = false;
         break;
 }
 ?>
@@ -143,10 +132,17 @@ switch ($type) {
             margin-top: 8px;
             margin-bottom: 32px;
         }
-
-        .content.default-error h1 {
-            font-size: var(--font-size-M, 16px);
+    
+        .content h1 {
             margin-bottom: 20px;
+        }
+
+        .content.small-error h1 {
+            font-size: var(--font-size-M, 20px);
+        }
+        
+        .content.large-error h1 {
+            font-size: var(--font-size-XXXL, 32px);
         }
 
         .bordered-button {
@@ -261,11 +257,6 @@ switch ($type) {
             font-weight: 500;
             line-height: 140%;
             letter-spacing: -0.45px;
-        }
-
-        .back-button:before {
-            content: "<";
-            font-size: 16px;
         }
 
         .trace-grid {
@@ -391,35 +382,33 @@ switch ($type) {
 
 <body x-data="{ page: 'error' }">
     <div class="main">
-        <div x-show="page === 'error'" class="content<?php echo !in_array($type, $knownTypes) ? ' default-error' : ''; ?>">
-            <div class="center"><span class=<?php echo $this->print($labelClass); ?>><?php echo $this->print($label); ?></span></div>
+        <div x-show="page === 'error'" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
+            <div class="center"><span class="<?php echo $this->print($labelClass); ?>"><?php echo $this->print($label); ?></span></div>
             <h1><?php echo $this->print($message); ?></h1>
             <div class="center">
+                <span class='type'><?php echo $this->print($type); ?></span>
+            </div>
+            <div class="center" style="margin-top: 20px;">
                 <?php if (!empty($buttons)): ?>
                     <?php foreach ($buttons as $button): ?>
                         <a href="<?php echo htmlspecialchars($button['url']); ?>">
-                            <button class="<?php echo htmlspecialchars($button['class']); ?>"
-                                <?php if (isset($button['x-on:click'])): ?>
-                                    x-on:click="<?php echo htmlspecialchars($button['x-on:click']); ?>"
-                                <?php endif; ?>>
+                            <button class="<?php echo htmlspecialchars($button['class']); ?>">
                                 <?php echo htmlspecialchars($button['text']); ?>
                             </button>
                         </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                <?php if (!in_array($type, $knownTypes)): ?>
-                    <span class='type'><?php echo $this->print($type); ?></span>
+                    
+                <?php if ($development) : ?>
+                        <button class="<?php echo count($buttons) === 0 ? 'bordered-button' : 'button' ?>" x-on:click="page = 'trace'">View error trace</button>
                 <?php endif; ?>
             </div>
-            <?php if ($development && empty($buttons)) : ?>
-                <div class="center" style="margin-top: 20px;">
-                    <button class="bordered-button" x-on:click="page = 'trace'">View error trace</button>
-                </div>
-            <?php endif; ?>
         </div>
 
         <div x-show="page === 'trace'" class="error-trace">
-            <button class="back-button" x-on:click="page = 'error'">Back</button>
+            <button class="back-button" x-on:click="page = 'error'">
+                Back
+            </button>
             <div class="trace-grid-header">Error trace</div>
             <?php foreach ($trace as $index => $traceItem): ?>
                 <div class="trace-grid">
@@ -440,14 +429,14 @@ switch ($type) {
 
                     <?php if (isset($traceItem['args'])): ?>
                         <div class="trace-label">args</div>
-                        <div class="trace-args"><?php echo $this->print(json_encode($traceItem['args'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)); ?></div>
+                        <div class="trace-args"><pre><?php echo $this->print(\var_export($traceItem['args'], true)); ?></pre></div>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
     </div>
 
-    <div class="brand">
+    <div x-show="page === 'error'" class="brand">
         <p>Powered by</p>
         <svg class="logo-dark" width="110" height="20" viewBox="0 0 110 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M31.8649 16.2461C33.6492 16.2461 34.5511 15.3184 34.9433 14.6867H35.1197C35.1981 15.3578 35.6687 15.9895 36.5903 15.9895H38.3353V14.0156H37.8843C37.5706 14.0156 37.4138 13.838 37.4138 13.5617V5.64661H35.1001V6.90986H34.9236C34.4727 6.27823 33.5315 5.39001 31.8061 5.39001C29.0611 5.39001 27.022 7.67965 27.022 10.818C27.022 13.9564 29.1003 16.2461 31.8649 16.2461ZM32.2767 13.9959C30.6493 13.9959 29.3748 12.7919 29.3748 10.8378C29.3748 8.92316 30.6101 7.62044 32.2571 7.62044C33.8256 7.62044 35.1393 8.86395 35.1393 10.8378C35.1393 12.5945 34.0217 13.9959 32.2767 13.9959Z" fill="#EDEDF0" />

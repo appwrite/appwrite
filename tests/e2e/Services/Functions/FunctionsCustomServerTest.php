@@ -2272,7 +2272,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertStringContainsString('function_execute_permission_denied', $response['body']);
+        $this->assertStringContainsString('FUNCTION_EXECUTE_PERMISSION_MISSING', $response['body']);
 
         $this->cleanupFunction($functionId);
     }
