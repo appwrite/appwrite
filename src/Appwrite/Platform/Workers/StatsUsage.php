@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Throwable;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -85,7 +86,7 @@ class StatsUsage extends Action
     ];
 
     /**
-     * @var callable
+     * @var callable(): Database
      */
     protected mixed $getLogsDB;
 
@@ -125,8 +126,8 @@ class StatsUsage extends Action
 
     /**
      * @param Message $message
-     * @param callable $getProjectDB
-     * @param callable $getLogsDB
+     * @param callable(): Database $getProjectDB
+     * @param callable(): Database $getLogsDB
      * @param Registry $register
      * @return void
      * @throws \Utopia\Database\Exception
@@ -191,7 +192,7 @@ class StatsUsage extends Action
     * @param Document $project
     * @param Document $document
     * @param array $metrics
-    * @param  callable $getProjectDB
+    * @param  callable(): Database $getProjectDB
     * @return void
     */
     private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
@@ -328,6 +329,11 @@ class StatsUsage extends Action
         }
     }
 
+    /**
+     * Commit stats to DB
+     * @param callable(): Database $getProjectDB
+     * @return void
+     */
     public function commitToDb(callable $getProjectDB): void
     {
         foreach ($this->stats as $stats) {
@@ -384,7 +390,6 @@ class StatsUsage extends Action
                 continue;
             }
             try {
-                /** @var \Utopia\Database\Database $dbForProject */
                 $dbForProject = $getProjectDB($projectStats['project']);
                 Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
                 $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
@@ -425,7 +430,6 @@ class StatsUsage extends Action
             return;
         }
 
-        /** @var \Utopia\Database\Database $dbForLogs*/
         $dbForLogs = call_user_func($this->getLogsDB);
         $dbForLogs
             ->setTenant(null)
