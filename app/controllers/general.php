@@ -74,7 +74,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ])
         )[0] ?? new Document();
     }
-    
+
     $errorView = __DIR__ . '/../views/general/error.phtml';
     $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
 
@@ -535,7 +535,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     }
                 }
             }
-            
+
             // Branded error pages (when developer left body empty)
             if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
                 $layout = new View($errorView);
@@ -1304,9 +1304,9 @@ App::error()
             ->setStatusCode($code);
 
         $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
-        
+
         // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
-        if(!\str_starts_with($route->getPath(), '/v1')) {
+        if (!\str_starts_with($route->getPath(), '/v1')) {
             $template = __DIR__ . '/../views/general/error.phtml';
         }
 

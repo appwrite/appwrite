@@ -2612,10 +2612,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build failed", $response['body']);
-        
+
         $this->cleanupSite($siteId);
     }
-    
+
     public function testEmptySiteSource(): void
     {
         $siteId = $this->setupSite([
@@ -2707,7 +2707,7 @@ class SitesCustomServerTest extends Scope
             $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             $this->assertStringContainsString('Error:', $deployment['body']['buildLogs'], 'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
-        
+
         $this->cleanupSite($siteId);
     }
 }

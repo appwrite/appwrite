@@ -240,7 +240,7 @@ switch ($type) {
         }
 
         .error-trace {
-            max-width: 800px;
+            max-width: 900px;
             padding: 20px;
             font-family: var(--font-family-sansSerif, Inter), sans-serif;
         }
@@ -374,7 +374,34 @@ switch ($type) {
             .type {
                 background: var(--color-overlay-on-neutral, rgba(25, 25, 28, 1));
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #414146);
+            }
+
+            .back-button {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-grid {
+                background: var(--color-bgColor-neutral-secondary, #1D1D21);
                 border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #2D2D31);
+            }
+
+            .trace-grid-header {
+                background: var(--color-bgColor-neutral-secondary, #19191C);
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #2D2D31);
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-label {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-value {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-args {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
             }
         }
     </style>
