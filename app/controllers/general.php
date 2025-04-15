@@ -543,7 +543,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $layout = new View($errorView);
                 $layout
                     ->setParam('title', $project->getAttribute('name') . ' - Error')
-                    ->setParam('type', 'empty_proxy_error')
+                    ->setParam('type', 'proxy_error_override')
                     ->setParam('code', $executionResponse['statusCode']);
 
                 $executionResponse['body'] = $layout->render();
