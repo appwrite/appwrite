@@ -62,7 +62,7 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
         $this->assertEquals(200, $usage['headers']['status-code']);
-        $this->assertEquals(19, count($usage['body']));
+        $this->assertEquals(24, count($usage['body']));
         $this->assertEquals('24h', $usage['body']['range']);
         $this->assertIsNumeric($usage['body']['deploymentsTotal']);
         $this->assertIsNumeric($usage['body']['deploymentsStorageTotal']);
