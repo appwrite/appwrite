@@ -250,7 +250,7 @@ App::init()
                     $sdkValidator = new WhiteList($servers, true);
                     $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
 
-                    if ($sdkValidator->isValid($sdk)) {
+                    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                         $sdks = $dbKey->getAttribute('sdks', []);
 
                         if (!in_array($sdk, $sdks)) {

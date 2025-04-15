@@ -808,9 +808,9 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
     // add sdk to key
     $sdkValidator = new WhiteList($servers, true);
-    $sdk = $request->getHeader('x-sdk-name', null);
+    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
 
-    if ($sdk && $sdkValidator->isValid($sdk)) {
+    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
         $sdks = $key->getAttribute('sdks', []);
 
         if (!in_array($sdk, $sdks)) {
