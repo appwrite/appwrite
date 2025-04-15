@@ -9,6 +9,7 @@ use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Executor\Executor;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -239,6 +240,8 @@ CLI::setResource('logError', function (Registry $register) {
         Console::warning($error->getTraceAsString());
     };
 }, ['register']);
+
+CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $platform = new Appwrite();
 $platform->init(Service::TYPE_TASK);

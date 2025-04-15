@@ -18,6 +18,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -387,6 +388,8 @@ Server::setResource('logError', function (Registry $register, Document $project)
         Console::warning($error->getTraceAsString());
     };
 }, ['register', 'project']);
+
+Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
