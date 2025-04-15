@@ -1655,8 +1655,8 @@ class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
-        $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertStringContainsString("This domain is not connected to any Appwrite resource yet", $response['body']);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
 
         $site = $this->createSite([
             'siteId' => ID::unique(),
@@ -1707,8 +1707,8 @@ class SitesCustomServerTest extends Scope
         $siteDomain = $this->setupSiteDomain($siteId);
         $this->assertNotEmpty($siteDomain);
 
-        $delpoymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($delpoymentDomain);
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $siteDomain);
@@ -1719,7 +1719,7 @@ class SitesCustomServerTest extends Scope
         $contentLength = $response['headers']['content-length'];
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $delpoymentDomain);
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/console/auth/preview', $response['headers']['location']);
@@ -2435,7 +2435,7 @@ class SitesCustomServerTest extends Scope
         }, 100000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertStringContainsString('build_failed', $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -2501,6 +2501,113 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertStringContainsString('Hello one', $deployment['body']['buildLogs']);
         $this->assertStringContainsString('Hello two', $deployment['body']['buildLogs']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testErrorPages(): void
+    {
+        // non-existent domain page
+        $domain = 'non-existent-page.sites.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('Nothing is here yet', $response['body']);
+        $this->assertStringContainsString('Start with this domain', $response['body']);
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'buildCommand' => 'sleep 5 && cd non-existing-directory',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        // test canceled deployment error page
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deployment = $this->cancelDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
+
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $apiKey = $jwtObj->encode([
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment build canceled", $response['body']);
+        $this->assertStringContainsString("View deployments", $response['body']);
+
+        // check site domain for no active deployments
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertNotEmpty($deploymentId);
+
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
+
+        $proxyClient->setEndpoint('http://' . $deploymentDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // deployment is still building error page
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString("View logs", $response['body']);
+        $this->assertStringContainsString("Reload", $response['body']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals('failed', $deployment['body']['status']);
+        }, 50000, 500);
+
+        // deployment failed error page
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment build failed", $response['body']);
+        $this->assertStringContainsString("View logs", $response['body']);
 
         $this->cleanupSite($siteId);
     }
