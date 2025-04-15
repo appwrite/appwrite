@@ -413,7 +413,7 @@ class StatsUsage extends Action
                 return;
             }
         }
-        $documentClone = new Document($stat->getArrayCopy());
+        $documentClone = clone $stat;
         $documentClone->setAttribute('$tenant', (int) $project->getInternalId());
         $this->statDocuments[] = $documentClone;
     }
