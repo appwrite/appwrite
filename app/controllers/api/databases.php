@@ -3098,6 +3098,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+        catch(DatabaseException $e){
+            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND,$e->getMessage());
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
