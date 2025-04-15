@@ -800,7 +800,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
     // update access time
     $accessedAt = $key->getAttribute('accessedAt', '');
-    if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+    if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
         $key->setAttribute('accessedAt', DatabaseDateTime::now());
         Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
@@ -808,9 +808,9 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
     // add sdk to key
     $sdkValidator = new WhiteList($servers, true);
-    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+    $sdk = $request->getHeader('x-sdk-name', null);
 
-    if ($sdkValidator->isValid($sdk)) {
+    if ($sdk && $sdkValidator->isValid($sdk)) {
         $sdks = $key->getAttribute('sdks', []);
 
         if (!in_array($sdk, $sdks)) {

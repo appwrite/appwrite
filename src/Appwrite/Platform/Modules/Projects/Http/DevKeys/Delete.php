@@ -66,10 +66,6 @@ class Delete extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        if ($key === false || $key->isEmpty()) {
-            throw new Exception(Exception::KEY_NOT_FOUND);
-        }
-
         $dbForPlatform->deleteDocument('devKeys', $key->getId());
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
