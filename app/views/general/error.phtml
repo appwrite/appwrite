@@ -25,6 +25,34 @@ if($exception !== null && method_exists($exception, 'getCTAs')) {
 }
 
 switch ($type) {
+    case 'empty_proxy_error':
+        $type = '';
+        $label = 'Error ' . $code;
+        
+        $message = $code >= 500 ? 'An unexpected server error occured.' : 'An unexpected client error occured.';
+        switch($code) {
+            case 401:
+                $message = 'You must sign in to access this page.';
+                break;
+            case 403:
+                $message = 'You are not authorized to access this page.';
+                break;
+            case 404:
+                $message = 'The page you are looking for does not exist.';
+                break;
+            case 504:
+                $message = 'The server did not respond in time.';
+                break;
+            case 501:
+                $message = 'This page is not implemented yet.';
+                break;
+        }
+        
+        break;
+    case 'function_execute_permission_missing':
+        $label = 'Execution not permitted';
+        $labelClass = 'warning';
+        break;
     case 'build_not_ready':
         $label = 'Deployment is still building';
         $message = 'The page will update after the build completes.';
@@ -40,7 +68,7 @@ switch ($type) {
         $message = 'This page is empty, but you can make it yours.';
         break;
     case 'deployment_not_found':
-        $label = 'No deployments available';
+        $label = 'No active deployments';
         $message = 'This page is empty, activate a deployment to make it live.';
         break;
     case 'build_canceled':
@@ -246,7 +274,7 @@ switch ($type) {
         }
 
         .back-button {
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -257,6 +285,10 @@ switch ($type) {
             font-weight: 500;
             line-height: 140%;
             letter-spacing: -0.45px;
+        }
+        
+        .back-button:hover {
+            text-decoration: underline;
         }
 
         .trace-grid {
@@ -412,9 +444,11 @@ switch ($type) {
         <div x-show="page === 'error'" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
             <div class="center"><span class="<?php echo $this->print($labelClass); ?>"><?php echo $this->print($label); ?></span></div>
             <h1><?php echo $this->print($message); ?></h1>
-            <div class="center">
-                <span class='type'><?php echo $this->print($type); ?></span>
-            </div>
+            <?php if (!empty($type)): ?>
+                <div class="center">
+                    <span class='type'><?php echo $this->print($type); ?></span>
+                </div>
+            <?php endif; ?>
             <div class="center" style="margin-top: 20px;">
                 <?php if (!empty($buttons)): ?>
                     <?php foreach ($buttons as $button): ?>

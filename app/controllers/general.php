@@ -313,7 +313,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if ($type === 'function') {
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
-                throw new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
+                $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
+                $exception->addCTA('View settings', $url . '/console/project-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
+                throw $exception;
             }
         }
 
@@ -548,6 +550,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 foreach ($executionResponse['headers'] as $key => $value) {
                     if (\strtolower($key) === 'content-length') {
                         $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
+                    } elseif (\strtolower($key) === 'content-type') {
+                        $executionResponse['headers'][$key] = 'text/html';
                     }
                 }
             }

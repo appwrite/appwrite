@@ -2435,7 +2435,7 @@ class SitesCustomServerTest extends Scope
         }, 100000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertStringContainsString('his page is empty, activate a deployment to make it live.', $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -2515,16 +2515,16 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("This page is empty, but you can make it yours.", $response['body']);
+        $this->assertStringContainsString('Nothing is here yet', $response['body']);
+        $this->assertStringContainsString('Start with this domain', $response['body']);
 
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
-            'name' => 'Astro SSR site',
-            'framework' => 'astro',
+            'name' => 'Static site',
+            'framework' => 'other',
             'buildRuntime' => 'node-22',
-            'outputDirectory' => './dist',
-            'buildCommand' => 'cd random',
-            'installCommand' => 'npm install',
+            'outputDirectory' => './',
+            'buildCommand' => 'sleep 5 && cd non-existing-directory',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -2532,28 +2532,19 @@ class SitesCustomServerTest extends Scope
 
         // test canceled deployment error page
         $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('astro'),
+            'code' => $this->packageSite('static'),
             'activate' => 'true'
         ]);
-
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
-
-        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
-        $this->assertNotEmpty($deploymentDomain);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $deployment = $this->getDeployment($siteId, $deploymentId);
-
-            $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertEquals('building', $deployment['body']['status']);
-        }, 100000, 250);
 
         $deployment = $this->cancelDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals('canceled', $deployment['body']['status']);
+
+        $deploymentDomain = $this->getDeploymentDomain($deploymentId);
+        $this->assertNotEmpty($deploymentDomain);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $deploymentDomain);
@@ -2571,12 +2562,14 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build canceled", $response['body']);
+        $this->assertStringContainsString("View deployments", $response['body']);
 
         // check site domain for no active deployments
         $proxyClient->setEndpoint('http://' . $domain);
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString("No deployments available", $response['body']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('astro'),
@@ -2599,6 +2592,8 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString("View logs", $response['body']);
+        $this->assertStringContainsString("Reload", $response['body']);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -2612,6 +2607,7 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build failed", $response['body']);
+        $this->assertStringContainsString("View logs", $response['body']);
 
         $this->cleanupSite($siteId);
     }
