@@ -563,21 +563,19 @@ class Databases extends Action
         $start = \microtime(true);
 
         try {
-            $documents = $database->deleteDocuments($collectionId, $queries);
+            $count = $database->deleteDocuments(
+                $collectionId,
+                $queries,
+                Database::DELETE_BATCH_SIZE,
+                $callback
+            );
         } catch (\Throwable $th) {
-            Console::error('Failed to delete documents for collection ' . $collectionId . ': ' . $th->getMessage());
+            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
+            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
             return;
         }
 
-        if (\is_callable($callback)) {
-            foreach ($documents as $document) {
-                $callback($document);
-            }
-        }
-
         $end = \microtime(true);
-        $count = \count($documents);
-
         Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 
