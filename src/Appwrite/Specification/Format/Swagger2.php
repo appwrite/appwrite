@@ -173,7 +173,7 @@ class Swagger2 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc = $desc ?? '';
+            $desc ??= '';
             $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
 
             $temp = [
