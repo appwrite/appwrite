@@ -2989,6 +2989,40 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
     }
 
+    /**
+     * @depends testCreateProject
+     */
+    public function testUseInvalidKey(array $data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permission' => 'file',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        // Use invalid key to read
+        $response = $this->client->call(Client::METHOD_GET, "/storage/buckets/{$bucketId}/files", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => 'invalid-key'
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
     // JWT Keys
 
     /**
