@@ -64,7 +64,7 @@ class Get extends Action
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
-        
+
         if ($deployment->getAttribute('resourceId') !== $site->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }

@@ -45,7 +45,16 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'description' => 'Deprecated since 1.7.0. Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPTIONS_ROUTER_FORCE_HTTPS',
+                'description' => 'Allows you to force HTTPS connection to function and site domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -773,8 +782,17 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
+                'description' => 'Deprecated since 1.7.0. The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_SIZE_LIMIT',
+                'description' => 'The maximum size of a function and site deployments in bytes. The default value is 30MB.',
+                'introduction' => '1.7.0',
                 'default' => '30000000',
                 'required' => false,
                 'question' => '',
@@ -800,8 +818,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
                 'introduction' => '0.13.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 900 seconds.',
+                'introduction' => '1.7.0',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -818,7 +845,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -826,9 +853,27 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_CPUS',
+                'description' => 'The maximum number of CPU core a single cloud function or a site is allowed to use. Please note that setting a value higher than available cores might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'introduction' => '1.7.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_MEMORY',
+                'description' => 'The maximum amount of memory a single function or site is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'introduction' => '1.7.0',
                 'default' => '0',
                 'required' => false,
                 'question' => '',
@@ -891,8 +936,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'description' => 'Deprecated since 1.7.0. The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
                 'introduction' => '0.13.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function or site must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'introduction' => '1.7.0',
                 'default' => '60',
                 'required' => false,
                 'question' => '',
@@ -936,8 +990,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes.',
+                'description' => 'Deprecated since 1.7.0. The docker network used for communication between the executor and runtimes.',
                 'introduction' => '1.2.0',
+                'default' => 'runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes for sites and functions.',
+                'introduction' => '1.7.0',
                 'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
@@ -963,7 +1026,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
+                'description' => 'Deprecated since 1.7.0. Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
                 'introduction' => '1.4.0',
                 'default' => '3600',
                 'required' => false,
@@ -971,7 +1034,41 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_COMPUTE_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes of functions and sites. The default value is 3600 seconds (1 hour).',
+                'introduction' => '1.7.0',
+                'default' => '3600',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
+    ],
+    [
+        'category' => 'Sites',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_SITES_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.json.',
+                'introduction' => '1.7.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SITES_RUNTIMES',
+                'description' => "This option allows you to enable or disable runtime environments for Sites. Disable unused runtimes to save disk space.\n\nTo enable cloud site runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
+                'introduction' => '1.7.0',
+                'default' => 'static-1,node-22,flutter-3.29',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ]
     ],
     [
         'category' => 'VCS (Version Control System)',

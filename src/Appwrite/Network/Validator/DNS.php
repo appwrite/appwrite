@@ -18,7 +18,7 @@ class DNS extends Validator
     /**
      * @param string $target
      */
-    public function __construct(protected $target, protected string $type = self::RECORD_CNAME)
+    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME)
     {
     }
 
