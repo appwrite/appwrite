@@ -209,7 +209,7 @@ App::get('/v1/teams')
             $results = $dbForProject->find('teams', $queries);
         } catch (OrderException $e) {
             $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL,$message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         }
         $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
@@ -871,7 +871,7 @@ App::get('/v1/teams/:teamId/memberships')
             );
         } catch (OrderException $e) {
             $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL,$message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         }
 
         $total = $dbForProject->count(
