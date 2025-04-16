@@ -84,7 +84,7 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartAt'));
+        $startTime = new \DateTime($deployment->getAttribute('buildStartAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 

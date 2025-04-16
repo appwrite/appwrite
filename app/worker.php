@@ -396,7 +396,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('trace', $error->getTraceAsString());
 
 
-            foreach ($extras as $key => $value) {
+            foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
             }
 
