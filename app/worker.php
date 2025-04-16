@@ -340,7 +340,7 @@ Server::setResource('pools', function (Registry $register) {
 }, ['register']);
 
 Server::setResource('deviceForCsvImports', function (Document $project) {
-    return getDevice(APP_STORAGE_CSV_IMPORTS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
 }, ['project']);
 
 Server::setResource('deviceForFunctions', function (Document $project) {

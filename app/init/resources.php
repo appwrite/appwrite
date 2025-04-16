@@ -509,7 +509,7 @@ App::setResource('deviceForFiles', function ($project) {
 }, ['project']);
 
 App::setResource('deviceForCsvImports', function (Document $project) {
-    return getDevice(APP_STORAGE_CSV_IMPORTS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
