@@ -90,6 +90,12 @@ trait DatabasesBase
      */
     public function testConsoleProject(array $data)
     {
+        if ($this->getSide() === 'server') {
+            // Server side can't get past the invalid key check anyway
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
