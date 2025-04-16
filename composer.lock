@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cfb5c437126bf194a6fe7225961c1582",
+    "content-hash": "85afadfc660334537aaba2c355f98b9c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3951,11 +3951,17 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat-csv",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/migration",
-                "reference": "9088ef1079da3fb13b8abc3821feee618475a0c3"
+                "url": "https://github.com/utopia-php/migration.git",
+                "reference": "545705e251b766940d2833893f267975d73abe32"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/545705e251b766940d2833893f267975d73abe32",
+                "reference": "545705e251b766940d2833893f267975d73abe32",
+                "shasum": ""
             },
             "require": {
                 "appwrite/appwrite": "11.*",
@@ -3981,25 +3987,7 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Migration"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4011,7 +3999,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2025-04-16T06:21:15+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/0.9.0"
+            },
+            "time": "2025-04-16T07:52:53+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8134,9 +8126,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
