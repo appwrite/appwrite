@@ -37,6 +37,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -483,11 +484,15 @@ App::get('/v1/functions')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries),
-            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_FUNCTION_LIST);
+        try {
+            $response->dynamic(new Document([
+                'functions' => $dbForProject->find('functions', $queries),
+                'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
+            ]), Response::MODEL_FUNCTION_LIST);
+        } catch (OrderException $e) {
+            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+        }
     });
 
 App::get('/v1/functions/runtimes')
@@ -1537,8 +1542,12 @@ App::get('/v1/functions/:functionId/deployments')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('deployments', $queries);
+        try {
+            $results = $dbForProject->find('deployments', $queries);
+        } catch (OrderException $e) {
+            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+        }
         $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
@@ -2331,8 +2340,12 @@ App::get('/v1/functions/:functionId/executions')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('executions', $queries);
+        try {
+            $results = $dbForProject->find('executions', $queries);
+        } catch (OrderException $e) {
+            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+        }
         $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
         $roles = Authorization::getRoles();
