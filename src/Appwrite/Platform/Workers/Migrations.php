@@ -18,7 +18,7 @@ use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
-use Utopia\Migration\Sources\Csv;
+use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
@@ -136,7 +136,7 @@ class Migrations extends Action
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
             ),
-            Csv::getName() => new Csv(
+            CSV::getName() => new CSV(
                 $resourceId,
                 $migrationOptions['path'],
                 $this->deviceForCsvImports,

@@ -3955,7 +3955,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration",
-                "reference": "52fb030dfb988233dee96845b9c481542fe1a360"
+                "reference": "9088ef1079da3fb13b8abc3821feee618475a0c3"
             },
             "require": {
                 "appwrite/appwrite": "11.*",
@@ -4011,7 +4011,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2025-04-12T11:28:18+00:00"
+            "time": "2025-04-16T06:21:15+00:00"
         },
         {
             "name": "utopia-php/orchestration",

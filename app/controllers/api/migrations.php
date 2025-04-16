@@ -22,7 +22,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
-use Utopia\Migration\Sources\Csv;
+use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
@@ -363,7 +363,7 @@ App::post('/v1/migrations/csv')
             '$id' => $migrationId,
             'status' => 'pending',
             'stage' => 'init',
-            'source' => Csv::getName(),
+            'source' => CSV::getName(),
             'destination' => Appwrite::class::getName(),
             'resources' => $resources,
             'resourceId' => $resourceId,
