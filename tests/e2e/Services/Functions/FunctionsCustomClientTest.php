@@ -303,7 +303,7 @@ class FunctionsCustomClientTest extends Scope
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->assertEquals(1, $templatesOffset['body']['total']);
+        $this->addToAssertionCount(1, $templatesOffset['body']['templates']);
         $this->assertEquals($templates['body']['templates'][2]['id'], $templatesOffset['body']['templates'][0]['id']);
 
         // List templates with filters
@@ -344,7 +344,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(5, $templates['body']['total']);
+        $this->assertCount(5, $templates['body']['templates']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
 

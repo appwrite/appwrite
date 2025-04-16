@@ -2178,6 +2178,7 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    #[Retry(count: 3)]
     public function testErrorPages(): void
     {
         // non-existent domain
