@@ -364,7 +364,7 @@ App::post('/v1/migrations/csv')
             'status' => 'pending',
             'stage' => 'init',
             'source' => CSV::getName(),
-            'destination' => Appwrite::class::getName(),
+            'destination' => Appwrite::getName(),
             'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
