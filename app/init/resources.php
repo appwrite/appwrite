@@ -40,6 +40,7 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
@@ -74,10 +75,10 @@ App::setResource('localeCodes', function () {
 
 // Queues
 App::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 App::setResource('consumer', function (Group $pools) {
-    return $pools->get('consumer')->pop()->getResource();
+    return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);

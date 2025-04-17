@@ -463,6 +463,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         Console::error('[Error] Message: ' . $th->getMessage());
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
+        Console::error('[Error] Trace: ' . $th->getTraceAsString());
 
         $swooleResponse->setStatusCode(500);
 
@@ -484,7 +485,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on('Task', function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);

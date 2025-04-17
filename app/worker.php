@@ -35,6 +35,8 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Adapter\Pool as QueuePool;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
@@ -42,7 +44,7 @@ use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 Authorization::disable();
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Runtime::enableCoroutine();
 
 Server::setResource('register', fn () => $register);
 
@@ -239,11 +241,11 @@ Server::setResource('timelimit', function (\Redis $redis) {
 Server::setResource('log', fn () => new Log());
 
 Server::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
 Server::setResource('consumer', function (Group $pools) {
-    return $pools->get('consumer')->pop()->getResource();
+    return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
@@ -408,24 +410,20 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
-    $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => $pools->get('consumer')->pop()->getResource(),
-        'workerName' => strtolower($workerName) ?? null,
-        'queueName' => $queueName
-    ]);
+    $platform->init(
+        type: Service::TYPE_WORKER,
+        params: ['workerName' => strtolower($workerName) ?? null],
+        server: new Server(new QueuePool(
+            $pools->get('consumer'),
+            workerNum: System::getEnv('_APP_WORKERS_NUM', 1),
+            queue: $queueName
+        ))
+    );
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
 $worker = $platform->getWorker();
-
-$worker
-    ->shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->get('consumer')->reclaim();
-    });
 
 $worker
     ->error()
@@ -435,8 +433,6 @@ $worker
     ->inject('pools')
     ->inject('project')
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
-        $pools->get('consumer')->reclaim();
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {

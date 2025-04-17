@@ -24,6 +24,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -158,6 +159,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
 CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
+
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getInternalId());
@@ -182,14 +184,14 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-CLI::setResource('queueForStatsUsage', function (Connection $publisher) {
+CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
 CLI::setResource('publisher', function (Group $pools) {
-    return $pools->get('publisher')->pop()->getResource();
+    return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
