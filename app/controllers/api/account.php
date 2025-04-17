@@ -43,6 +43,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -4892,8 +4893,11 @@ App::get('/v1/account/identities')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('identities', $queries);
+        try {
+            $results = $dbForProject->find('identities', $queries);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([

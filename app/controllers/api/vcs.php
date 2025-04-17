@@ -19,6 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -1121,9 +1122,12 @@ App::get('/v1/vcs/installations')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForPlatform->find('installations', $queries);
-        $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForPlatform->find('installations', $queries);
+            $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'installations' => $results,

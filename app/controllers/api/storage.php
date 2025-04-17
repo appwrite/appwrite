@@ -24,6 +24,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -218,10 +219,15 @@ App::get('/v1/storage/buckets')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $buckets = $dbForProject->find('buckets', $queries);
+            $total = $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', $queries),
-            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
+            'buckets' => $buckets,
+            'total' => $total,
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -844,6 +850,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
