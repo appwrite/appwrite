@@ -4814,7 +4814,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 308,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4899,7 +4899,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 307,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5013,7 +5013,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 309,
+                    "weight": 308,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5086,7 +5086,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 333,
+                    "weight": 332,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5137,7 +5137,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 332,
+                    "weight": 331,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5596,7 +5596,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 378,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5678,7 +5678,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 382,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5752,7 +5752,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
-                    "weight": 210,
+                    "weight": 209,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5837,7 +5837,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
-                    "weight": 209,
+                    "weight": 208,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -5934,7 +5934,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
-                    "weight": 211,
+                    "weight": 210,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6005,7 +6005,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
-                    "weight": 216,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6093,7 +6093,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
-                    "weight": 217,
+                    "weight": 216,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6159,7 +6159,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
-                    "weight": 213,
+                    "weight": 212,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6225,7 +6225,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
-                    "weight": 212,
+                    "weight": 211,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6441,7 +6441,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
-                    "weight": 214,
+                    "weight": 213,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6514,7 +6514,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 221,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6589,7 +6589,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 220,
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6673,7 +6673,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 222,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6734,7 +6734,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 224,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6807,7 +6807,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 226,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6870,7 +6870,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 228,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6955,7 +6955,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
-                    "weight": 227,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7065,7 +7065,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
-                    "weight": 229,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7136,7 +7136,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
-                    "weight": 230,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7222,7 +7222,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
-                    "weight": 232,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7295,7 +7295,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
-                    "weight": 231,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7392,7 +7392,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 223,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7452,7 +7452,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 225,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
