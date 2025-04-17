@@ -66,10 +66,6 @@ class Get extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        if ($key === false || $key->isEmpty()) {
-            throw new Exception(Exception::KEY_NOT_FOUND);
-        }
-
         $response->dynamic($key, Response::MODEL_DEV_KEY);
     }
 }

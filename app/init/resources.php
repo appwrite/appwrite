@@ -807,7 +807,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
     }
 
     // update access time
-    $accessedAt = $key->getAttribute('accessedAt', '');
+    $accessedAt = $key->getAttribute('accessedAt', 0);
     if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
         $key->setAttribute('accessedAt', DatabaseDateTime::now());
         Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
