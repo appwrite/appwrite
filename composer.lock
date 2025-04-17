@@ -4217,12 +4217,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "b192e36f646d3f5da80f70e3a69e0065b23a3612"
+                "reference": "13ad11e65cb29323c25a31a4bf93c4c1113709c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/b192e36f646d3f5da80f70e3a69e0065b23a3612",
-                "reference": "b192e36f646d3f5da80f70e3a69e0065b23a3612",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/13ad11e65cb29323c25a31a4bf93c4c1113709c0",
+                "reference": "13ad11e65cb29323c25a31a4bf93c4c1113709c0",
                 "shasum": ""
             },
             "require": {
@@ -4275,7 +4275,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-pool-adapter"
             },
-            "time": "2025-04-17T11:55:59+00:00"
+            "time": "2025-04-17T11:58:10+00:00"
         },
         {
             "name": "utopia-php/registry",

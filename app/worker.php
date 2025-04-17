@@ -35,7 +35,6 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Adapter\Pool as QueuePool;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
