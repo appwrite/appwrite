@@ -35,7 +35,6 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
@@ -170,7 +169,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             $database->setTenant($project->getInternalId());
             return $database;
         }
-        
+
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
 

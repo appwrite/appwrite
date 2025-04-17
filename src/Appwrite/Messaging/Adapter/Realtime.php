@@ -2,8 +2,8 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\PubSub\Adapter as PubSubAdapter;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
+use Appwrite\PubSub\Adapter as PubSubAdapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -142,7 +142,8 @@ class Realtime extends MessagingAdapter
 
         global $register;
 
-        $register->get('pools')->get('pubsub')->use(fn (PubSubAdapter $redis) =>
+        $register->get('pools')->get('pubsub')->use(
+            fn (PubSubAdapter $redis) =>
             $redis->publish('realtime', json_encode([
                 'project' => $projectId,
                 'roles' => $roles,

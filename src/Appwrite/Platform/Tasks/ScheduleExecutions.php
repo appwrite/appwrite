@@ -60,7 +60,7 @@ class ScheduleExecutions extends ScheduleBase
             \go(function () use ($schedule, $delay, $data, $pools) {
                 Co::sleep($delay);
 
-                $pools->get('publisher')->use(function(Publisher $publisher) use ($schedule, $data) {
+                $pools->get('publisher')->use(function (Publisher $publisher) use ($schedule, $data) {
                     $queueForFunctions = new Func($publisher);
 
                     $queueForFunctions->setType('schedule')
@@ -84,6 +84,6 @@ class ScheduleExecutions extends ScheduleBase
             );
 
             unset($this->schedules[$schedule['$internalId']]);
-}
+        }
     }
 }

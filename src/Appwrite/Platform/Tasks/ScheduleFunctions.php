@@ -75,28 +75,28 @@ class ScheduleFunctions extends ScheduleBase
                 \sleep($delay); // in seconds
 
 
-                    foreach ($scheduleKeys as $scheduleKey) {
-                        // Ensure schedule was not deleted
-                        if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                            return;
-                        }
-
-                        $schedule = $this->schedules[$scheduleKey];
-
-                        $this->updateProjectAccess($schedule['project'], $dbForPlatform);
-
-                        $pools->get('publisher')->use(function(Publisher $publisher) use ($schedule) {
-                            $queueForFunctions = new Func($publisher);
-    
-                            $queueForFunctions
-                                ->setType('schedule')
-                                ->setFunction($schedule['resource'])
-                                ->setMethod('POST')
-                                ->setPath('/')
-                                ->setProject($schedule['project'])
-                                ->trigger();
-                        });
+                foreach ($scheduleKeys as $scheduleKey) {
+                    // Ensure schedule was not deleted
+                    if (!\array_key_exists($scheduleKey, $this->schedules)) {
+                        return;
                     }
+
+                    $schedule = $this->schedules[$scheduleKey];
+
+                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+
+                    $pools->get('publisher')->use(function (Publisher $publisher) use ($schedule) {
+                        $queueForFunctions = new Func($publisher);
+
+                        $queueForFunctions
+                            ->setType('schedule')
+                            ->setFunction($schedule['resource'])
+                            ->setMethod('POST')
+                            ->setPath('/')
+                            ->setProject($schedule['project'])
+                            ->trigger();
+                    });
+                }
             });
         }
 
