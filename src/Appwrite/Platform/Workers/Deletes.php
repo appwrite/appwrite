@@ -897,6 +897,17 @@ class Deletes extends Action
         });
 
         /**
+         * Delete Logs
+         */
+        Console::info("Deleting logs for site " . $siteId);
+        $this->deleteByGroup('executions', [
+            Query::select($this->selects),
+            Query::equal('resourceInternalId', [$siteInternalId]),
+            Query::equal('resourceType', ['sites']),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        /**
          * Delete VCS Repositories and VCS Comments
          */
         Console::info("Deleting VCS repositories and comments linked to site " . $siteId);
@@ -977,7 +988,8 @@ class Deletes extends Action
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
             Query::select($this->selects),
-            Query::equal('functionInternalId', [$functionInternalId]),
+            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['functions']),
             Query::orderAsc()
         ], $dbForProject);
 
