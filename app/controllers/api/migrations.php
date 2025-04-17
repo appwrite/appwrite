@@ -32,12 +32,13 @@ include_once __DIR__ . '/../shared/api.php';
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Appwrite data')
+    ->desc('Create Appwrite migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createAppwriteMigration',
         description: '/docs/references/migrations/migration-appwrite.md',
         auth: [AuthType::ADMIN],
@@ -93,12 +94,13 @@ App::post('/v1/migrations/appwrite')
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase data')
+    ->desc('Create Firebase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createFirebaseMigration',
         description: '/docs/references/migrations/migration-firebase.md',
         auth: [AuthType::ADMIN],
@@ -159,12 +161,13 @@ App::post('/v1/migrations/firebase')
 
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Supabase data')
+    ->desc('Create Supabase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createSupabaseMigration',
         description: '/docs/references/migrations/migration-supabase.md',
         auth: [AuthType::ADMIN],
@@ -225,12 +228,13 @@ App::post('/v1/migrations/supabase')
 
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate NHost data')
+    ->desc('Create NHost migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createNHostMigration',
         description: '/docs/references/migrations/migration-nhost.md',
         auth: [AuthType::ADMIN],
@@ -297,6 +301,7 @@ App::get('/v1/migrations')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'list',
         description: '/docs/references/migrations/list-migrations.md',
         auth: [AuthType::ADMIN],
@@ -366,6 +371,7 @@ App::get('/v1/migrations/:migrationId')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'get',
         description: '/docs/references/migrations/get-migration.md',
         auth: [AuthType::ADMIN],
@@ -391,10 +397,11 @@ App::get('/v1/migrations/:migrationId')
 
 App::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Appwrite data')
+    ->desc('Get Appwrite migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getAppwriteReport',
         description: '/docs/references/migrations/migration-appwrite-report.md',
         auth: [AuthType::ADMIN],
@@ -439,10 +446,11 @@ App::get('/v1/migrations/appwrite/report')
 
 App::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Firebase data')
+    ->desc('Get Firebase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getFirebaseReport',
         description: '/docs/references/migrations/migration-firebase-report.md',
         auth: [AuthType::ADMIN],
@@ -491,10 +499,11 @@ App::get('/v1/migrations/firebase/report')
 
 App::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Supabase Data')
+    ->desc('Get Supabase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getSupabaseReport',
         description: '/docs/references/migrations/migration-supabase-report.md',
         auth: [AuthType::ADMIN],
@@ -539,10 +548,11 @@ App::get('/v1/migrations/supabase/report')
 
 App::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on NHost Data')
+    ->desc('Get NHost migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getNHostReport',
         description: '/docs/references/migrations/migration-nhost-report.md',
         auth: [AuthType::ADMIN],
@@ -587,13 +597,14 @@ App::get('/v1/migrations/nhost/report')
 
 App::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Retry migration')
+    ->desc('Update retry migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'retry',
         description: '/docs/references/migrations/retry-migration.md',
         auth: [AuthType::ADMIN],
@@ -644,6 +655,7 @@ App::delete('/v1/migrations/:migrationId')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'delete',
         description: '/docs/references/migrations/delete-migration.md',
         auth: [AuthType::ADMIN],
