@@ -481,6 +481,18 @@ return [
         'code' => 403,
     ],
 
+    /** Tokens */
+    Exception::TOKEN_NOT_FOUND => [
+        'name' => Exception::TOKEN_NOT_FOUND,
+        'description' => 'The requested file token could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOKEN_EXPIRED => [
+        'name' => Exception::TOKEN_EXPIRED,
+        'description' => 'The requested file token has expired.',
+        'code' => 401,
+    ],
+
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,

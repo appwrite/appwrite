@@ -26664,7 +26664,7 @@
                 ],
                 "description": "",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "ResourceToken",
                         "content": {
                             "application\/json": {

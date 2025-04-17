@@ -305,6 +305,7 @@ class Exception extends \Exception
 
     /** Tokens */
     public const TOKEN_NOT_FOUND = 'token_not_found';
+    public const TOKEN_EXPIRED = 'token_expired';
 
 
     protected string $type = '';

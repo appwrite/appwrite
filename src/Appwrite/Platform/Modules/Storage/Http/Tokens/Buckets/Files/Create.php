@@ -53,7 +53,7 @@ class Create extends Action
             auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
             responses: [
                 new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
+                    code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_RESOURCE_TOKEN,
                 )
             ],

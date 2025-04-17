@@ -69,14 +69,16 @@ class Get extends Action
         if ($expire != null) {
             $now = new \DateTime();
             $expiryDate = new \DateTime($expire);
+            if ($expiryDate < $now) {
+                throw new Exception(Exception::TOKEN_EXPIRED);
+            }
             $maxAge = $expiryDate->getTimestamp() - $now->getTimestamp();
-            ;
         }
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic(new Document(['jwt' => $jwt->encode([
                 'resourceType' => $token->getAttribute('resourceType'),
                 'resourceId' => $token->getAttribute('resourceId'),

@@ -19274,7 +19274,7 @@
                 ],
                 "description": "",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "ResourceToken",
                         "schema": {
                             "$ref": "#\/definitions\/resourceToken"
