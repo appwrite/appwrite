@@ -485,14 +485,15 @@ App::get('/v1/functions')
 
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
-            $response->dynamic(new Document([
-                'functions' => $dbForProject->find('functions', $queries),
-                'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
-            ]), Response::MODEL_FUNCTION_LIST);
+            $functions = $dbForProject->find('functions', $queries);
+            $total = $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+        $response->dynamic(new Document([
+            'functions' => $functions,
+            'total' => $total,
+        ]), Response::MODEL_FUNCTION_LIST);
     });
 
 App::get('/v1/functions/runtimes')
@@ -1544,11 +1545,10 @@ App::get('/v1/functions/:functionId/deployments')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForProject->find('deployments', $queries);
+            $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -2342,11 +2342,10 @@ App::get('/v1/functions/:functionId/executions')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForProject->find('executions', $queries);
+            $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);

@@ -1116,11 +1116,10 @@ App::get('/v1/vcs/installations')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForPlatform->find('installations', $queries);
+            $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'installations' => $results,

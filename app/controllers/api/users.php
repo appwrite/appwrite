@@ -632,14 +632,15 @@ App::get('/v1/users')
 
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
-            $response->dynamic(new Document([
-                'users' => $dbForProject->find('users', $queries),
-                'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
-            ]), Response::MODEL_USER_LIST);
+            $users = $dbForProject->find('users', $queries);
+            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+        $response->dynamic(new Document([
+            'users' => $users,
+            'total' => $total,
+        ]), Response::MODEL_USER_LIST);
     });
 
 App::get('/v1/users/:userId')
@@ -986,14 +987,15 @@ App::get('/v1/users/:userId/targets')
             $cursor->setValue($cursorDocument);
         }
         try {
-            $response->dynamic(new Document([
-                'targets' => $dbForProject->find('targets', $queries),
-                'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
-            ]), Response::MODEL_TARGET_LIST);
+            $targets = $dbForProject->find('targets', $queries);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+        $response->dynamic(new Document([
+            'targets' => $targets,
+            'total' => $total,
+        ]), Response::MODEL_TARGET_LIST);
     });
 
 App::get('/v1/users/identities')
@@ -1055,14 +1057,15 @@ App::get('/v1/users/identities')
 
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
-            $response->dynamic(new Document([
-                'identities' => $dbForProject->find('identities', $queries),
-                'total' => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT),
-            ]), Response::MODEL_IDENTITY_LIST);
+            $identities = $dbForProject->find('identities', $queries);
+            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+        $response->dynamic(new Document([
+            'identities' => $identities,
+            'total' => $total,
+        ]), Response::MODEL_IDENTITY_LIST);
     });
 
 App::patch('/v1/users/:userId/status')

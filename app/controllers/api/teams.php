@@ -207,11 +207,10 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForProject->find('teams', $queries);
+            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -869,16 +868,15 @@ App::get('/v1/teams/:teamId/memberships')
                 collection: 'memberships',
                 queries: $queries,
             );
+            $total = $dbForProject->count(
+                collection: 'memberships',
+                queries: $filterQueries,
+                max: APP_LIMIT_COUNT
+            );
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 

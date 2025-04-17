@@ -349,14 +349,15 @@ App::get('/v1/migrations')
 
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
-            $response->dynamic(new Document([
-                'migrations' => $dbForProject->find('migrations', $queries),
-                'total' => $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT),
-            ]), Response::MODEL_MIGRATION_LIST);
+            $migrations = $dbForProject->find('migrations', $queries);
+            $total = $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            $message = "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.";
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+        $response->dynamic(new Document([
+            'migrations' => $migrations,
+            'total' => $total,
+        ]), Response::MODEL_MIGRATION_LIST);
     });
 
 App::get('/v1/migrations/:migrationId')
