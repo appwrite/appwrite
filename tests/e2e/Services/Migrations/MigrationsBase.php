@@ -10,8 +10,10 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\CSV;
 
 trait MigrationsBase
 {
@@ -895,5 +897,333 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
+    }
+
+    /**
+     * Import documents from a CSV file.
+     */
+    public function testCreateCsvMigration(): array
+    {
+        // make a database
+        $response = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('Test Database', $response['body']['name']);
+
+        $databaseId = $response['body']['$id'];
+
+        // make a collection
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test collection',
+            'collectionId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['name'], 'Test collection');
+
+        $collectionId = $response['body']['$id'];
+
+        // make attributes
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['key'], 'name');
+        $this->assertEquals($response['body']['type'], 'string');
+        $this->assertEquals($response['body']['size'], 256);
+        $this->assertEquals($response['body']['required'], true);
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'age',
+            'min' => 18,
+            'max' => 65,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['key'], 'age');
+        $this->assertEquals($response['body']['type'], 'integer');
+        $this->assertEquals($response['body']['min'], 18);
+        $this->assertEquals($response['body']['max'], 65);
+        $this->assertEquals($response['body']['required'], true);
+
+        // make a bucket, upload a file to it!
+        // 1. enable compression, encryption
+        $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['csv'],
+            'compression' => 'gzip',
+            'encryption' => true
+        ]);
+        $this->assertEquals(201, $bucketOne['headers']['status-code']);
+        $this->assertNotEmpty($bucketOne['body']['$id']);
+
+        $bucketOneId = $bucketOne['body']['$id'];
+
+        // 2. no compression and encryption
+        $bucketTwo = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket 2',
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['csv'],
+            'compression' => 'none',
+            'encryption' => false
+        ]);
+
+        $this->assertNotEmpty($bucketTwo['body']['$id']);
+        $this->assertEquals(201, $bucketTwo['headers']['status-code']);
+
+        $bucketTwoId = $bucketTwo['body']['$id'];
+
+        $bucketIds = [
+            'compressed' => $bucketOneId,
+            'uncompressed' => $bucketTwoId,
+
+            // in uncompressed buckets!
+            'missing-row' => $bucketTwoId,
+            'missing-column' => $bucketTwoId,
+            'irrelevant-column' => $bucketTwoId,
+        ];
+
+        $fileIds = [];
+
+        foreach ($bucketIds as $label => $bucketId) {
+            $csvFileName = match ($label) {
+                'missing-row',
+                'missing-column',
+                'irrelevant-column' => "{$label}.csv",
+                default => 'documents.csv',
+            };
+
+            $mimeType = match ($csvFileName) {
+                default => 'text/csv',
+                'missing-row.csv' => 'text/plain', // invalid csv structure, falls back to plain text!
+            };
+
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/'.$csvFileName), $mimeType, $csvFileName),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals($csvFileName, $response['body']['name']);
+            $this->assertEquals($mimeType, $response['body']['mimeType']);
+
+            $fileIds[$label] = $response['body']['$id'];
+        }
+
+        // compressed, fail.
+        $compressed = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['compressed'],
+                'bucketId' => $bucketIds['compressed'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        // fail on compressed, encrypted buckets!
+        $this->assertEquals(400, $compressed['body']['code']);
+        $this->assertEquals('storage_file_type_unsupported', $compressed['body']['type']);
+        $this->assertEquals('Only uncompressed, unencrypted CSV files can be used for document import.', $compressed['body']['message']);
+
+        // missing attribute, fail in worker.
+        $missingColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['missing-column'],
+                'bucketId' => $bucketIds['missing-column'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($missingColumn, $databaseId, $collectionId) {
+            $migrationId = $missingColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains("CSV header mismatch. Missing attribute: 'age'")
+            );
+        }, 60000, 500);
+
+        // missing row data, fail in worker.
+        $missingColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['missing-row'],
+                'bucketId' => $bucketIds['missing-row'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($missingColumn, $databaseId, $collectionId) {
+            $migrationId = $missingColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains('CSV row does not match the number of header columns')
+            );
+        }, 60000, 500);
+
+        // irrelevant column - email, fail in worker.
+        $irrelevantColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['irrelevant-column'],
+                'bucketId' => $bucketIds['irrelevant-column'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($irrelevantColumn, $databaseId, $collectionId) {
+            $migrationId = $irrelevantColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains("CSV header mismatch. Unexpected attribute: 'email'")
+            );
+        }, 60000, 500);
+
+        // no compression, no encryption, pass.
+        $migration = $this->performCsvMigration(
+            [
+                'endpoint' => 'http://localhost/v1',
+                'fileId' => $fileIds['uncompressed'],
+                'bucketId' => $bucketIds['uncompressed'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEmpty($migration['body']['statusCounters']);
+        $this->assertEquals('CSV', $migration['body']['source']);
+        $this->assertEquals('pending', $migration['body']['status']);
+        $this->assertEquals('Appwrite', $migration['body']['destination']);
+        $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'migrationId' => $migration['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateCsvMigration
+     */
+    public function testImportSuccessful(array $response): void
+    {
+        $databaseId = $response['databaseId'];
+        $collectionId = $response['collectionId'];
+        $migrationId = $response['migrationId'];
+
+        $documentsCountInCSV = 100;
+
+        // get migration stats
+        $this->assertEventually(function () use ($migrationId, $databaseId, $collectionId, $documentsCountInCSV) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $migration['body']['statusCounters']);
+            $this->assertEquals($documentsCountInCSV, $migration['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+        }, 60000, 500);
+
+        // get documents count
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                // there should be only 100!
+                Query::limit(150)->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertIsArray($documents['body']['documents']);
+        $this->assertIsNumeric($documents['body']['total']);
+        $this->assertEquals($documentsCountInCSV, $documents['body']['total']);
+    }
+
+    private function performCsvMigration(array $body): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/migrations/csv', [
+            'content-type' => 'application/json',
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $body);
     }
 }
