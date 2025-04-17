@@ -322,10 +322,10 @@ App::post('/v1/migrations/csv')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('deviceForFiles')
-    ->inject('deviceForCsvImports')
+    ->inject('deviceForImports')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForCsvImports, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForImports, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -351,12 +351,12 @@ App::post('/v1/migrations/csv')
 
         // copy to temporary folder
         $migrationId = ID::unique();
-        $newPath = $deviceForCsvImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
-        if (!$deviceForFiles->transfer($path, $newPath, $deviceForCsvImports)) {
+        $newPath = $deviceForImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
+        if (!$deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
             throw new \Exception("Unable to copy file");
         }
 
-        $fileSize = $deviceForCsvImports->getFileSize($path);
+        $fileSize = $deviceForImports->getFileSize($path);
         $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([

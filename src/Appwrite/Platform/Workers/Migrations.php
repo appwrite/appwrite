@@ -34,7 +34,7 @@ class Migrations extends Action
 
     protected Database $dbForPlatform;
 
-    protected Device $deviceForCsvImports;
+    protected Device $deviceForImports;
 
     protected Document $project;
 
@@ -61,17 +61,17 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForRealtime')
-            ->inject('deviceForCsvImports')
-            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForCsvImports) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime, $deviceForCsvImports));
+            ->inject('deviceForImports')
+            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime, $deviceForImports));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForCsvImports): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
     {
         $payload = $message->getPayload() ?? [];
-        $this->deviceForCsvImports = $deviceForCsvImports;
+        $this->deviceForImports = $deviceForImports;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -139,7 +139,7 @@ class Migrations extends Action
             CSV::getName() => new CSV(
                 $resourceId,
                 $migrationOptions['path'],
-                $this->deviceForCsvImports,
+                $this->deviceForImports,
                 $this->dbForProject
             ),
             default => throw new \Exception('Invalid source type'),
