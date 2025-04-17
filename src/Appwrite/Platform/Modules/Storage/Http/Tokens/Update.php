@@ -66,7 +66,7 @@ class Update extends Action
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->callback(fn ($tokenId, $expire, $permissions, $response, $dbForProject, $queueForEvents) => $this->action($tokenId, $expire, $permissions, $response, $dbForProject, $queueForEvents));
+        ->callback([$this, 'action']);
     }
 
     public function action(string $tokenId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Event $queueForEvents)

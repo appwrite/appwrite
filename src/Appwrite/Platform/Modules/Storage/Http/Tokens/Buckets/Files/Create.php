@@ -67,7 +67,7 @@ class Create extends Action
         ->inject('dbForProject')
         ->inject('user')
         ->inject('queueForEvents')
-        ->callback(fn ($bucketId, $fileId, $expire, $permissions, $response, $dbForProject, $user, $queueForEvents) => $this->action($bucketId, $fileId, $expire, $permissions, $response, $dbForProject, $user, $queueForEvents));
+        ->callback([$this, 'action']);
     }
 
     public function action(string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents)

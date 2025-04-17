@@ -57,7 +57,7 @@ class Delete extends Action
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->callback(fn ($tokenId, $response, $dbForProject, $queueForEvents) => $this->action($tokenId, $response, $dbForProject, $queueForEvents));
+        ->callback([$this, 'action']);
     }
 
     public function action(string $tokenId, Response $response, Database $dbForProject, Event $queueForEvents)
