@@ -16,11 +16,12 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as PoolAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -53,7 +54,7 @@ if (!function_exists('getConsoleDB')) {
         /** @var Group $pools */
         $pools = $register->get('pools');
 
-        $adapter = new PoolAdapter($pools->get('console'));
+        $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, getCache());
         $database
             ->setNamespace('_console')
@@ -84,7 +85,7 @@ if (!function_exists('getProjectDB')) {
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, getCache());
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -121,10 +122,7 @@ if (!function_exists('getCache')) {
         $adapters = [];
 
         foreach ($list as $value) {
-            $adapters[] = $pools
-                ->get($value)
-                ->pop()
-                ->getResource();
+            $adapters[] = new CachePool($pools->get($value));
         }
 
         return new Cache(new Sharding($adapters));

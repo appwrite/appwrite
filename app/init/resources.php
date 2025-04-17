@@ -24,11 +24,12 @@ use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as PoolAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -330,7 +331,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
 
     $database
@@ -357,7 +358,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
 }, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
-    $adapter = new PoolAdapter($pools->get('console'));
+    $adapter = new DatabasePool($pools->get('console'));
     $database = new Database($adapter, $cache);
 
     $database
@@ -413,7 +414,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $configure($database);
@@ -431,7 +432,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             return $database;
         }
 
-        $adapter = new PoolAdapter($pools->get('logs'));
+        $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
 
         $database
@@ -456,10 +457,7 @@ App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
+        $adapters[] = new CachePool($pools->get($value));
     }
 
     $cache = new Cache(new Sharding($adapters));

@@ -14,7 +14,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as PoolAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -163,7 +163,7 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
     $sleep = 1;
     $attempts = 0;
 
-    do {
+    while (true) {
         try {
             $attempts++;
             $resource = $app->getResource($resourceKey);
@@ -171,13 +171,15 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
         } catch (\Exception $e) {
+            \var_dump($e);
+            exit;
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
             sleep($sleep);
         }
-    } while ($attempts < $max);
+    }
 
     Console::success("[Setup] - $dbName database init started...");
 
@@ -313,7 +315,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $cache = $app->getResource('cache');
 
         foreach ($sharedTablesV2 as $hostname) {
-            $adapter = new PoolAdapter($pools->get($hostname));
+            $adapter = new DatabasePool($pools->get($hostname));
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
                 ->setSharedTables(true)

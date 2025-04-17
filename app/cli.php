@@ -11,11 +11,12 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
 use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as PoolAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -42,10 +43,7 @@ CLI::setResource('cache', function ($pools) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
+        $adapters[] = new CachePool($pools->get($value));
     }
 
     return new Cache(new Sharding($adapters));
@@ -65,7 +63,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
         $attempts++;
         try {
             // Prepare database connection
-            $adapter = new PoolAdapter($pools->get('console'));
+            $adapter = new DatabasePool($pools->get('console'));
             $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
@@ -133,7 +131,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $adapter = new PoolAdapter($pools->get($dsn->getHost()));
+        $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -166,7 +164,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             return $database;
         }
 
-        $adapter = new PoolAdapter($pools->get('logs'));
+        $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
 
         $database
