@@ -13,8 +13,6 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
@@ -1565,9 +1563,3 @@ $platform->init(Service::TYPE_HTTP);
 if (!empty(Method::getErrors())) {
     throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
 }
-
-
-// Modules
-
-$platform = new Appwrite();
-$platform->init(Service::TYPE_HTTP);
