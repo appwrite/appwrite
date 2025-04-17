@@ -137,13 +137,10 @@ class OpenAPI3 extends Format
                 $sdk = $mainSdk;
             }
 
-            $consumes = [];
-            if (strtoupper($route->getMethod()) !== 'GET') {
-                /**
-                 * @var \Appwrite\SDK\Method $sdk
-                 */
-                $consumes = [$sdk->getRequestType()];
-            }
+            /**
+             * @var \Appwrite\SDK\Method $sdk
+             */
+            $consumes = [$sdk->getRequestType()];
 
             $method = $sdk->getMethodName() ?? \uniqid();
 
@@ -321,17 +318,15 @@ class OpenAPI3 extends Format
             }
 
             $body = [
-                'content' => [],
-            ];
-
-            if (!empty($consumes)) {
-                $body['content'][$consumes[0]] = [
-                    'schema'  => [
-                        'type' => 'object',
-                        'properties' => [],
+                'content' => [
+                    $consumes[0]  => [
+                        'schema'  => [
+                            'type' => 'object',
+                            'properties' => [],
+                        ],
                     ],
-                ];
-            }
+                ],
+            ];
 
             $bodyRequired = [];
 
@@ -531,50 +526,48 @@ class OpenAPI3 extends Format
                         $bodyRequired[] = $name;
                     }
 
-                    if (!empty($consumes)) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                            'type' => $node['schema']['type'],
-                            'description' => $node['description'],
-                            'x-example' => $node['schema']['x-example'] ?? null
-                        ];
+                    $body['content'][$consumes[0]]['schema']['properties'][$name] = [
+                        'type' => $node['schema']['type'],
+                        'description' => $node['description'],
+                        'x-example' => $node['schema']['x-example'] ?? null
+                    ];
 
-                        if (isset($node['schema']['enum'])) {
-                            /// If the enum flag is Set, add the enum values to the body
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
-                        }
+                    if (isset($node['schema']['enum'])) {
+                        /// If the enum flag is Set, add the enum values to the body
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
+                    }
 
-                        if ($node['schema']['x-upload-id'] ?? false) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
-                        }
+                    if ($node['schema']['x-upload-id'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                    }
 
-                        if (isset($node['default'])) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
-                        }
+                    if (isset($node['default'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
+                    }
 
-                        if (\array_key_exists('items', $node['schema'])) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
-                        }
+                    if (\array_key_exists('items', $node['schema'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
+                    }
 
-                        if ($node['x-global'] ?? false) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
-                        }
+                    if ($node['x-global'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
+                    }
 
-                        if ($isNullable) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
-                        }
+                    if ($isNullable) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
                     }
                 }
 
                 $url = \str_replace(':' . $name, '{' . $name . '}', $url);
             }
 
-            if (!empty($bodyRequired) && !empty($consumes)) {
+            if (!empty($bodyRequired)) {
                 $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
             }
 
-            if (!empty($consumes) && !empty($body['content'][$consumes[0]]['schema']['properties'])) {
+            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
                 $temp['requestBody'] = $body;
             }
 

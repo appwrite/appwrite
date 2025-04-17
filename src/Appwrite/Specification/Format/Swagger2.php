@@ -137,7 +137,7 @@ class Swagger2 extends Format
             }
 
             $consumes = [];
-            if (strtoupper($route->getMethod()) !== 'GET') {
+            if (strtoupper($route->getMethod()) !== 'GET' && strtoupper($route->getMethod()) !== 'HEAD') {
                 $consumes = [$sdk->getRequestType()];
             }
 
