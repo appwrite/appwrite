@@ -1795,6 +1795,17 @@ return [
                 'filters' => ['json', 'encrypt'],
             ],
             [
+                '$id' => ID::custom('options'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65536,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('resources'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1848,7 +1859,29 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('resourceId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1871,6 +1904,13 @@ return [
                 'attributes' => ['source'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resource_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_DESC],
             ],
             [
                 '$id' => ID::custom('_fulltext_search'),

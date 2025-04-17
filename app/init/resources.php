@@ -508,6 +508,10 @@ App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+App::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
+
 App::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
