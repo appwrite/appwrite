@@ -19,8 +19,7 @@ class Parameter
         protected mixed $default = null,
         protected mixed $validator = null,
         protected bool $optional = false,
-    )
-    {
+    ) {
     }
 
     public function getName(): string

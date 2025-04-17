@@ -43,8 +43,7 @@ class Method
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
         protected array $additionalParameters = []
-    )
-    {
+    ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
         $this->validateDesc($description);

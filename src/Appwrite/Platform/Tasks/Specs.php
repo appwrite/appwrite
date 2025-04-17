@@ -20,7 +20,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
 use Utopia\Request as UtopiaRequest;
 use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
