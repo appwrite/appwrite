@@ -4346,7 +4346,7 @@
                 "tags": [
                     "console"
                 ],
-                "description": "",
+                "description": "Check if a resource ID is available.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -4354,7 +4354,7 @@
                 },
                 "x-appwrite": {
                     "method": "getResource",
-                    "weight": 423,
+                    "weight": 424,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9036,7 +9036,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all the project's functions. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Functions List",
@@ -9051,7 +9051,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 367,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9108,7 +9108,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new function. You can pass a list of [permissions](https:\/\/appwrite.io\/docs\/permissions) to allow different project users or team with access to execute the function using the client API.",
                 "responses": {
                     "201": {
                         "description": "Function",
@@ -9123,7 +9123,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 364,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9338,7 +9338,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all runtimes that are currently active on your instance.",
                 "responses": {
                     "200": {
                         "description": "Runtimes List",
@@ -9353,7 +9353,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 369,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9386,7 +9386,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "List allowed function specifications for this instance.",
                 "responses": {
                     "200": {
                         "description": "Specifications List",
@@ -9401,7 +9401,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 370,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9435,7 +9435,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "List available function templates. You can use template details in [createFunction](\/docs\/references\/cloud\/server-nodejs\/functions#create) method.",
                 "responses": {
                     "200": {
                         "description": "Function Templates List",
@@ -9450,7 +9450,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
-                    "weight": 393,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9534,7 +9534,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function template using ID. You can use template details in [createFunction](\/docs\/references\/cloud\/server-nodejs\/functions#create) method.",
                 "responses": {
                     "200": {
                         "description": "Template Function",
@@ -9549,7 +9549,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
-                    "weight": 392,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9593,7 +9593,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for all functions in the project. View statistics including total deployments, builds, logs, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageFunctions",
@@ -9608,7 +9608,7 @@
                 },
                 "x-appwrite": {
                     "method": "listUsage",
-                    "weight": 386,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9664,7 +9664,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Function",
@@ -9679,7 +9679,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 365,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9722,7 +9722,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Update function by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Function",
@@ -9737,7 +9737,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 366,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9956,7 +9956,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Delete a function by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -9964,7 +9964,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 368,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10009,7 +10009,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Update the function active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your function.",
                 "responses": {
                     "200": {
                         "description": "Function",
@@ -10024,7 +10024,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
-                    "weight": 373,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10088,7 +10088,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all the function's code deployments. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Deployments List",
@@ -10103,7 +10103,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 374,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10170,7 +10170,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new function code deployment. Use this endpoint to upload a new version of your code function. To execute your newly uploaded code, you'll need to update the function's deployment to use your new deployment UID.\n\nThis endpoint accepts a tar.gz file compressed with your code. Make sure to include any dependencies your code has within the compressed file. You can learn more about code packaging in the [Appwrite Cloud Functions tutorial](https:\/\/appwrite.io\/docs\/functions).\n\nUse the \"command\" param to set the entrypoint used to execute your code.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -10185,7 +10185,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 371,
+                    "weight": 372,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -10265,7 +10265,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -10280,7 +10280,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 379,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10349,7 +10349,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/functions#listTemplates) to find the template details.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -10364,7 +10364,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 376,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10451,7 +10451,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a deployment when a function is connected to VCS.\n\nThis endpoint lets you create deployment from a branch, commit, or a tag.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -10466,7 +10466,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 377,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10547,7 +10547,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function deployment by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Deployment",
@@ -10562,7 +10562,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 372,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10615,7 +10615,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Delete a code deployment by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -10623,7 +10623,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 375,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10678,7 +10678,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.",
                 "responses": {
                     "200": {
                         "description": "File"
@@ -10686,7 +10686,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 378,
+                    "weight": 379,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -10760,7 +10760,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Deployment",
@@ -10775,7 +10775,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 380,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10830,7 +10830,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all the current user function execution logs. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Executions List",
@@ -10845,7 +10845,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 383,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10904,7 +10904,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.",
                 "responses": {
                     "201": {
                         "description": "Execution",
@@ -10919,7 +10919,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 381,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11018,7 +11018,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function execution log by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Execution",
@@ -11033,7 +11033,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 382,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11089,7 +11089,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Delete a function execution by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -11097,7 +11097,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
-                    "weight": 384,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11152,7 +11152,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a for a specific function. View statistics including total deployments, builds, executions, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageFunction",
@@ -11167,7 +11167,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "weight": 385,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11233,7 +11233,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all variables of a specific function.",
                 "responses": {
                     "200": {
                         "description": "Variables List",
@@ -11248,7 +11248,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 389,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11291,7 +11291,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.",
                 "responses": {
                     "201": {
                         "description": "Variable",
@@ -11306,7 +11306,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 387,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11381,7 +11381,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a variable by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Variable",
@@ -11396,7 +11396,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 388,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11449,7 +11449,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Update variable by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Variable",
@@ -11464,7 +11464,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 390,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11546,7 +11546,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Delete a variable by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -11554,7 +11554,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 391,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13469,7 +13469,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 356,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13544,7 +13544,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 353,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13687,7 +13687,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 360,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13832,7 +13832,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 355,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14005,7 +14005,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 362,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14182,7 +14182,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 354,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14290,7 +14290,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 361,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14401,7 +14401,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 359,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14453,7 +14453,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 363,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14514,7 +14514,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 357,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14588,7 +14588,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 358,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14662,7 +14662,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 328,
+                    "weight": 329,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14737,7 +14737,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 327,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14841,7 +14841,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 340,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14948,7 +14948,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 326,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15032,7 +15032,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 339,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15119,7 +15119,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 318,
+                    "weight": 319,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15233,7 +15233,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15350,7 +15350,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 321,
+                    "weight": 322,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15444,7 +15444,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 334,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15541,7 +15541,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 319,
+                    "weight": 320,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15645,7 +15645,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 332,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15752,7 +15752,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 320,
+                    "weight": 321,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15894,7 +15894,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 333,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16038,7 +16038,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 322,
+                    "weight": 323,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16132,7 +16132,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 335,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16229,7 +16229,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 323,
+                    "weight": 324,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16323,7 +16323,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 336,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16420,7 +16420,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 324,
+                    "weight": 325,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16514,7 +16514,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 337,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16611,7 +16611,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 325,
+                    "weight": 326,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16705,7 +16705,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 338,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16802,7 +16802,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 330,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16854,7 +16854,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 341,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16915,7 +16915,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 329,
+                    "weight": 330,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16989,7 +16989,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 350,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17063,7 +17063,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 343,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17136,7 +17136,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 342,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17218,7 +17218,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 345,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17277,7 +17277,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 346,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17353,7 +17353,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 347,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17414,7 +17414,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 344,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17488,7 +17488,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 349,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17571,7 +17571,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 348,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17660,7 +17660,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 351,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17722,7 +17722,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 352,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17796,7 +17796,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 310,
+                    "weight": 311,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17956,7 +17956,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
-                    "weight": 312,
+                    "weight": 313,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18024,6 +18024,84 @@
                         "in": "query"
                     }
                 ]
+            }
+        },
+        "\/migrations\/csv": {
+            "post": {
+                "summary": "Import documents from a CSV",
+                "operationId": "migrationsCreateCsvMigration",
+                "tags": [
+                    "migrations"
+                ],
+                "description": "Import documents from a CSV file into your Appwrite database. This endpoint allows you to import documents from a CSV file uploaded to Appwrite Storage bucket.",
+                "responses": {
+                    "202": {
+                        "description": "Migration",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/migration"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createCsvMigration",
+                    "weight": 310,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "migrations\/create-csv-migration.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/migrations\/migration-csv.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "migrations.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bucketId": {
+                                        "type": "string",
+                                        "description": "Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https:\/\/appwrite.io\/docs\/server\/storage#createBucket).",
+                                        "x-example": "<BUCKET_ID>"
+                                    },
+                                    "fileId": {
+                                        "type": "string",
+                                        "description": "File ID.",
+                                        "x-example": "<FILE_ID>"
+                                    },
+                                    "resourceId": {
+                                        "type": "string",
+                                        "description": "Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.",
+                                        "x-example": "[ID1:ID2]"
+                                    }
+                                },
+                                "required": [
+                                    "bucketId",
+                                    "fileId",
+                                    "resourceId"
+                                ]
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/migrations\/firebase": {
@@ -18123,7 +18201,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
-                    "weight": 313,
+                    "weight": 314,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18304,7 +18382,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
-                    "weight": 315,
+                    "weight": 316,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18540,7 +18618,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
-                    "weight": 314,
+                    "weight": 315,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18663,7 +18741,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 311,
+                    "weight": 312,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18720,7 +18798,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
-                    "weight": 316,
+                    "weight": 317,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18770,7 +18848,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 317,
+                    "weight": 318,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24101,7 +24179,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "",
+                "description": "Create a new proxy rule for serving Appwrite's API on custom domain.",
                 "responses": {
                     "201": {
                         "description": "Rule",
@@ -24116,7 +24194,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAPIRule",
-                    "weight": 424,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24167,7 +24245,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "",
+                "description": "Create a new proxy rule for executing Appwrite Function on custom domain.",
                 "responses": {
                     "201": {
                         "description": "Rule",
@@ -24182,7 +24260,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFunctionRule",
-                    "weight": 426,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24244,7 +24322,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "",
+                "description": "Create a new proxy rule for to redirect from custom domain to another domain.",
                 "responses": {
                     "201": {
                         "description": "Rule",
@@ -24259,7 +24337,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRedirectRule",
-                    "weight": 427,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24335,7 +24413,7 @@
                 "tags": [
                     "proxy"
                 ],
-                "description": "",
+                "description": "Create a new proxy rule for serving Appwrite Site on custom domain.",
                 "responses": {
                     "201": {
                         "description": "Rule",
@@ -24350,7 +24428,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSiteRule",
-                    "weight": 425,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24580,7 +24658,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a list of all the project's sites. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Sites List",
@@ -24595,7 +24673,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 396,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24649,7 +24727,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a new site.",
                 "responses": {
                     "201": {
                         "description": "Site",
@@ -24664,7 +24742,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 394,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24894,7 +24972,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a list of all frameworks that are currently available on the server instance.",
                 "responses": {
                     "200": {
                         "description": "Frameworks List",
@@ -24909,7 +24987,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFrameworks",
-                    "weight": 399,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24942,7 +25020,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "List allowed site specifications for this instance.",
                 "responses": {
                     "200": {
                         "description": "Specifications List",
@@ -24957,7 +25035,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 422,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24991,7 +25069,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "List available site templates. You can use template details in [createSite](\/docs\/references\/cloud\/server-nodejs\/sites#create) method.",
                 "responses": {
                     "200": {
                         "description": "Site Templates List",
@@ -25006,7 +25084,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
-                    "weight": 418,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25090,7 +25168,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a site template using ID. You can use template details in [createSite](\/docs\/references\/cloud\/server-nodejs\/sites#create) method.",
                 "responses": {
                     "200": {
                         "description": "Template Site",
@@ -25105,7 +25183,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
-                    "weight": 419,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25149,7 +25227,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for all sites in the project. View statistics including total deployments, builds, logs, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageSites",
@@ -25164,7 +25242,7 @@
                 },
                 "x-appwrite": {
                     "method": "listUsage",
-                    "weight": 420,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25220,7 +25298,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a site by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Site",
@@ -25235,7 +25313,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 395,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25278,7 +25356,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Update site by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Site",
@@ -25293,7 +25371,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 397,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25526,7 +25604,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Delete a site by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -25534,7 +25612,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 398,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25579,7 +25657,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Update the site active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your site.",
                 "responses": {
                     "200": {
                         "description": "Site",
@@ -25594,7 +25672,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
-                    "weight": 405,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25658,7 +25736,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a list of all the site's code deployments. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Deployments List",
@@ -25673,7 +25751,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 404,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25740,7 +25818,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -25755,7 +25833,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 400,
+                    "weight": 401,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -25840,7 +25918,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing site deployment. This endpoint allows you to rebuild a deployment with the updated site configuration, including its commands and output directory if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -25855,7 +25933,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 408,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25919,7 +25997,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/sites#listTemplates) to find the template details.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -25934,7 +26012,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 401,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26021,7 +26099,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a deployment when a site is connected to VCS.\n\nThis endpoint lets you create deployment from a branch, commit, or a tag.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -26036,7 +26114,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 402,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26118,7 +26196,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a site deployment by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Deployment",
@@ -26133,7 +26211,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 403,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26186,7 +26264,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Delete a site deployment by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -26194,7 +26272,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 406,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26249,7 +26327,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a site deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.",
                 "responses": {
                     "200": {
                         "description": "File"
@@ -26257,7 +26335,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 407,
+                    "weight": 408,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -26331,7 +26409,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing site deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Deployment",
@@ -26346,7 +26424,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 409,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26401,7 +26479,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a list of all site logs. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Executions List",
@@ -26416,7 +26494,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 411,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26471,7 +26549,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a site request log by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Execution",
@@ -26486,7 +26564,7 @@
                 },
                 "x-appwrite": {
                     "method": "getLog",
-                    "weight": 410,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26539,7 +26617,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Delete a site log by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -26547,7 +26625,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteLog",
-                    "weight": 412,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26602,7 +26680,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get usage metrics and statistics for a for a specific site. View statistics including total deployments, builds, executions, storage usage, and compute time. The response includes both current totals and historical data for each metric. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, defaults to 30 days.",
                 "responses": {
                     "200": {
                         "description": "UsageSite",
@@ -26617,7 +26695,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "weight": 421,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26683,7 +26761,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a list of all variables of a specific site.",
                 "responses": {
                     "200": {
                         "description": "Variables List",
@@ -26698,7 +26776,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 415,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26741,7 +26819,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.",
                 "responses": {
                     "201": {
                         "description": "Variable",
@@ -26756,7 +26834,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 413,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26831,7 +26909,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Get a variable by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Variable",
@@ -26846,7 +26924,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 414,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26899,7 +26977,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Update variable by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Variable",
@@ -26914,7 +26992,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 416,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26996,7 +27074,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "",
+                "description": "Delete a variable by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -27004,7 +27082,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 417,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -39911,6 +39989,18 @@
                         },
                         "x-example": []
                     },
+                    "buildsSuccessTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of successful function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsFailedTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of failed function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "builds": {
                         "type": "array",
                         "description": "Aggregated number of functions build per period.",
@@ -39966,6 +40056,22 @@
                             "$ref": "#\/components\/schemas\/metric"
                         },
                         "x-example": []
+                    },
+                    "buildsSuccess": {
+                        "type": "array",
+                        "description": "Aggregated number of successful function builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsFailed": {
+                        "type": "array",
+                        "description": "Aggregated number of failed function builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
                     }
                 },
                 "required": [
@@ -39983,13 +40089,17 @@
                     "functions",
                     "deployments",
                     "deploymentsStorage",
+                    "buildsSuccessTotal",
+                    "buildsFailedTotal",
                     "builds",
                     "buildsStorage",
                     "buildsTime",
                     "buildsMbSeconds",
                     "executions",
                     "executionsTime",
-                    "executionsMbSeconds"
+                    "executionsMbSeconds",
+                    "buildsSuccess",
+                    "buildsFailed"
                 ]
             },
             "usageFunction": {
@@ -40019,6 +40129,18 @@
                         "x-example": 0,
                         "format": "int32"
                     },
+                    "buildsSuccessTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of successful function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsFailedTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of failed function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "buildsStorageTotal": {
                         "type": "integer",
                         "description": "total aggregated sum of function builds storage.",
@@ -40028,6 +40150,12 @@
                     "buildsTimeTotal": {
                         "type": "integer",
                         "description": "Total aggregated sum of function builds compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTimeAverage": {
+                        "type": "integer",
+                        "description": "Average builds compute time.",
                         "x-example": 0,
                         "format": "int32"
                     },
@@ -40126,6 +40254,269 @@
                             "$ref": "#\/components\/schemas\/metric"
                         },
                         "x-example": []
+                    },
+                    "buildsSuccess": {
+                        "type": "array",
+                        "description": "Aggregated number of successful builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsFailed": {
+                        "type": "array",
+                        "description": "Aggregated number of failed builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    }
+                },
+                "required": [
+                    "range",
+                    "deploymentsTotal",
+                    "deploymentsStorageTotal",
+                    "buildsTotal",
+                    "buildsSuccessTotal",
+                    "buildsFailedTotal",
+                    "buildsStorageTotal",
+                    "buildsTimeTotal",
+                    "buildsTimeAverage",
+                    "buildsMbSecondsTotal",
+                    "executionsTotal",
+                    "executionsTimeTotal",
+                    "executionsMbSecondsTotal",
+                    "deployments",
+                    "deploymentsStorage",
+                    "builds",
+                    "buildsStorage",
+                    "buildsTime",
+                    "buildsMbSeconds",
+                    "executions",
+                    "executionsTime",
+                    "executionsMbSeconds",
+                    "buildsSuccess",
+                    "buildsFailed"
+                ]
+            },
+            "usageSites": {
+                "description": "UsageSites",
+                "type": "object",
+                "properties": {
+                    "range": {
+                        "type": "string",
+                        "description": "Time range of the usage stats.",
+                        "x-example": "30d"
+                    },
+                    "deploymentsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of functions deployments.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deploymentsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions deployment storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of functions build.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsStorageTotal": {
+                        "type": "integer",
+                        "description": "total aggregated sum of functions build storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTimeTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions build compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsMbSecondsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions build mbSeconds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsTotal": {
+                        "type": "integer",
+                        "description": "Total  aggregated number of functions execution.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsTimeTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions  execution compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsMbSecondsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions execution mbSeconds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deployments": {
+                        "type": "array",
+                        "description": "Aggregated number of functions deployment per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "deploymentsStorage": {
+                        "type": "array",
+                        "description": "Aggregated number of  functions deployment storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsSuccessTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of successful function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsFailedTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of failed function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "builds": {
+                        "type": "array",
+                        "description": "Aggregated number of functions build per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsStorage": {
+                        "type": "array",
+                        "description": "Aggregated sum of functions build storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsTime": {
+                        "type": "array",
+                        "description": "Aggregated sum of  functions build compute time per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsMbSeconds": {
+                        "type": "array",
+                        "description": "Aggregated sum of functions build mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executions": {
+                        "type": "array",
+                        "description": "Aggregated number of  functions execution per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executionsTime": {
+                        "type": "array",
+                        "description": "Aggregated number of functions execution compute time per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executionsMbSeconds": {
+                        "type": "array",
+                        "description": "Aggregated number of functions mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsSuccess": {
+                        "type": "array",
+                        "description": "Aggregated number of successful function builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsFailed": {
+                        "type": "array",
+                        "description": "Aggregated number of failed function builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "sitesTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of sites.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "sites": {
+                        "type": "array",
+                        "description": "Aggregated number of sites per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "requestsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of requests.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "requests": {
+                        "type": "array",
+                        "description": "Aggregated number of requests per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "inboundTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated inbound bandwidth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "inbound": {
+                        "type": "array",
+                        "description": "Aggregated number of inbound bandwidth per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "outboundTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated outbound bandwidth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "outbound": {
+                        "type": "array",
+                        "description": "Aggregated number of outbound bandwidth per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
                     }
                 },
                 "required": [
@@ -40141,139 +40532,25 @@
                     "executionsMbSecondsTotal",
                     "deployments",
                     "deploymentsStorage",
+                    "buildsSuccessTotal",
+                    "buildsFailedTotal",
                     "builds",
                     "buildsStorage",
                     "buildsTime",
                     "buildsMbSeconds",
                     "executions",
                     "executionsTime",
-                    "executionsMbSeconds"
-                ]
-            },
-            "usageSites": {
-                "description": "UsageSites",
-                "type": "object",
-                "properties": {
-                    "range": {
-                        "type": "string",
-                        "description": "Time range of the usage stats.",
-                        "x-example": "30d"
-                    },
-                    "sitesTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated number of sites.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "deploymentsTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated number of sites deployments.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "deploymentsStorageTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated sum of sites deployment storage.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "buildsTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated number of sites build.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "buildsStorageTotal": {
-                        "type": "integer",
-                        "description": "total aggregated sum of sites build storage.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "buildsTimeTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated sum of sites build compute time.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "buildsMbSecondsTotal": {
-                        "type": "integer",
-                        "description": "Total aggregated sum of sites build mbSeconds.",
-                        "x-example": 0,
-                        "format": "int32"
-                    },
-                    "sites": {
-                        "type": "array",
-                        "description": "Aggregated number of sites per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": 0
-                    },
-                    "deployments": {
-                        "type": "array",
-                        "description": "Aggregated number of sites deployment per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    },
-                    "deploymentsStorage": {
-                        "type": "array",
-                        "description": "Aggregated number of sites deployment storage per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    },
-                    "builds": {
-                        "type": "array",
-                        "description": "Aggregated number of sites build per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    },
-                    "buildsStorage": {
-                        "type": "array",
-                        "description": "Aggregated sum of sites build storage per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    },
-                    "buildsTime": {
-                        "type": "array",
-                        "description": "Aggregated sum of sites build compute time per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    },
-                    "buildsMbSeconds": {
-                        "type": "array",
-                        "description": "Aggregated sum of sites build mbSeconds per period.",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/metric"
-                        },
-                        "x-example": []
-                    }
-                },
-                "required": [
-                    "range",
+                    "executionsMbSeconds",
+                    "buildsSuccess",
+                    "buildsFailed",
                     "sitesTotal",
-                    "deploymentsTotal",
-                    "deploymentsStorageTotal",
-                    "buildsTotal",
-                    "buildsStorageTotal",
-                    "buildsTimeTotal",
-                    "buildsMbSecondsTotal",
                     "sites",
-                    "deployments",
-                    "deploymentsStorage",
-                    "builds",
-                    "buildsStorage",
-                    "buildsTime",
-                    "buildsMbSeconds"
+                    "requestsTotal",
+                    "requests",
+                    "inboundTotal",
+                    "inbound",
+                    "outboundTotal",
+                    "outbound"
                 ]
             },
             "usageSite": {
@@ -40287,43 +40564,79 @@
                     },
                     "deploymentsTotal": {
                         "type": "integer",
-                        "description": "Total aggregated number of site deployments.",
+                        "description": "Total aggregated number of function deployments.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "deploymentsStorageTotal": {
                         "type": "integer",
-                        "description": "Total aggregated sum of site deployments storage.",
+                        "description": "Total aggregated sum of function deployments storage.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "buildsTotal": {
                         "type": "integer",
-                        "description": "Total aggregated number of site builds.",
+                        "description": "Total aggregated number of function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsSuccessTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of successful function builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsFailedTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of failed function builds.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "buildsStorageTotal": {
                         "type": "integer",
-                        "description": "total aggregated sum of site builds storage.",
+                        "description": "total aggregated sum of function builds storage.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "buildsTimeTotal": {
                         "type": "integer",
-                        "description": "Total aggregated sum of site builds compute time.",
+                        "description": "Total aggregated sum of function builds compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTimeAverage": {
+                        "type": "integer",
+                        "description": "Average builds compute time.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "buildsMbSecondsTotal": {
                         "type": "integer",
-                        "description": "Total aggregated sum of site builds mbSeconds.",
+                        "description": "Total aggregated sum of function builds mbSeconds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsTotal": {
+                        "type": "integer",
+                        "description": "Total  aggregated number of function executions.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsTimeTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of function  executions compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "executionsMbSecondsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of function executions mbSeconds.",
                         "x-example": 0,
                         "format": "int32"
                     },
                     "deployments": {
                         "type": "array",
-                        "description": "Aggregated number of site deployments per period.",
+                        "description": "Aggregated number of function deployments per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40331,7 +40644,7 @@
                     },
                     "deploymentsStorage": {
                         "type": "array",
-                        "description": "Aggregated number of site deployments storage per period.",
+                        "description": "Aggregated number of  function deployments storage per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40339,7 +40652,7 @@
                     },
                     "builds": {
                         "type": "array",
-                        "description": "Aggregated number of site builds per period.",
+                        "description": "Aggregated number of function builds per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40347,7 +40660,7 @@
                     },
                     "buildsStorage": {
                         "type": "array",
-                        "description": "Aggregated sum of site builds storage per period.",
+                        "description": "Aggregated sum of function builds storage per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40355,7 +40668,7 @@
                     },
                     "buildsTime": {
                         "type": "array",
-                        "description": "Aggregated sum of site builds compute time per period.",
+                        "description": "Aggregated sum of function builds compute time per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40363,7 +40676,89 @@
                     },
                     "buildsMbSeconds": {
                         "type": "array",
-                        "description": "Aggregated number of site builds mbSeconds per period.",
+                        "description": "Aggregated number of function builds mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executions": {
+                        "type": "array",
+                        "description": "Aggregated number of function executions per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executionsTime": {
+                        "type": "array",
+                        "description": "Aggregated number of function executions compute time per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "executionsMbSeconds": {
+                        "type": "array",
+                        "description": "Aggregated number of function mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsSuccess": {
+                        "type": "array",
+                        "description": "Aggregated number of successful builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsFailed": {
+                        "type": "array",
+                        "description": "Aggregated number of failed builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "requestsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of requests.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "requests": {
+                        "type": "array",
+                        "description": "Aggregated number of requests per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "inboundTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated inbound bandwidth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "inbound": {
+                        "type": "array",
+                        "description": "Aggregated number of inbound bandwidth per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "outboundTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated outbound bandwidth.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "outbound": {
+                        "type": "array",
+                        "description": "Aggregated number of outbound bandwidth per period.",
                         "items": {
                             "$ref": "#\/components\/schemas\/metric"
                         },
@@ -40375,15 +40770,32 @@
                     "deploymentsTotal",
                     "deploymentsStorageTotal",
                     "buildsTotal",
+                    "buildsSuccessTotal",
+                    "buildsFailedTotal",
                     "buildsStorageTotal",
                     "buildsTimeTotal",
+                    "buildsTimeAverage",
                     "buildsMbSecondsTotal",
+                    "executionsTotal",
+                    "executionsTimeTotal",
+                    "executionsMbSecondsTotal",
                     "deployments",
                     "deploymentsStorage",
                     "builds",
                     "buildsStorage",
                     "buildsTime",
-                    "buildsMbSeconds"
+                    "buildsMbSeconds",
+                    "executions",
+                    "executionsTime",
+                    "executionsMbSeconds",
+                    "buildsSuccess",
+                    "buildsFailed",
+                    "requestsTotal",
+                    "requests",
+                    "inboundTotal",
+                    "inbound",
+                    "outboundTotal",
+                    "outbound"
                 ]
             },
             "usageProject": {
