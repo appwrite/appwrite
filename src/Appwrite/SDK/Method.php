@@ -88,7 +88,7 @@ class Method
         }
 
         if (\str_ends_with($desc, '.md')) {
-            $descPath = $this->getDescriptionFilePath();
+            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
 
             if (empty($descPath)) {
                 self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";

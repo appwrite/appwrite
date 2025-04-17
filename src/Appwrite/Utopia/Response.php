@@ -30,7 +30,6 @@ use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -38,13 +37,16 @@ use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\DevKey;
+use Appwrite\Utopia\Response\Model\DetectionFramework;
+use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\Framework;
+use Appwrite\Utopia\Response\Model\FrameworkAdapter;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
@@ -82,16 +84,21 @@ use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
+use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
+use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
+use Appwrite\Utopia\Response\Model\TemplateFramework;
 use Appwrite\Utopia\Response\Model\TemplateFunction;
 use Appwrite\Utopia\Response\Model\TemplateRuntime;
+use Appwrite\Utopia\Response\Model\TemplateSite;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
@@ -103,6 +110,8 @@ use Appwrite\Utopia\Response\Model\UsageDatabases;
 use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageSite;
+use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
@@ -141,6 +150,8 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
+    public const MODEL_USAGE_SITES = 'usageSites';
+    public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
@@ -239,11 +250,26 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
     public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
-    public const MODEL_DETECTION = 'detection';
+    public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
+
+    // Sites
+    public const MODEL_SITE = 'site';
+    public const MODEL_SITE_LIST = 'siteList';
+    public const MODEL_FRAMEWORK = 'framework';
+    public const MODEL_FRAMEWORK_LIST = 'frameworkList';
+    public const MODEL_FRAMEWORK_ADAPTER = 'frameworkAdapter';
+    public const MODEL_TEMPLATE_SITE = 'templateSite';
+    public const MODEL_TEMPLATE_SITE_LIST = 'templateSiteList';
+    public const MODEL_TEMPLATE_FRAMEWORK = 'templateFramework';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -254,8 +280,6 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
-    public const MODEL_BUILD = 'build';
-    public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
     public const MODEL_SPECIFICATION = 'specification';
@@ -354,15 +378,18 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+            ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
+            ->setModel(new BaseList('Site Templates List', self::MODEL_TEMPLATE_SITE_LIST, 'templates', self::MODEL_TEMPLATE_SITE))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
-            ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
+            ->setModel(new BaseList('Framework Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST, 'frameworkProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK))
+            ->setModel(new BaseList('Runtime Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST, 'runtimeProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_RUNTIME))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
+            ->setModel(new BaseList('Frameworks List', self::MODEL_FRAMEWORK_LIST, 'frameworks', self::MODEL_FRAMEWORK))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
@@ -426,19 +453,26 @@ class Response extends SwooleResponse
             ->setModel(new Bucket())
             ->setModel(new Team())
             ->setModel(new Membership())
+            ->setModel(new Site())
+            ->setModel(new TemplateSite())
+            ->setModel(new TemplateFramework())
             ->setModel(new Func())
             ->setModel(new TemplateFunction())
             ->setModel(new TemplateRuntime())
             ->setModel(new TemplateVariable())
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
-            ->setModel(new Detection())
+            ->setModel(new ProviderRepositoryFramework())
+            ->setModel(new ProviderRepositoryRuntime())
+            ->setModel(new DetectionFramework())
+            ->setModel(new DetectionRuntime())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
+            ->setModel(new Framework())
+            ->setModel(new FrameworkAdapter())
             ->setModel(new Deployment())
             ->setModel(new Execution())
-            ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
@@ -468,6 +502,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
+            ->setModel(new UsageSites())
+            ->setModel(new UsageSite())
             ->setModel(new UsageProject())
             ->setModel(new Headers())
             ->setModel(new Specification())

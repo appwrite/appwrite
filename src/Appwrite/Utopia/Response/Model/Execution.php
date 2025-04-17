@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
@@ -106,7 +107,7 @@ class Execution extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Function execution duration in seconds.',
+                'description' => 'Resource(function/site) execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
             ])
@@ -138,5 +139,19 @@ class Execution extends Model
     public function getType(): string
     {
         return Response::MODEL_EXECUTION;
+    }
+
+
+    /**
+     * Convert DB structure to response model
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $document->removeAttribute('resourceType');
+        $document->setAttribute('functionId', $document->getAttribute('resourceId', ''));
+        $document->removeAttribute('resourceId');
+        return $document;
     }
 }

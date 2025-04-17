@@ -8,7 +8,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Domains\Domain;
 use Utopia\System\System;
+use Utopia\Validator\IP;
 use Utopia\Validator\Text;
 
 App::init()
@@ -40,10 +42,21 @@ App::get('/v1/console/variables')
     ))
     ->inject('response')
     ->action(function (Response $response) {
-        $isDomainEnabled = !empty(System::getEnv('_APP_DOMAIN', ''))
-            && !empty(System::getEnv('_APP_DOMAIN_TARGET', ''))
-            && System::getEnv('_APP_DOMAIN', '') !== 'localhost'
-            && System::getEnv('_APP_DOMAIN_TARGET', '') !== 'localhost';
+        $validator = new Domain(System::getEnv('_APP_DOMAIN'));
+        $isDomainValid = !empty(System::getEnv('_APP_DOMAIN', '')) && $validator->isKnown() && !$validator->isTest();
+
+        $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
+        $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
+
+        $validator = new IP(IP::V4);
+        $isAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_A', '')) && ($validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_A')));
+
+        $validator = new IP(IP::V6);
+        $isAAAAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_AAAA', '')) && $validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'));
+
+        $isDomainEnabled = $isDomainValid && (
+            $isAAAAValid || $isAValid || $isCNAMEValid
+        );
 
         $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
             && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
@@ -54,13 +67,19 @@ App::get('/v1/console/variables')
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
         $variables = new Document([
-            '_APP_DOMAIN_TARGET' => System::getEnv('_APP_DOMAIN_TARGET'),
+            '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
+            '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
+            '_APP_DOMAIN_TARGET_A' => System::getEnv('_APP_DOMAIN_TARGET_A'),
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
-            '_APP_FUNCTIONS_SIZE_LIMIT' => +System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
+            '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
-            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled
+            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
+            '_APP_DOMAIN_SITES' => System::getEnv('_APP_DOMAIN_SITES'),
+            '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+            '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
+            '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

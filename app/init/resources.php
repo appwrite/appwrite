@@ -510,6 +510,14 @@ App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+App::setResource('deviceForSites', function ($project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
+
 App::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
@@ -859,16 +867,24 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHostname', function (Request $request) {
+App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
+    $allowed = false;
+
     if (App::isDevelopment()) {
-        $host = $request->getQuery('appwrite-hostname') ?? '';
+        $allowed = true;
+    } elseif (!\is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
+        $allowed = true;
+    }
+
+    if ($allowed) {
+        $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', '')) ?? '';
         if (!empty($host)) {
             return $host;
         }
     }
 
     return '';
-}, ['request']);
+}, ['request', 'apiKey']);
 
 App::setResource('apiKey', function (Request $request, Document $project): ?Key {
     $key = $request->getHeader('x-appwrite-key');
