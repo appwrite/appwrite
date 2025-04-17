@@ -72,6 +72,7 @@ services:
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -684,6 +685,7 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-imports:/storage/imports:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
@@ -990,7 +992,7 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
-      # Host mount nessessary to share files between executor and runtimes.
+      # Host mount necessary to share files between executor and runtimes.
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
@@ -1159,6 +1161,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
   appwrite-sites:
