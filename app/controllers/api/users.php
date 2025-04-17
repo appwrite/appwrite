@@ -33,6 +33,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -630,10 +631,15 @@ App::get('/v1/users')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $users = $dbForProject->find('users', $queries);
+            $total = $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'users' => $users,
+            'total' => $total,
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -980,10 +986,15 @@ App::get('/v1/users/:userId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $targets = $dbForProject->find('targets', $queries);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'targets' => $dbForProject->find('targets', $queries),
-            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+            'targets' => $targets,
+            'total' => $total,
         ]), Response::MODEL_TARGET_LIST);
     });
 
@@ -1045,10 +1056,15 @@ App::get('/v1/users/identities')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $identities = $dbForProject->find('identities', $queries);
+            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'identities' => $dbForProject->find('identities', $queries),
-            'total' => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT),
+            'identities' => $identities,
+            'total' => $total,
         ]), Response::MODEL_IDENTITY_LIST);
     });
 

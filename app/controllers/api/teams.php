@@ -33,6 +33,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -204,9 +205,12 @@ App::get('/v1/teams')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('teams', $queries);
+            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -859,17 +863,20 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $memberships = $dbForProject->find(
+                collection: 'memberships',
+                queries: $queries,
+            );
+            $total = $dbForProject->count(
+                collection: 'memberships',
+                queries: $filterQueries,
+                max: APP_LIMIT_COUNT
+            );
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
-        $memberships = $dbForProject->find(
-            collection: 'memberships',
-            queries: $queries,
-        );
-
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
