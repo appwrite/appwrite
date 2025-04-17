@@ -1641,20 +1641,7 @@ trait DatabasesBase
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
-
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'queries' => [
-                Query::equal('type', ['string'])->toString(),
-                Query::cursorAfter(new Document(['$id' => 'title']))->toString()
-            ],
-        ]);
-
-
+        // changing description attribute to be null by default instead of empty string
         $patchNull = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string/description', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1663,6 +1650,7 @@ trait DatabasesBase
             'default' => null,
             'required' => false,
         ]);
+        // creating a dummy doc with null description
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1679,6 +1667,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
+        // fetching docs with cursor after the dummy doc with order attr description which is null
         $documentsPaginated = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1688,8 +1677,10 @@ trait DatabasesBase
                 Query::cursorAfter(new Document(['$id' => $document1['body']['$id']]))->toString()
             ],
         ]);
-
+        // should throw 400 as the order attr description of the selected doc is null
         $this->assertEquals(400, $documentsPaginated['headers']['status-code']);
+
+        // deleting the dummy doc created
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $document1['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
