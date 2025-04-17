@@ -885,7 +885,9 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
-            Query::equal('resourceInternalId', [$siteInternalId])
+            Query::equal('resourceInternalId', [$siteInternalId]),
+            Query::equal('resourceType', ['site']),
+            Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $deploymentIds[] = $document->getId();
@@ -961,6 +963,7 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['function']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
