@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -347,10 +348,15 @@ App::get('/v1/migrations')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $migrations = $dbForProject->find('migrations', $queries);
+            $total = $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'migrations' => $dbForProject->find('migrations', $queries),
-            'total' => $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT),
+            'migrations' => $migrations,
+            'total' => $total,
         ]), Response::MODEL_MIGRATION_LIST);
     });
 
