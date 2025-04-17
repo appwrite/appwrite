@@ -1011,23 +1011,40 @@ trait MigrationsBase
         $bucketIds = [
             'compressed' => $bucketOneId,
             'uncompressed' => $bucketTwoId,
+
+            // in uncompressed buckets!
+            'missing-row' => $bucketTwoId,
+            'missing-column' => $bucketTwoId,
+            'irrelevant-column' => $bucketTwoId,
         ];
 
         $fileIds = [];
 
         foreach ($bucketIds as $label => $bucketId) {
+            $csvFileName = match ($label) {
+                'missing-row',
+                'missing-column',
+                'irrelevant-column' => "{$label}.csv",
+                default => 'documents.csv',
+            };
+
+            $mimeType = match ($csvFileName) {
+                default => 'text/csv',
+                'missing-row.csv' => 'text/plain', // invalid csv structure, falls back to plain text!
+            };
+
             $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/documents.csv'), 'text/csv', 'documents.csv'),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/'.$csvFileName), $mimeType, $csvFileName),
             ]);
 
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals('documents.csv', $response['body']['name']);
-            $this->assertEquals('text/csv', $response['body']['mimeType']);
+            $this->assertEquals($csvFileName, $response['body']['name']);
+            $this->assertEquals($mimeType, $response['body']['mimeType']);
 
             $fileIds[$label] = $response['body']['$id'];
         }
@@ -1045,6 +1062,93 @@ trait MigrationsBase
         $this->assertEquals(400, $compressed['body']['code']);
         $this->assertEquals('storage_file_type_unsupported', $compressed['body']['type']);
         $this->assertEquals('Only uncompressed, unencrypted CSV files can be used for document import.', $compressed['body']['message']);
+
+        // missing attribute, fail in worker.
+        $missingColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['missing-column'],
+                'bucketId' => $bucketIds['missing-column'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($missingColumn, $databaseId, $collectionId) {
+            $migrationId = $missingColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains("CSV header mismatch. Missing attribute: 'age'")
+            );
+        }, 60000, 500);
+
+        // missing row data, fail in worker.
+        $missingColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['missing-row'],
+                'bucketId' => $bucketIds['missing-row'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($missingColumn, $databaseId, $collectionId) {
+            $migrationId = $missingColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains('CSV row does not match the number of header columns')
+            );
+        }, 60000, 500);
+
+        // irrelevant column - email, fail in worker.
+        $irrelevantColumn = $this->performCsvMigration(
+            [
+                'fileId' => $fileIds['irrelevant-column'],
+                'bucketId' => $bucketIds['irrelevant-column'],
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($irrelevantColumn, $databaseId, $collectionId) {
+            $migrationId = $irrelevantColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('CSV', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_DOCUMENT, $migration['body']['resources']);
+            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains("CSV header mismatch. Unexpected attribute: 'email'")
+            );
+        }, 60000, 500);
 
         // no compression, no encryption, pass.
         $migration = $this->performCsvMigration(
