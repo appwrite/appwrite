@@ -136,7 +136,10 @@ class Swagger2 extends Format
                 $sdk = $mainSdk;
             }
 
-            $consumes = [$sdk->getRequestType()];
+            $consumes = [];
+            if (strtoupper($route->getMethod()) !== 'GET') {
+                $consumes = [$sdk->getRequestType()];
+            }
 
             $method = $sdk->getMethodName() ?? \uniqid();
 

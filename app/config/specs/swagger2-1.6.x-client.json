@@ -67,9 +67,7 @@
             "get": {
                 "summary": "Get account",
                 "operationId": "accountGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -289,9 +287,7 @@
             "get": {
                 "summary": "List identities",
                 "operationId": "accountListIdentities",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -465,9 +461,7 @@
             "get": {
                 "summary": "List logs",
                 "operationId": "accountListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -975,9 +969,7 @@
             "get": {
                 "summary": "List factors",
                 "operationId": "accountListMfaFactors",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1028,9 +1020,7 @@
             "get": {
                 "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1415,9 +1405,7 @@
             "get": {
                 "summary": "Get account preferences",
                 "operationId": "accountGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1707,9 +1695,7 @@
             "get": {
                 "summary": "List sessions",
                 "operationId": "accountListSessions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -2013,9 +1999,7 @@
             "get": {
                 "summary": "Create OAuth2 session",
                 "operationId": "accountCreateOAuth2Session",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "text\/html"
                 ],
@@ -2303,9 +2287,7 @@
             "get": {
                 "summary": "Get session",
                 "operationId": "accountGetSession",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -2930,9 +2912,7 @@
             "get": {
                 "summary": "Create OAuth2 token",
                 "operationId": "accountCreateOAuth2Token",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "text\/html"
                 ],
@@ -3430,9 +3410,7 @@
             "get": {
                 "summary": "Get browser icon",
                 "operationId": "avatarsGetBrowser",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3557,9 +3535,7 @@
             "get": {
                 "summary": "Get credit card icon",
                 "operationId": "avatarsGetCreditCard",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3690,9 +3666,7 @@
             "get": {
                 "summary": "Get favicon",
                 "operationId": "avatarsGetFavicon",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -3755,9 +3729,7 @@
             "get": {
                 "summary": "Get country flag",
                 "operationId": "avatarsGetFlag",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4244,9 +4216,7 @@
             "get": {
                 "summary": "Get image from URL",
                 "operationId": "avatarsGetImage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -4329,9 +4299,7 @@
             "get": {
                 "summary": "Get user initials",
                 "operationId": "avatarsGetInitials",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4422,9 +4390,7 @@
             "get": {
                 "summary": "Get QR code",
                 "operationId": "avatarsGetQR",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4515,9 +4481,7 @@
             "get": {
                 "summary": "List documents",
                 "operationId": "databasesListDocuments",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4703,9 +4667,7 @@
             "get": {
                 "summary": "Get document",
                 "operationId": "databasesGetDocument",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4970,9 +4932,7 @@
             "get": {
                 "summary": "List executions",
                 "operationId": "functionsListExecutions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5172,9 +5132,7 @@
             "get": {
                 "summary": "Get execution",
                 "operationId": "functionsGetExecution",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5392,9 +5350,7 @@
             "get": {
                 "summary": "Get user locale",
                 "operationId": "localeGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5446,9 +5402,7 @@
             "get": {
                 "summary": "List locale codes",
                 "operationId": "localeListCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5500,9 +5454,7 @@
             "get": {
                 "summary": "List continents",
                 "operationId": "localeListContinents",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5554,9 +5506,7 @@
             "get": {
                 "summary": "List countries",
                 "operationId": "localeListCountries",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5608,9 +5558,7 @@
             "get": {
                 "summary": "List EU countries",
                 "operationId": "localeListCountriesEU",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5662,9 +5610,7 @@
             "get": {
                 "summary": "List countries phone codes",
                 "operationId": "localeListCountriesPhones",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5716,9 +5662,7 @@
             "get": {
                 "summary": "List currencies",
                 "operationId": "localeListCurrencies",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5770,9 +5714,7 @@
             "get": {
                 "summary": "List languages",
                 "operationId": "localeListLanguages",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5982,9 +5924,7 @@
             "get": {
                 "summary": "List files",
                 "operationId": "storageListFiles",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -6157,9 +6097,7 @@
             "get": {
                 "summary": "Get file",
                 "operationId": "storageGetFile",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -6388,9 +6326,7 @@
             "get": {
                 "summary": "Get file for download",
                 "operationId": "storageGetFileDownload",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -6460,9 +6396,7 @@
             "get": {
                 "summary": "Get file preview",
                 "operationId": "storageGetFilePreview",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -6660,9 +6594,7 @@
             "get": {
                 "summary": "Get file for view",
                 "operationId": "storageGetFileView",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -6732,9 +6664,7 @@
             "get": {
                 "summary": "List teams",
                 "operationId": "teamsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -6899,9 +6829,7 @@
             "get": {
                 "summary": "Get team",
                 "operationId": "teamsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7100,9 +7028,7 @@
             "get": {
                 "summary": "List team memberships",
                 "operationId": "teamsListMemberships",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7298,9 +7224,7 @@
             "get": {
                 "summary": "Get team membership",
                 "operationId": "teamsGetMembership",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7622,9 +7546,7 @@
             "get": {
                 "summary": "Get team preferences",
                 "operationId": "teamsGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
