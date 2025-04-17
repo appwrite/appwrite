@@ -4,9 +4,13 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
@@ -19,11 +23,12 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -37,6 +42,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries;
@@ -153,7 +159,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
-        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     } catch (\Throwable $e) {
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
@@ -197,7 +203,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (\Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
@@ -237,8 +243,8 @@ function updateAttribute(
     string $filter = null,
     string|bool|int|float $default = null,
     bool $required = null,
-    int|float $min = null,
-    int|float $max = null,
+    int|float|null $min = null,
+    int|float|null $max = null,
     array $elements = null,
     array $options = [],
     string $newKey = null,
@@ -291,14 +297,11 @@ function updateAttribute(
         $attribute->setAttribute('size', $size);
     }
 
-    $formatOptions = $attribute->getAttribute('formatOptions');
-
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
+            $min ??= $attribute->getAttribute('formatOptions')['min'];
+            $max ??= $attribute->getAttribute('formatOptions')['max'];
 
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -386,30 +389,44 @@ function updateAttribute(
                 size: $size,
                 required: $required,
                 default: $default,
-                formatOptions: $options ?? null,
+                formatOptions: $options,
                 newKey: $newKey ?? null
             );
         } catch (TruncateException) {
             throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+        } catch (IndexException $e) {
+            throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
         }
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        // Delete attribute and recreate since we can't modify IDs
-        $original = clone $attribute;
-
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
+        $originalUid = $attribute->getId();
 
         $attribute
             ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        try {
-            $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (DatabaseException|PDOException) {
-            $attribute = $dbForProject->createDocument('attributes', $original);
+        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+
+        /**
+         * @var Document $index
+         */
+        foreach ($collection->getAttribute('indexes') as $index) {
+            /**
+             * @var string[] $attributes
+             */
+            $attributes = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                $attributes[$found] = $newKey;
+                $index->setAttribute('attributes', $attributes);
+                $dbForProject->updateDocument('indexes', $index->getId(), $index);
+            }
         }
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -447,21 +464,27 @@ App::post('/v1/databases')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'database.create')
     ->label('audits.resource', 'database/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/databases/create.md') // create this file later
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'create',
+        description: '/docs/references/databases/create.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -511,7 +534,7 @@ App::post('/v1/databases')
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());
-        $queueForUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
+        $queueForStatsUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -523,13 +546,19 @@ App::get('/v1/databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/databases/list.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'list',
+        description: '/docs/references/databases/list.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -579,13 +608,19 @@ App::get('/v1/databases/:databaseId')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/databases/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'get',
+        description: '/docs/references/databases/get.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -605,13 +640,19 @@ App::get('/v1/databases/:databaseId/logs')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listLogs')
-    ->label('sdk.description', '/docs/references/databases/get-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listLogs',
+        description: '/docs/references/databases/get-logs.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
@@ -632,13 +673,15 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -686,7 +729,7 @@ App::get('/v1/databases/:databaseId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -700,13 +743,19 @@ App::put('/v1/databases/:databaseId')
     ->label('event', 'databases.[databaseId].update')
     ->label('audits.event', 'database.update')
     ->label('audits.resource', 'database/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/databases/update.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'update',
+        description: '/docs/references/databases/update.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DATABASE,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
@@ -739,19 +788,26 @@ App::delete('/v1/databases/:databaseId')
     ->label('event', 'databases.[databaseId].delete')
     ->label('audits.event', 'database.delete')
     ->label('audits.resource', 'database/{request.databaseId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/databases/delete.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'delete',
+        description: '/docs/references/databases/delete.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -774,7 +830,7 @@ App::delete('/v1/databases/:databaseId')
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_STORAGE, 1); // Global, deletion forces full recalculation
 
         $response->noContent();
@@ -788,13 +844,19 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'collection.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createCollection')
-    ->label('sdk.description', '/docs/references/databases/create-collection.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createCollection',
+        description: '/docs/references/databases/create-collection.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
@@ -853,13 +915,19 @@ App::get('/v1/databases/:databaseId/collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listCollections')
-    ->label('sdk.description', '/docs/references/databases/list-collections.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listCollections',
+        description: '/docs/references/databases/list-collections.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -919,13 +987,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getCollection')
-    ->label('sdk.description', '/docs/references/databases/get-collection.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getCollection',
+        description: '/docs/references/databases/get-collection.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
@@ -954,13 +1028,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listCollectionLogs')
-    ->label('sdk.description', '/docs/references/databases/get-collection-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listCollectionLogs',
+        description: '/docs/references/databases/get-collection-logs.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
@@ -983,14 +1063,21 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -1038,7 +1125,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1053,13 +1140,19 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.event', 'collection.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateCollection')
-    ->label('sdk.description', '/docs/references/databases/update-collection.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateCollection',
+        description: '/docs/references/databases/update-collection.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COLLECTION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
@@ -1121,12 +1214,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
     ->label('audits.event', 'collection.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'deleteCollection')
-    ->label('sdk.description', '/docs/references/databases/delete-collection.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'deleteCollection',
+        description: '/docs/references/databases/delete-collection.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
@@ -1177,13 +1277,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createStringAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-string-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createStringAttribute',
+        description: '/docs/references/databases/create-string-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_STRING
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1234,13 +1339,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createEmailAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-email-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createEmailAttribute',
+        description: '/docs/references/databases/create-email-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_EMAIL,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1277,13 +1387,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createEnumAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-attribute-enum.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createEnumAttribute',
+        description: '/docs/references/databases/create-attribute-enum.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_ENUM,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1325,13 +1440,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createIpAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-ip-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createIpAttribute',
+        description: '/docs/references/databases/create-ip-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_IP,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1368,13 +1488,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createUrlAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-url-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createUrlAttribute',
+        description: '/docs/references/databases/create-url-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_URL,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1411,13 +1536,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createIntegerAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-integer-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createIntegerAttribute',
+        description: '/docs/references/databases/create-integer-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_INTEGER,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1433,8 +1563,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
-        $min = \is_null($min) ? PHP_INT_MIN : $min;
-        $max = \is_null($max) ? PHP_INT_MAX : $max;
+        $min ??= PHP_INT_MIN;
+        $max ??= PHP_INT_MAX;
 
         if ($min > $max) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -1483,13 +1613,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createFloatAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-float-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createFloatAttribute',
+        description: '/docs/references/databases/create-float-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_FLOAT,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1505,8 +1640,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
-        $min = \is_null($min) ? -PHP_FLOAT_MAX : $min;
-        $max = \is_null($max) ? PHP_FLOAT_MAX : $max;
+        $min ??= -PHP_FLOAT_MAX;
+        $max ??= PHP_FLOAT_MAX;
 
         if ($min > $max) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -1553,13 +1688,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createBooleanAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-boolean-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createBooleanAttribute',
+        description: '/docs/references/databases/create-boolean-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_BOOLEAN,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1595,13 +1735,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createDatetimeAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-datetime-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createDatetimeAttribute',
+        description: '/docs/references/databases/create-datetime-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_DATETIME,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1640,13 +1785,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createRelationshipAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-relationship-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createRelationshipAttribute',
+        description: '/docs/references/databases/create-relationship-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('relatedCollectionId', '', new UID(), 'Related Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1766,13 +1916,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listAttributes')
-    ->label('sdk.description', '/docs/references/databases/list-attributes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listAttributes',
+        description: '/docs/references/databases/list-attributes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_LIST
+            )
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new Attributes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Attributes::ALLOWED_ATTRIBUTES), true)
@@ -1847,23 +2002,29 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getAttribute')
-    ->label('sdk.description', '/docs/references/databases/get-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', [
-        Response::MODEL_ATTRIBUTE_BOOLEAN,
-        Response::MODEL_ATTRIBUTE_INTEGER,
-        Response::MODEL_ATTRIBUTE_FLOAT,
-        Response::MODEL_ATTRIBUTE_EMAIL,
-        Response::MODEL_ATTRIBUTE_ENUM,
-        Response::MODEL_ATTRIBUTE_URL,
-        Response::MODEL_ATTRIBUTE_IP,
-        Response::MODEL_ATTRIBUTE_DATETIME,
-        Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-        Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getAttribute',
+        description: '/docs/references/databases/get-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: [
+                    Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_INTEGER,
+                    Response::MODEL_ATTRIBUTE_FLOAT,
+                    Response::MODEL_ATTRIBUTE_EMAIL,
+                    Response::MODEL_ATTRIBUTE_ENUM,
+                    Response::MODEL_ATTRIBUTE_URL,
+                    Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_DATETIME,
+                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+                    Response::MODEL_ATTRIBUTE_STRING
+                ]
+            ),
+        ]
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1925,12 +2086,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateStringAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-string-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateStringAttribute',
+        description: '/docs/references/databases/update-string-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_STRING,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1969,12 +2137,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateEmailAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-email-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateEmailAttribute',
+        description: '/docs/references/databases/update-email-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_EMAIL,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2011,12 +2186,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateEnumAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-enum-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateEnumAttribute',
+        description: '/docs/references/databases/update-enum-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_ENUM,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2055,12 +2237,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateIpAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-ip-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateIpAttribute',
+        description: '/docs/references/databases/update-ip-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_IP,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2097,12 +2286,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateUrlAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-url-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateUrlAttribute',
+        description: '/docs/references/databases/update-url-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_URL,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2139,18 +2335,25 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateIntegerAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-integer-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateIntegerAttribute',
+        description: '/docs/references/databases/update-integer-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_INTEGER,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
-    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
+    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
@@ -2191,18 +2394,25 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateFloatAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-float-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateFloatAttribute',
+        description: '/docs/references/databases/update-float-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_FLOAT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
-    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
+    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
@@ -2243,12 +2453,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateBooleanAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-boolean-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateBooleanAttribute',
+        description: '/docs/references/databases/update-boolean-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_BOOLEAN,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2284,12 +2501,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateDatetimeAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-datetime-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateDatetimeAttribute',
+        description: '/docs/references/databases/update-datetime-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_DATETIME,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2325,12 +2549,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateRelationshipAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-relationship-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateRelationshipAttribute',
+        description: '/docs/references/databases/update-relationship-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2383,12 +2614,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'deleteAttribute')
-    ->label('sdk.description', '/docs/references/databases/delete-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'deleteAttribute',
+        description: '/docs/references/databases/delete-attribute.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -2396,8 +2634,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2414,6 +2652,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
 
         if ($attribute->isEmpty()) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        }
+
+        /**
+         * Check index dependency
+         */
+        $validator = new IndexDependencyValidator(
+            $collection->getAttribute('indexes'),
+            $dbForProject->getAdapter()->getSupportForCastIndexArray(),
+        );
+
+        if (! $validator->isValid($attribute)) {
+            throw new Exception(Exception::INDEX_DEPENDENCY);
         }
 
         // Only update status if removing available attribute
@@ -2482,7 +2732,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model));
 
-        $queueForUsage
+        $queueForStatsUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$db->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
@@ -2497,13 +2747,19 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'index.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createIndex')
-    ->label('sdk.description', '/docs/references/databases/create-index.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'createIndex',
+        description: '/docs/references/databases/create-index.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_INDEX,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
@@ -2582,12 +2838,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
-                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown attribute: ' . $attribute);
+                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown attribute: ' . $attribute . '. Verify the attribute name or create the attribute.');
             }
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeSize = $oldAttributes[$attributeIndex]['size'];
             $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
@@ -2600,10 +2855,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             }
 
             $lengths[$i] = null;
-
-            if ($attributeType === Database::VAR_STRING) {
-                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
-            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
@@ -2627,7 +2878,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $dbForProject->getAdapter()->getMaxIndexLength()
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
         if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
@@ -2665,13 +2917,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listIndexes')
-    ->label('sdk.description', '/docs/references/databases/list-indexes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listIndexes',
+        description: '/docs/references/databases/list-indexes.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INDEX_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
@@ -2741,13 +2999,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getIndex')
-    ->label('sdk.description', '/docs/references/databases/get-index.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getIndex',
+        description: '/docs/references/databases/get-index.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INDEX,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
@@ -2784,12 +3048,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
     ->label('audits.event', 'index.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'deleteIndex')
-    ->label('sdk.description', '/docs/references/databases/delete-index.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'deleteIndex',
+        description: '/docs/references/databases/delete-index.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Index Key.')
@@ -2852,15 +3123,24 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createDocument')
-    ->label('sdk.description', '/docs/references/databases/create-document.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
-    ->label('sdk.offline.key', '{documentId}')
+    ->label(
+        'sdk',
+        [
+            new Method(
+                namespace: 'databases',
+                name: 'createDocument',
+                description: '/docs/references/databases/create-document.md',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_DOCUMENT,
+                    )
+                ],
+                contentType: ContentType::JSON
+            )
+        ]
+    )
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
@@ -2870,9 +3150,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -2943,7 +3222,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $operations = 0;
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -3035,6 +3318,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
@@ -3070,6 +3354,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $response->addHeader('X-Debug-Operations', $operations);
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($document, Response::MODEL_DOCUMENT);
@@ -3089,10 +3380,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
-
-
-        $queueForUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3101,21 +3388,26 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listDocuments')
-    ->label('sdk.description', '/docs/references/databases/list-documents.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listDocuments',
+        description: '/docs/references/databases/list-documents.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3151,7 +3443,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-
             $documentId = $cursor->getValue();
 
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
@@ -3166,11 +3457,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
         $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
             }
+
+            $operations++;
 
             $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
@@ -3185,8 +3480,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
+
                 if (!\is_array($related)) {
                     $relations = [$related];
                 } else {
@@ -3194,6 +3494,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                // todo: Use local cache for this getDocument
                 $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
@@ -3217,6 +3518,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         foreach ($documents as $document) {
             $processDocument($collection, $document);
         }
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+
+        $response->addHeader('X-Debug-Operations', $operations);
 
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
@@ -3257,25 +3564,28 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getDocument')
-    ->label('sdk.description', '/docs/references/databases/get-document.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
-    ->label('sdk.offline.key', '{documentId}')
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getDocument',
+        description: '/docs/references/databases/get-document.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -3302,11 +3612,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             if ($document->isEmpty()) {
                 return;
             }
+
+            $operations++;
 
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
@@ -3320,8 +3634,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 $related = $document->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
+                    if (\in_array(\gettype($related), ['array', 'object'])) {
+                        $operations++;
+                    }
+
                     continue;
                 }
+
                 if (!\is_array($related)) {
                     $related = [$related];
                 }
@@ -3341,6 +3660,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $processDocument($collection, $document);
 
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+
+        $response->addHeader('X-Debug-Operations', $operations);
+
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
@@ -3350,13 +3675,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listDocumentLogs')
-    ->label('sdk.description', '/docs/references/databases/get-document-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'listDocumentLogs',
+        description: '/docs/references/databases/get-document-logs.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOG_LIST,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
@@ -3391,13 +3722,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -3443,8 +3776,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
         }
+
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3461,15 +3795,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateDocument')
-    ->label('sdk.description', '/docs/references/databases/update-document.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
-    ->label('sdk.offline.key', '{documentId}')
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'updateDocument',
+        description: '/docs/references/databases/update-document.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
@@ -3479,8 +3817,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3547,7 +3885,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $operations = 0;
+
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+
+            $operations++;
+
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3614,6 +3957,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         });
 
         $setCollection($collection, $newDocument);
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+        $response->addHeader('X-Debug-Operations', $operations);
 
         try {
             $document = $dbForProject->withRequestTimestamp(
@@ -3700,14 +4049,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'deleteDocument')
-    ->label('sdk.description', '/docs/references/databases/delete-document.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
-    ->label('sdk.offline.key', '{documentId}')
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'deleteDocument',
+        description: '/docs/references/databases/delete-document.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
@@ -3715,9 +4069,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3786,6 +4139,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $response->addHeader('X-Debug-Operations', 1);
+
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
@@ -3802,9 +4162,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
-        $queueForUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-
         $response->noContent();
     });
 
@@ -3813,12 +4170,19 @@ App::get('/v1/databases/usage')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getUsage',
+        description: '/docs/references/databases/get-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_DATABASES,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -3831,7 +4195,9 @@ App::get('/v1/databases/usage')
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -3883,10 +4249,14 @@ App::get('/v1/databases/usage')
             'collectionsTotal' => $usage[$metrics[1]]['total'],
             'documentsTotal'   => $usage[$metrics[2]]['total'],
             'storageTotal'   => $usage[$metrics[3]]['total'],
+            'databasesReadsTotal' => $usage[$metrics[4]]['total'],
+            'databasesWritesTotal' => $usage[$metrics[5]]['total'],
             'databases'   => $usage[$metrics[0]]['data'],
             'collections' => $usage[$metrics[1]]['data'],
             'documents'   => $usage[$metrics[2]]['data'],
             'storage'   => $usage[$metrics[3]]['data'],
+            'databasesReads' => $usage[$metrics[4]]['data'],
+            'databasesWrites' => $usage[$metrics[5]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -3895,12 +4265,19 @@ App::get('/v1/databases/:databaseId/usage')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getDatabaseUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getDatabaseUsage',
+        description: '/docs/references/databases/get-database-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_DATABASE,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
@@ -3919,7 +4296,9 @@ App::get('/v1/databases/:databaseId/usage')
         $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
-            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE)
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_READS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASES_OPERATIONS_WRITES)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -3971,9 +4350,13 @@ App::get('/v1/databases/:databaseId/usage')
             'collectionsTotal'   => $usage[$metrics[0]]['total'],
             'documentsTotal'   => $usage[$metrics[1]]['total'],
             'storageTotal'   => $usage[$metrics[2]]['total'],
+            'databaseReadsTotal' => $usage[$metrics[3]]['total'],
+            'databaseWritesTotal' => $usage[$metrics[4]]['total'],
             'collections'   => $usage[$metrics[0]]['data'],
             'documents'   => $usage[$metrics[1]]['data'],
             'storage'   => $usage[$metrics[2]]['data'],
+            'databaseReads'   => $usage[$metrics[3]]['data'],
+            'databaseWrites'   => $usage[$metrics[4]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
@@ -3983,12 +4366,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getCollectionUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        name: 'getCollectionUsage',
+        description: '/docs/references/databases/get-collection-usage.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USAGE_COLLECTION,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->param('collectionId', '', new UID(), 'Collection ID.')

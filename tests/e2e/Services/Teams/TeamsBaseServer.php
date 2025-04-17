@@ -175,16 +175,6 @@ trait TeamsBaseServer
         $userUid = $response['body']['userId'];
         $membershipUid = $response['body']['$id'];
 
-        // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()), []);
-
-        // $this->assertEquals($userUid, $response['body']['$id']);
-        // $this->assertContains('team:'.$teamUid, $response['body']['roles']);
-        // $this->assertContains('team:'.$teamUid.'/admin', $response['body']['roles']);
-        // $this->assertContains('team:'.$teamUid.'/editor', $response['body']['roles']);
-
         /**
          * Test for FAILURE
          */
@@ -199,7 +189,7 @@ trait TeamsBaseServer
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(409, $response['headers']['status-code']); // membership already created
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',

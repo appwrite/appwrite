@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.6.0",
+        "version": "1.6.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -58,9 +58,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -110,9 +107,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -197,9 +191,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -276,9 +267,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/identities",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -338,9 +326,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -404,9 +389,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -455,9 +437,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -524,9 +503,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -597,9 +573,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -666,9 +639,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -747,9 +717,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -818,9 +785,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -866,10 +830,10 @@
                 ],
                 "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                 "responses": {
-                    "204": {
-                        "description": "No content",
+                    "200": {
+                        "description": "Session",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/session"
                                 }
@@ -894,9 +858,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -973,9 +934,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1027,9 +985,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1079,9 +1034,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1131,9 +1083,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1185,9 +1134,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1258,9 +1204,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1336,9 +1279,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1415,9 +1355,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1467,9 +1404,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1543,9 +1477,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1620,9 +1551,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1705,9 +1633,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1750,9 +1675,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -1804,9 +1726,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1855,9 +1774,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1931,9 +1847,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2007,9 +1920,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2083,9 +1993,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2159,9 +2066,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "{sessionId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2223,9 +2127,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2280,9 +2181,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2346,9 +2244,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2400,9 +2295,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2451,7 +2343,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2484,9 +2376,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2563,9 +2452,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2709,9 +2595,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2785,9 +2668,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2856,9 +2736,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2938,9 +2815,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -2990,9 +2864,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3063,9 +2934,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3193,9 +3061,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3212,7 +3077,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3233,7 +3098,8 @@
                                 "union-china-pay",
                                 "visa",
                                 "mir",
-                                "maestro"
+                                "maestro",
+                                "rupay"
                             ],
                             "x-enum-name": "CreditCard",
                             "x-enum-keys": [
@@ -3252,7 +3118,8 @@
                                 "Union China Pay",
                                 "Visa",
                                 "MIR",
-                                "Maestro"
+                                "Maestro",
+                                "Rupay"
                             ]
                         },
                         "in": "path"
@@ -3327,9 +3194,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3389,9 +3253,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3881,9 +3742,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3967,9 +3825,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -4063,9 +3918,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -4164,9 +4016,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4240,9 +4089,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4322,9 +4168,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4384,9 +4227,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4463,9 +4303,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4527,9 +4364,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4613,9 +4447,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4720,9 +4551,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4792,9 +4620,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4894,9 +4719,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -4968,9 +4790,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5055,9 +4874,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5140,7 +4956,7 @@
                     "200": {
                         "description": "AttributeBoolean",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeBoolean"
                                 }
@@ -5164,9 +4980,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5278,9 +5091,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5363,7 +5173,7 @@
                     "200": {
                         "description": "AttributeDatetime",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeDatetime"
                                 }
@@ -5387,9 +5197,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5501,9 +5308,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5586,7 +5390,7 @@
                     "200": {
                         "description": "AttributeEmail",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeEmail"
                                 }
@@ -5610,9 +5414,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5724,9 +5525,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5818,7 +5616,7 @@
                     "200": {
                         "description": "AttributeEnum",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeEnum"
                                 }
@@ -5842,9 +5640,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -5965,9 +5760,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6060,7 +5852,7 @@
                     "200": {
                         "description": "AttributeFloat",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeFloat"
                                 }
@@ -6084,9 +5876,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6164,8 +5953,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -6210,9 +5997,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6305,7 +6089,7 @@
                     "200": {
                         "description": "AttributeInteger",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeInteger"
                                 }
@@ -6329,9 +6113,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6409,8 +6190,6 @@
                                 },
                                 "required": [
                                     "required",
-                                    "min",
-                                    "max",
                                     "default"
                                 ]
                             }
@@ -6455,9 +6234,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6540,7 +6316,7 @@
                     "200": {
                         "description": "AttributeIP",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeIp"
                                 }
@@ -6564,9 +6340,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6678,9 +6451,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6812,9 +6582,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -6908,7 +6675,7 @@
                     "200": {
                         "description": "AttributeString",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeString"
                                 }
@@ -6932,9 +6699,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7051,9 +6815,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7136,7 +6897,7 @@
                     "200": {
                         "description": "AttributeURL",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeUrl"
                                 }
@@ -7160,9 +6921,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7305,9 +7063,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7379,9 +7134,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7438,7 +7190,7 @@
                     "200": {
                         "description": "AttributeRelationship",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/attributeRelationship"
                                 }
@@ -7462,9 +7214,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -7575,9 +7324,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -7633,7 +7379,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -7664,9 +7410,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -7775,9 +7518,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -7874,9 +7614,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -7977,9 +7714,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -8063,9 +7797,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8148,9 +7879,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8271,9 +7999,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8345,9 +8070,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8428,9 +8150,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8504,9 +8223,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8596,7 +8312,8 @@
                                             "bun-1.0",
                                             "bun-1.1",
                                             "go-1.23",
-                                            "static-1"
+                                            "static-1",
+                                            "flutter-3.24"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -8753,9 +8470,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8806,9 +8520,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8858,9 +8569,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -8920,9 +8628,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9019,7 +8724,8 @@
                                             "bun-1.0",
                                             "bun-1.1",
                                             "go-1.23",
-                                            "static-1"
+                                            "static-1",
+                                            "flutter-3.24"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -9146,9 +8852,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9210,9 +8913,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9296,9 +8996,6 @@
                         "server"
                     ],
                     "packaging": true,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9395,9 +9092,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9467,9 +9161,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9532,9 +9223,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9577,7 +9265,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -9590,7 +9278,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9599,9 +9287,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9658,7 +9343,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.",
                 "responses": {
                     "200": {
                         "description": "Build",
@@ -9678,7 +9363,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/update-deployment-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/update-deployment-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9687,9 +9372,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9755,9 +9437,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -9832,9 +9511,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -9922,9 +9598,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -10041,9 +9714,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -10108,9 +9778,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10182,9 +9849,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10244,9 +9908,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10333,9 +9994,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10405,9 +10063,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10494,9 +10149,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10570,9 +10222,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10626,9 +10275,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10680,9 +10326,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10732,9 +10375,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10784,9 +10424,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10822,7 +10459,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
-                    "weight": 134,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10836,9 +10473,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10899,9 +10533,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -10937,7 +10568,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
-                    "weight": 130,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10951,61 +10582,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": [],
-                        "Key": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": []
-                    }
-                ]
-            }
-        },
-        "\/health\/queue": {
-            "get": {
-                "summary": "Get queue",
-                "operationId": "healthGetQueue",
-                "tags": [
-                    "health"
-                ],
-                "description": "Check the Appwrite queue messaging servers are up and connection is successful.",
-                "responses": {
-                    "200": {
-                        "description": "Health Status",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/healthStatus"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getQueue",
-                    "weight": 129,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "health\/get-queue.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "health.read",
-                    "platforms": [
-                        "server"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11041,7 +10617,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
-                    "weight": 136,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11055,9 +10631,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11106,7 +10679,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
-                    "weight": 135,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11120,9 +10693,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11171,7 +10741,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
-                    "weight": 137,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11185,9 +10755,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11247,7 +10814,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
-                    "weight": 138,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11261,9 +10828,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11326,9 +10890,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11354,8 +10915,9 @@
                                 "v1-audits",
                                 "v1-mails",
                                 "v1-functions",
-                                "v1-usage",
-                                "v1-usage-dump",
+                                "v1-stats-resources",
+                                "v1-stats-usage",
+                                "v1-stats-usage-dump",
                                 "v1-webhooks",
                                 "v1-certificates",
                                 "v1-builds",
@@ -11403,7 +10965,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
-                    "weight": 142,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11417,9 +10979,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11468,7 +11027,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
-                    "weight": 133,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11482,9 +11041,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11533,7 +11089,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
-                    "weight": 139,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11547,9 +11103,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11598,7 +11151,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
-                    "weight": 140,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11612,9 +11165,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11663,7 +11213,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
-                    "weight": 141,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11677,9 +11227,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11706,9 +11253,71 @@
                 ]
             }
         },
-        "\/health\/queue\/usage": {
+        "\/health\/queue\/stats-resources": {
             "get": {
-                "summary": "Get usage queue",
+                "summary": "Get stats  resources queue",
+                "operationId": "healthGetQueueStatsResources",
+                "tags": [
+                    "health"
+                ],
+                "description": "Get the number of metrics that are waiting to be processed in the Appwrite stats resources queue.",
+                "responses": {
+                    "200": {
+                        "description": "Health Queue",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/healthQueue"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getQueueStatsResources",
+                    "weight": 142,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "health\/get-queue-stats-resources.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-resources.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "health.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "threshold",
+                        "description": "Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 5000
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/health\/queue\/stats-usage": {
+            "get": {
+                "summary": "Get stats usage queue",
                 "operationId": "healthGetQueueUsage",
                 "tags": [
                     "health"
@@ -11733,7 +11342,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "health\/get-queue-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11742,9 +11351,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11771,10 +11377,10 @@
                 ]
             }
         },
-        "\/health\/queue\/usage-dump": {
+        "\/health\/queue\/stats-usage-dump": {
             "get": {
                 "summary": "Get usage dump queue",
-                "operationId": "healthGetQueueUsageDump",
+                "operationId": "healthGetQueueStatsUsageDump",
                 "tags": [
                     "health"
                 ],
@@ -11792,13 +11398,13 @@
                     }
                 },
                 "x-appwrite": {
-                    "method": "getQueueUsageDump",
+                    "method": "getQueueStatsUsageDump",
                     "weight": 144,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
-                    "demo": "health\/get-queue-usage-dump.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-usage-dump.md",
+                    "demo": "health\/get-queue-stats-usage-dump.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-stats-usage-dump.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11807,9 +11413,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11858,7 +11461,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
-                    "weight": 132,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11872,9 +11475,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11937,9 +11537,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -11989,9 +11586,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12027,7 +11621,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
-                    "weight": 131,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12041,9 +11635,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12095,9 +11686,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/localed",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12151,9 +11739,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/localeCode",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12207,9 +11792,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/continents",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12263,9 +11845,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12319,9 +11898,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/eu",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12375,9 +11951,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/phones",
-                    "offline-key": "",
-                    "offline-response-key": "countryCode",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12431,9 +12004,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/currencies",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12487,9 +12057,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/languages",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -12527,7 +12094,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 390,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12542,9 +12109,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12606,7 +12170,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 387,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12621,9 +12185,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12738,7 +12299,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an email message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -12753,7 +12314,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 394,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12768,9 +12329,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12902,7 +12460,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 389,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12917,9 +12475,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -12978,7 +12533,7 @@
                                     },
                                     "data": {
                                         "type": "object",
-                                        "description": "Additional Data for push notification.",
+                                        "description": "Additional key-value pair data for push notification.",
                                         "x-example": "{}"
                                     },
                                     "action": {
@@ -12998,7 +12553,7 @@
                                     },
                                     "sound": {
                                         "type": "string",
-                                        "description": "Sound for push notification. Available only for Android and IOS Platform.",
+                                        "description": "Sound for push notification. Available only for Android and iOS Platform.",
                                         "x-example": "<SOUND>"
                                     },
                                     "color": {
@@ -13012,9 +12567,9 @@
                                         "x-example": "<TAG>"
                                     },
                                     "badge": {
-                                        "type": "string",
-                                        "description": "Badge for push notification. Available only for IOS Platform.",
-                                        "x-example": "<BADGE>"
+                                        "type": "integer",
+                                        "description": "Badge for push notification. Available only for iOS Platform.",
+                                        "x-example": null
                                     },
                                     "draft": {
                                         "type": "boolean",
@@ -13025,12 +12580,31 @@
                                         "type": "string",
                                         "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                         "x-example": null
+                                    },
+                                    "contentAvailable": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "critical": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Set the notification priority. \"normal\" will consider device state and may not deliver notifications immediately. \"high\" will always attempt to immediately deliver the notification.",
+                                        "x-example": "normal",
+                                        "enum": [
+                                            "normal",
+                                            "high"
+                                        ],
+                                        "x-enum-name": "MessagePriority",
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "required": [
-                                    "messageId",
-                                    "title",
-                                    "body"
+                                    "messageId"
                                 ]
                             }
                         }
@@ -13045,7 +12619,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update a push notification by its unique ID.\n",
+                "description": "Update a push notification by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -13060,7 +12634,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 396,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13075,9 +12649,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13190,6 +12761,27 @@
                                         "type": "string",
                                         "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                         "x-example": null
+                                    },
+                                    "contentAvailable": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "critical": {
+                                        "type": "boolean",
+                                        "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                        "x-example": false
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                        "x-example": "normal",
+                                        "enum": [
+                                            "normal",
+                                            "high"
+                                        ],
+                                        "x-enum-name": "MessagePriority",
+                                        "x-enum-keys": []
                                     }
                                 }
                             }
@@ -13220,7 +12812,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 388,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13235,9 +12827,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13317,7 +12906,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -13332,12 +12921,12 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 395,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "messaging\/update-sms.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/update-email.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/update-sms.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -13347,9 +12936,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13447,7 +13033,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 393,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13462,9 +13048,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13503,7 +13086,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 397,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13518,9 +13101,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13568,7 +13148,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 391,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13583,9 +13163,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13646,7 +13223,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 392,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13661,9 +13238,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13724,7 +13298,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 362,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13739,9 +13313,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13803,7 +13374,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 361,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13818,9 +13389,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -13911,7 +13479,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 374,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13926,9 +13494,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14022,7 +13587,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 360,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14037,9 +13602,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14110,7 +13672,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 373,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14125,9 +13687,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14201,7 +13760,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 352,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14216,9 +13775,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14319,7 +13875,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 365,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14334,9 +13890,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14440,7 +13993,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 355,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14455,9 +14008,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14538,7 +14088,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 368,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14553,9 +14103,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14639,7 +14186,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 353,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14654,9 +14201,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14747,7 +14291,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 366,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14762,9 +14306,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -14858,7 +14399,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 354,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14873,9 +14414,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15004,7 +14542,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 367,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15019,9 +14557,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15152,7 +14687,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 356,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15167,9 +14702,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15250,7 +14782,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 369,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15265,9 +14797,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15351,7 +14880,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 357,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15366,9 +14895,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15449,7 +14975,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 370,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15464,9 +14990,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15550,7 +15073,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 358,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15565,9 +15088,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15648,7 +15168,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 371,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15663,9 +15183,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15749,7 +15266,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 359,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15764,9 +15281,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15847,7 +15361,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 372,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15862,9 +15376,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -15948,7 +15459,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 364,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15963,9 +15474,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16004,7 +15512,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 375,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16019,9 +15527,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16069,7 +15574,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 363,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16084,9 +15589,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16147,7 +15649,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 384,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16162,9 +15664,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16225,7 +15724,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 377,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16240,9 +15739,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16302,7 +15798,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 376,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16317,9 +15813,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16388,7 +15881,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 379,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16403,9 +15896,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16451,7 +15941,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 380,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16466,9 +15956,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16531,7 +16018,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 381,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16546,9 +16033,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16596,7 +16080,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 378,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16611,9 +16095,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16674,7 +16155,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 383,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16689,9 +16170,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16761,7 +16239,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 382,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16778,9 +16256,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "JWT": []
@@ -16855,7 +16330,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 385,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16870,9 +16345,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -16921,7 +16393,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 386,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16938,9 +16410,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "JWT": []
@@ -17014,9 +16483,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -17090,9 +16556,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -17220,9 +16683,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -17282,9 +16742,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -17409,9 +16866,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -17475,9 +16929,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17565,9 +17016,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17667,9 +17115,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17743,9 +17188,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17836,9 +17278,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17907,9 +17346,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -17978,9 +17414,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18156,6 +17589,7 @@
                                 "gif",
                                 "png",
                                 "webp",
+                                "heic",
                                 "avif"
                             ],
                             "x-enum-name": "ImageFormat",
@@ -18198,9 +17632,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18276,9 +17707,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18356,9 +17784,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18445,9 +17870,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18511,9 +17933,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18589,9 +18008,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18657,9 +18073,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18747,9 +18160,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18862,9 +18272,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "{membershipId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -18938,9 +18345,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -19029,9 +18433,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -19106,9 +18507,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -19207,9 +18605,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -19271,9 +18666,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -19355,9 +18747,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19431,9 +18820,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19522,9 +18908,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19610,9 +18993,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19698,9 +19078,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19769,9 +19146,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19833,9 +19207,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -19921,9 +19292,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20009,9 +19377,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20127,9 +19492,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20233,9 +19595,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20341,9 +19700,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20396,9 +19752,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20460,9 +19813,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20543,9 +19893,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20628,9 +19975,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20714,9 +20058,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20791,9 +20132,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20855,9 +20193,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -20911,15 +20246,8 @@
                 ],
                 "description": "Delete an authenticator app.",
                 "responses": {
-                    "200": {
-                        "description": "User",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/user"
-                                }
-                            }
-                        }
+                    "204": {
+                        "description": "No content"
                     }
                 },
                 "x-appwrite": {
@@ -20938,9 +20266,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21017,9 +20342,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21081,9 +20403,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21143,9 +20462,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21205,9 +20521,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21269,9 +20582,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21352,9 +20662,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21435,9 +20742,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21518,9 +20822,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21580,9 +20881,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21663,9 +20961,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21725,9 +21020,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21780,9 +21072,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21837,9 +21126,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21911,9 +21197,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -21995,9 +21278,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22071,9 +21351,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22184,9 +21461,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22257,9 +21531,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22349,9 +21620,6 @@
                         "console"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22423,9 +21691,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22508,9 +21773,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -22591,9 +21853,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -25746,7 +25005,7 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "description": "Function execution schedult in CRON format.",
+                        "description": "Function execution schedule in CRON format.",
                         "x-example": "5 4 * * *"
                     },
                     "timeout": {

@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
@@ -44,16 +45,30 @@ class Functions extends Action
             ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
+            ->inject('queueForRealtime')
             ->inject('queueForEvents')
-            ->inject('queueForUsage')
+            ->inject('queueForStatsUsage')
             ->inject('log')
+            ->inject('executor')
             ->inject('isResourceBlocked')
-            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $isResourceBlocked));
+            ->callback([$this, 'action']);
     }
 
-    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked): void
-    {
+    public function action(
+        Document $project,
+        Message $message,
+        Database $dbForProject,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        StatsUsage $queueForStatsUsage,
+        Log $log,
+        Executor $executor,
+        callable $isResourceBlocked
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -136,11 +151,14 @@ class Functions extends Action
                     $this->execute(
                         log: $log,
                         dbForProject: $dbForProject,
+                        queueForWebhooks: $queueForWebhooks,
                         queueForFunctions: $queueForFunctions,
-                        queueForUsage: $queueForUsage,
+                        queueForRealtime: $queueForRealtime,
+                        queueForStatsUsage: $queueForStatsUsage,
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
+                        executor:  $executor,
                         trigger: 'event',
                         path: '/',
                         method: 'POST',
@@ -176,11 +194,14 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
-                    queueForUsage: $queueForUsage,
+                    queueForRealtime: $queueForRealtime,
+                    queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'http',
                     path: $path,
                     method: $method,
@@ -198,11 +219,14 @@ class Functions extends Action
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
-                    queueForUsage: $queueForUsage,
+                    queueForRealtime: $queueForRealtime,
+                    queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'schedule',
                     path: $path,
                     method: $method,
@@ -256,8 +280,9 @@ class Functions extends Action
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
+            'resourceInternalId' => $function->getInternalId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'trigger' => $trigger,
@@ -270,7 +295,6 @@ class Functions extends Action
             'errors' => $message,
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$function->getId(), $executionId]),
         ]);
 
         $execution = $dbForProject->createDocument('executions', $execution);
@@ -284,10 +308,12 @@ class Functions extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
-     * @param Usage $queueForUsage
+     * @param Realtime $queueForRealtime
+     * @param StatsUsage $queueForStatsUsage
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
+     * @param Executor $executor
      * @param string $trigger
      * @param string $path
      * @param string $method
@@ -307,11 +333,14 @@ class Functions extends Action
     private function execute(
         Log $log,
         Database $dbForProject,
+        Webhook $queueForWebhooks,
         Func $queueForFunctions,
-        Usage $queueForUsage,
+        Realtime $queueForRealtime,
+        StatsUsage $queueForStatsUsage,
         Event $queueForEvents,
         Document $project,
         Document $function,
+        Executor $executor,
         string $trigger,
         string $path,
         string $method,
@@ -325,8 +354,8 @@ class Functions extends Action
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
-        $deploymentId = $function->getAttribute('deployment', '');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $deploymentId = $function->getAttribute('deploymentId', '');
+        $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -345,19 +374,7 @@ class Functions extends Action
             return;
         }
 
-        $buildId = $deployment->getAttribute('buildId', '');
-
-        $log->addTag('buildId', $buildId);
-
-        /** Check if build has exists */
-        $build = $dbForProject->getDocument('builds', $buildId);
-        if ($build->isEmpty()) {
-            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return;
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
@@ -403,8 +420,9 @@ class Functions extends Action
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionInternalId' => $function->getInternalId(),
-                'functionId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'trigger' => $trigger,
@@ -417,7 +435,6 @@ class Functions extends Action
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
             $execution = $dbForProject->createDocument('executions', $execution);
@@ -479,8 +496,8 @@ class Functions extends Action
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT),
-            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT),
+            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT),
+            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -502,7 +519,6 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -511,15 +527,15 @@ class Functions extends Action
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('buildPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
             );
 
@@ -552,32 +568,38 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Trigger usage queue */
-            $queueForUsage
+            $queueForStatsUsage
                 ->setProject($project)
                 ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
                 ->trigger()
             ;
         }
 
-
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
-        /** Trigger Webhook */
         $executionModel = new Execution();
+        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
+        $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+
         $queueForEvents
-            ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-            ->setClass(Event::WEBHOOK_CLASS_NAME)
             ->setProject($project)
             ->setUser($user)
             ->setEvent('functions.[functionId].executions.[executionId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())))
+            ->setPayload($realtimeExecution);
+
+        /** Trigger Webhook */
+        $queueForWebhooks
+            ->from($queueForEvents)
             ->trigger();
 
         /** Trigger Functions */
@@ -585,31 +607,11 @@ class Functions extends Action
             ->from($queueForEvents)
             ->trigger();
 
-        /** Trigger realtime event */
-        $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
-            'functionId' => $function->getId(),
-            'executionId' => $execution->getId()
-        ]);
-        $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
-            event: $allEvents[0],
-            payload: $execution,
-            project: $project
-        );
-        Realtime::send(
-            projectId: 'console',
-            payload: $execution->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles']
-        );
-        Realtime::send(
-            projectId: $project->getId(),
-            payload: $execution->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles']
-        );
+        /** Trigger Realtime Events */
+        $queueForRealtime
+            ->setSubscribers(['console', $project->getId()])
+            ->from($queueForEvents)
+            ->trigger();
 
         if (!empty($error)) {
             throw new Exception($error, $errorCode);

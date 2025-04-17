@@ -83,6 +83,38 @@ class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
         $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
+
+        /**
+         * Update project settings to show only MFA
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test that sensitive fields are not shown
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+
+        // Assert that sensitive fields are present
+        $this->assertEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
     /**

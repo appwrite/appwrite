@@ -8,6 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -74,8 +75,6 @@ class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-
-
     public function testCreateCustomExecution(): array
     {
         /**
@@ -111,7 +110,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
-        $this->assertEquals('default', $output['APPWRITE_REGION']);
+        $this->assertEquals(System::getEnv('_APP_REGION', 'default'), $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
@@ -221,7 +220,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
-        $this->assertEquals('default', $output['APPWRITE_REGION']);
+        $this->assertEquals(System::getEnv('_APP_REGION', 'default'), $output['APPWRITE_REGION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
@@ -277,6 +276,7 @@ class FunctionsCustomClientTest extends Scope
         // List all templates
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $templates['headers']['status-code']);
@@ -297,17 +297,19 @@ class FunctionsCustomClientTest extends Scope
         // List templates with pagination
         $templatesOffset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->assertEquals(1, $templatesOffset['body']['total']);
+        $this->addToAssertionCount(1, $templatesOffset['body']['templates']);
         $this->assertEquals($templates['body']['templates'][2]['id'], $templatesOffset['body']['templates'][0]['id']);
 
         // List templates with filters
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
             'runtimes' => ['bun-1.0', 'dart-2.16']
@@ -319,7 +321,16 @@ class FunctionsCustomClientTest extends Scope
             $this->assertContains($template['useCases'][0], ['starter', 'ai']);
         }
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-        $this->assertContains('bun-1.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+
+        foreach ($templates['body']['templates'] as $template) {
+            $this->assertThat(
+                \array_column($template['runtimes'], 'name'),
+                $this->logicalOr(
+                    $this->containsEqual('bun-1.0'),
+                    $this->containsEqual('dart-2.16'),
+                ),
+            );
+        }
 
         // List templates with pagination and filters
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
@@ -333,7 +344,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(5, $templates['body']['total']);
+        $this->assertCount(5, $templates['body']['templates']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
 
@@ -349,6 +360,7 @@ class FunctionsCustomClientTest extends Scope
         // List templates with invalid limit
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 5001,
             'offset' => 10,

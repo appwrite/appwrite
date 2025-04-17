@@ -30,14 +30,10 @@ class Migrate extends Action
             ->desc('Migrate Appwrite to new version')
             /** @TODO APP_VERSION_STABLE needs to be defined */
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register) {
-                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register) {
-                    $this->action($version, $dbForConsole, $getProjectDB, $register);
-                });
-            });
+            ->callback([$this, 'action']);
     }
 
     private function clearProjectsCache(Document $project)
@@ -58,7 +54,7 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Database $dbForPlatform, callable $getProjectDB, Registry $register)
     {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -93,10 +89,10 @@ class Migrate extends Action
         $count = 0;
 
         try {
-            $totalProjects = $dbForConsole->count('projects') + 1;
+            $totalProjects = $dbForPlatform->count('projects') + 1;
         } catch (\Throwable $th) {
-            $dbForConsole->setNamespace('_console');
-            $totalProjects = $dbForConsole->count('projects') + 1;
+            $dbForPlatform->setNamespace('_console');
+            $totalProjects = $dbForPlatform->count('projects') + 1;
         }
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
@@ -120,7 +116,7 @@ class Migrate extends Action
                     $projectDB = $getProjectDB($project);
                     $projectDB->disableValidation();
                     $migration
-                        ->setProject($project, $projectDB, $dbForConsole)
+                        ->setProject($project, $projectDB, $dbForPlatform)
                         ->setPDO($register->get('db', true))
                         ->execute();
                 } catch (\Throwable $th) {
@@ -132,7 +128,7 @@ class Migrate extends Action
             }
 
             $sum = \count($projects);
-            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($offset)]);
+            $projects = $dbForPlatform->find('projects', [Query::limit($limit), Query::offset($offset)]);
 
             $offset = $offset + $limit;
             $count = $count + $sum;

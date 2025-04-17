@@ -4,16 +4,21 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -21,52 +26,66 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Detector\Adapter\Bun;
-use Utopia\Detector\Adapter\CPP;
-use Utopia\Detector\Adapter\Dart;
-use Utopia\Detector\Adapter\Deno;
-use Utopia\Detector\Adapter\Dotnet;
-use Utopia\Detector\Adapter\Java;
-use Utopia\Detector\Adapter\JavaScript;
-use Utopia\Detector\Adapter\PHP;
-use Utopia\Detector\Adapter\Python;
-use Utopia\Detector\Adapter\Ruby;
-use Utopia\Detector\Adapter\Swift;
-use Utopia\Detector\Detector;
+use Utopia\Detector\Detection\Framework\Astro;
+use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\NextJs;
+use Utopia\Detector\Detection\Framework\Nuxt;
+use Utopia\Detector\Detection\Framework\Remix;
+use Utopia\Detector\Detection\Framework\SvelteKit;
+use Utopia\Detector\Detection\Packager\NPM;
+use Utopia\Detector\Detection\Packager\PNPM;
+use Utopia\Detector\Detection\Packager\Yarn;
+use Utopia\Detector\Detection\Runtime\Bun;
+use Utopia\Detector\Detection\Runtime\CPP;
+use Utopia\Detector\Detection\Runtime\Dart;
+use Utopia\Detector\Detection\Runtime\Deno;
+use Utopia\Detector\Detection\Runtime\Dotnet;
+use Utopia\Detector\Detection\Runtime\Java;
+use Utopia\Detector\Detection\Runtime\Node;
+use Utopia\Detector\Detection\Runtime\PHP;
+use Utopia\Detector\Detection\Runtime\Python;
+use Utopia\Detector\Detection\Runtime\Ruby;
+use Utopia\Detector\Detection\Runtime\Swift;
+use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Packager;
+use Utopia\Detector\Detector\Runtime;
+use Utopia\Detector\Detector\Strategy;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForPlatform, Build $queueForBuilds, callable $getProjectDB, Request $request) {
     $errors = [];
-    foreach ($repositories as $resource) {
+    foreach ($repositories as $repository) {
         try {
-            $resourceType = $resource->getAttribute('resourceType');
+            $resourceType = $repository->getAttribute('resourceType');
 
-            if ($resourceType !== "function") {
+            if ($resourceType !== "function" && $resourceType !== "site") {
                 continue;
             }
 
-            $projectId = $resource->getAttribute('projectId');
-            $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+            $projectId = $repository->getAttribute('projectId');
+            $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
-            $functionId = $resource->getAttribute('resourceId');
-            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-            $functionInternalId = $function->getInternalId();
+            $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
+            $resourceId = $repository->getAttribute('resourceId');
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resourceInternalId = $resource->getInternalId();
 
             $deploymentId = ID::unique();
-            $repositoryId = $resource->getId();
-            $repositoryInternalId = $resource->getInternalId();
-            $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-            $installationId = $resource->getAttribute('installationId');
-            $installationInternalId = $resource->getAttribute('installationInternalId');
-            $productionBranch = $function->getAttribute('providerBranch');
+            $repositoryId = $repository->getId();
+            $repositoryInternalId = $repository->getInternalId();
+            $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+            $installationId = $repository->getAttribute('installationId');
+            $installationInternalId = $repository->getAttribute('installationInternalId');
+            $productionBranch = $resource->getAttribute('providerBranch');
             $activate = false;
 
             if ($providerBranch == $productionBranch && $external === false) {
@@ -90,7 +109,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $isAuthorized = !$external;
 
             if (!$isAuthorized && !empty($providerPullRequestId)) {
-                if (\in_array($providerPullRequestId, $resource->getAttribute('providerPullRequestIds', []))) {
+                if (\in_array($providerPullRequestId, $repository->getAttribute('providerPullRequestIds', []))) {
                     $isAuthorized = true;
                 }
             }
@@ -103,8 +122,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $latestCommentId = '';
 
-            if (!empty($providerPullRequestId) && $function->getAttribute('providerSilentMode', false) === false) {
-                $latestComment = Authorization::skip(fn () => $dbForConsole->findOne('vcsComments', [
+            if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
+                $latestComment = Authorization::skip(fn () => $dbForPlatform->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
                     Query::orderDesc('$createdAt'),
@@ -112,20 +131,21 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
+
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
                         $teamId = $project->getAttribute('teamId', '');
 
-                        $latestComment = Authorization::skip(fn () => $dbForConsole->createDocument('vcsComments', new Document([
+                        $latestComment = Authorization::skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
                             '$id' => ID::unique(),
                             '$permissions' => [
                                 Permission::read(Role::team(ID::custom($teamId))),
@@ -146,7 +166,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     }
                 }
             } elseif (!empty($providerBranch)) {
-                $latestComments = Authorization::skip(fn () => $dbForConsole->find('vcsComments', [
+                $latestComments = Authorization::skip(fn () => $dbForPlatform->find('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerBranch', [$providerBranch]),
                     Query::orderDesc('$createdAt'),
@@ -156,19 +176,19 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }
             }
 
             if (!$isAuthorized) {
-                $functionName = $function->getAttribute('name');
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Authorization required for external contributor.';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -188,18 +208,32 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
             }
 
-            $deployment = $dbForProject->createDocument('deployments', new Document([
+            $commands = [];
+            if (!empty($resource->getAttribute('installCommand', ''))) {
+                $commands[] = $resource->getAttribute('installCommand', '');
+            }
+            if (!empty($resource->getAttribute('buildCommand', ''))) {
+                $commands[] = $resource->getAttribute('buildCommand', '');
+            }
+            if (!empty($resource->getAttribute('commands', ''))) {
+                $commands[] = $resource->getAttribute('commands', '');
+            }
+
+            $deployment = Authorization::skip(fn () => $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-                'resourceId' => $functionId,
-                'resourceInternalId' => $functionInternalId,
-                'resourceType' => 'functions',
-                'entrypoint' => $function->getAttribute('entrypoint'),
-                'commands' => $function->getAttribute('commands'),
+                'resourceId' => $resourceId,
+                'resourceInternalId' => $resourceInternalId,
+                'resourceType' => $resourceCollection,
+                'entrypoint' => $resource->getAttribute('entrypoint', ''),
+                'buildCommands' => \implode(' && ', $commands),
+                'buildOutput' => $resource->getAttribute('outputDirectory', ''),
+                'adapter' => $resource->getAttribute('adapter', ''),
+                'fallbackFile' => $resource->getAttribute('fallbackFile', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -213,21 +247,120 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitHash' => $providerCommitHash,
                 'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
                 'providerCommitAuthor' => $providerCommitAuthor,
-                'providerCommitMessage' => $providerCommitMessage,
+                'providerCommitMessage' => mb_strimwidth($providerCommitMessage, 0, 255, '...'),
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+                'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
-            ]));
+            ])));
 
-            if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
-                $functionName = $function->getAttribute('name');
+            $resource = $resource
+                ->setAttribute('latestDeploymentId', $deployment->getId())
+                ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
+
+            if ($resource->getCollection() === 'sites') {
+                $projectId = $project->getId();
+
+                // Deployment preview
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = ID::unique() . "." . $sitesDomain;
+                $ruleId = md5($domain);
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $resourceId,
+                        'deploymentResourceInternalId' => $resourceInternalId,
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+
+                // VCS branch preview
+                if (!empty($providerBranch)) {
+                    $domain = "branch-{$providerBranch}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+                    try {
+                        Authorization::skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getInternalId(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $resourceId,
+                                'deploymentResourceInternalId' => $resourceInternalId,
+                                'deploymentVcsProviderBranch' => $providerBranch,
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } catch (Duplicate $err) {
+                        // Ignore, rule already exists; will be updated by builds worker
+                    }
+                }
+
+                // VCS commit preview
+                if (!empty($providerCommitHash)) {
+                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+                    try {
+                        Authorization::skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getInternalId(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $resourceId,
+                                'deploymentResourceInternalId' => $resourceInternalId,
+                                'deploymentVcsProviderBranch' => $providerBranch,
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } catch (Duplicate $err) {
+                        // Ignore, rule already exists; will be updated by builds worker
+                    }
+                }
+            }
+
+            if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Starting...';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -238,17 +371,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
+                ->setResource($resource)
                 ->setDeployment($deployment)
                 ->setProject($project); // set the project because it won't be set for git deployments
 
-            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
+            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
 
             //TODO: Add event?
         } catch (Throwable $e) {
@@ -267,15 +400,22 @@ App::get('/v1/vcs/github/authorize')
     ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createGitHubInstallation')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
-    ->label('sdk.methodType', 'webAuth')
-    ->label('sdk.hide', true)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createGitHubInstallation',
+        description: '/docs/references/vcs/create-github-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::HTML,
+        type: MethodType::WEBAUTH,
+        hide: true,
+    ))
     ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
     ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->inject('request')
@@ -319,8 +459,8 @@ App::get('/v1/vcs/github/callback')
     ->inject('project')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForPlatform) {
         if (empty($state)) {
             $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
@@ -339,7 +479,7 @@ App::get('/v1/vcs/github/callback')
         $redirectSuccess = $state['success'] ?? '';
         $redirectFailure = $state['failure'] ?? '';
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             $error = 'Project with the ID from state could not be found.';
@@ -355,53 +495,6 @@ App::get('/v1/vcs/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        $personalSlug = '';
-
-        // OAuth Authroization
-        if (!empty($code)) {
-            $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-            $accessToken = $oauth2->getAccessToken($code) ?? '';
-            $refreshToken = $oauth2->getRefreshToken($code) ?? '';
-            $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
-            $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
-            $email = $oauth2->getUserEmail($accessToken);
-            $oauth2ID = $oauth2->getUserID($accessToken);
-
-            // Makes sure this email is not already used in another identity
-            $identity = $dbForConsole->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identity->isEmpty()) {
-                if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
-                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-                }
-
-                $identity = $identity
-                    ->setAttribute('providerAccessToken', $accessToken)
-                    ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
-
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
-            } else {
-                $identity = $dbForConsole->createDocument('identities', new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userInternalId' => $user->getInternalId(),
-                    'userId' => $user->getId(),
-                    'provider' => 'github',
-                    'providerUid' => $oauth2ID,
-                    'providerEmail' => $email,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-                ]));
-            }
-        }
-
         // Create / Update installation
         if (!empty($providerInstallationId)) {
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
@@ -411,10 +504,26 @@ App::get('/v1/vcs/github/callback')
 
             $projectInternalId = $project->getInternalId();
 
-            $installation = $dbForConsole->findOne('installations', [
+            $installation = $dbForPlatform->findOne('installations', [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
+
+            $personal = false;
+            $refreshToken = null;
+            $accessToken = null;
+            $accessTokenExpiry = null;
+
+            if (!empty($code)) {
+                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+
+                $accessToken = $oauth2->getAccessToken($code) ?? '';
+                $refreshToken = $oauth2->getRefreshToken($code) ?? '';
+                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
+
+                $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
+                $personal = $personalSlug === $owner;
+            }
 
             if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
@@ -433,15 +542,21 @@ App::get('/v1/vcs/github/callback')
                     'projectInternalId' => $projectInternalId,
                     'provider' => 'github',
                     'organization' => $owner,
-                    'personal' => $personalSlug === $owner
+                    'personal' => $personal,
+                    'personalRefreshToken' => $refreshToken,
+                    'personalAccessToken' => $accessToken,
+                    'personalAccessTokenExpiry' => $accessTokenExpiry,
                 ]);
 
-                $installation = $dbForConsole->createDocument('installations', $installation);
+                $installation = $dbForPlatform->createDocument('installations', $installation);
             } else {
                 $installation = $installation
                     ->setAttribute('organization', $owner)
-                    ->setAttribute('personal', $personalSlug === $owner);
-                $installation = $dbForConsole->updateDocument('installations', $installation->getId(), $installation);
+                    ->setAttribute('personal', $personal)
+                    ->setAttribute('personalRefreshToken', $refreshToken)
+                    ->setAttribute('personalAccessToken', $accessToken)
+                    ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
+                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
             }
         } else {
             $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
@@ -467,22 +582,27 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('Get files and directories of a VCS repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getRepositoryContents')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VCS_CONTENT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getRepositoryContents',
+        description: '/docs/references/vcs/get-repository-contents.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_VCS_CONTENT_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -524,26 +644,36 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_VCS_CONTENT_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
-    ->desc('Detect runtime settings from source code')
+App::post('/v1/vcs/github/installations/:installationId/detections')
+    ->alias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
+    ->desc('Create repository detection')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createRepositoryDetection')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DETECTION)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createRepositoryDetection',
+        description: '/docs/references/vcs/create-repository-detection.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DETECTION_RUNTIME,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DETECTION_FRAMEWORK,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $providerRepositoryId, string $type, string $providerRootDirectory, GitHub $github, Response $response, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -568,57 +698,142 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
-        $detectorFactory = new Detector($files, $languages);
+        $detector = new Packager($files);
+        $detector
+            ->addOption(new Yarn())
+            ->addOption(new PNPM())
+            ->addOption(new NPM());
+        $detection = $detector->detect();
 
-        $detectorFactory
-            ->addDetector(new JavaScript())
-            ->addDetector(new Bun())
-            ->addDetector(new PHP())
-            ->addDetector(new Python())
-            ->addDetector(new Dart())
-            ->addDetector(new Swift())
-            ->addDetector(new Ruby())
-            ->addDetector(new Java())
-            ->addDetector(new CPP())
-            ->addDetector(new Deno())
-            ->addDetector(new Dotnet());
+        $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
-        $runtime = $detectorFactory->detect();
+        if ($type === 'framework') {
+            $output = new Document([
+                'framework' => '',
+                'installCommand' => '',
+                'buildCommand' => '',
+                'outputDirectory' => '',
+            ]);
 
-        $runtimes = Config::getParam('runtimes');
-        $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-            return $runtimes[$key]['key'] === $runtime;
-        }))[0] ?? '';
+            $detector = new Framework($files, $packager);
+            $detector
+                ->addOption(new Flutter())
+                ->addOption(new Nuxt())
+                ->addOption(new Astro())
+                ->addOption(new SvelteKit())
+                ->addOption(new NextJs())
+                ->addOption(new Remix());
 
-        $detection = [];
-        $detection['runtime'] = $runtimeDetail;
+            $framework = $detector->detect();
 
-        $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
+            if (!\is_null($framework)) {
+                $output->setAttribute('installCommand', $framework->getInstallCommand());
+                $output->setAttribute('buildCommand', $framework->getBuildCommand());
+                $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
+                $framework = $framework->getName();
+            } else {
+                $framework = 'other';
+                $output->setAttribute('installCommand', '');
+                $output->setAttribute('buildCommand', '');
+                $output->setAttribute('outputDirectory', '');
+            }
+
+            $frameworks = Config::getParam('frameworks');
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
+                $framework = 'other';
+            }
+            $output->setAttribute('framework', $framework);
+        } else {
+            $output = new Document([
+                'runtime' => '',
+                'commands' => '',
+                'entrypoint' => '',
+            ]);
+
+            $strategies = [
+                new Strategy(Strategy::FILEMATCH),
+                new Strategy(Strategy::LANGUAGES),
+                new Strategy(Strategy::EXTENSION),
+            ];
+
+            foreach ($strategies as $strategy) {
+                $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                $detector
+                    ->addOption(new Node())
+                    ->addOption(new Bun())
+                    ->addOption(new Deno())
+                    ->addOption(new PHP())
+                    ->addOption(new Python())
+                    ->addOption(new Dart())
+                    ->addOption(new Swift())
+                    ->addOption(new Ruby())
+                    ->addOption(new Java())
+                    ->addOption(new CPP())
+                    ->addOption(new Dotnet());
+
+                $runtime = $detector->detect();
+
+                if (!\is_null($runtime)) {
+                    $output->setAttribute('commands', $runtime->getCommands());
+                    $output->setAttribute('entrypoint', $runtime->getEntrypoint());
+                    $runtime = $runtime->getName();
+                    break;
+                }
+            }
+
+            if (!empty($runtime)) {
+                $runtimes = Config::getParam('runtimes');
+                $runtimeWithVersion = '';
+                foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                    if ($runtimeConfig['key'] === $runtime) {
+                        $runtimeWithVersion = $runtimeKey;
+                    }
+                }
+
+                if (empty($runtimeWithVersion)) {
+                    throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
+                }
+
+                $output->setAttribute('runtime', $runtimeWithVersion);
+            } else {
+                throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
+            }
+        }
+        $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listRepositories')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listRepositories',
+        description: '/docs/references/vcs/list-repositories.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $type, string $search, GitHub $github, Response $response, Database $dbForPlatform) {
         if (empty($search)) {
             $search = "";
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -643,39 +858,86 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return $repo;
         }, $repos);
 
-        $repos = batch(\array_map(function ($repo) use ($github) {
-            return function () use ($repo, $github) {
-                try {
-                    $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-                    $files = \array_column($files, 'name');
+        $repos = batch(\array_map(function ($repo) use ($type, $github) {
+            return function () use ($repo, $type, $github) {
+                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                $files = \array_column($files, 'name');
+
+                $detector = new Packager($files);
+                $detector
+                    ->addOption(new Yarn())
+                    ->addOption(new PNPM())
+                    ->addOption(new NPM());
+                $detection = $detector->detect();
+
+                $packager = !\is_null($detection) ? $detection->getName() : 'npm';
+
+                if ($type === 'framework') {
+                    $frameworkDetector = new Framework($files, $packager);
+                    $frameworkDetector
+                        ->addOption(new Flutter())
+                        ->addOption(new Nuxt())
+                        ->addOption(new Astro())
+                        ->addOption(new SvelteKit())
+                        ->addOption(new NextJs())
+                        ->addOption(new Remix());
+
+                    $detectedFramework = $frameworkDetector->detect();
+
+                    if (!\is_null($detectedFramework)) {
+                        $framework = $detectedFramework->getName();
+                    } else {
+                        $framework = 'other';
+                    }
+
+                    $frameworks = Config::getParam('frameworks');
+                    if (!\in_array($framework, \array_keys($frameworks), true)) {
+                        $framework = 'other';
+                    }
+                    $repo['framework'] = $framework;
+                } else {
                     $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
 
-                    $detectorFactory = new Detector($files, $languages);
+                    $strategies = [
+                        new Strategy(Strategy::FILEMATCH),
+                        new Strategy(Strategy::LANGUAGES),
+                        new Strategy(Strategy::EXTENSION),
+                    ];
 
-                    $detectorFactory
-                        ->addDetector(new JavaScript())
-                        ->addDetector(new Bun())
-                        ->addDetector(new PHP())
-                        ->addDetector(new Python())
-                        ->addDetector(new Dart())
-                        ->addDetector(new Swift())
-                        ->addDetector(new Ruby())
-                        ->addDetector(new Java())
-                        ->addDetector(new CPP())
-                        ->addDetector(new Deno())
-                        ->addDetector(new Dotnet());
+                    foreach ($strategies as $strategy) {
+                        $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        $detector
+                            ->addOption(new Node())
+                            ->addOption(new Bun())
+                            ->addOption(new Deno())
+                            ->addOption(new PHP())
+                            ->addOption(new Python())
+                            ->addOption(new Dart())
+                            ->addOption(new Swift())
+                            ->addOption(new Ruby())
+                            ->addOption(new Java())
+                            ->addOption(new CPP())
+                            ->addOption(new Dotnet());
 
-                    $runtime = $detectorFactory->detect();
+                        $runtime = $detector->detect();
 
-                    $runtimes = Config::getParam('runtimes');
-                    $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                        return $runtimes[$key]['key'] === $runtime;
-                    }))[0] ?? '';
+                        if (!\is_null($runtime)) {
+                            $runtime = $runtime->getName();
+                            break;
+                        }
+                    }
 
-                    $repo['runtime'] = $runtimeDetail;
-                } catch (Throwable $error) {
-                    $repo['runtime'] = "";
-                    Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                    if (!empty($runtime)) {
+                        $runtimes = Config::getParam('runtimes');
+                        $runtimeWithVersion = '';
+                        foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                            if ($runtimeConfig['key'] === $runtime) {
+                                $runtimeWithVersion = $runtimeKey;
+                            }
+                        }
+
+                        $repo['runtime'] = $runtimeWithVersion ?? '';
+                    }
                 }
                 return $repo;
             };
@@ -686,22 +948,27 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         }, $repos);
 
         $response->dynamic(new Document([
-            'providerRepositories' => $repos,
+            $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
             'total' => \count($repos),
-        ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
+        ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('Create repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'createRepository')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'createRepository',
+        description: '/docs/references/vcs/create-repository.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('name', '', new Text(256), 'Repository name (slug)')
     ->param('private', '', new Boolean(false), 'Mark repository public or private')
@@ -709,9 +976,9 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->inject('user')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $name, bool $private, GitHub $github, Document $user, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $name, bool $private, GitHub $github, Document $user, Response $response, Document $project, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -720,17 +987,23 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         if ($installation->getAttribute('personal', false) === true) {
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
-            $identity = $dbForConsole->findOne('identities', [
-                Query::equal('provider', ['github']),
-                Query::equal('userInternalId', [$user->getInternalId()]),
-            ]);
-            if ($identity->isEmpty()) {
-                throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
-            }
+            $accessToken = $installation->getAttribute('personalAccessToken');
+            $refreshToken = $installation->getAttribute('personalRefreshToken');
+            $accessTokenExpiry = $installation->getAttribute('personalAccessTokenExpiry');
 
-            $accessToken = $identity->getAttribute('providerAccessToken');
-            $refreshToken = $identity->getAttribute('providerRefreshToken');
-            $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
+            if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
+                $identity = $dbForPlatform->findOne('identities', [
+                    Query::equal('provider', ['github']),
+                    Query::equal('userInternalId', [$user->getInternalId()]),
+                ]);
+                if ($identity->isEmpty()) {
+                    throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+                }
+
+                $accessToken = $accessToken ?? $identity->getAttribute('providerAccessToken');
+                $refreshToken = $refreshToken ?? $identity->getAttribute('providerRefreshToken');
+                $accessTokenExpiry = $accessTokenExpiry ?? $identity->getAttribute('providerAccessTokenExpiry');
+            }
 
             $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
             if ($isExpired) {
@@ -745,12 +1018,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                     throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
                 }
 
-                $identity = $identity
-                    ->setAttribute('providerAccessToken', $accessToken)
-                    ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                $installation = $installation
+                    ->setAttribute('personalAccessToken', $accessToken)
+                    ->setAttribute('personalRefreshToken', $refreshToken)
+                    ->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+                $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
             }
 
             try {
@@ -796,21 +1069,26 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('Get repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getRepository')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getRepository',
+        description: '/docs/references/vcs/get-repository.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -845,21 +1123,26 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listRepositoryBranches')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BRANCH_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listRepositoryBranches',
+        description: '/docs/references/vcs/list-repository-branches.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_BRANCH_LIST,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -897,11 +1180,11 @@ App::post('/v1/vcs/github/events')
     ->inject('gitHub')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
     ->action(
-        function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
+        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
             $payload = $request->getRawPayload();
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
@@ -934,37 +1217,37 @@ App::post('/v1/vcs/github/events')
 
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-                //find functionId from functions table
-                $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
+                //find resourceId from relevant resources table
+                $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
                 ]));
 
                 // create new deployment only on push and not when branch is created
                 if (!$providerBranchCreated) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
-                    // TODO: Use worker for this job instead (update function as well)
+                    // TODO: Use worker for this job instead (update function/site as well)
                     $providerInstallationId = $parsedPayload["installationId"];
 
-                    $installations = $dbForConsole->find('installations', [
+                    $installations = $dbForPlatform->find('installations', [
                         Query::equal('providerInstallationId', [$providerInstallationId]),
                         Query::limit(1000)
                     ]);
 
                     foreach ($installations as $installation) {
-                        $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
+                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('installationInternalId', [$installation->getInternalId()]),
                             Query::limit(1000)
                         ]));
 
                         foreach ($repositories as $repository) {
-                            Authorization::skip(fn () => $dbForConsole->deleteDocument('repositories', $repository->getId()));
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
                         }
 
-                        $dbForConsole->deleteDocument('installations', $installation->getId());
+                        $dbForPlatform->deleteDocument('installations', $installation->getId());
                     }
                 }
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
@@ -993,12 +1276,12 @@ App::post('/v1/vcs/github/events')
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
                     $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-                    $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
+                    $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::orderDesc('$createdAt')
                     ]));
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
@@ -1007,7 +1290,7 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
 
                     if ($external) {
-                        $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
+                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('providerRepositoryId', [$providerRepositoryId]),
                             Query::orderDesc('$createdAt')
                         ]));
@@ -1018,7 +1301,7 @@ App::post('/v1/vcs/github/events')
                             if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
                                 $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
                                 $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-                                $repository = Authorization::skip(fn () => $dbForConsole->updateDocument('repositories', $repository->getId(), $repository));
+                                $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
                             }
                         }
                     }
@@ -1033,20 +1316,25 @@ App::get('/v1/vcs/installations')
     ->desc('List installations')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'listInstallations')
-    ->label('sdk.description', '/docs/references/vcs/list-installations.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INSTALLATION_LIST)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'listInstallations',
+        description: '/docs/references/vcs/list-installations.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION_LIST,
+            )
+        ]
+    ))
     ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -1075,7 +1363,7 @@ App::get('/v1/vcs/installations')
             }
 
             $installationId = $cursor->getValue();
-            $cursorDocument = $dbForConsole->getDocument('installations', $installationId);
+            $cursorDocument = $dbForPlatform->getDocument('installations', $installationId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Installation '{$installationId}' for the 'cursor' value not found.");
@@ -1086,8 +1374,8 @@ App::get('/v1/vcs/installations')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $results = $dbForConsole->find('installations', $queries);
-        $total = $dbForConsole->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        $results = $dbForPlatform->find('installations', $queries);
+        $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'installations' => $results,
@@ -1099,19 +1387,24 @@ App::get('/v1/vcs/installations/:installationId')
     ->desc('Get installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'getInstallation')
-    ->label('sdk.description', '/docs/references/vcs/get-installation.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_INSTALLATION)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'getInstallation',
+        description: '/docs/references/vcs/get-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_INSTALLATION,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $installationId, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->inject('dbForPlatform')
+    ->action(function (string $installationId, Response $response, Document $project, Database $dbForPlatform) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation === false || $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -1128,25 +1421,32 @@ App::delete('/v1/vcs/installations/:installationId')
     ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'deleteInstallation')
-    ->label('sdk.description', '/docs/references/vcs/delete-installation.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'deleteInstallation',
+        description: '/docs/references/vcs/delete-installation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForDeletes')
-    ->action(function (string $installationId, Response $response, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->action(function (string $installationId, Response $response, Document $project, Database $dbForPlatform, Delete $queueForDeletes) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!$dbForConsole->deleteDocument('installations', $installation->getId())) {
+        if (!$dbForPlatform->deleteDocument('installations', $installation->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
         }
 
@@ -1161,12 +1461,18 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->desc('Authorize external deployment')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.method', 'updateExternalDeployments')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'vcs',
+        name: 'updateExternalDeployments',
+        description: '/docs/references/vcs/update-external-deployments.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('repositoryId', '', new Text(256), 'VCS Repository Id')
     ->param('providerPullRequestId', '', new Text(256), 'GitHub Pull Request Id')
@@ -1174,17 +1480,17 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
-    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForConsole, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
+        $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForConsole->getDocument('repositories', $repositoryId, [
+        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]));
 
@@ -1201,7 +1507,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         // TODO: Delete from array when PR is closed
 
-        $repository = Authorization::skip(fn () => $dbForConsole->updateDocument('repositories', $repository->getId(), $repository));
+        $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
 
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
@@ -1225,7 +1531,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
 
-        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
+        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
 
         $response->noContent();
     });

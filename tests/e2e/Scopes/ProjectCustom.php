@@ -4,6 +4,7 @@ namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 trait ProjectCustom
 {
@@ -42,7 +43,7 @@ trait ProjectCustom
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
-            'region' => 'default',
+            'region' => System::getEnv('_APP_REGION', 'default'),
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
@@ -74,10 +75,16 @@ trait ProjectCustom
                 'files.write',
                 'buckets.read',
                 'buckets.write',
+                'sites.read',
+                'sites.write',
                 'functions.read',
                 'functions.write',
+                'sites.read',
+                'sites.write',
                 'execution.read',
                 'execution.write',
+                'log.read',
+                'log.write',
                 'locale.read',
                 'avatars.read',
                 'health.read',

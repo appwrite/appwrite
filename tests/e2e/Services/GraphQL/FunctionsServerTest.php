@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -14,6 +15,7 @@ class FunctionsServerTest extends Scope
     use ProjectCustom;
     use SideServer;
     use Base;
+    use Async;
 
     public function testCreateFunction(): array
     {
@@ -117,7 +119,7 @@ class FunctionsServerTest extends Scope
             ]
         ];
 
-        while (true) {
+        $this->assertEventually(function () use ($projectId, $gqlPayload, &$deployment) {
             $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -127,19 +129,8 @@ class FunctionsServerTest extends Scope
             $this->assertArrayNotHasKey('errors', $deployment['body']);
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
-
-            if (
-                $deployment['status'] === 'ready'
-                || $deployment['status'] === 'failed'
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
-
-        $this->assertEquals('ready', $deployment['status']);
-
+            $this->assertEquals('ready', $deployment['status']);
+        }, 30000);
         return $deployment;
     }
 
@@ -195,8 +186,8 @@ class FunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsNotArray($response['body']);
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['data']);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testGetFunctions(): array
@@ -261,7 +252,7 @@ class FunctionsServerTest extends Scope
         $runtimes = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        ]), $gqlPayload);
 
         $this->assertIsArray($runtimes['body']['data']);
         $this->assertArrayNotHasKey('errors', $runtimes['body']);
