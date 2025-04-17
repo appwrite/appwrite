@@ -72,6 +72,7 @@ services:
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -171,6 +172,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
@@ -197,11 +199,13 @@ services:
       - _APP_DATABASE_SHARED_TABLES_V1
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.2.27
+    image: appwrite/console:5.2.56
     restart: unless-stopped
     networks:
       - appwrite
@@ -389,6 +393,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DATABASE_SHARED_TABLES_V1
       - _APP_EMAIL_CERTIFICATES
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -486,6 +492,8 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -662,6 +670,7 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-imports:/storage/imports:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
@@ -721,6 +730,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_DELAY
@@ -756,7 +766,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
       - _APP_STATS_RESOURCES_INTERVAL
-  
+
   appwrite-worker-stats-resources:
     entrypoint: worker-stats-resources
     <<: *x-logging
@@ -787,7 +797,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
-  
+
   appwrite-worker-stats-usage:
     entrypoint: worker-stats-usage
     <<: *x-logging
@@ -850,7 +860,7 @@ services:
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
       - _APP_STATS_USAGE_DUAL_WRITING_DBS
-  
+
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
@@ -1124,6 +1134,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
   appwrite-builds:

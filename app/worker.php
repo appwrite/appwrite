@@ -13,13 +13,12 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\StatsUsageDump;
-/** remove */
-use Appwrite\Event\Usage;
-use Appwrite\Event\UsageDump;
-/** /remove */
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -112,6 +111,8 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
             ->setNamespace('_' . $project->getInternalId());
     }
 
+    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
@@ -173,6 +174,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
                 ->setNamespace('_' . $project->getInternalId());
         }
 
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+
         return $database;
     };
 }, ['pools', 'dbForPlatform', 'cache']);
@@ -198,7 +201,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
@@ -211,15 +214,18 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
 
-Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
-});
+Server::setResource('auditRetention', function (Document $project) {
+    if ($project->getId() === 'console') {
+        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+    }
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+}, ['project']);
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {
@@ -269,14 +275,6 @@ Server::setResource('consumer', function (Group $pools) {
     return $pools->get('consumer')->pop()->getResource();
 }, ['pools']);
 
-Server::setResource('queueForUsage', function (Publisher $publisher) {
-    return new Usage($publisher);
-}, ['publisher']);
-
-Server::setResource('queueForUsageDump', function (Publisher $publisher) {
-    return new UsageDump($publisher);
-}, ['publisher']);
-
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
@@ -313,9 +311,17 @@ Server::setResource('queueForAudits', function (Publisher $publisher) {
     return new Audit($publisher);
 }, ['publisher']);
 
+Server::setResource('queueForWebhooks', function (Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
+
 Server::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+
+Server::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
 
 Server::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
@@ -332,6 +338,10 @@ Server::setResource('logger', function (Registry $register) {
 Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
+
+Server::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
 
 Server::setResource('deviceForFunctions', function (Document $project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
@@ -407,6 +417,8 @@ Server::setResource('logError', function (Registry $register, Document $project)
         Console::warning($error->getTraceAsString());
     };
 }, ['register', 'project']);
+
+Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

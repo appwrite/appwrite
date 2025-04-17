@@ -391,7 +391,8 @@ App::init()
     ->inject('resourceToken')
     ->inject('mode')
     ->inject('apiKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('plan')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -521,6 +522,10 @@ App::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
+            $route = $utopia->match($request);
+            $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+
             $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
@@ -533,9 +538,9 @@ App::init()
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
-                if ($type === 'bucket') {
+                if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {
                     $bucketId = $parts[1] ?? null;
-                    $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') == $bucket->getInternalId();
                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -568,19 +573,23 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-
-                    $transformedAt = $file->getAttribute('transformedAt', '');
-                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-                        $file->setAttribute('transformedAt', DateTime::now());
-                        Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                    //Do not update transformedAt if it's a console user
+                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                        $transformedAt = $file->getAttribute('transformedAt', '');
+                        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                            $file->setAttribute('transformedAt', DateTime::now());
+                            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                        }
                     }
                 }
 
                 $response
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($cacheLog->getAttribute('mimeType'))
-                    ->send($data);
+                    ->setContentType($cacheLog->getAttribute('mimeType'));
+                if (!$isImageTransformation || !$isDisabled) {
+                    $response->send($data);
+                }
             } else {
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')

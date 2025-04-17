@@ -77,9 +77,12 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
+        $startTime = microtime(true);
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
+        $endTime = microtime(true);
+        $executionTime = $endTime - $startTime;
+        Console::info('Project: ' . $project->getId() . '(' . $project->getInternalId() . ') aggregated in ' . $executionTime .' seconds');
     }
-
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
     {
@@ -111,6 +114,13 @@ class StatsResources extends Action
             $keys = $dbForPlatform->count('keys', [
                 Query::equal('projectInternalId', [$project->getInternalId()])
             ]);
+
+            $domains = $dbForPlatform->count('rules', [
+                Query::equal('projectInternalId', [$project->getInternalId()]),
+                Query::equal('owner', ['']),
+            ]);
+
+
             $databases = $dbForProject->count('databases');
             $buckets = $dbForProject->count('buckets');
             $users = $dbForProject->count('users');
@@ -129,9 +139,20 @@ class StatsResources extends Action
             ]);
             $teams = $dbForProject->count('teams');
             $functions = $dbForProject->count('functions');
+
             $messages = $dbForProject->count('messages');
             $providers = $dbForProject->count('providers');
             $topics = $dbForProject->count('topics');
+            $targets = $dbForProject->count('targets');
+            $emailTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
+            ]);
+            $pushTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH])
+            ]);
+            $smsTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS])
+            ]);
 
             $metrics = [
                 METRIC_DATABASES => $databases,
@@ -148,6 +169,11 @@ class StatsResources extends Action
                 METRIC_PROVIDERS => $providers,
                 METRIC_TOPICS => $topics,
                 METRIC_KEYS => $keys,
+                METRIC_DOMAINS => $domains,
+                METRIC_TARGETS => $targets,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $smsTargets,
             ];
 
             foreach ($metrics as $metric => $value) {
@@ -167,7 +193,7 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForDatabase($dbForProject, $dbForLogs, $region);
+                $this->countForDatabase($dbForProject, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
@@ -227,42 +253,54 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations);
     }
 
-    protected function countForDatabase(Database $dbForProject, Database $dbForLogs, string $region)
+    protected function countForDatabase(Database $dbForProject, string $region)
     {
         $totalCollections = 0;
         $totalDocuments = 0;
 
-        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $dbForLogs, $region, &$totalCollections, &$totalDocuments) {
+        $totalDatabaseStorage = 0;
+
+        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
             $collections = $dbForProject->count('database_' . $database->getInternalId());
 
             $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS);
             $this->createStatsDocuments($region, $metric, $collections);
 
-            $documents = $this->countForCollections($dbForProject, $dbForLogs, $database, $region);
+            [$documents, $storage] = $this->countForCollections($dbForProject, $database, $region);
 
+            $totalDatabaseStorage += $storage;
             $totalDocuments += $documents;
             $totalCollections += $collections;
         });
 
         $this->createStatsDocuments($region, METRIC_COLLECTIONS, $totalCollections);
         $this->createStatsDocuments($region, METRIC_DOCUMENTS, $totalDocuments);
+        $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE, $totalDatabaseStorage);
     }
-    protected function countForCollections(Database $dbForProject, Database $dbForLogs, Document $database, string $region): int
+    protected function countForCollections(Database $dbForProject, Document $database, string $region): array
     {
         $databaseDocuments = 0;
-        $this->foreachDocument($dbForProject, 'database_' . $database->getInternalId(), [], function ($collection) use ($dbForProject, $dbForLogs, $database, $region, &$totalCollections, &$databaseDocuments) {
+        $databaseStorage = 0;
+        $this->foreachDocument($dbForProject, 'database_' . $database->getInternalId(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
             $documents = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $this->createStatsDocuments($region, $metric, $documents);
-
             $databaseDocuments += $documents;
+
+            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
+            $this->createStatsDocuments($region, $metric, $collectionStorage);
+            $databaseStorage += $collectionStorage;
+
         });
 
         $metric = str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_DOCUMENTS);
         $this->createStatsDocuments($region, $metric, $databaseDocuments);
 
-        return $databaseDocuments;
+        $metric = str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE);
+        $this->createStatsDocuments($region, $metric, $databaseStorage);
+
+        return [$databaseDocuments, $databaseStorage];
     }
 
     protected function countForFunctions(Database $dbForProject, Database $dbForLogs, string $region)

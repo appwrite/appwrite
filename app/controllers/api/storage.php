@@ -6,7 +6,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -935,16 +934,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    ->inject('request')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('resourceToken')
-    ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->inject('queueForStatsUsage')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, Document $resourceToken, string $mode, Device $deviceForFiles, Device $deviceForLocal, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1077,22 +1072,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        $queueForStatsUsage
-            ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
-        ;
-
-        $transformedAt = $file->getAttribute('transformedAt', '');
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-            $file->setAttribute('transformedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' .  $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+        //Do not update transformedAt if it's a console user
+        if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            $transformedAt = $file->getAttribute('transformedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                $file->setAttribute('transformedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+            }
         }
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType($contentType)
-            ->file($data)
-        ;
+            ->file($data);
 
         unset($image);
     });
@@ -1886,9 +1878,12 @@ App::get('/v1/storage/:bucketId/usage')
     ->param('bucketId', '', new UID(), 'Bucket ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
+    ->inject('getLogsDB')
+    ->action(function (string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, callable $getLogsDB) {
 
+        $dbForLogs = call_user_func($getLogsDB, $project);
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -1901,12 +1896,16 @@ App::get('/v1/storage/:bucketId/usage')
         $metrics = [
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
+            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED),
         ];
 
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $db = ($metric === str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
+                    ? $dbForLogs
+                    : $dbForProject;
+
+                $result =  $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1914,7 +1913,7 @@ App::get('/v1/storage/:bucketId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $db->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -1955,5 +1954,7 @@ App::get('/v1/storage/:bucketId/usage')
             'filesStorageTotal' => $usage[$metrics[1]]['total'],
             'files' => $usage[$metrics[0]]['data'],
             'storage' => $usage[$metrics[1]]['data'],
+            'imageTransformations' => $usage[$metrics[2]]['data'],
+            'imageTransformationsTotal' => $usage[$metrics[2]]['total'],
         ]), Response::MODEL_USAGE_BUCKETS);
     });

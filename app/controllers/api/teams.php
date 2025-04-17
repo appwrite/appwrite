@@ -488,7 +488,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $email = \strtolower($email);
-        $name = (empty($name)) ? $email : $name;
+        $name = empty($name) ? $email : $name;
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -507,7 +507,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
-            $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
+            $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
             if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
@@ -615,7 +615,10 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                 $dbForProject->createDocument('memberships', $membership);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            if ($isPrivilegedUser || $isAppUser) {
+                Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            }
 
         } elseif ($membership->getAttribute('confirm') === false) {
             $membership->setAttribute('secret', Auth::hash($secret));
@@ -715,7 +718,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name'))
+                    ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
 
@@ -1031,7 +1034,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
@@ -1043,9 +1045,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -1065,6 +1068,21 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
+
+        if ($project->getId() === 'console') {
+            // Quick check: fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [Query::contains('roles', ['owner'])],
+                max: 2
+            );
+
+            // Prevent role change if there's only one owner left,
+            // the requester is that owner, and the new `$roles` no longer include 'owner'!
+            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+            }
+        }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
@@ -1362,13 +1380,15 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -1415,7 +1435,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
