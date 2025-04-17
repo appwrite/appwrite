@@ -1202,7 +1202,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('adapter'), // ssr or static
+                '$id' => ID::custom('adapter'), // ssr or static; named this way as it's a term in SSR frameworks
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1727,7 +1727,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('adapter'),
+                '$id' => ID::custom('adapter'), // ssr or static; named this way as it's a term in SSR frameworks
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
