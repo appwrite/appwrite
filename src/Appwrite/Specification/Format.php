@@ -113,6 +113,18 @@ abstract class Format
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
         switch ($service) {
+            case 'console':
+                switch ($method) {
+                    case 'getResource':
+                        switch ($param) {
+                            case 'type':
+                                return 'ConsoleResourceType';
+                            case 'value':
+                                return 'ConsoleResourceValue';
+                        }
+                        break;
+                }
+                break;
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
@@ -184,7 +196,7 @@ abstract class Format
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getFunctionUsage':
+                    case 'listUsage':
                         switch ($param) {
                             case 'range':
                                 return 'FunctionUsageRange';
@@ -194,6 +206,52 @@ abstract class Format
                         switch ($param) {
                             case 'method':
                                 return 'ExecutionMethod';
+                        }
+                        break;
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
+                    case 'createVcsDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDeploymentType';
+                        }
+                        break;
+                }
+                break;
+            case 'sites':
+                switch ($method) {
+                    case 'getDeploymentDownload':
+                        switch ($param) {
+                            case 'type':
+                                return 'DeploymentDownloadType';
+                        }
+                        break;
+                    case 'getUsage':
+                    case 'listUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'SiteUsageRange';
+                        }
+                        break;
+                    case 'createVcsDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDeploymentType';
+                        }
+                        break;
+                }
+                break;
+            case 'vcs':
+                switch ($method) {
+                    case 'createRepositoryDetection':
+                    case 'listRepositories':
+                        switch ($param) {
+                            case 'type':
+                                return 'VCSDetectionType';
                         }
                         break;
                 }
@@ -380,10 +438,24 @@ abstract class Format
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
+            case 'proxy':
+                switch ($method) {
+                    case 'createRedirectRule':
+                        return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
+                }
+                break;
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getFunctionUsage':
+                    case 'listUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'sites':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }

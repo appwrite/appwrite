@@ -149,7 +149,7 @@ App::get('/v1/project/usage')
         $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -165,7 +165,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -181,7 +181,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -230,13 +230,13 @@ App::get('/v1/project/usage')
         $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE);
             $deploymentValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$deploymentMetric]),
                 Query::equal('period', ['inf'])
             ]);
 
-            $buildMetric = str_replace(['{functionInternalId}'], [$function->getInternalId()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
+            $buildMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE);
             $buildValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$buildMetric]),
                 Query::equal('period', ['inf'])
@@ -254,7 +254,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -270,7 +270,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -400,7 +400,7 @@ App::post('/v1/project/variables')
     ))
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-    ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+    ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
@@ -521,19 +521,25 @@ App::put('/v1/project/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
+    ->action(function (string $variableId, string $key, ?string $value, ?bool $secret, Document $project, Response $response, Database $dbForProject, Database $dbForPlatform) {
         $variable = $dbForProject->getDocument('variables', $variableId);
         if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        if ($variable->getAttribute('secret') === true && $secret === false) {
+            throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
+        }
+
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('secret', $secret ?? $variable->getAttribute('secret'))
             ->setAttribute('search', implode(' ', [$variableId, $key, 'project']));
 
         try {

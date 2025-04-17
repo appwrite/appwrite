@@ -1,0 +1,7 @@
+reviews:
+  auto_review:
+    base_branches:
+      - main
+      - 1.6.x
+      - 1.7.x
+      - feat-sites # temporary until merged to 1.7.x

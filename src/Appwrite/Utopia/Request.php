@@ -36,16 +36,16 @@ class Request extends UtopiaRequest
                 $methods = [$methods];
             }
 
+            $methods = \array_filter($methods, function ($method) {
+                return !empty($method);
+            });
+
             $params = [];
+            $endpointIdentifier = 'unknown.unknown';
 
             foreach ($methods as $method) {
                 /** @var \Appwrite\SDK\Method $method */
-                if (empty($method)) {
-                    $endpointIdentifier = 'unknown.unknown';
-                } else {
-                    $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
-                }
-
+                $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
                 $params += $method->getParameters();
             }
 
