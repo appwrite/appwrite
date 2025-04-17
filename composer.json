@@ -62,7 +62,7 @@
         "utopia-php/messaging": "0.16.*",
         "utopia-php/migration": "0.8.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "dev-feat-custom-server as 0.7.4",
+        "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "0.8.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "dev-feat-pool-adapter as 0.9.1",

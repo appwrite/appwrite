@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "127ac05400882555232b9d9a9d9e5c0e",
+    "content-hash": "c8a1e0dfdd111062fe7a969e17ddc2b5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4058,16 +4058,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "dev-feat-custom-server",
+            "version": "0.7.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "1afcdb43643531c82d5beaab30c2cfb5bf40ab52"
+                "reference": "a5b93d8177702ec458c3af9137663133c012b71b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/1afcdb43643531c82d5beaab30c2cfb5bf40ab52",
-                "reference": "1afcdb43643531c82d5beaab30c2cfb5bf40ab52",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a5b93d8177702ec458c3af9137663133c012b71b",
+                "reference": "a5b93d8177702ec458c3af9137663133c012b71b",
                 "shasum": ""
             },
             "require": {
@@ -4102,9 +4102,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/feat-custom-server"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.4"
             },
-            "time": "2025-04-17T07:58:12+00:00"
+            "time": "2025-03-13T13:00:12+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4217,12 +4217,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "80cc1fb1053950f977f0d027bb4a7f7c91c1e794"
+                "reference": "b192e36f646d3f5da80f70e3a69e0065b23a3612"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/80cc1fb1053950f977f0d027bb4a7f7c91c1e794",
-                "reference": "80cc1fb1053950f977f0d027bb4a7f7c91c1e794",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/b192e36f646d3f5da80f70e3a69e0065b23a3612",
+                "reference": "b192e36f646d3f5da80f70e3a69e0065b23a3612",
                 "shasum": ""
             },
             "require": {
@@ -4275,7 +4275,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-pool-adapter"
             },
-            "time": "2025-04-17T08:43:02+00:00"
+            "time": "2025-04-17T11:55:59+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8128,12 +8128,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/platform",
-            "version": "dev-feat-custom-server",
-            "alias": "0.7.4",
-            "alias_normalized": "0.7.4.0"
-        },
-        {
             "package": "utopia-php/queue",
             "version": "dev-feat-pool-adapter",
             "alias": "0.9.1",
@@ -8142,7 +8136,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/platform": 20,
         "utopia-php/queue": 20
     },
     "prefer-stable": false,

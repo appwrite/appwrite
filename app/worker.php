@@ -410,20 +410,24 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
-    $platform->init(
-        type: Service::TYPE_WORKER,
-        params: ['workerName' => strtolower($workerName) ?? null],
-        server: new Server(new QueuePool(
-            $pools->get('consumer'),
-            workerNum: System::getEnv('_APP_WORKERS_NUM', 1),
-            queue: $queueName
-        ))
-    );
+    $platform->init(Service::TYPE_WORKER, [
+        'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
+        'connection' => $pools->get('consumer')->pop()->getResource(),
+        'workerName' => strtolower($workerName) ?? null,
+        'queueName' => $queueName
+    ]);
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
 $worker = $platform->getWorker();
+
+$worker
+    ->shutdown()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->get('consumer')->reclaim();
+    });
 
 $worker
     ->error()
@@ -433,6 +437,8 @@ $worker
     ->inject('pools')
     ->inject('project')
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
+        $pools->get('consumer')->reclaim();
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {
