@@ -670,11 +670,10 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-imports:/storage/imports:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      # for csv import access
-      - appwrite-imports:/storage/imports:rw
     depends_on:
       - mariadb
     environment:
