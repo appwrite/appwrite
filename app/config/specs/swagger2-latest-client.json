@@ -4918,7 +4918,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a list of all the current user function execution logs. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Executions List",
@@ -4929,7 +4929,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 383,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4991,7 +4991,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.",
                 "responses": {
                     "201": {
                         "description": "Execution",
@@ -5002,7 +5002,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 381,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5109,7 +5109,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "",
+                "description": "Get a function execution log by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Execution",
@@ -5120,7 +5120,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 382,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5761,7 +5761,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 348,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5845,7 +5845,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 352,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
