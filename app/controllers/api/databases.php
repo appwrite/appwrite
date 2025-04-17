@@ -535,7 +535,6 @@ App::post('/v1/databases')
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());
-        $queueForStatsUsage->addMetric(str_replace(['{databaseInternalId}'], [$database->getInternalId()], METRIC_DATABASE_ID_STORAGE), 1); // per database
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -830,9 +829,6 @@ App::delete('/v1/databases/:databaseId')
         $queueForEvents
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, Response::MODEL_DATABASE));
-
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_STORAGE, 1); // Global, deletion forces full recalculation
 
         $response->noContent();
     });
@@ -2733,9 +2729,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model));
 
-        $queueForStatsUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$db->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-
         $response->noContent();
     });
 
@@ -3460,8 +3453,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations); // per collection
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -4402,8 +4394,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1)
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', 1);
 

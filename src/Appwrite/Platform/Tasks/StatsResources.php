@@ -67,7 +67,8 @@ class StatsResources extends Action
              * For each project that were accessed in last 24 hours
              */
             $this->foreachDocument($this->dbForPlatform, 'projects', [
-                Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours))
+                Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
             ], function ($project) use ($queue) {
                 $queue
                     ->setProject($project)
