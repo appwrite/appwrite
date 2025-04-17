@@ -72,7 +72,7 @@ services:
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - appwrite-csv-imports:/storage/imports:rw
+      - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -674,7 +674,7 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
       # for csv import access
-      - appwrite-csv-imports:/storage/imports:rw
+      - appwrite-imports:/storage/imports:rw
     depends_on:
       - mariadb
     environment:
@@ -1135,7 +1135,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
-  appwrite-csv-imports:
+  appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
   appwrite-builds:
