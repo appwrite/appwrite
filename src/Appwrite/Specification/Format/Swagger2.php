@@ -144,7 +144,7 @@ class Swagger2 extends Format
                 $method = array_keys($method)[0];
             }
 
-            $desc = $sdk->getDescriptionFilePath();
+            $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];

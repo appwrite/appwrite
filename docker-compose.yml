@@ -77,6 +77,8 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
+      - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
@@ -111,10 +113,12 @@ services:
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -158,12 +162,15 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_FUNCTIONS_SIZE_LIMIT
+      - _APP_COMPUTE_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_SITES_RUNTIMES
+      - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_LOGGING_CONFIG
@@ -205,7 +212,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.2.56
+    image: appwrite/console:5.3.0-sites-rc.40
     restart: unless-stopped
     networks:
       - appwrite
@@ -348,6 +355,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -436,7 +444,9 @@ services:
       - appwrite
     volumes:
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -462,12 +472,13 @@ services:
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_SIZE_LIMIT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -492,6 +503,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_DOMAIN_SITES
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -515,7 +527,9 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
@@ -560,9 +574,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
@@ -681,7 +696,9 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -713,7 +730,9 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
       - _APP_DOMAIN_FUNCTIONS
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -952,12 +971,18 @@ services:
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
 
+  appwrite-browser:
+    container_name: appwrite-browser
+    image: appwrite/browser:0.2.2
+    networks:
+      - appwrite
+
   openruntimes-executor:
     container_name: openruntimes-executor
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.11
+    image: openruntimes/executor:0.7.13
     restart: unless-stopped
     networks:
       - appwrite
@@ -966,19 +991,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       # Host mount nessessary to share files between executor and runtimes.
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
-      - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
+      - OPR_EXECUTOR_IMAGE_PULL=enabled
+      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
+      - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
       - OPR_EXECUTOR_ENV=$_APP_ENV
-      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
+      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v4
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v5
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1137,5 +1164,6 @@ volumes:
   appwrite-imports:
   appwrite-certificates:
   appwrite-functions:
+  appwrite-sites:
   appwrite-builds:
   appwrite-config:

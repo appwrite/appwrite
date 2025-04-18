@@ -62,7 +62,7 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->callback(fn (Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports) => $this->action($message, $project, $dbForProject, $dbForPlatform, $logError, $queueForRealtime, $deviceForImports));
+            ->callback([$this, 'action']);
     }
 
     /**

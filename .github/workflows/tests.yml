@@ -90,6 +90,9 @@ jobs:
           docker compose up -d
           sleep 10
 
+      - name: Logs
+        run: docker compose logs appwrite
+
       - name: Doctor
         run: docker compose exec -T appwrite doctor
 
@@ -119,6 +122,14 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 10
+          
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run General Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
@@ -142,6 +153,8 @@ jobs:
           Locale,
           Projects,
           Realtime,
+          Sites,
+          Proxy,
           Storage,
           Teams,
           Users,
@@ -166,6 +179,14 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 30
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         run: |
@@ -199,6 +220,8 @@ jobs:
             Locale,
             Projects,
             Realtime,
+            Sites,
+            Proxy,
             Storage,
             Teams,
             Users,
@@ -230,6 +253,14 @@ jobs:
           docker compose up -d
           sleep 30
 
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         run: |
           if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
@@ -241,7 +272,7 @@ jobs:
             export _APP_DATABASE_SHARED_TABLES=database_db_main
             export _APP_DATABASE_SHARED_TABLES_V1=
           fi
-          
+      
           docker compose exec -T \
             -e _APP_DATABASE_SHARED_TABLES \
             -e _APP_DATABASE_SHARED_TABLES_V1 \

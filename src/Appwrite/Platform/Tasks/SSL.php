@@ -24,7 +24,7 @@ class SSL extends Action
             ->param('domain', System::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
             ->param('skip-check', true, new Boolean(true), 'If DNS and renew check should be skipped. Defaults to true, and when true, all jobs will result in certificate generation attempt.', true)
             ->inject('queueForCertificates')
-            ->callback(fn (string $domain, bool|string $skipCheck, Certificate $queueForCertificates) => $this->action($domain, $skipCheck, $queueForCertificates));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $domain, bool|string $skipCheck, Certificate $queueForCertificates): void

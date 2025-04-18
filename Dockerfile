@@ -70,6 +70,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/vars && \

@@ -13,6 +13,7 @@ use Swoole\Table;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -27,6 +28,8 @@ use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 use Utopia\Swoole\Files;
 use Utopia\System\System;
+
+Files::load(__DIR__.'/../public');
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
@@ -249,8 +252,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() &&
-                !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
+            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -301,6 +303,54 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ]), $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            }
+
+            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+                Console::info("    └── Creating screenshots bucket...");
+                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                    '$id' => ID::custom('screenshots'),
+                    '$collection' => ID::custom('buckets'),
+                    'name' => 'Screenshots',
+                    'maximumFileSize' => 5000000, // ~5MB
+                    'allowedFileExtensions' => [ 'png' ],
+                    'enabled' => true,
+                    'compression' => Compression::GZIP,
+                    'encryption' => false,
+                    'antivirus' => false,
+                    'fileSecurity' => true,
+                    '$permissions' => [],
+                    'search' => 'buckets Screenshots',
+                ])));
+
+                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+
+                Console::info("    └── Creating files collection for screenshots bucket...");
+                $files = $collections['buckets']['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
+                }
+
+                $attributes = array_map(fn ($attr) => new Document([
+                    '$id' => ID::custom($attr['$id']),
+                    'type' => $attr['type'],
+                    'size' => $attr['size'],
+                    'required' => $attr['required'],
+                    'signed' => $attr['signed'],
+                    'array' => $attr['array'],
+                    'filters' => $attr['filters'],
+                    'default' => $attr['default'] ?? null,
+                    'format' => $attr['format'] ?? ''
+                ]), $files['attributes']);
+
+                $indexes = array_map(fn ($index) => new Document([
+                    '$id' => ID::custom($index['$id']),
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]), $files['indexes']);
+
+                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes));
             }
         });
 
@@ -514,7 +564,6 @@ $http->on('Task', function () use ($register, $domains) {
                 if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
-                $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
                     $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
@@ -525,7 +574,7 @@ $http->on('Task', function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
                         continue;
                     }
                     $domains->set(md5($domain), ['value' => 1]);
