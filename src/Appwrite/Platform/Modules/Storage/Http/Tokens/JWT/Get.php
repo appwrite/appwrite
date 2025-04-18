@@ -66,7 +66,7 @@ class Get extends Action
         // calculate maxAge based on expiry date
         $maxAge = PHP_INT_MAX;
         $expire = $token->getAttribute('expire');
-        if ($expire != null) {
+        if ($expire !== null) {
             $now = new \DateTime();
             $expiryDate = new \DateTime($expire);
             if ($expiryDate < $now) {

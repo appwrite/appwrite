@@ -861,7 +861,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
         $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
 
-        if ($token->isEmpty() || $token->getAttribute('secret') != $secret) {
+        if ($token->isEmpty() || $token->getAttribute('secret') !== $secret) {
             return new Document([]);
         }
 
@@ -869,7 +869,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
             $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
             $ids = explode(':', $token->getAttribute('resourceId'));
 
-            if (count($internalIds) != 2 || count($ids) != 2) {
+            if (count($internalIds) !== 2 || count($ids) !== 2) {
                 return new Document([]);
             }
 

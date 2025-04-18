@@ -82,12 +82,13 @@ class Create extends Action
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_UPDATE);
         $bucketPermission = $validator->isValid($bucket->getUpdate());
-        if (!$fileSecurity && !$bucketPermission) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
 
-        $filePermission = $validator->isValid($file->getUpdate());
-        if ($fileSecurity && !$bucketPermission && !$filePermission) {
+        if ($fileSecurity) {
+            $filePermission = $validator->isValid($file->getUpdate());
+            if (!$bucketPermission && !$filePermission) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+        } elseif (!$bucketPermission) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
