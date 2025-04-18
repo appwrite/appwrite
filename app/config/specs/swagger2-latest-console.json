@@ -30115,7 +30115,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "List all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Resource Tokens List",
@@ -30126,7 +30126,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 396,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -30196,7 +30196,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
                 "responses": {
                     "201": {
                         "description": "ResourceToken",
@@ -30207,7 +30207,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFileToken",
-                    "weight": 393,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -30292,7 +30292,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Get a token by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "ResourceToken",
@@ -30303,7 +30303,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 394,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -30353,7 +30353,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
                 "responses": {
                     "200": {
                         "description": "ResourceToken",
@@ -30364,7 +30364,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 397,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -30437,7 +30437,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Delete a token by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -30445,7 +30445,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 398,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -30497,7 +30497,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
                 "responses": {
                     "200": {
                         "description": "JWT",
@@ -30508,7 +30508,7 @@
                 },
                 "x-appwrite": {
                     "method": "getJWT",
-                    "weight": 395,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -41273,3 +41273,1943 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "buildsSuccessTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of successful function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsFailedTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of failed function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "total aggregated sum of function builds storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function builds compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeAverage": {
+                    "type": "integer",
+                    "description": "Average builds compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function builds mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total  aggregated number of function executions.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function  executions compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function executions mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deployments": {
+                    "type": "array",
+                    "description": "Aggregated number of function deployments per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "deploymentsStorage": {
+                    "type": "array",
+                    "description": "Aggregated number of  function deployments storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "builds": {
+                    "type": "array",
+                    "description": "Aggregated number of function builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsStorage": {
+                    "type": "array",
+                    "description": "Aggregated sum of function builds storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsTime": {
+                    "type": "array",
+                    "description": "Aggregated sum of function builds compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of function builds mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of function executions per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsTime": {
+                    "type": "array",
+                    "description": "Aggregated number of function executions compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of function mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccess": {
+                    "type": "array",
+                    "description": "Aggregated number of successful builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsFailed": {
+                    "type": "array",
+                    "description": "Aggregated number of failed builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                }
+            },
+            "required": [
+                "range",
+                "deploymentsTotal",
+                "deploymentsStorageTotal",
+                "buildsTotal",
+                "buildsSuccessTotal",
+                "buildsFailedTotal",
+                "buildsStorageTotal",
+                "buildsTimeTotal",
+                "buildsTimeAverage",
+                "buildsMbSecondsTotal",
+                "executionsTotal",
+                "executionsTimeTotal",
+                "executionsMbSecondsTotal",
+                "deployments",
+                "deploymentsStorage",
+                "builds",
+                "buildsStorage",
+                "buildsTime",
+                "buildsMbSeconds",
+                "executions",
+                "executionsTime",
+                "executionsMbSeconds",
+                "buildsSuccess",
+                "buildsFailed"
+            ]
+        },
+        "usageSites": {
+            "description": "UsageSites",
+            "type": "object",
+            "properties": {
+                "range": {
+                    "type": "string",
+                    "description": "Time range of the usage stats.",
+                    "x-example": "30d"
+                },
+                "deploymentsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of functions deployments.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions deployment storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of functions build.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "total aggregated sum of functions build storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions build compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions build mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total  aggregated number of functions execution.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions  execution compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions execution mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deployments": {
+                    "type": "array",
+                    "description": "Aggregated number of functions deployment per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "deploymentsStorage": {
+                    "type": "array",
+                    "description": "Aggregated number of  functions deployment storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccessTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of successful function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsFailedTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of failed function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "builds": {
+                    "type": "array",
+                    "description": "Aggregated number of functions build per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsStorage": {
+                    "type": "array",
+                    "description": "Aggregated sum of functions build storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsTime": {
+                    "type": "array",
+                    "description": "Aggregated sum of  functions build compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated sum of functions build mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of  functions execution per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsTime": {
+                    "type": "array",
+                    "description": "Aggregated number of functions execution compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of functions mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccess": {
+                    "type": "array",
+                    "description": "Aggregated number of successful function builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsFailed": {
+                    "type": "array",
+                    "description": "Aggregated number of failed function builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "sitesTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of sites.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "sites": {
+                    "type": "array",
+                    "description": "Aggregated number of sites per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "requestsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of requests.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "requests": {
+                    "type": "array",
+                    "description": "Aggregated number of requests per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "inboundTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated inbound bandwidth.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "inbound": {
+                    "type": "array",
+                    "description": "Aggregated number of inbound bandwidth per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "outboundTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated outbound bandwidth.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "outbound": {
+                    "type": "array",
+                    "description": "Aggregated number of outbound bandwidth per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                }
+            },
+            "required": [
+                "range",
+                "deploymentsTotal",
+                "deploymentsStorageTotal",
+                "buildsTotal",
+                "buildsStorageTotal",
+                "buildsTimeTotal",
+                "buildsMbSecondsTotal",
+                "executionsTotal",
+                "executionsTimeTotal",
+                "executionsMbSecondsTotal",
+                "deployments",
+                "deploymentsStorage",
+                "buildsSuccessTotal",
+                "buildsFailedTotal",
+                "builds",
+                "buildsStorage",
+                "buildsTime",
+                "buildsMbSeconds",
+                "executions",
+                "executionsTime",
+                "executionsMbSeconds",
+                "buildsSuccess",
+                "buildsFailed",
+                "sitesTotal",
+                "sites",
+                "requestsTotal",
+                "requests",
+                "inboundTotal",
+                "inbound",
+                "outboundTotal",
+                "outbound"
+            ]
+        },
+        "usageSite": {
+            "description": "UsageSite",
+            "type": "object",
+            "properties": {
+                "range": {
+                    "type": "string",
+                    "description": "The time range of the usage stats.",
+                    "x-example": "30d"
+                },
+                "deploymentsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of function deployments.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function deployments storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsSuccessTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of successful function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsFailedTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of failed function builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "total aggregated sum of function builds storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function builds compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeAverage": {
+                    "type": "integer",
+                    "description": "Average builds compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function builds mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total  aggregated number of function executions.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function  executions compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of function executions mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deployments": {
+                    "type": "array",
+                    "description": "Aggregated number of function deployments per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "deploymentsStorage": {
+                    "type": "array",
+                    "description": "Aggregated number of  function deployments storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "builds": {
+                    "type": "array",
+                    "description": "Aggregated number of function builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsStorage": {
+                    "type": "array",
+                    "description": "Aggregated sum of function builds storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsTime": {
+                    "type": "array",
+                    "description": "Aggregated sum of function builds compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of function builds mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of function executions per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsTime": {
+                    "type": "array",
+                    "description": "Aggregated number of function executions compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of function mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccess": {
+                    "type": "array",
+                    "description": "Aggregated number of successful builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsFailed": {
+                    "type": "array",
+                    "description": "Aggregated number of failed builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "requestsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of requests.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "requests": {
+                    "type": "array",
+                    "description": "Aggregated number of requests per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "inboundTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated inbound bandwidth.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "inbound": {
+                    "type": "array",
+                    "description": "Aggregated number of inbound bandwidth per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "outboundTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated outbound bandwidth.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "outbound": {
+                    "type": "array",
+                    "description": "Aggregated number of outbound bandwidth per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                }
+            },
+            "required": [
+                "range",
+                "deploymentsTotal",
+                "deploymentsStorageTotal",
+                "buildsTotal",
+                "buildsSuccessTotal",
+                "buildsFailedTotal",
+                "buildsStorageTotal",
+                "buildsTimeTotal",
+                "buildsTimeAverage",
+                "buildsMbSecondsTotal",
+                "executionsTotal",
+                "executionsTimeTotal",
+                "executionsMbSecondsTotal",
+                "deployments",
+                "deploymentsStorage",
+                "builds",
+                "buildsStorage",
+                "buildsTime",
+                "buildsMbSeconds",
+                "executions",
+                "executionsTime",
+                "executionsMbSeconds",
+                "buildsSuccess",
+                "buildsFailed",
+                "requestsTotal",
+                "requests",
+                "inboundTotal",
+                "inbound",
+                "outboundTotal",
+                "outbound"
+            ]
+        },
+        "usageProject": {
+            "description": "UsageProject",
+            "type": "object",
+            "properties": {
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of function executions.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "documentsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated  number of documents.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of databases.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of databases storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "usersTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of users.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "filesStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of files storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "functionsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of functions storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of builds storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of deployments storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "bucketsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of buckets.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of function executions mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of function builds mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesReadsTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases reads.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "databasesWritesTotal": {
+                    "type": "integer",
+                    "description": "Total number of databases writes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "requests": {
+                    "type": "array",
+                    "description": "Aggregated  number of requests per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "network": {
+                    "type": "array",
+                    "description": "Aggregated number of consumed bandwidth per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "users": {
+                    "type": "array",
+                    "description": "Aggregated number of users per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of executions per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of executions by functions.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "bucketsBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of usage by buckets.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "databasesStorageBreakdown": {
+                    "type": "array",
+                    "description": "An array of the aggregated breakdown of storage usage by databases.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSecondsBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of execution mbSeconds by functions.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSecondsBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of build mbSeconds by functions.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "functionsStorageBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of functions storage size (in bytes).",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "authPhoneTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of phone auth.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "authPhoneEstimate": {
+                    "type": "number",
+                    "description": "Estimated total aggregated cost of phone auth.",
+                    "x-example": 0,
+                    "format": "double"
+                },
+                "authPhoneCountryBreakdown": {
+                    "type": "array",
+                    "description": "Aggregated breakdown in totals of phone auth by country.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
+                "databasesReads": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database reads.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "databasesWrites": {
+                    "type": "array",
+                    "description": "An array of aggregated number of database writes.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "imageTransformations": {
+                    "type": "array",
+                    "description": "An array of aggregated number of image transformations.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "imageTransformationsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of image transformations.",
+                    "x-example": 0,
+                    "format": "int32"
+                }
+            },
+            "required": [
+                "executionsTotal",
+                "documentsTotal",
+                "databasesTotal",
+                "databasesStorageTotal",
+                "usersTotal",
+                "filesStorageTotal",
+                "functionsStorageTotal",
+                "buildsStorageTotal",
+                "deploymentsStorageTotal",
+                "bucketsTotal",
+                "executionsMbSecondsTotal",
+                "buildsMbSecondsTotal",
+                "databasesReadsTotal",
+                "databasesWritesTotal",
+                "requests",
+                "network",
+                "users",
+                "executions",
+                "executionsBreakdown",
+                "bucketsBreakdown",
+                "databasesStorageBreakdown",
+                "executionsMbSecondsBreakdown",
+                "buildsMbSecondsBreakdown",
+                "functionsStorageBreakdown",
+                "authPhoneTotal",
+                "authPhoneEstimate",
+                "authPhoneCountryBreakdown",
+                "databasesReads",
+                "databasesWrites",
+                "imageTransformations",
+                "imageTransformationsTotal"
+            ]
+        },
+        "headers": {
+            "description": "Headers",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Header name.",
+                    "x-example": "Content-Type"
+                },
+                "value": {
+                    "type": "string",
+                    "description": "Header value.",
+                    "x-example": "application\/json"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ]
+        },
+        "specification": {
+            "description": "Specification",
+            "type": "object",
+            "properties": {
+                "memory": {
+                    "type": "integer",
+                    "description": "Memory size in MB.",
+                    "x-example": 512,
+                    "format": "int32"
+                },
+                "cpus": {
+                    "type": "number",
+                    "description": "Number of CPUs.",
+                    "x-example": 1,
+                    "format": "double"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Is size enabled.",
+                    "x-example": true
+                },
+                "slug": {
+                    "type": "string",
+                    "description": "Size slug.",
+                    "x-example": "s-1vcpu-512mb"
+                }
+            },
+            "required": [
+                "memory",
+                "cpus",
+                "enabled",
+                "slug"
+            ]
+        },
+        "proxyRule": {
+            "description": "Rule",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Rule ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Rule creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Rule update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Domain name.",
+                    "x-example": "appwrite.company.com"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Action definition for the rule. Possible values are \"api\", \"deployment\", or \"redirect\"",
+                    "x-example": "deployment"
+                },
+                "trigger": {
+                    "type": "string",
+                    "description": "Defines how the rule was created. Possible values are \"manual\" or \"deployment\"",
+                    "x-example": "manual"
+                },
+                "redirectUrl": {
+                    "type": "string",
+                    "description": "URL to redirect to. Used if type is \"redirect\"",
+                    "x-example": "https:\/\/appwrite.io\/docs"
+                },
+                "redirectStatusCode": {
+                    "type": "integer",
+                    "description": "Status code to apply during redirect. Used if type is \"redirect\"",
+                    "x-example": 301,
+                    "format": "int32"
+                },
+                "deploymentId": {
+                    "type": "string",
+                    "description": "ID of deployment. Used if type is \"deployment\"",
+                    "x-example": "n3u9feiwmf"
+                },
+                "deploymentResourceType": {
+                    "type": "string",
+                    "description": "Type of deployment. Possible values are \"function\", \"site\". Used if rule's type is \"deployment\".",
+                    "x-example": "function"
+                },
+                "deploymentResourceId": {
+                    "type": "string",
+                    "description": "ID deployment's resource. Used if type is \"deployment\"",
+                    "x-example": "n3u9feiwmf"
+                },
+                "deploymentVcsProviderBranch": {
+                    "type": "string",
+                    "description": "Name of Git branch that updates rule. Used if type is \"deployment\"",
+                    "x-example": "function"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Domain verification status. Possible values are \"created\", \"verifying\", \"verified\" and \"unverified\"",
+                    "x-example": "verified"
+                },
+                "logs": {
+                    "type": "string",
+                    "description": "Certificate generation logs. This will return an empty string if generation did not run, or succeeded.",
+                    "x-example": "HTTP challegne failed."
+                },
+                "renewAt": {
+                    "type": "string",
+                    "description": "Certificate auto-renewal date in ISO 8601 format.",
+                    "x-example": "datetime"
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "domain",
+                "type",
+                "trigger",
+                "redirectUrl",
+                "redirectStatusCode",
+                "deploymentId",
+                "deploymentResourceType",
+                "deploymentResourceId",
+                "deploymentVcsProviderBranch",
+                "status",
+                "logs",
+                "renewAt"
+            ]
+        },
+        "smsTemplate": {
+            "description": "SmsTemplate",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Template type",
+                    "x-example": "verification"
+                },
+                "locale": {
+                    "type": "string",
+                    "description": "Template locale",
+                    "x-example": "en_us"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Template message",
+                    "x-example": "Click on the link to verify your account."
+                }
+            },
+            "required": [
+                "type",
+                "locale",
+                "message"
+            ]
+        },
+        "emailTemplate": {
+            "description": "EmailTemplate",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Template type",
+                    "x-example": "verification"
+                },
+                "locale": {
+                    "type": "string",
+                    "description": "Template locale",
+                    "x-example": "en_us"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Template message",
+                    "x-example": "Click on the link to verify your account."
+                },
+                "senderName": {
+                    "type": "string",
+                    "description": "Name of the sender",
+                    "x-example": "My User"
+                },
+                "senderEmail": {
+                    "type": "string",
+                    "description": "Email of the sender",
+                    "x-example": "mail@appwrite.io"
+                },
+                "replyTo": {
+                    "type": "string",
+                    "description": "Reply to email address",
+                    "x-example": "emails@appwrite.io"
+                },
+                "subject": {
+                    "type": "string",
+                    "description": "Email subject",
+                    "x-example": "Please verify your email address"
+                }
+            },
+            "required": [
+                "type",
+                "locale",
+                "message",
+                "senderName",
+                "senderEmail",
+                "replyTo",
+                "subject"
+            ]
+        },
+        "consoleVariables": {
+            "description": "Console Variables",
+            "type": "object",
+            "properties": {
+                "_APP_DOMAIN_TARGET_CNAME": {
+                    "type": "string",
+                    "description": "CNAME target for your Appwrite custom domains.",
+                    "x-example": "appwrite.io"
+                },
+                "_APP_DOMAIN_TARGET_A": {
+                    "type": "string",
+                    "description": "A target for your Appwrite custom domains.",
+                    "x-example": "127.0.0.1"
+                },
+                "_APP_DOMAIN_TARGET_AAAA": {
+                    "type": "string",
+                    "description": "AAAA target for your Appwrite custom domains.",
+                    "x-example": "::1"
+                },
+                "_APP_STORAGE_LIMIT": {
+                    "type": "integer",
+                    "description": "Maximum file size allowed for file upload in bytes.",
+                    "x-example": "30000000",
+                    "format": "int32"
+                },
+                "_APP_COMPUTE_SIZE_LIMIT": {
+                    "type": "integer",
+                    "description": "Maximum file size allowed for deployment in bytes.",
+                    "x-example": "30000000",
+                    "format": "int32"
+                },
+                "_APP_USAGE_STATS": {
+                    "type": "string",
+                    "description": "Defines if usage stats are enabled. This value is set to 'enabled' by default, to disable the usage stats set the value to 'disabled'.",
+                    "x-example": "enabled"
+                },
+                "_APP_VCS_ENABLED": {
+                    "type": "boolean",
+                    "description": "Defines if VCS (Version Control System) is enabled.",
+                    "x-example": true
+                },
+                "_APP_DOMAIN_ENABLED": {
+                    "type": "boolean",
+                    "description": "Defines if main domain is configured. If so, custom domains can be created.",
+                    "x-example": true
+                },
+                "_APP_ASSISTANT_ENABLED": {
+                    "type": "boolean",
+                    "description": "Defines if AI assistant is enabled.",
+                    "x-example": true
+                },
+                "_APP_DOMAIN_SITES": {
+                    "type": "string",
+                    "description": "A domain to use for site URLs.",
+                    "x-example": "sites.localhost"
+                },
+                "_APP_DOMAIN_FUNCTIONS": {
+                    "type": "string",
+                    "description": "A domain to use for function URLs.",
+                    "x-example": "functions.localhost"
+                },
+                "_APP_OPTIONS_FORCE_HTTPS": {
+                    "type": "string",
+                    "description": "Defines if HTTPS is enforced for all requests.",
+                    "x-example": "enabled"
+                },
+                "_APP_DOMAINS_NAMESERVERS": {
+                    "type": "string",
+                    "description": "Comma-separated list of nameservers.",
+                    "x-example": "ns1.example.com,ns2.example.com"
+                }
+            },
+            "required": [
+                "_APP_DOMAIN_TARGET_CNAME",
+                "_APP_DOMAIN_TARGET_A",
+                "_APP_DOMAIN_TARGET_AAAA",
+                "_APP_STORAGE_LIMIT",
+                "_APP_COMPUTE_SIZE_LIMIT",
+                "_APP_USAGE_STATS",
+                "_APP_VCS_ENABLED",
+                "_APP_DOMAIN_ENABLED",
+                "_APP_ASSISTANT_ENABLED",
+                "_APP_DOMAIN_SITES",
+                "_APP_DOMAIN_FUNCTIONS",
+                "_APP_OPTIONS_FORCE_HTTPS",
+                "_APP_DOMAINS_NAMESERVERS"
+            ]
+        },
+        "mfaChallenge": {
+            "description": "MFA Challenge",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Token ID.",
+                    "x-example": "bb8ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Token creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "User ID.",
+                    "x-example": "5e5ea5c168bb8"
+                },
+                "expire": {
+                    "type": "string",
+                    "description": "Token expiration date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "userId",
+                "expire"
+            ]
+        },
+        "mfaRecoveryCodes": {
+            "description": "MFA Recovery Codes",
+            "type": "object",
+            "properties": {
+                "recoveryCodes": {
+                    "type": "array",
+                    "description": "Recovery codes.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "a3kf0-s0cl2",
+                        "s0co1-as98s"
+                    ]
+                }
+            },
+            "required": [
+                "recoveryCodes"
+            ]
+        },
+        "mfaType": {
+            "description": "MFAType",
+            "type": "object",
+            "properties": {
+                "secret": {
+                    "type": "string",
+                    "description": "Secret token used for TOTP factor.",
+                    "x-example": true
+                },
+                "uri": {
+                    "type": "string",
+                    "description": "URI for authenticator apps.",
+                    "x-example": true
+                }
+            },
+            "required": [
+                "secret",
+                "uri"
+            ]
+        },
+        "mfaFactors": {
+            "description": "MFAFactors",
+            "type": "object",
+            "properties": {
+                "totp": {
+                    "type": "boolean",
+                    "description": "Can TOTP be used for MFA challenge for this account.",
+                    "x-example": true
+                },
+                "phone": {
+                    "type": "boolean",
+                    "description": "Can phone (SMS) be used for MFA challenge for this account.",
+                    "x-example": true
+                },
+                "email": {
+                    "type": "boolean",
+                    "description": "Can email be used for MFA challenge for this account.",
+                    "x-example": true
+                },
+                "recoveryCode": {
+                    "type": "boolean",
+                    "description": "Can recovery code be used for MFA challenge for this account.",
+                    "x-example": true
+                }
+            },
+            "required": [
+                "totp",
+                "phone",
+                "email",
+                "recoveryCode"
+            ]
+        },
+        "provider": {
+            "description": "Provider",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Provider ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Provider creation time in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Provider update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name for the provider instance.",
+                    "x-example": "Mailgun"
+                },
+                "provider": {
+                    "type": "string",
+                    "description": "The name of the provider service.",
+                    "x-example": "mailgun"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Is provider enabled?",
+                    "x-example": true
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Type of provider.",
+                    "x-example": "sms"
+                },
+                "credentials": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Provider credentials.",
+                    "x-example": {
+                        "key": "123456789"
+                    }
+                },
+                "options": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Provider options.",
+                    "x-example": {
+                        "from": "sender-email@mydomain"
+                    }
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "name",
+                "provider",
+                "enabled",
+                "type",
+                "credentials"
+            ]
+        },
+        "message": {
+            "description": "Message",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Message ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Message creation time in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Message update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "providerType": {
+                    "type": "string",
+                    "description": "Message provider type.",
+                    "x-example": "email"
+                },
+                "topics": {
+                    "type": "array",
+                    "description": "Topic IDs set as recipients.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "5e5ea5c16897e"
+                    ]
+                },
+                "users": {
+                    "type": "array",
+                    "description": "User IDs set as recipients.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "5e5ea5c16897e"
+                    ]
+                },
+                "targets": {
+                    "type": "array",
+                    "description": "Target IDs set as recipients.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "5e5ea5c16897e"
+                    ]
+                },
+                "scheduledAt": {
+                    "type": "string",
+                    "description": "The scheduled time for message.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00",
+                    "x-nullable": true
+                },
+                "deliveredAt": {
+                    "type": "string",
+                    "description": "The time when the message was delivered.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00",
+                    "x-nullable": true
+                },
+                "deliveryErrors": {
+                    "type": "array",
+                    "description": "Delivery errors if any.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "Failed to send message to target 5e5ea5c16897e: Credentials not valid."
+                    ],
+                    "x-nullable": true
+                },
+                "deliveredTotal": {
+                    "type": "integer",
+                    "description": "Number of recipients the message was delivered to.",
+                    "x-example": 1,
+                    "format": "int32"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Data of the message.",
+                    "x-example": {
+                        "subject": "Welcome to Appwrite",
+                        "content": "Hi there, welcome to Appwrite family."
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Status of delivery.",
+                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "providerType",
+                "topics",
+                "users",
+                "targets",
+                "deliveredTotal",
+                "data",
+                "status"
+            ]
+        },
+        "topic": {
+            "description": "Topic",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Topic ID.",
+                    "x-example": "259125845563242502"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Topic creation time in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Topic update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the topic.",
+                    "x-example": "events"
+                },
+                "emailTotal": {
+                    "type": "integer",
+                    "description": "Total count of email subscribers subscribed to the topic.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "smsTotal": {
+                    "type": "integer",
+                    "description": "Total count of SMS subscribers subscribed to the topic.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "pushTotal": {
+                    "type": "integer",
+                    "description": "Total count of push subscribers subscribed to the topic.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "subscribe": {
+                    "type": "array",
+                    "description": "Subscribe permissions.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": "users"
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "name",
+                "emailTotal",
+                "smsTotal",
+                "pushTotal",
+                "subscribe"
+            ]
+        },
+        "subscriber": {
+            "description": "Subscriber",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Subscriber ID.",
+                    "x-example": "259125845563242502"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Subscriber creation time in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Subscriber update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "targetId": {
+                    "type": "string",
+                    "description": "Target ID.",
+                    "x-example": "259125845563242502"
+                },
+                "target": {
+                    "type": "object",
+                    "description": "Target.",
+                    "x-example": {
+                        "$id": "259125845563242502",
+                        "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                        "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                        "providerType": "email",
+                        "providerId": "259125845563242502",
+                        "name": "ageon-app-email",
+                        "identifier": "random-mail@email.org",
+                        "userId": "5e5ea5c16897e"
+                    },
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/target"
+                    }
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "Topic ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "userName": {
+                    "type": "string",
+                    "description": "User Name.",
+                    "x-example": "Aegon Targaryen"
+                },
+                "topicId": {
+                    "type": "string",
+                    "description": "Topic ID.",
+                    "x-example": "259125845563242502"
+                },
+                "providerType": {
+                    "type": "string",
+                    "description": "The target provider type. Can be one of the following: `email`, `sms` or `push`.",
+                    "x-example": "email"
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "targetId",
+                "target",
+                "userId",
+                "userName",
+                "topicId",
+                "providerType"
+            ]
+        },
+        "target": {
+            "description": "Target",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Target ID.",
+                    "x-example": "259125845563242502"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Target creation time in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Target update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Target Name.",
+                    "x-example": "Apple iPhone 12"
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "User ID.",
+                    "x-example": "259125845563242502"
+                },
+                "providerId": {
+                    "type": "string",
+                    "description": "Provider ID.",
+                    "x-example": "259125845563242502",
+                    "x-nullable": true
+                },
+                "providerType": {
+                    "type": "string",
+                    "description": "The target provider type. Can be one of the following: `email`, `sms` or `push`.",
+                    "x-example": "email"
+                },
+                "identifier": {
+                    "type": "string",
+                    "description": "The target identifier.",
+                    "x-example": "token"
+                },
+                "expired": {
+                    "type": "boolean",
+                    "description": "Is the target expired.",
+                    "x-example": false
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "name",
+                "userId",
+                "providerType",
+                "identifier",
+                "expired"
+            ]
+        },
+        "migration": {
+            "description": "Migration",
+            "type": "object",
+            "properties": {
+                "$id": {
+                    "type": "string",
+                    "description": "Migration ID.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Migration creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Variable creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Migration status ( pending, processing, failed, completed ) ",
+                    "x-example": "pending"
+                },
+                "stage": {
+                    "type": "string",
+                    "description": "Migration stage ( init, processing, source-check, destination-check, migrating, finished )",
+                    "x-example": "init"
+                },
+                "source": {
+                    "type": "string",
+                    "description": "A string containing the type of source of the migration.",
+                    "x-example": "Appwrite"
+                },
+                "destination": {
+                    "type": "string",
+                    "description": "A string containing the type of destination of the migration.",
+                    "x-example": "Appwrite"
+                },
+                "resources": {
+                    "type": "array",
+                    "description": "Resources to migrate.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "user"
+                    ]
+                },
+                "resourceId": {
+                    "type": "string",
+                    "description": "Id of the resource to migrate.",
+                    "x-example": "databaseId:collectionId"
+                },
+                "statusCounters": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "A group of counters that represent the total progress of the migration.",
+                    "x-example": "{\"Database\": {\"PENDING\": 0, \"SUCCESS\": 1, \"ERROR\": 0, \"SKIP\": 0, \"PROCESSING\": 0, \"WARNING\": 0}}"
+                },
+                "resourceData": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "An array of objects containing the report data of the resources that were migrated.",
+                    "x-example": "[{\"resource\":\"Database\",\"id\":\"public\",\"status\":\"SUCCESS\",\"message\":\"\"}]"
+                },
+                "errors": {
+                    "type": "array",
+                    "description": "All errors that occurred during the migration process.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": []
+                }
+            },
+            "required": [
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "status",
+                "stage",
+                "source",
+                "destination",
+                "resources",
+                "resourceId",
+                "statusCounters",
+                "resourceData",
+                "errors"
+            ]
+        },
+        "migrationReport": {
+            "description": "Migration Report",
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "integer",
+                    "description": "Number of users to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "team": {
+                    "type": "integer",
+                    "description": "Number of teams to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "database": {
+                    "type": "integer",
+                    "description": "Number of databases to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "document": {
+                    "type": "integer",
+                    "description": "Number of documents to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "file": {
+                    "type": "integer",
+                    "description": "Number of files to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "bucket": {
+                    "type": "integer",
+                    "description": "Number of buckets to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "function": {
+                    "type": "integer",
+                    "description": "Number of functions to be migrated.",
+                    "x-example": 20,
+                    "format": "int32"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Size of files to be migrated in mb.",
+                    "x-example": 30000,
+                    "format": "int32"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Version of the Appwrite instance to be migrated.",
+                    "x-example": "1.4.0"
+                }
+            },
+            "required": [
+                "user",
+                "team",
+                "database",
+                "document",
+                "file",
+                "bucket",
+                "function",
+                "size",
+                "version"
+            ]
+        }
+    },
+    "externalDocs": {
+        "description": "Full API docs, specs and tutorials",
+        "url": "https:\/\/appwrite.io\/docs"
+    }
+}

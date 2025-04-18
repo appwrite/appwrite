@@ -1543,14 +1543,12 @@ foreach (Config::getParam('services', []) as $service) {
     }
 }
 
-// Modules
-$platform = new Appwrite();
-$platform->init(Service::TYPE_HTTP);
-
 // Check for any errors found while we were initialising the SDK Methods.
 if (!empty(Method::getErrors())) {
     throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
 }
+
+// Modules
 
 $platform = new Appwrite();
 $platform->init(Service::TYPE_HTTP);

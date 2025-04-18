@@ -29578,7 +29578,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "List all the tokens created for a specific file or bucket. You can use the query params to filter your results.",
                 "responses": {
                     "200": {
                         "description": "Resource Tokens List",
@@ -29593,7 +29593,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 396,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -29659,7 +29659,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.",
                 "responses": {
                     "201": {
                         "description": "ResourceToken",
@@ -29674,7 +29674,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFileToken",
-                    "weight": 393,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -29757,7 +29757,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Get a token by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "ResourceToken",
@@ -29772,7 +29772,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 394,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -29818,7 +29818,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.",
                 "responses": {
                     "200": {
                         "description": "ResourceToken",
@@ -29833,7 +29833,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 397,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -29904,7 +29904,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Delete a token by its unique ID.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -29912,7 +29912,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 398,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -29960,7 +29960,7 @@
                 "tags": [
                     "tokens"
                 ],
-                "description": "",
+                "description": "Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.",
                 "responses": {
                     "200": {
                         "description": "JWT",
@@ -29975,7 +29975,7 @@
                 },
                 "x-appwrite": {
                     "method": "getJWT",
-                    "weight": 395,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
