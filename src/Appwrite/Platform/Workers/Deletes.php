@@ -1202,26 +1202,26 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
-        /**
-         * deleteDocuments uses a cursor, we need to add a unique order by field or use default
-         */
+        $count = 0;
 
         try {
-            $documents = $database->deleteDocuments($collection, $queries);
+            $database->deleteDocuments(
+                collection: $collection,
+                queries: $queries,
+                onNext: function (Document $document) use (&$count, $callback) {
+                    $count++;
+                    if (\is_callable($callback)) {
+                        $callback($document);
+                    }
+                }
+            );
         } catch (Throwable $th) {
             $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
             Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
             return;
         }
 
-        if (\is_callable($callback)) {
-            foreach ($documents as $document) {
-                $callback($document);
-            }
-        }
-
         $end = \microtime(true);
-        $count = \count($documents);
 
         Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
