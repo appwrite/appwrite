@@ -183,6 +183,7 @@ class Swagger2 extends Format
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
+                    'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',

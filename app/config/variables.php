@@ -80,6 +80,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CUSTOM_DOMAIN_DENY_LIST',
+                'description' => 'List of reserved or prohibited domains when configuring custom domains.',
+                'introduction' => '',
+                'default' => 'example.com,test.com,app.example.com',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
