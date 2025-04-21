@@ -1061,7 +1061,7 @@ trait MigrationsBase
         // fail on compressed, encrypted buckets!
         $this->assertEquals(400, $compressed['body']['code']);
         $this->assertEquals('storage_file_type_unsupported', $compressed['body']['type']);
-        $this->assertEquals('Only uncompressed, unencrypted CSV files can be used for document import.', $compressed['body']['message']);
+        $this->assertEquals('Only unencrypted CSV files can be used for document import.', $compressed['body']['message']);
 
         // missing attribute, fail in worker.
         $missingColumn = $this->performCsvMigration(
