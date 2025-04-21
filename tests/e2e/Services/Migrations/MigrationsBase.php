@@ -971,7 +971,7 @@ trait MigrationsBase
         $this->assertEquals($response['body']['required'], true);
 
         // make a bucket, upload a file to it!
-        // 1. enable compression, encryption
+        // 1. enable encryption
         $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -989,7 +989,7 @@ trait MigrationsBase
 
         $bucketOneId = $bucketOne['body']['$id'];
 
-        // 2. no compression and encryption
+        // 2. no encryption
         $bucketTwo = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -999,7 +999,7 @@ trait MigrationsBase
             'name' => 'Test Bucket 2',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ['csv'],
-            'compression' => 'none',
+            'compression' => 'gzip',
             'encryption' => false
         ]);
 
@@ -1009,10 +1009,10 @@ trait MigrationsBase
         $bucketTwoId = $bucketTwo['body']['$id'];
 
         $bucketIds = [
-            'compressed' => $bucketOneId,
-            'uncompressed' => $bucketTwoId,
+            'encrypted' => $bucketOneId,
+            'unencrypted' => $bucketTwoId,
 
-            // in uncompressed buckets!
+            // in unencrypted buckets!
             'missing-row' => $bucketTwoId,
             'missing-column' => $bucketTwoId,
             'irrelevant-column' => $bucketTwoId,
@@ -1049,19 +1049,19 @@ trait MigrationsBase
             $fileIds[$label] = $response['body']['$id'];
         }
 
-        // compressed, fail.
-        $compressed = $this->performCsvMigration(
+        // encrypted bucket, fail.
+        $encrypted = $this->performCsvMigration(
             [
-                'fileId' => $fileIds['compressed'],
-                'bucketId' => $bucketIds['compressed'],
+                'fileId' => $fileIds['encrypted'],
+                'bucketId' => $bucketIds['encrypted'],
                 'resourceId' => $databaseId . ':' . $collectionId,
             ]
         );
 
         // fail on compressed, encrypted buckets!
-        $this->assertEquals(400, $compressed['body']['code']);
-        $this->assertEquals('storage_file_type_unsupported', $compressed['body']['type']);
-        $this->assertEquals('Only unencrypted CSV files can be used for document import.', $compressed['body']['message']);
+        $this->assertEquals(400, $encrypted['body']['code']);
+        $this->assertEquals('storage_file_type_unsupported', $encrypted['body']['type']);
+        $this->assertEquals('Only unencrypted CSV files can be used for document import.', $encrypted['body']['message']);
 
         // missing attribute, fail in worker.
         $missingColumn = $this->performCsvMigration(
@@ -1150,12 +1150,12 @@ trait MigrationsBase
             );
         }, 60000, 500);
 
-        // no compression, no encryption, pass.
+        // no encryption, pass.
         $migration = $this->performCsvMigration(
             [
                 'endpoint' => 'http://localhost/v1',
-                'fileId' => $fileIds['uncompressed'],
-                'bucketId' => $bucketIds['uncompressed'],
+                'fileId' => $fileIds['unencrypted'],
+                'bucketId' => $bucketIds['unencrypted'],
                 'resourceId' => $databaseId . ':' . $collectionId,
             ]
         );
