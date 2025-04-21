@@ -27,6 +27,8 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
+use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Validator\ArrayList;
@@ -345,18 +347,37 @@ App::post('/v1/migrations/csv')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        if (!empty($file->getAttribute('openSSLCipher')) || $file->getAttribute('algorithm', Compression::NONE) !== Compression::NONE) {
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, "Only uncompressed, unencrypted CSV files can be used for document import.");
+        if (!empty($file->getAttribute('openSSLCipher'))) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, "Only unencrypted CSV files can be used for document import.");
         }
 
-        // copy to temporary folder
+        $compression = $file->getAttribute('algorithm', Compression::NONE);
+        $hasCompression = $compression !== Compression::NONE; // skipped on files that are 20MB+ in size.
+
+        // copy to import volume
         $migrationId = ID::unique();
         $newPath = $deviceForImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
-        if (!$deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
+
+        if ($hasCompression) {
+            $source = $deviceForFiles->read($path);
+
+            switch ($compression) {
+                case Compression::ZSTD:
+                    $source = (new Zstd())->decompress($source);
+                    break;
+                case Compression::GZIP:
+                    $source = (new GZIP())->decompress($source);
+                    break;
+            }
+
+            if (! $deviceForImports->write($newPath, $source, 'text/csv')) {
+                throw new \Exception("Unable to copy file");
+            }
+        } elseif (! $deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
             throw new \Exception("Unable to copy file");
         }
 
-        $fileSize = $deviceForImports->getFileSize($path);
+        $fileSize = $deviceForImports->getFileSize($newPath);
         $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
