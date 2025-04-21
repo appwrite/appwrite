@@ -21,14 +21,14 @@ class Action extends UtopiaAction
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        if ($fileSecurity) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
