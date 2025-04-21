@@ -61,11 +61,11 @@ class Get extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->isEmpty()) {
+        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

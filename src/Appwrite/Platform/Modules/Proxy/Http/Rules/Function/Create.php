@@ -5,12 +5,11 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -20,7 +19,9 @@ use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
+use Utopia\Validator\IP;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -96,13 +97,6 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        // Apex domain prevention due to CNAME limitations
-        if (empty(App::getEnv('_APP_DOMAINS_NAMESERVERS', ''))) {
-            if ($domain->get() === $domain->getRegisterable()) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The instance does not allow root-level (apex) domains.');
-            }
-        }
-
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
@@ -118,8 +112,23 @@ class Create extends Action
             $status = 'verified';
         }
         if ($status === 'created') {
-            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
-            $validator = new CNAME($target->get());
+            $validators = [];
+            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+            }
+            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+            }
+            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+            }
+
+            if (empty($validators)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
+            }
+
+            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
             if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
             }

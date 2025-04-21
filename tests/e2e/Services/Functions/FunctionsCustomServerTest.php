@@ -1736,7 +1736,7 @@ class FunctionsCustomServerTest extends Scope
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(19, count($response['body']));
+            $this->assertEquals(24, count($response['body']));
             $this->assertEquals('24h', $response['body']['range']);
             $this->assertEquals(1, $response['body']['executionsTotal']);
         }, 25000, 1000);
@@ -2174,6 +2174,183 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId1, $function['body']['latestDeploymentId']);
         $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    #[Retry(count: 3)]
+    public function testErrorPages(): void
+    {
+        // non-existent domain
+        $domain = 'non-existent-page.functions.localhost';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('Nothing is here yet', $response['body']);
+        $this->assertStringContainsString('Start with this domain', $response['body']);
+
+        // failed deployment
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'commands' => 'cd non-existing-directory',
+            'execute' => ['any']
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deployment = $this->createDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
+
+        // canceled deployment
+        $deployment = $this->createDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deployment = $this->cancelDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testErrorPagesPermissions(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'commands' => '',
+            'execute' => ['users']
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('Execution not permitted', $response['body']);
+        $this->assertStringContainsString('View settings', $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testErrorPagesEmptyBody(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'commands' => '',
+            'execute' => ['any']
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=404', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('Error 404', $response['body']);
+        $this->assertStringContainsString('does not exist', $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=504', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(504, $response['headers']['status-code']);
+        $this->assertStringContainsString('Error 504', $response['body']);
+        $this->assertStringContainsString('respond in time', $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=400', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Error 400', $response['body']);
+        $this->assertStringContainsString('unexpected client error', $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=500', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertStringContainsString('Error 500', $response['body']);
+        $this->assertStringContainsString('unexpected server error', $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=400&body=CustomError400', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('CustomError400', $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=500&body=CustomError500', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertStringContainsString('CustomError500', $response['body']);
 
         $this->cleanupFunction($functionId);
     }

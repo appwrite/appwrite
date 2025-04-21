@@ -80,10 +80,6 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
-        if ($variable === false || $variable->isEmpty()) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
         if ($variable->getAttribute('secret') === true && $secret === false) {
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }

@@ -1038,7 +1038,7 @@ return [
                 '$id' => ID::custom('providerUid'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 2048, // Decrease to 128 as in index length?
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1107,14 +1107,14 @@ return [
                 '$id' => ID::custom('_key_userInternalId_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['userInternalId', 'provider', 'providerUid'],
-                'lengths' => [11, 128, 128],
+                'lengths' => [11, 128, 128], // providerUid is length 2000!
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['provider', 'providerUid'],
-                'lengths' => [128, 128],
+                'lengths' => [128, 128], // providerUid is length 2000!
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [

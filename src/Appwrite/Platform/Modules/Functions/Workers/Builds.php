@@ -72,6 +72,7 @@ class Builds extends Action
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -90,6 +91,7 @@ class Builds extends Action
      * @param Device $deviceForSites
      * @param Device $deviceForFiles
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      */
@@ -108,7 +110,8 @@ class Builds extends Action
         Device $deviceForSites,
         callable $isResourceBlocked,
         Device $deviceForFiles,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -146,7 +149,8 @@ class Builds extends Action
                     $deployment,
                     $template,
                     $isResourceBlocked,
-                    $log
+                    $log,
+                    $executor
                 );
                 break;
 
@@ -172,6 +176,7 @@ class Builds extends Action
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
+     * @param Executor $executor
      * @return void
      * @throws \Utopia\Database\Exception
      *
@@ -194,7 +199,8 @@ class Builds extends Action
         Document $deployment,
         Document $template,
         callable $isResourceBlocked,
-        Log $log
+        Log $log,
+        Executor $executor
     ): void {
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -206,8 +212,6 @@ class Builds extends Action
             'sites' => $deviceForSites,
             'functions' => $deviceForFunctions,
         };
-
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $log->addTag($resourceKey, $resource->getId());
 
@@ -561,6 +565,10 @@ class Builds extends Action
             // Some runtimes/frameworks can't compile with less memory than this
             $minMemory = $resource->getCollection() === 'sites' ? 2048 : 1024;
 
+            if ($resource->getAttribute('framework', '') === 'analog') {
+                $minMemory = 4096;
+            }
+
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
@@ -800,7 +808,7 @@ class Builds extends Action
 
             if ($resource->getCollection() === 'sites') {
                 $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][37m Screenshot capturing started. [0m\n";
+                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -846,6 +854,20 @@ class Builds extends Action
                     $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
                     $apiKey = $jwtObj->encode([
                         'hostnameOverride' => true,
+                        'disabledMetrics' => [
+                            METRIC_EXECUTIONS,
+                            METRIC_EXECUTIONS_COMPUTE,
+                            METRIC_EXECUTIONS_MB_SECONDS,
+                            METRIC_NETWORK_REQUESTS,
+                            METRIC_NETWORK_INBOUND,
+                            METRIC_NETWORK_OUTBOUND,
+                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
+                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
+                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
+                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
+                        ],
                         'bannerDisabled' => true,
                         'projectCheckDisabled' => true,
                         'previewAuthDisabled' => true,
@@ -940,7 +962,7 @@ class Builds extends Action
 
                     $logs = $deployment->getAttribute('buildLogs', '');
                     $date = \date('H:i:s');
-                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][37m Screenshot capturing finished. [0m\n";
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
 
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -1176,49 +1198,24 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
-        $key = match($resource->getCollection()) {
-            'functions' => 'functionInternalId',
-            'sites' => 'siteInternalId',
-            default => throw new \Exception('Invalid resource type')
-        };
-
-        $metrics = match($resource->getCollection()) {
-            'functions' => [
-                'builds' => METRIC_FUNCTION_ID_BUILDS,
-                'buildsSuccess' => METRIC_FUNCTION_ID_BUILDS_SUCCESS,
-                'buildsFailed' => METRIC_FUNCTION_ID_BUILDS_FAILED,
-                'buildsComputeSuccess' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS,
-                'buildsComputeFailed' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED,
-                'buildsStorage' => METRIC_FUNCTION_ID_BUILDS_STORAGE,
-                'buildsCompute' => METRIC_FUNCTION_ID_BUILDS_COMPUTE,
-                'buildsMbSeconds' => METRIC_FUNCTION_ID_BUILDS_MB_SECONDS
-            ],
-            'sites' => [
-                'builds' => METRIC_SITES_ID_BUILDS,
-                'buildsSuccess' => METRIC_SITES_ID_BUILDS_SUCCESS,
-                'buildsFailed' => METRIC_SITES_ID_BUILDS_FAILED,
-                'buildsComputeSuccess' => METRIC_SITES_ID_BUILDS_COMPUTE_SUCCESS,
-                'buildsComputeFailed' => METRIC_SITES_ID_BUILDS_COMPUTE_FAILED,
-                'buildsStorage' => METRIC_SITES_ID_BUILDS_STORAGE,
-                'buildsCompute' => METRIC_SITES_ID_BUILDS_COMPUTE,
-                'buildsMbSeconds' => METRIC_SITES_ID_BUILDS_MB_SECONDS
-            ]
-        };
-
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
-                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
@@ -1227,10 +1224,14 @@ class Builds extends Action
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
             ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS), 1) // per function
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -7,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -15,12 +17,18 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Transfer;
+use Utopia\Storage\Compression\Compression;
+use Utopia\Storage\Device;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -88,7 +96,6 @@ App::post('/v1/migrations/appwrite')
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
-
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
@@ -283,6 +290,98 @@ App::post('/v1/migrations/nhost')
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/csv')
+    ->groups(['api', 'migrations'])
+    ->desc('Import documents from a CSV')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        name: 'createCsvMigration',
+        description: '/docs/references/migrations/migration-csv.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('deviceForFiles')
+    ->inject('deviceForImports')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForImports, Event $queueForEvents, Migration $queueForMigrations) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $path = $file->getAttribute('path', '');
+        if (!$deviceForFiles->exists($path)) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+        }
+
+        if (!empty($file->getAttribute('openSSLCipher')) || $file->getAttribute('algorithm', Compression::NONE) !== Compression::NONE) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, "Only uncompressed, unencrypted CSV files can be used for document import.");
+        }
+
+        // copy to temporary folder
+        $migrationId = ID::unique();
+        $newPath = $deviceForImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
+        if (!$deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
+            throw new \Exception("Unable to copy file");
+        }
+
+        $fileSize = $deviceForImports->getFileSize($path);
+        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => CSV::getName(),
+            'destination' => Appwrite::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => [],
+            'resourceData' => [],
+            'errors' => [],
+            'options' => [
+                'path' => $newPath,
+                'size' => $fileSize,
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
             ->trigger();
 
         $response

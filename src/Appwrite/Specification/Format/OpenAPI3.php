@@ -148,7 +148,7 @@ class OpenAPI3 extends Format
                 $method = array_keys($method)[0];
             }
 
-            $desc = $sdk->getDescriptionFilePath();
+            $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
@@ -177,7 +177,7 @@ class OpenAPI3 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc = $desc ?? '';
+            $desc ??= '';
             $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
 
             $temp = [

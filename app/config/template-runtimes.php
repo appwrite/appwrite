@@ -1,5 +1,8 @@
 <?php
 
+// TODO: Remove, replace with runtimes.php directly
+// Used in function templates and site frameworks
+
 return [
     'NODE' => [
         'name' => 'node',

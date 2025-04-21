@@ -80,11 +80,11 @@ class XList extends Base
             return $b['score'] <=> $a['score'];
         });
 
+        $total = \count($templates);
         $templates = \array_slice($templates, $offset, $limit);
-
         $response->dynamic(new Document([
             'templates' => $templates,
-            'total' => \count($templates),
+            'total' => $total,
         ]), Response::MODEL_TEMPLATE_SITE_LIST);
     }
 }

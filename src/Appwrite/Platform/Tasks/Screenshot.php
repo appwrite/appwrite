@@ -147,7 +147,7 @@ class Screenshot extends Action
             'installCommand' => $framework['installCommand'] ?? '',
             'outputDirectory' => $framework['outputDirectory'] ?? '',
             'providerRootDirectory' => $framework['providerRootDirectory'],
-            'timeout' => 60
+            'timeout' => 30
         ]);
 
         if ($site['headers']['status-code'] !== 201) {

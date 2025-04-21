@@ -49,7 +49,7 @@ class SitesCustomClientTest extends Scope
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->assertEquals(1, $templatesOffset['body']['total']);
+        $this->assertCount(1, $templatesOffset['body']['templates']);
         $this->assertEquals($templates['body']['templates'][2]['key'], $templatesOffset['body']['templates'][0]['key']);
 
         // List templates with filters

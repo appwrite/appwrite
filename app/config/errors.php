@@ -546,6 +546,11 @@ return [
         'description' => 'Function runtime could not be detected.',
         'code' => 400,
     ],
+    Exception::FUNCTION_EXECUTE_PERMISSION_MISSING => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_MISSING,
+        'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
+        'code' => 401,
+    ],
 
     /** Sites */
     Exception::SITE_NOT_FOUND => [
@@ -578,6 +583,11 @@ return [
     Exception::BUILD_ALREADY_COMPLETED => [
         'name' => Exception::BUILD_ALREADY_COMPLETED,
         'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
+    Exception::BUILD_CANCELED => [
+        'name' => Exception::BUILD_CANCELED,
+        'description' => 'Build with the requested ID has been canceled.',
         'code' => 400,
     ],
     Exception::BUILD_FAILED => [

@@ -51,6 +51,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('log')
+            ->inject('executor')
             ->inject('isResourceBlocked')
             ->callback([$this, 'action']);
     }
@@ -65,6 +66,7 @@ class Functions extends Action
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         Log $log,
+        Executor $executor,
         callable $isResourceBlocked
     ): void {
         $payload = $message->getPayload() ?? [];
@@ -156,6 +158,7 @@ class Functions extends Action
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
+                        executor:  $executor,
                         trigger: 'event',
                         path: '/',
                         method: 'POST',
@@ -198,6 +201,7 @@ class Functions extends Action
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'http',
                     path: $path,
                     method: $method,
@@ -222,6 +226,7 @@ class Functions extends Action
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
+                    executor:  $executor,
                     trigger: 'schedule',
                     path: $path,
                     method: $method,
@@ -308,6 +313,7 @@ class Functions extends Action
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
+     * @param Executor $executor
      * @param string $trigger
      * @param string $path
      * @param string $method
@@ -334,6 +340,7 @@ class Functions extends Action
         Event $queueForEvents,
         Document $project,
         Document $function,
+        Executor $executor,
         string $trigger,
         string $path,
         string $method,
@@ -512,7 +519,6 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -565,11 +571,14 @@ class Functions extends Action
             $queueForStatsUsage
                 ->setProject($project)
                 ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
                 ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
                 ->trigger()
             ;
         }

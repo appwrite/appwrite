@@ -9,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -56,6 +55,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -65,7 +65,8 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Document $project,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Executor $executor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -83,7 +84,7 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartAt'));
+        $startTime = new \DateTime($deployment->getAttribute('buildStartAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
@@ -99,7 +100,6 @@ class Update extends Action
         }
 
         try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
         } catch (\Throwable $th) {
             // Don't throw if the deployment doesn't exist
