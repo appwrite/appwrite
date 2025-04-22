@@ -1,0 +1,88 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Projects\Http\DevKeys;
+
+use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\DevKeys;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
+
+class XList extends Action
+{
+    use HTTP;
+    public static function getName()
+    {
+        return 'listDevKeys';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+            ->setHttpPath('/v1/projects/:projectId/dev-keys')
+            ->desc('List dev keys')
+            ->groups(['api', 'projects'])
+            ->label('scope', 'projects.read')
+            ->label('sdk', new Method(
+                namespace: 'projects',
+                name: 'listDevKeys',
+                description: <<<EOT
+                List all the project\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'
+                EOT,
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_DEV_KEY_LIST
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
+            ->param('queries', [], new DevKeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', DevKeys::ALLOWED_ATTRIBUTES), true)
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->inject('response')
+            ->inject('dbForPlatform')
+            ->callback([$this, 'action']);
+    }
+
+    public function action(string $projectId, ?array $queries, ?string $search, Response $response, Database $dbForPlatform)
+    {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
+
+        $keys = $dbForPlatform->find('devKeys', $queries);
+
+        $response->dynamic(new Document([
+            'devKeys' => $keys,
+            'total' => count($keys),
+        ]), Response::MODEL_DEV_KEY_LIST);
+    }
+}

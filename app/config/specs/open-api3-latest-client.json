@@ -4763,7 +4763,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 384,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4837,7 +4837,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 382,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4951,7 +4951,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 383,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
