@@ -12,8 +12,8 @@ const response = await databases.updateIntegerAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    null, // min
-    null, // max
     null, // default
+    null, // min (optional)
+    null, // max (optional)
     '' // newKey (optional)
 );

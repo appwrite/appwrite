@@ -14,8 +14,8 @@ result = databases.update_float_attribute(
     collection_id: '<COLLECTION_ID>',
     key: '',
     required: false,
-    min: null,
-    max: null,
     default: null,
+    min: null, # optional
+    max: null, # optional
     new_key: '' # optional
 )

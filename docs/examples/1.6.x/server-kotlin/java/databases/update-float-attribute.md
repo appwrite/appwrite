@@ -14,9 +14,9 @@ databases.updateFloatAttribute(
     "<COLLECTION_ID>", // collectionId
     "", // key
     false, // required
-    0, // min
-    0, // max
     0, // default
+    0, // min (optional)
+    0, // max (optional)
     "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
