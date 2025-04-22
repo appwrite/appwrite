@@ -1,7 +1,6 @@
 mutation {
     accountDeleteMfaAuthenticator(
-        type: "totp",
-        otp: "<OTP>"
+        type: "totp"
     ) {
         status
     }

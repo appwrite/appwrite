@@ -12,9 +12,9 @@ let attributeFloat = try await databases.updateFloatAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    min: 0,
-    max: 0,
     default: 0,
+    min: 0, // optional
+    max: 0, // optional
     newKey: "" // optional
 )
 

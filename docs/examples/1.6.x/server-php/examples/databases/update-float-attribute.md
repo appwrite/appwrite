@@ -15,8 +15,8 @@ $result = $databases->updateFloatAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     required: false,
-    min: null,
-    max: null,
     default: null,
+    min: null, // optional
+    max: null, // optional
     newKey: '' // optional
 );

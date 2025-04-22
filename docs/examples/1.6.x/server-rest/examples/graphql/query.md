@@ -1,5 +1,5 @@
 POST /v1/graphql HTTP/1.1
-Host: cloud.appwrite.io
+Host: &lt;REGION&gt;.cloud.appwrite.io
 X-Sdk-Graphql: true
 Content-Type: application/json
 X-Appwrite-Response-Format: 1.6.0

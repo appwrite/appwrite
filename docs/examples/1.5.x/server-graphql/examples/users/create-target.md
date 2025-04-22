@@ -15,5 +15,6 @@ mutation {
         providerId
         providerType
         identifier
+        expired
     }
 }

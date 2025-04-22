@@ -13,8 +13,8 @@ result = databases.update_integer_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    min = None,
-    max = None,
     default = None,
+    min = None, # optional
+    max = None, # optional
     new_key = '' # optional
 )

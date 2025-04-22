@@ -12,8 +12,8 @@ AttributeInteger result = await databases.updateIntegerAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     xrequired: false,
-    min: 0,
-    max: 0,
     xdefault: 0,
+    min: 0, // (optional)
+    max: 0, // (optional)
     newKey: '', // (optional)
 );
