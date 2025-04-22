@@ -4560,7 +4560,7 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://example.com'
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']['message']);
+        $this->assertStringContainsString('Invalid `success` param: URL host must be one of: localhost, appwrite.io, *.appwrite.io', $response['body']);
 
         /** Test oauth2 with devKey and now get oauth2 is disabled */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
