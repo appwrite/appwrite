@@ -5,13 +5,12 @@ use Appwrite\Services\Account;
 use Appwrite\Enums\AuthenticatorType;
 
 $client = (new Client())
-    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    ->setProject('5df5acd0d48c2') // Your project ID
+    ->setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setSession(''); // The user session to authenticate with
 
 $account = new Account($client);
 
 $result = $account->deleteMfaAuthenticator(
-    type: AuthenticatorType::TOTP(),
-    otp: '<OTP>'
+    type: AuthenticatorType::TOTP()
 );

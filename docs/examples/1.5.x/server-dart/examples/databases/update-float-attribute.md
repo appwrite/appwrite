@@ -1,9 +1,9 @@
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
 
 Databases databases = Databases(client);
 
@@ -12,7 +12,8 @@ AttributeFloat result = await databases.updateFloatAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     xrequired: false,
-    min: 0,
-    max: 0,
     xdefault: 0,
+    min: 0, // (optional)
+    max: 0, // (optional)
+    newKey: '', // (optional)
 );
