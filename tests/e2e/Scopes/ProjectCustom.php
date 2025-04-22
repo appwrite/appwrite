@@ -103,7 +103,9 @@ trait ProjectCustom
                 'subscribers.write',
                 'subscribers.read',
                 'migrations.write',
-                'migrations.read'
+                'migrations.read',
+                'tokens.read',
+                'tokens.write',
             ],
         ]);
 
