@@ -8136,7 +8136,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 368,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8209,7 +8209,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 365,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8440,7 +8440,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 370,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8489,7 +8489,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 371,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8539,7 +8539,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 366,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8598,7 +8598,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 367,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8826,7 +8826,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 369,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8887,7 +8887,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
-                    "weight": 374,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8967,7 +8967,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 375,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9050,7 +9050,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 372,
+                    "weight": 377,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -9146,7 +9146,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 380,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9231,7 +9231,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 377,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9334,7 +9334,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 378,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9431,7 +9431,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 373,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9493,7 +9493,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 376,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9557,7 +9557,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 379,
+                    "weight": 384,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -9647,7 +9647,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 381,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9718,7 +9718,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 384,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9794,7 +9794,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 382,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9910,7 +9910,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 383,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9976,7 +9976,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
-                    "weight": 385,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10047,7 +10047,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 390,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10106,7 +10106,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 388,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10197,7 +10197,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 389,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10266,7 +10266,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 391,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10357,7 +10357,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 392,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16691,7 +16691,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 397,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16761,7 +16761,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 395,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17007,7 +17007,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFrameworks",
-                    "weight": 400,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17056,7 +17056,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 423,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17106,7 +17106,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 396,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17165,7 +17165,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 398,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17407,7 +17407,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 399,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17468,7 +17468,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
-                    "weight": 406,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17548,7 +17548,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 405,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17631,7 +17631,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 401,
+                    "weight": 406,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -17732,7 +17732,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 409,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17812,7 +17812,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 402,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17915,7 +17915,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 403,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18013,7 +18013,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 404,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18075,7 +18075,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 407,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18139,7 +18139,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 408,
+                    "weight": 413,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -18229,7 +18229,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 410,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18300,7 +18300,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 412,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18371,7 +18371,7 @@
                 },
                 "x-appwrite": {
                     "method": "getLog",
-                    "weight": 411,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18433,7 +18433,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteLog",
-                    "weight": 413,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18504,7 +18504,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 416,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18563,7 +18563,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 414,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18654,7 +18654,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 415,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18723,7 +18723,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 417,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18814,7 +18814,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 418,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
