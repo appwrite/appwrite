@@ -183,13 +183,15 @@ return [
         'variables' => []
     ],
     [
-        'key' => 'lynx-starter',
-        'name' => 'Lynx Starter',
-        'tagline' => 'Sample application built with Lynx, a cross-platform framework focused on performance.',
+        'key' => 'playground-for-lynx',
+        'name' => 'Lynx playground',
+        'tagline' => 'A basic Lynx website without Appwrite SDK integration.',
+        // When we add Lynx with Appwrite SDK, use following tagline for it:
+        // 'tagline' => 'Sample application built with Lynx, a cross-platform framework focused on performance.',
         'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
-        'screenshotDark' => $url . '/images/sites/templates/lynx-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/lynx-starter-light.png',
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-lynx-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-lynx-light.png',
         'frameworks' => [
             getFramework('LYNX', [
                 'providerRootDirectory' => './lynx/starter',
@@ -1108,15 +1110,14 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => []
     ],
-    // TODO: Remove astro starter eventually, or add all frameworks's starters
     [
-        'key' => 'astro-starter',
-        'name' => 'Astro starter',
-        'tagline' => 'Sample application built with Astro, a content-driven web framework.',
+        'key' => 'playground-for-astro',
+        'name' => 'Astro playground',
+        'tagline' => 'A basic Astro website without Appwrite SDK integration.',
         'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
-        'screenshotDark' => $url . '/images/sites/templates/astro-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/astro-starter-light.png',
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-astro-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-astro-light.png',
         'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
@@ -1125,17 +1126,17 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
-        'key' => 'remix-starter',
-        'name' => 'Remix starter',
-        'tagline' => 'Sample application built with Remix, a React meta-framework.',
+        'key' => 'playground-for-remix',
+        'name' => 'Remix playground',
+        'tagline' => 'A basic Remix website without Appwrite SDK integration.',
         'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'useCases' => [UseCases::STARTER],
-        'screenshotDark' => $url . '/images/sites/templates/remix-starter-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/remix-starter-light.png',
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-remix-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-remix-light.png',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
@@ -1144,7 +1145,201 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-nextjs',
+        'name' => 'Next.js playground',
+        'tagline' => 'A basic Next.js website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-nextjs-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-nextjs-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-flutter',
+        'name' => 'Flutter playground',
+        'tagline' => 'A basic Flutter website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-flutter-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-flutter-light.png',
+        'frameworks' => [
+            getFramework('FLUTTER', [
+                'providerRootDirectory' => './flutter/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-vite',
+        'name' => 'Vite playground',
+        'tagline' => 'A basic Vite website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-vite-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-vite-light.png',
+        'frameworks' => [
+            getFramework('VITE', [
+                'providerRootDirectory' => './vite/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-angular',
+        'name' => 'Angular playground',
+        'tagline' => 'A basic Angular website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-angular-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-angular-light.png',
+        'frameworks' => [
+            getFramework('ANGULAR', [
+                'providerRootDirectory' => './angular/starter',
+                 'outputDirectory' => './dist/starter/browser',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-analog',
+        'name' => 'Analog playground',
+        'tagline' => 'A basic Analog website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-analog-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-analog-light.png',
+        'frameworks' => [
+            getFramework('ANALOG', [
+                'providerRootDirectory' => './analog/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-svelte',
+        'name' => 'Svelte playground',
+        'tagline' => 'A basic Svelte website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-svelte-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-svelte-light.png',
+        'frameworks' => [
+            getFramework('SVELTEKIT', [
+                'providerRootDirectory' => './sveltekit/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+
+    [
+        'key' => 'playground-for-react',
+        'name' => 'React playground',
+        'tagline' => 'A basic React website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-react-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-react-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'outputDirectory' => './build',
+                'providerRootDirectory' => './react/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+
+    [
+        'key' => 'playground-for-vue',
+        'name' => 'Vue playground',
+        'tagline' => 'A basic Vue website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-vue-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-vue-light.png',
+        'frameworks' => [
+            getFramework('VUE', [
+                'providerRootDirectory' => './vue/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-nuxt',
+        'name' => 'Nuxt playground',
+        'tagline' => 'A basic Nuxt website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-nuxt-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-nuxt-light.png',
+        'frameworks' => [
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-react-native',
+        'name' => 'React Native playground',
+        'tagline' => 'A basic React Native website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-react-native-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-react-native-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react-native/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
 ];
