@@ -1,4 +1,6 @@
 <?php
+use Utopia\System\System;
+
 $development = $this->getParam('development', false);
 $type = $this->getParam('type', 'general_server_error');
 $code = $this->getParam('code', 500);
@@ -11,6 +13,15 @@ $isSimpleMessage = true;
 $label = '';
 $labelClass = '';
 $buttons = [];
+
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+$hostname = System::getEnv('_APP_DOMAIN');
+// TODO: remove this later
+if (System::getEnv('_APP_ENV') === 'development') {
+    $hostname = 'localhost';
+}
+
+$url = $protocol . '://' . $hostname;
 
 if($exception !== null && method_exists($exception, 'getCTAs')) {
     foreach ($exception->getCTAs() as $index => $cta) {
@@ -94,8 +105,8 @@ switch ($type) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <link rel="icon" type="image/svg+xml" href="/images/logos/appwrite-icon.svg" />
-    <link rel="mask-icon" type="image/png" href="/console/logos/appwrite-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="<?php echo $url; ?>/images/logos/appwrite-icon.svg" />
+    <link rel="mask-icon" type="image/png" href="<?php echo $url; ?>/images/logos/appwrite-icon.png" />
     <link
         rel="preload"
         href="/fonts/inter/inter-v8-latin-600.woff2"
