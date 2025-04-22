@@ -6,7 +6,7 @@ return [
     Specification::S_05VCPU_512MB => [
         'slug' => Specification::S_05VCPU_512MB,
         'memory' => 512,
-        'cpus' => 1 // TODO: revert this, it's a temporary change to test function performance.
+        'cpus' => 0.5
     ],
     Specification::S_1VCPU_512MB => [
         'slug' => Specification::S_1VCPU_512MB,

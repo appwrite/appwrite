@@ -5,4 +5,5 @@ appwrite databases updateFloatAttribute \
         --required false \
         --min null \
         --max null \
-        --default null
+        --default null \
+

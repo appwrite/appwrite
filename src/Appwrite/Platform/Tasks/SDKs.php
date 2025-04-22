@@ -25,6 +25,9 @@ use Appwrite\Spec\Swagger2;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class SDKs extends Action
 {
@@ -37,23 +40,35 @@ class SDKs extends Action
     {
         $this
             ->desc('Generate Appwrite SDKs')
-            ->callback(fn () => $this->action());
+            ->param('platform', null, new Nullable(new Text(256)), 'Selected Platform', optional: true)
+            ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
+            ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
+            ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
+            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
+            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
+            ->callback([$this, 'action']);
     }
 
-    public function action(): void
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
     {
-        $platforms = Config::getParam('platforms');
-        $selectedPlatform = Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
-        $selectedSDK = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
-        $version = Console::confirm('Choose an Appwrite version');
-        $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
-        $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
-        $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
+        $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+        $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $version ??= Console::confirm('Choose an Appwrite version');
+
+        $git ??= Console::confirm('Should we use git push? (yes/no)');
+        $git = $git === 'yes';
+
+        if ($git) {
+            $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
+            $production = $production === 'Appwrite';
+            $message ??= Console::confirm('Please enter your commit message:');
+        }
 
         if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', 'latest'])) {
             throw new \Exception('Unknown version given');
         }
 
+        $platforms = Config::getParam('platforms');
         foreach ($platforms as $key => $platform) {
             if ($selectedPlatform !== $key && $selectedPlatform !== '*') {
                 continue;
@@ -260,9 +275,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
-                        git init --initial-branch=' . $gitBranch . ' && \
+                        git init && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch origin ' . $gitBranch . ' && \
+                        git fetch origin && \
+                        git checkout main || git checkout -b main && \
+                        git pull origin main && \
+                        git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
+                        git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
                         cp -r ' . $result . '/. ' . $target . '/ && \

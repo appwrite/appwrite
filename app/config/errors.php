@@ -349,11 +349,6 @@ return [
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::TEAM_INVITE_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'User has already been invited or is already a member of this team',
-        'code' => 409,
-    ],
     Exception::TEAM_INVITE_NOT_FOUND => [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
         'description' => 'The requested team invitation could not be found.',
@@ -361,7 +356,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
+        'description' => 'The team invitation secret is invalid. Please request a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -598,6 +593,11 @@ return [
         'description' => 'Database timed out. Try adjusting your queries or adding an index.',
         'code' => 408
     ],
+    Exception::DATABASE_QUERY_ORDER_NULL => [
+        'name' => Exception::DATABASE_QUERY_ORDER_NULL,
+        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'code' => 400,
+    ],
 
     /** Collections */
     Exception::COLLECTION_NOT_FOUND => [
@@ -686,7 +686,7 @@ return [
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of attributes has been reached.',
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
@@ -730,6 +730,11 @@ return [
         'name' => Exception::INDEX_INVALID,
         'description' => 'Index invalid.',
         'code' => 400,
+    ],
+    Exception::INDEX_DEPENDENCY => [
+        'name' => Exception::INDEX_DEPENDENCY,
+        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'code' => 409,
     ],
 
     /** Project Errors */

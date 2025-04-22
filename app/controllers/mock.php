@@ -24,7 +24,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('docs', false)
-    ->label('sdk.mock', true)
+    ->label('mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
@@ -40,7 +40,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('docs', false)
-    ->label('sdk.mock', true)
+    ->label('mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('grant_type', 'authorization_code', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
@@ -162,15 +162,15 @@ App::post('/v1/mock/api-key-unprefixed')
     ->label('docs', false)
     ->param('projectId', '', new UID(), 'Project ID.')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
         }
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -195,9 +195,9 @@ App::post('/v1/mock/api-key-unprefixed')
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForConsole->createDocument('keys', $key);
+        $key = $dbForPlatform->createDocument('keys', $key);
 
-        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -214,15 +214,15 @@ App::get('/v1/mock/github/callback')
     ->inject('gitHub')
     ->inject('project')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
         }
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             $error = 'Project with the ID from state could not be found.';
@@ -256,7 +256,7 @@ App::get('/v1/mock/github/callback')
                 'personal' => false
             ]);
 
-            $installation = $dbForConsole->createDocument('installations', $installation);
+            $installation = $dbForPlatform->createDocument('installations', $installation);
         }
 
         $response->json([

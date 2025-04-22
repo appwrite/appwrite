@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
-use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -46,31 +47,43 @@ class Builds extends Action
         $this
             ->desc('Builds worker')
             ->inject('message')
-            ->inject('dbForConsole')
+            ->inject('project')
+            ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
-            ->inject('queueForUsage')
+            ->inject('queueForRealtime')
+            ->inject('queueForStatsUsage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
+            ->inject('isResourceBlocked')
             ->inject('log')
-            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->inject('executor')
+            ->inject('plan')
+            ->callback(fn ($message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log, Executor $executor, array $plan) =>
+                $this->action($message, $project, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $usage, $cache, $dbForProject, $deviceForFunctions, $isResourceBlocked, $log, $executor, $plan));
     }
 
     /**
      * @param Message $message
-     * @param Database $dbForConsole
+     * @param Document $project
+     * @param Database $dbForPlatform
      * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
-     * @param Usage $queueForUsage
+     * @param Realtime $queueForRealtime
+     * @param StatsUsage $queueForStatsUsage
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
      * @param Log $log
+     * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, callable $isResourceBlocked, Log $log, Executor $executor, array $plan): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -79,7 +92,6 @@ class Builds extends Action
         }
 
         $type = $payload['type'] ?? '';
-        $project = new Document($payload['project'] ?? []);
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
@@ -92,7 +104,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForEvents, $queueForStatsUsage, $dbForPlatform, $dbForProject, $github, $project, $resource, $deployment, $template, $isResourceBlocked, $log, $executor, $plan);
                 break;
 
             default:
@@ -102,10 +114,12 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
-     * @param Usage $queueForUsage
-     * @param Database $dbForConsole
+     * @param StatsUsage $queueForStatsUsage
+     * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param GitHub $github
      * @param Document $project
@@ -113,20 +127,24 @@ class Builds extends Action
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
+     * @param Executor $executor
+     * @param array $plan
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Event $queueForEvents, StatsUsage $queueForStatsUsage, Database $dbForPlatform, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, callable $isResourceBlocked, Log $log, Executor $executor, array $plan): void
     {
-        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
-
         $functionId = $function->getId();
         $log->addTag('functionId', $function->getId());
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new \Exception('Function not found', 404);
+            throw new \Exception('Function not found');
+        }
+
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
+            throw new \Exception('Function blocked');
         }
 
         $deploymentId = $deployment->getId();
@@ -134,15 +152,15 @@ class Builds extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found', 404);
+            throw new \Exception('Deployment not found');
         }
 
         if (empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
+            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $function->getAttribute('version', 'v2');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
@@ -151,10 +169,7 @@ class Builds extends Action
         }
 
         // Realtime preparation
-        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId()
-        ]);
+        $event = "functions.[functionId].deployments.[deploymentId].update";
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
@@ -199,7 +214,7 @@ class Builds extends Action
         $repositoryName = '';
 
         if ($isVcsEnabled) {
-            $installation = $dbForConsole->getDocument('installations', $installationId);
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
@@ -209,8 +224,7 @@ class Builds extends Action
 
         try {
             if ($isNewBuild && !$isVcsEnabled) {
-                // Non-vcs+Template
-
+                // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
                 $templateVersion = $template->getAttribute('version', '');
@@ -232,6 +246,8 @@ class Builds extends Action
                     if ($exit !== 0) {
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
+
+                    Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                     // Ensure directories
                     Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
@@ -367,21 +383,16 @@ class Builds extends Action
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                     /**
-                     * Send realtime Event
+                     * Trigger Realtime Event
                      */
-                    $target = Realtime::fromPayload(
-                        // Pass first, most verbose event pattern
-                        event: $allEvents[0],
-                        payload: $build,
-                        project: $project
-                    );
-                    Realtime::send(
-                        projectId: 'console',
-                        payload: $build->getArrayCopy(),
-                        events: $allEvents,
-                        channels: $target['channels'],
-                        roles: $target['roles']
-                    );
+                    $queueForRealtime
+                        ->setProject($project)
+                        ->setSubscribers(['console'])
+                        ->setEvent($event)
+                        ->setParam('functionId', $function->getId())
+                        ->setParam('deploymentId', $deployment->getId())
+                        ->setPayload($build->getArrayCopy())
+                        ->trigger();
                 }
 
                 $tmpPath = '/tmp/builds/' . $buildId;
@@ -393,10 +404,18 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
+
                 $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                if ($directorySize > $functionsSizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+
+                if (isset($plan['functionSize'])) {
+                    $functionsSizeLimit = (int) $plan['functionSize'] * 1000 * 1000;
                 }
+
+                if ($directorySize > $functionsSizeLimit) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / (1000 * 1000), 2) . ' MBs.');
+                }
+
+                Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
                 Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
@@ -415,7 +434,7 @@ class Builds extends Action
                 $directorySize = $deviceForFunctions->getFileSize($source);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             /** Request the executor to build the code... */
@@ -423,43 +442,37 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
-            /** Trigger Webhook */
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                    ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
                     ->setEvent('functions.[functionId].deployments.[deploymentId].update')
                     ->setParam('functionId', $function->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
-            $deploymentUpdate->trigger();
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($deploymentUpdate)
+                ->trigger();
 
             /** Trigger Functions */
             $queueForFunctions
                 ->from($deploymentUpdate)
                 ->trigger();
 
-            /** Trigger Realtime */
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $build,
-                project: $project
-            );
-
-            Realtime::send(
-                projectId: 'console',
-                payload: $build->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            /** Trigger Realtime Event */
+            $queueForRealtime
+                ->setProject($project)
+                ->setSubscribers(['console'])
+                ->setEvent($event)
+                ->setParam('functionId', $function->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($build->getArrayCopy())
+                ->trigger();
 
             $vars = [];
 
@@ -552,12 +565,12 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
+                Co\go(function () use ($executor, $project, $function, $deployment, &$response, &$build, $dbForProject, $event, &$err, $queueForRealtime, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $event, $project, $function, $deployment, $queueForRealtime, &$isCanceled) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -567,7 +580,7 @@ class Builds extends Action
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
-                                        throw new \Exception('Build not found', 404);
+                                        throw new \Exception('Build not found');
                                     }
 
                                     if ($build->getAttribute('status') === 'canceled') {
@@ -582,21 +595,16 @@ class Builds extends Action
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
-                                     * Send realtime Event
+                                     * Trigger Realtime Event
                                      */
-                                    $target = Realtime::fromPayload(
-                                        // Pass first, most verbose event pattern
-                                        event: $allEvents[0],
-                                        payload: $build,
-                                        project: $project
-                                    );
-                                    Realtime::send(
-                                        projectId: 'console',
-                                        payload: $build->getArrayCopy(),
-                                        events: $allEvents,
-                                        channels: $target['channels'],
-                                        roles: $target['roles']
-                                    );
+                                    $queueForRealtime
+                                        ->setProject($project)
+                                        ->setSubscribers(['console'])
+                                        ->setEvent($event)
+                                        ->setParam('functionId', $function->getId())
+                                        ->setParam('deploymentId', $deployment->getId())
+                                        ->setPayload($build->getArrayCopy())
+                                        ->trigger();
                                 }
                             }
                         );
@@ -621,8 +629,11 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            if (isset($plan['buildSize'])) {
+                $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
+            }
             if ($response['size'] > $buildSizeLimit) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             /** Update the build document */
@@ -637,7 +648,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
 
             Console::success("Build id: $buildId created");
@@ -658,12 +669,12 @@ class Builds extends Action
             /** Update function schedule */
 
             // Inform scheduler if function is still active
-            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
             $schedule
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -680,42 +691,37 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForPlatform);
             }
         } finally {
             /**
-             * Send realtime Event
+             * Trigger Realtime Event
              */
-            $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
-                event: $allEvents[0],
-                payload: $build,
-                project: $project
-            );
-            Realtime::send(
-                projectId: 'console',
-                payload: $build->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            $queueForRealtime
+                ->setProject($project)
+                ->setSubscribers(['console'])
+                ->setEvent($event)
+                ->setParam('functionId', $function->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($build->getArrayCopy())
+                ->trigger();
 
             /** Trigger usage queue */
             if ($build->getAttribute('status') === 'ready') {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
             } elseif ($build->getAttribute('status') === 'failed') {
-                $queueForUsage
+                $queueForStatsUsage
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
             }
 
-            $queueForUsage
+            $queueForStatsUsage
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
@@ -739,7 +745,7 @@ class Builds extends Action
      * @param Document $function
      * @param string $deploymentId
      * @param Database $dbForProject
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @return void
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -747,7 +753,7 @@ class Builds extends Action
      * @throws Conflict
      * @throws Restricted
      */
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForPlatform): void
     {
         if ($function->getAttribute('providerSilentMode', false) === true) {
             return;
@@ -792,7 +798,7 @@ class Builds extends Action
                 $retries++;
 
                 try {
-                    $dbForConsole->createDocument('vcsCommentLocks', new Document([
+                    $dbForPlatform->createDocument('vcsCommentLocks', new Document([
                         '$id' => $commentId
                     ]));
                     break;
@@ -812,7 +818,7 @@ class Builds extends Action
                 $comment->addBuild($project, $function, $status, $deployment->getId(), ['type' => 'logs']);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
-                $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
+                $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
     }

@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.services.storage import Storage
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint

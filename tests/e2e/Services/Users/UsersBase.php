@@ -310,6 +310,22 @@ trait UsersBase
         $this->assertNotEmpty($session['secret']);
         $this->assertNotEmpty($session['expire']);
         $this->assertEquals('server', $session['provider']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['secret']
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
 

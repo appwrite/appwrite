@@ -26,5 +26,8 @@ $result = $messaging->updatePush(
     tag: '<TAG>', // optional
     badge: null, // optional
     draft: false, // optional
-    scheduledAt: '' // optional
+    scheduledAt: '', // optional
+    contentAvailable: false, // optional
+    critical: false, // optional
+    priority: MessagePriority::NORMAL() // optional
 );

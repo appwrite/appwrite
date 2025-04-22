@@ -4,8 +4,8 @@ namespace Appwrite\Event;
 
 use InvalidArgumentException;
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 
 class Event
 {
@@ -24,11 +24,11 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
-    public const USAGE_QUEUE_NAME = 'v1-usage';
-    public const USAGE_CLASS_NAME = 'UsageV1';
+    public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
+    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
 
-    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
-    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+    public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
+    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
@@ -58,11 +58,29 @@ class Event
     protected bool $paused = false;
 
     /**
-     * @param Connection $connection
+     * @param Publisher $publisher
      * @return void
      */
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Publisher $publisher)
     {
+    }
+
+    /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
     }
 
     /**
@@ -119,7 +137,6 @@ class Event
     public function setProject(Document $project): self
     {
         $this->project = $project;
-
         return $this;
     }
 
@@ -295,6 +312,27 @@ class Event
     }
 
     /**
+     * Get trimmed values for sensitive/large payload fields.
+     * Override this method in child classes to add more fields to trim.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+                '$internalId' => $this->project->getInternalId(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -302,16 +340,35 @@ class Event
      */
     public function trigger(): string|bool
     {
-        $client = new Client($this->queue, $this->connection);
 
-        return $client->enqueue([
+        if ($this->paused) {
+            return false;
+        }
+
+        /** The getter is required since events like Databases need to override the queue name depending on the project */
+        $queue = new Queue($this->getQueue());
+
+        // Merge the base payload with any trimmed values
+        $payload = array_merge($this->preparePayload(), $this->trimPayload());
+
+        return $this->publisher->enqueue($queue, $payload);
+    }
+
+    /**
+     * Prepare payload for queue. Can be overridden by child classes to customize payload.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 
     /**

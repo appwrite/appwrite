@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.6.0",
+        "version": "1.6.2",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -43,7 +43,8 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 8,
+                    "group": "account",
+                    "weight": 9,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -58,9 +59,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -94,7 +92,8 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 7,
+                    "group": "account",
+                    "weight": 8,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -109,9 +108,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -166,7 +162,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\r\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\r\n",
+                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\n",
                 "responses": {
                     "200": {
                         "description": "User",
@@ -181,7 +177,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 33,
+                    "group": "account",
+                    "weight": 34,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -196,9 +193,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -259,7 +253,8 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
-                    "weight": 56,
+                    "group": "identities",
+                    "weight": 57,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -274,9 +269,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/identities",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -320,7 +312,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
-                    "weight": 57,
+                    "group": "identities",
+                    "weight": 58,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -335,9 +328,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -385,7 +375,8 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "weight": 28,
+                    "group": "tokens",
+                    "weight": 29,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -400,9 +391,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -436,7 +424,8 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 30,
+                    "group": "logs",
+                    "weight": 31,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -451,9 +440,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -504,7 +490,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMFA",
-                    "weight": 43,
+                    "group": "mfa",
+                    "weight": 44,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -519,9 +506,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -576,7 +560,8 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
-                    "weight": 45,
+                    "group": "mfa",
+                    "weight": 46,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -591,9 +576,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -624,7 +606,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify authenticator",
+                "summary": "Update authenticator (confirmation)",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -644,7 +626,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
-                    "weight": 46,
+                    "group": "mfa",
+                    "weight": 47,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -659,9 +642,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -724,7 +704,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
-                    "weight": 50,
+                    "group": "mfa",
+                    "weight": 51,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -739,9 +720,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -794,7 +772,8 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaChallenge",
-                    "weight": 51,
+                    "group": "mfa",
+                    "weight": 52,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -809,9 +788,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -850,17 +826,17 @@
                 }
             },
             "put": {
-                "summary": "Create MFA challenge (confirmation)",
+                "summary": "Update MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "tags": [
                     "account"
                 ],
                 "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                 "responses": {
-                    "204": {
-                        "description": "No content",
+                    "200": {
+                        "description": "Session",
                         "content": {
-                            "": {
+                            "application\/json": {
                                 "schema": {
                                     "$ref": "#\/components\/schemas\/session"
                                 }
@@ -870,7 +846,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
-                    "weight": 52,
+                    "group": "mfa",
+                    "weight": 53,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -885,9 +862,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -948,7 +922,8 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
-                    "weight": 44,
+                    "group": "mfa",
+                    "weight": 45,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -963,9 +938,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -981,7 +953,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA recovery codes",
+                "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1001,7 +973,8 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
-                    "weight": 49,
+                    "group": "mfa",
+                    "weight": 50,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1016,9 +989,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1052,7 +1022,8 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
-                    "weight": 47,
+                    "group": "mfa",
+                    "weight": 48,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1067,9 +1038,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1083,7 +1051,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1103,7 +1071,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
-                    "weight": 48,
+                    "group": "mfa",
+                    "weight": 49,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1118,9 +1087,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1156,7 +1122,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 31,
+                    "group": "account",
+                    "weight": 32,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1171,9 +1138,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1228,7 +1192,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
-                    "weight": 32,
+                    "group": "account",
+                    "weight": 33,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1243,9 +1208,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1305,7 +1267,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
-                    "weight": 34,
+                    "group": "account",
+                    "weight": 35,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1320,9 +1283,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1383,7 +1343,8 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 29,
+                    "group": "account",
+                    "weight": 30,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1398,9 +1359,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1434,7 +1392,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 35,
+                    "group": "account",
+                    "weight": 36,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1449,9 +1408,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/prefs",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1506,7 +1462,8 @@
                 },
                 "x-appwrite": {
                     "method": "createRecovery",
-                    "weight": 37,
+                    "group": "recovery",
+                    "weight": 38,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1524,9 +1481,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1565,12 +1519,12 @@
                 }
             },
             "put": {
-                "summary": "Create password recovery (confirmation)",
+                "summary": "Update password recovery (confirmation)",
                 "operationId": "accountUpdateRecovery",
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
+                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
                 "responses": {
                     "200": {
                         "description": "Token",
@@ -1585,7 +1539,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateRecovery",
-                    "weight": 38,
+                    "group": "recovery",
+                    "weight": 39,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1600,9 +1555,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1669,7 +1621,8 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
-                    "weight": 10,
+                    "group": "sessions",
+                    "weight": 11,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1684,9 +1637,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1713,7 +1663,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
-                    "weight": 11,
+                    "group": "sessions",
+                    "weight": 12,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1728,9 +1679,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1766,7 +1714,8 @@
                 },
                 "x-appwrite": {
                     "method": "createAnonymousSession",
-                    "weight": 16,
+                    "group": "sessions",
+                    "weight": 17,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1781,9 +1730,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1802,7 +1748,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Session",
@@ -1817,7 +1763,8 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
-                    "weight": 15,
+                    "group": "sessions",
+                    "weight": 16,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1832,9 +1779,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1893,7 +1837,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
-                    "weight": 25,
+                    "group": "sessions",
+                    "weight": 26,
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
@@ -1908,9 +1853,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1954,7 +1896,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\r\n\r\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\n\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "301": {
                         "description": "File"
@@ -1962,7 +1904,8 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Session",
-                    "weight": 18,
+                    "group": "sessions",
+                    "weight": 19,
                     "cookies": false,
                     "type": "webAuth",
                     "deprecated": false,
@@ -1977,9 +1920,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -1992,7 +1932,7 @@
                 "parameters": [
                     {
                         "name": "provider",
-                        "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, auth0, authentik, autodesk, bitbucket, bitly, box, dailymotion, discord, disqus, dropbox, etsy, facebook, github, gitlab, google, linkedin, microsoft, notion, oidc, okta, paypal, paypalSandbox, podio, salesforce, slack, spotify, stripe, tradeshift, tradeshiftBox, twitch, wordpress, yahoo, yammer, yandex, zoho, zoom.",
+                        "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, auth0, authentik, autodesk, bitbucket, bitly, box, dailymotion, discord, disqus, dropbox, etsy, facebook, figma, github, gitlab, google, linkedin, microsoft, notion, oidc, okta, paypal, paypalSandbox, podio, salesforce, slack, spotify, stripe, tradeshift, tradeshiftBox, twitch, wordpress, yahoo, yammer, yandex, zoho, zoom.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -2012,6 +1952,7 @@
                                 "dropbox",
                                 "etsy",
                                 "facebook",
+                                "figma",
                                 "github",
                                 "gitlab",
                                 "google",
@@ -2105,7 +2046,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneSession",
-                    "weight": 26,
+                    "group": "sessions",
+                    "weight": 27,
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
@@ -2120,9 +2062,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2181,7 +2120,8 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
-                    "weight": 17,
+                    "group": "sessions",
+                    "weight": 18,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2196,9 +2136,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2257,7 +2194,8 @@
                 },
                 "x-appwrite": {
                     "method": "getSession",
-                    "weight": 12,
+                    "group": "sessions",
+                    "weight": 13,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2272,9 +2210,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/account\/sessions",
-                    "offline-key": "{sessionId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2320,7 +2255,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateSession",
-                    "weight": 14,
+                    "group": "sessions",
+                    "weight": 15,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2335,9 +2271,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2376,7 +2309,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
-                    "weight": 13,
+                    "group": "sessions",
+                    "weight": 14,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2391,9 +2325,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2441,7 +2372,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
-                    "weight": 36,
+                    "group": "account",
+                    "weight": 37,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2456,9 +2388,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2479,7 +2408,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to register a device for push notifications. Provide a target ID (custom or generated using ID.unique()), a device identifier (usually a device token), and optionally specify which provider should send notifications to this target. The target is automatically linked to the current session and includes device information like brand and model.",
                 "responses": {
                     "201": {
                         "description": "Target",
@@ -2494,12 +2423,13 @@
                 },
                 "x-appwrite": {
                     "method": "createPushTarget",
-                    "weight": 53,
+                    "group": "pushTargets",
+                    "weight": 54,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2508,9 +2438,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2560,7 +2487,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Update the currently logged in user's push notification target. You can modify the target's identifier (device token) and provider ID (token, email, phone etc.). The target must exist and belong to the current user. If you change the provider ID, notifications will be sent through the new messaging provider instead.",
                 "responses": {
                     "200": {
                         "description": "Target",
@@ -2575,12 +2502,13 @@
                 },
                 "x-appwrite": {
                     "method": "updatePushTarget",
-                    "weight": 54,
+                    "group": "pushTargets",
+                    "weight": 55,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2589,9 +2517,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2640,27 +2565,21 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Delete a push notification target for the currently logged in user. After deletion, the device will no longer receive push notifications. The target must exist and belong to the current user.",
                 "responses": {
                     "204": {
-                        "description": "No content",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/target"
-                                }
-                            }
-                        }
+                        "description": "No content"
                     }
                 },
                 "x-appwrite": {
                     "method": "deletePushTarget",
-                    "weight": 55,
+                    "group": "pushTargets",
+                    "weight": 56,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2669,9 +2588,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2703,7 +2619,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2718,7 +2634,8 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "weight": 24,
+                    "group": "tokens",
+                    "weight": 25,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2733,9 +2650,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2784,7 +2698,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2799,7 +2713,8 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "weight": 23,
+                    "group": "tokens",
+                    "weight": 24,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2817,9 +2732,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2873,7 +2785,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \r\n\r\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \n\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "301": {
                         "description": "File"
@@ -2881,7 +2793,8 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "weight": 22,
+                    "group": "tokens",
+                    "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
                     "deprecated": false,
@@ -2896,9 +2809,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -2911,7 +2821,7 @@
                 "parameters": [
                     {
                         "name": "provider",
-                        "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, auth0, authentik, autodesk, bitbucket, bitly, box, dailymotion, discord, disqus, dropbox, etsy, facebook, github, gitlab, google, linkedin, microsoft, notion, oidc, okta, paypal, paypalSandbox, podio, salesforce, slack, spotify, stripe, tradeshift, tradeshiftBox, twitch, wordpress, yahoo, yammer, yandex, zoho, zoom.",
+                        "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, auth0, authentik, autodesk, bitbucket, bitly, box, dailymotion, discord, disqus, dropbox, etsy, facebook, figma, github, gitlab, google, linkedin, microsoft, notion, oidc, okta, paypal, paypalSandbox, podio, salesforce, slack, spotify, stripe, tradeshift, tradeshiftBox, twitch, wordpress, yahoo, yammer, yandex, zoho, zoom.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -2931,6 +2841,7 @@
                                 "dropbox",
                                 "etsy",
                                 "facebook",
+                                "figma",
                                 "github",
                                 "gitlab",
                                 "google",
@@ -3009,7 +2920,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3024,7 +2935,8 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "weight": 27,
+                    "group": "tokens",
+                    "weight": 28,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3042,9 +2954,6 @@
                         "client"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3088,7 +2997,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\r\n",
+                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3103,7 +3012,8 @@
                 },
                 "x-appwrite": {
                     "method": "createVerification",
-                    "weight": 39,
+                    "group": "verification",
+                    "weight": 40,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3118,9 +3028,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3153,7 +3060,7 @@
                 }
             },
             "put": {
-                "summary": "Create email verification (confirmation)",
+                "summary": "Update email verification (confirmation)",
                 "operationId": "accountUpdateVerification",
                 "tags": [
                     "account"
@@ -3173,7 +3080,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateVerification",
-                    "weight": 40,
+                    "group": "verification",
+                    "weight": 41,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3188,9 +3096,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3251,7 +3156,8 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneVerification",
-                    "weight": 41,
+                    "group": "verification",
+                    "weight": 42,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3269,9 +3175,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3305,7 +3208,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
-                    "weight": 42,
+                    "group": "verification",
+                    "weight": 43,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3320,9 +3224,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3368,7 +3269,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
+                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -3376,7 +3277,8 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
-                    "weight": 59,
+                    "group": null,
+                    "weight": 60,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3392,9 +3294,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3496,7 +3395,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -3504,7 +3403,8 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
-                    "weight": 58,
+                    "group": null,
+                    "weight": 59,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3520,9 +3420,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3537,7 +3434,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3558,7 +3455,8 @@
                                 "union-china-pay",
                                 "visa",
                                 "mir",
-                                "maestro"
+                                "maestro",
+                                "rupay"
                             ],
                             "x-enum-name": "CreditCard",
                             "x-enum-keys": [
@@ -3577,7 +3475,8 @@
                                 "Union China Pay",
                                 "Visa",
                                 "MIR",
-                                "Maestro"
+                                "Maestro",
+                                "Rupay"
                             ]
                         },
                         "in": "path"
@@ -3628,7 +3527,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\r\n\r\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\n\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -3636,7 +3535,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
-                    "weight": 62,
+                    "group": null,
+                    "weight": 63,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3652,9 +3552,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -3688,7 +3585,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -3696,7 +3593,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
-                    "weight": 60,
+                    "group": null,
+                    "weight": 61,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3712,9 +3610,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4178,7 +4073,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\r\n\r\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\n\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -4186,7 +4081,8 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
-                    "weight": 61,
+                    "group": null,
+                    "weight": 62,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4202,9 +4098,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4262,7 +4155,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\r\n\r\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\n\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -4270,7 +4163,8 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
-                    "weight": 64,
+                    "group": null,
+                    "weight": 65,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4286,9 +4180,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4356,7 +4247,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\r\n",
+                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\n",
                 "responses": {
                     "200": {
                         "description": "Image"
@@ -4364,7 +4255,8 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
-                    "weight": 63,
+                    "group": null,
+                    "weight": 64,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4380,9 +4272,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4465,7 +4354,8 @@
                 },
                 "x-appwrite": {
                     "method": "listDocuments",
-                    "weight": 108,
+                    "group": "documents",
+                    "weight": 109,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4481,9 +4371,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4537,7 +4424,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4552,7 +4439,8 @@
                 },
                 "x-appwrite": {
                     "method": "createDocument",
-                    "weight": 107,
+                    "group": "documents",
+                    "weight": 108,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4568,9 +4456,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4661,7 +4546,8 @@
                 },
                 "x-appwrite": {
                     "method": "getDocument",
-                    "weight": 109,
+                    "group": "documents",
+                    "weight": 110,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4677,9 +4563,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4758,7 +4641,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateDocument",
-                    "weight": 111,
+                    "group": "documents",
+                    "weight": 112,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4774,9 +4658,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4859,7 +4740,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDocument",
-                    "weight": 112,
+                    "group": "documents",
+                    "weight": 113,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4875,9 +4757,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
-                    "offline-key": "{documentId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -4945,7 +4824,8 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 304,
+                    "group": "executions",
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4961,9 +4841,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5033,7 +4910,8 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 303,
+                    "group": "executions",
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5049,9 +4927,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5084,7 +4959,7 @@
                                     "body": {
                                         "type": "string",
                                         "description": "HTTP body of execution. Default value is empty string.",
-                                        "x-example": null
+                                        "x-example": "<BODY>"
                                     },
                                     "async": {
                                         "type": "boolean",
@@ -5150,7 +5025,8 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 305,
+                    "group": "executions",
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5166,9 +5042,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5226,7 +5099,8 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 329,
+                    "group": "graphql",
+                    "weight": 330,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5242,9 +5116,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5280,7 +5151,8 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 328,
+                    "group": "graphql",
+                    "weight": 329,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5296,9 +5168,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5319,7 +5188,7 @@
                 "tags": [
                     "locale"
                 ],
-                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\r\n\r\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
+                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\n\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
                 "responses": {
                     "200": {
                         "description": "Locale",
@@ -5334,7 +5203,8 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 116,
+                    "group": null,
+                    "weight": 117,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5350,9 +5220,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/localed",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5388,7 +5255,8 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
-                    "weight": 117,
+                    "group": null,
+                    "weight": 118,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5404,9 +5272,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/localeCode",
-                    "offline-key": "current",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5442,7 +5307,8 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
-                    "weight": 121,
+                    "group": null,
+                    "weight": 122,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5458,9 +5324,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/continents",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5496,7 +5359,8 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
-                    "weight": 118,
+                    "group": null,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5512,9 +5376,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5550,7 +5411,8 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
-                    "weight": 119,
+                    "group": null,
+                    "weight": 120,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5566,9 +5428,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/eu",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5604,7 +5463,8 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
-                    "weight": 120,
+                    "group": null,
+                    "weight": 121,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5620,9 +5480,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/countries\/phones",
-                    "offline-key": "",
-                    "offline-response-key": "countryCode",
                     "auth": {
                         "Project": []
                     }
@@ -5658,7 +5515,8 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
-                    "weight": 122,
+                    "group": null,
+                    "weight": 123,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5674,9 +5532,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/currencies",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5712,7 +5567,8 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
-                    "weight": 123,
+                    "group": null,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5728,9 +5584,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/locale\/languages",
-                    "offline-key": "",
-                    "offline-response-key": "code",
                     "auth": {
                         "Project": []
                     }
@@ -5766,7 +5619,8 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 380,
+                    "group": "subscribers",
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5783,9 +5637,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5851,7 +5702,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 384,
+                    "group": "subscribers",
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5868,9 +5720,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -5928,7 +5777,8 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
-                    "weight": 206,
+                    "group": "files",
+                    "weight": 207,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5944,9 +5794,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6001,7 +5848,7 @@
                 "tags": [
                     "storage"
                 ],
-                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\r\n\r\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\r\n\r\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\r\n\r\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\r\n",
+                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\n\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\n\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\n\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\n",
                 "responses": {
                     "201": {
                         "description": "File",
@@ -6016,7 +5863,8 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
-                    "weight": 205,
+                    "group": "files",
+                    "weight": 206,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6032,9 +5880,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6116,7 +5961,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
-                    "weight": 207,
+                    "group": "files",
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6132,9 +5978,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6190,7 +6033,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
-                    "weight": 212,
+                    "group": "files",
+                    "weight": 213,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6206,9 +6050,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6281,7 +6122,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
-                    "weight": 213,
+                    "group": "files",
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6297,9 +6139,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6350,7 +6189,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
-                    "weight": 209,
+                    "group": "files",
+                    "weight": 210,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6366,9 +6206,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6419,7 +6256,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
-                    "weight": 208,
+                    "group": "files",
+                    "weight": 209,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6435,9 +6273,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6611,6 +6446,7 @@
                                 "gif",
                                 "png",
                                 "webp",
+                                "heic",
                                 "avif"
                             ],
                             "x-enum-name": "ImageFormat",
@@ -6637,7 +6473,8 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
-                    "weight": 210,
+                    "group": "files",
+                    "weight": 211,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6653,9 +6490,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6713,7 +6547,8 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 217,
+                    "group": "teams",
+                    "weight": 218,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6729,9 +6564,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6791,7 +6623,8 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 216,
+                    "group": "teams",
+                    "weight": 217,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6807,9 +6640,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6878,7 +6708,8 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 218,
+                    "group": "teams",
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6894,9 +6725,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -6942,7 +6770,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 220,
+                    "group": "teams",
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6958,9 +6787,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams",
-                    "offline-key": "{teamId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7018,7 +6844,8 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 222,
+                    "group": "teams",
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7034,9 +6861,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7069,7 +6893,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint.",
+                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint. Hide sensitive attributes from the response by toggling membership privacy in the Console.",
                 "responses": {
                     "200": {
                         "description": "Memberships List",
@@ -7084,7 +6908,8 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 224,
+                    "group": "memberships",
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7100,9 +6925,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7157,7 +6979,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\r\n\r\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\r\n\r\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \r\n\r\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\r\n",
+                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\n\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\n\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \n\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\n",
                 "responses": {
                     "201": {
                         "description": "Membership",
@@ -7172,7 +6994,8 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
-                    "weight": 223,
+                    "group": "memberships",
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7188,9 +7011,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7270,7 +7090,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Get a team member by the membership unique id. All team members have read access for this resource.",
+                "description": "Get a team member by the membership unique id. All team members have read access for this resource. Hide sensitive attributes from the response by toggling membership privacy in the Console.",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7285,7 +7105,8 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
-                    "weight": 225,
+                    "group": "memberships",
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7301,9 +7122,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/memberships",
-                    "offline-key": "{membershipId}",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7344,7 +7162,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\r\n",
+                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7359,7 +7177,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
-                    "weight": 226,
+                    "group": "memberships",
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7375,9 +7194,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7448,7 +7264,8 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
-                    "weight": 228,
+                    "group": "memberships",
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7464,9 +7281,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7509,7 +7323,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\r\n\r\nIf the request is successful, a session for the user is automatically created.\r\n",
+                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\n\nIf the request is successful, a session for the user is automatically created.\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7524,7 +7338,8 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
-                    "weight": 227,
+                    "group": "memberships",
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7539,9 +7354,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7624,7 +7436,8 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 219,
+                    "group": "teams",
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7639,9 +7452,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -7687,7 +7497,8 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 221,
+                    "group": "teams",
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7702,9 +7513,6 @@
                         "server"
                     ],
                     "packaging": false,
-                    "offline-model": "\/teams\/{teamId}\/prefs",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
                     "auth": {
                         "Project": []
                     }
@@ -9266,12 +9074,12 @@
                     },
                     "userName": {
                         "type": "string",
-                        "description": "User name.",
+                        "description": "User name. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": "John Doe"
                     },
                     "userEmail": {
                         "type": "string",
-                        "description": "User email address.",
+                        "description": "User email address. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": "john@appwrite.io"
                     },
                     "teamId": {
@@ -9301,7 +9109,7 @@
                     },
                     "mfa": {
                         "type": "boolean",
-                        "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise.",
+                        "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": false
                     },
                     "roles": {
@@ -9826,7 +9634,7 @@
                     "name": {
                         "type": "string",
                         "description": "Target Name.",
-                        "x-example": "Aegon apple token"
+                        "x-example": "Apple iPhone 12"
                     },
                     "userId": {
                         "type": "string",
@@ -9848,6 +9656,11 @@
                         "type": "string",
                         "description": "The target identifier.",
                         "x-example": "token"
+                    },
+                    "expired": {
+                        "type": "boolean",
+                        "description": "Is the target expired.",
+                        "x-example": false
                     }
                 },
                 "required": [
@@ -9857,7 +9670,8 @@
                     "name",
                     "userId",
                     "providerType",
-                    "identifier"
+                    "identifier",
+                    "expired"
                 ]
             }
         },

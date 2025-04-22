@@ -2,8 +2,10 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
 
@@ -28,8 +30,30 @@ class Request extends UtopiaRequest
         $parameters = parent::getParams();
 
         if ($this->hasFilters() && self::hasRoute()) {
-            $method = self::getRoute()->getLabel('sdk.method', 'unknown');
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
+            $methods = self::getRoute()->getLabel('sdk', null);
+
+            if (!\is_array($methods)) {
+                $methods = [$methods];
+            }
+
+            $params = [];
+
+            foreach ($methods as $method) {
+                /** @var \Appwrite\SDK\Method $method */
+                if (empty($method)) {
+                    $endpointIdentifier = 'unknown.unknown';
+                } else {
+                    $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
+                }
+
+                $params += $method->getParameters();
+            }
+
+            if (!empty($params)) {
+                $parameters = array_filter($parameters, function ($key) use ($params) {
+                    return array_key_exists($key, $params);
+                }, \ARRAY_FILTER_USE_KEY);
+            }
 
             foreach ($this->getFilters() as $filter) {
                 $parameters = $filter->parse($parameters, $endpointIdentifier);
@@ -157,5 +181,28 @@ class Request extends UtopiaRequest
     {
         $headers = $this->getHeaders();
         return $headers[$key] ?? $default;
+    }
+
+    /**
+    * Get User Agent
+    *
+    * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
+    *
+    * @param  string  $default
+    * @return string
+    */
+    public function getUserAgent(string $default = ''): string
+    {
+        $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
+        if (!empty($forwardedUserAgent)) {
+            $roles = Authorization::getRoles();
+            $isAppUser = Auth::isAppUser($roles);
+
+            if ($isAppUser) {
+                return $forwardedUserAgent;
+            }
+        }
+
+        return UtopiaRequest::getUserAgent($default);
     }
 }

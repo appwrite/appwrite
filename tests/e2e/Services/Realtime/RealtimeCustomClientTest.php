@@ -111,6 +111,30 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testPingPong()
+    {
+        $client = $this->getWebsocket(['files'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'ping'
+        ]));
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('pong', $response['type']);
+
+        $client->close();
+    }
+
     public function testManualAuthentication()
     {
         $user = $this->getUser();
@@ -1288,22 +1312,15 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Poll until deployment is built
-        while (true) {
+        $this->assertEventually(function () use ($function, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
+            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+        });
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',

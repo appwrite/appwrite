@@ -277,6 +277,7 @@ class AccountCustomClientTest extends Scope
     {
         sleep(5);
         $session = $data['session'] ?? '';
+
         /**
          * Test for SUCCESS
          */
@@ -2307,6 +2308,60 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
+
+        // Forwarded User Agent with API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CM', actual: $response['body']['clientCode']);
+        $this->assertEquals('Chrome Mobile', $response['body']['clientName']);
+
+        // Forwarded User Agent without API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-user-agent' => 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals('browser', $response['body']['clientType']);
+        $this->assertEquals('CH', $response['body']['clientCode']);
+        $this->assertEquals('Chrome', $response['body']['clientName']);
 
         /**
          * Test for FAILURE
@@ -2363,6 +2418,33 @@ class AccountCustomClientTest extends Scope
 
         $message = $smsRequest['data']['message'];
         $token = substr($message, 0, 6);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // disable phone sessions
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'status' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authPhone']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals("Phone authentication is disabled for this project", $response['body']['message']);
 
         return \array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6)
