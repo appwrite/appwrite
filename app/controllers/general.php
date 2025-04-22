@@ -106,7 +106,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     );
 
     if (!$project->isEmpty() && $project->getId() !== 'console') {
-        $accessedAt = $project->getAttribute('accessedAt', '');
+        $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $project->setAttribute('accessedAt', DateTime::now());
             Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
@@ -760,8 +760,9 @@ App::init()
     ->inject('executor')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
+    ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -994,6 +995,10 @@ App::init()
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
 
+        if (!$devKey->isEmpty()) {
+            $response->addHeader('Access-Control-Allow-Origin', '*');
+        }
+
         /*
         * Validate Client Domain - Check to avoid CSRF attack
         *  Adding Appwrite API domains to allow XDOMAIN communication
@@ -1004,6 +1009,7 @@ App::init()
 
         if (
             !$originValidator->isValid($origin)
+            && $devKey->isEmpty()
             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
@@ -1027,8 +1033,9 @@ App::options()
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('project')
+    ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -1052,6 +1059,10 @@ App::options()
             ->addHeader('Access-Control-Allow-Credentials', 'true')
             ->noContent();
 
+        if (!$devKey->isEmpty()) {
+            $response->addHeader('Access-Control-Allow-Origin', '*');
+        }
+
         /** OPTIONS requests in utopia do not execute shutdown handlers, as a result we need to track the OPTIONS requests explicitly
          * @see https://github.com/utopia-php/http/blob/0.33.16/src/App.php#L825-L855
          */
@@ -1072,6 +1083,7 @@ App::error()
     ->inject('logger')
     ->inject('log')
     ->inject('queueForStatsUsage')
+    ->inject('devKey')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
@@ -1286,7 +1298,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = ((App::isDevelopment())) ? [
+        $output = App::isDevelopment() ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -1543,11 +1555,12 @@ foreach (Config::getParam('services', []) as $service) {
     }
 }
 
-// Modules
-$platform = new Appwrite();
-$platform->init(Service::TYPE_HTTP);
-
 // Check for any errors found while we were initialising the SDK Methods.
 if (!empty(Method::getErrors())) {
     throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
 }
+
+// Modules
+
+$platform = new Appwrite();
+$platform->init(Service::TYPE_HTTP);
