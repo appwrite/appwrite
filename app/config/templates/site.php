@@ -1216,7 +1216,7 @@ return [
         'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './angular/starter',
-                 'outputDirectory' => './dist/starter/browser',
+                'outputDirectory' => './dist/starter/browser',
             ]),
         ],
         'vcsProvider' => 'github',

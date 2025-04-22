@@ -225,8 +225,8 @@ class Screenshot extends Action
         $idDark = '';
 
         $slowTemplates = [
-          'starter-for-react-native',
-          'playground-for-react-native'
+            'starter-for-react-native',
+            'playground-for-react-native'
         ];
         if (\in_array($templateId, $slowTemplates)) {
             Console::warning("Build for this template is slow, increasing waiting time ...");
