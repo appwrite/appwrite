@@ -4354,7 +4354,7 @@
                 },
                 "x-appwrite": {
                     "method": "getResource",
-                    "weight": 424,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9051,7 +9051,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 368,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9123,7 +9123,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 365,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9353,7 +9353,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 370,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9401,7 +9401,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 371,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9450,7 +9450,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
-                    "weight": 394,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9549,7 +9549,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
-                    "weight": 393,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9608,7 +9608,7 @@
                 },
                 "x-appwrite": {
                     "method": "listUsage",
-                    "weight": 387,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9679,7 +9679,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 366,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9737,7 +9737,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 367,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9964,7 +9964,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 369,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10024,7 +10024,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
-                    "weight": 374,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10103,7 +10103,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 375,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10185,7 +10185,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 372,
+                    "weight": 377,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -10280,7 +10280,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 380,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10364,7 +10364,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 377,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10466,7 +10466,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 378,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10562,7 +10562,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 373,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10623,7 +10623,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 376,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10686,7 +10686,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 379,
+                    "weight": 384,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -10775,7 +10775,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 381,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10845,7 +10845,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 384,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10919,7 +10919,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 382,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11033,7 +11033,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 383,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11097,7 +11097,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
-                    "weight": 385,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11167,7 +11167,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "weight": 386,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11248,7 +11248,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 390,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11306,7 +11306,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 388,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11396,7 +11396,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 389,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11464,7 +11464,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 391,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11554,7 +11554,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 392,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20708,6 +20708,389 @@
                 }
             }
         },
+        "\/projects\/{projectId}\/dev-keys": {
+            "get": {
+                "summary": "List dev keys",
+                "operationId": "projectsListDevKeys",
+                "tags": [
+                    "projects"
+                ],
+                "description": "List all the project\\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'",
+                "responses": {
+                    "200": {
+                        "description": "Dev Keys List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKeyList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listDevKeys",
+                    "weight": 368,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/list-dev-keys.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterList all the project\\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: accessedAt, expire",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create dev key",
+                "operationId": "projectsCreateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "Create a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.",
+                "responses": {
+                    "201": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createDevKey",
+                    "weight": 365,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/create-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/projects\/{projectId}\/dev-keys\/{keyId}": {
+            "get": {
+                "summary": "Get dev key",
+                "operationId": "projectsGetDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "Get a project\\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.",
+                "responses": {
+                    "200": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDevKey",
+                    "weight": 367,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/get-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a project\\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update dev key",
+                "operationId": "projectsUpdateDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "Update a project\\'s dev key by its unique ID. Use this endpoint to update a project\\'s dev key name or expiration time.'",
+                "responses": {
+                    "200": {
+                        "description": "DevKey",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/devKey"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateDevKey",
+                    "weight": 366,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/update-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterUpdate a project\\'s dev key by its unique ID. Use this endpoint to update a project\\'s dev key name or expiration time.'",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Key name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "expire": {
+                                        "type": "string",
+                                        "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "expire"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete dev key",
+                "operationId": "projectsDeleteDevKey",
+                "tags": [
+                    "projects"
+                ],
+                "description": "Delete a project\\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDevKey",
+                    "weight": 369,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/delete-dev-key.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterDelete a project\\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "keyId",
+                        "description": "Key unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<KEY_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
         "\/projects\/{projectId}\/jwts": {
             "post": {
                 "summary": "Create JWT",
@@ -24194,7 +24577,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAPIRule",
-                    "weight": 425,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24260,7 +24643,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFunctionRule",
-                    "weight": 427,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24337,7 +24720,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRedirectRule",
-                    "weight": 428,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24428,7 +24811,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSiteRule",
-                    "weight": 426,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24673,7 +25056,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 397,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24742,7 +25125,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 395,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24987,7 +25370,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFrameworks",
-                    "weight": 400,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25035,7 +25418,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 423,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25084,7 +25467,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
-                    "weight": 419,
+                    "weight": 424,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25183,7 +25566,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
-                    "weight": 420,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25242,7 +25625,7 @@
                 },
                 "x-appwrite": {
                     "method": "listUsage",
-                    "weight": 421,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25313,7 +25696,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 396,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25371,7 +25754,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 398,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25612,7 +25995,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 399,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25672,7 +26055,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
-                    "weight": 406,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25751,7 +26134,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 405,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25833,7 +26216,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 401,
+                    "weight": 406,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -25933,7 +26316,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
-                    "weight": 409,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26012,7 +26395,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
-                    "weight": 402,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26114,7 +26497,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVcsDeployment",
-                    "weight": 403,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26211,7 +26594,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 404,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26272,7 +26655,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 407,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26335,7 +26718,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 408,
+                    "weight": 413,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -26424,7 +26807,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
-                    "weight": 410,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26494,7 +26877,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 412,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26564,7 +26947,7 @@
                 },
                 "x-appwrite": {
                     "method": "getLog",
-                    "weight": 411,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26625,7 +27008,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteLog",
-                    "weight": 413,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26695,7 +27078,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "weight": 422,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26776,7 +27159,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 416,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26834,7 +27217,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 414,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26924,7 +27307,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 415,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -26992,7 +27375,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 417,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -27082,7 +27465,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 418,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -34800,6 +35183,30 @@
                     "keys"
                 ]
             },
+            "devKeyList": {
+                "description": "Dev Keys List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of devKeys documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "devKeys": {
+                        "type": "array",
+                        "description": "List of devKeys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "devKeys"
+                ]
+            },
             "platformList": {
                 "description": "Platforms List",
                 "type": "object",
@@ -39116,6 +39523,14 @@
                         },
                         "x-example": {}
                     },
+                    "devKeys": {
+                        "type": "array",
+                        "description": "List of dev keys.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/devKey"
+                        },
+                        "x-example": {}
+                    },
                     "smtpEnabled": {
                         "type": "boolean",
                         "description": "Status for custom SMTP",
@@ -39299,6 +39714,7 @@
                     "platforms",
                     "webhooks",
                     "keys",
+                    "devKeys",
                     "smtpEnabled",
                     "smtpSenderName",
                     "smtpSenderEmail",
@@ -39484,6 +39900,65 @@
                     "name",
                     "expire",
                     "scopes",
+                    "secret",
+                    "accessedAt",
+                    "sdks"
+                ]
+            },
+            "devKey": {
+                "description": "DevKey",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Key ID.",
+                        "x-example": "5e5ea5c16897e"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Key creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Key update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Key name.",
+                        "x-example": "Dev API Key"
+                    },
+                    "expire": {
+                        "type": "string",
+                        "description": "Key expiration date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "Secret key.",
+                        "x-example": "919c2d18fb5d4...a2ae413da83346ad2"
+                    },
+                    "accessedAt": {
+                        "type": "string",
+                        "description": "Most recent access date in ISO 8601 format. This attribute is only updated again after 24 hours.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "sdks": {
+                        "type": "array",
+                        "description": "List of SDK user agents that used this key.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": "appwrite:flutter"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "name",
+                    "expire",
                     "secret",
                     "accessedAt",
                     "sdks"

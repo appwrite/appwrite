@@ -250,7 +250,7 @@ App::init()
                 );
 
                 if ($dbKey) {
-                    $accessedAt = $dbKey->getAttribute('accessedAt', '');
+                    $accessedAt = $dbKey->getAttribute('accessedAt', 0);
 
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                         $dbKey->setAttribute('accessedAt', DateTime::now());
@@ -261,7 +261,7 @@ App::init()
                     $sdkValidator = new WhiteList($servers, true);
                     $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
 
-                    if ($sdkValidator->isValid($sdk)) {
+                    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                         $sdks = $dbKey->getAttribute('sdks', []);
 
                         if (!in_array($sdk, $sdks)) {
@@ -311,7 +311,7 @@ App::init()
 
         // Update project last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
+            $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
@@ -320,7 +320,7 @@ App::init()
 
         // Update user last activity
         if (!empty($user->getId())) {
-            $accessedAt = $user->getAttribute('accessedAt', '');
+            $accessedAt = $user->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
@@ -403,7 +403,8 @@ App::init()
     ->inject('mode')
     ->inject('apiKey')
     ->inject('plan')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('devKey')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -470,6 +471,7 @@ App::init()
                 $enabled                // Abuse is enabled
                 && !$isAppUser          // User is not API key
                 && !$isPrivilegedUser   // User is not an admin
+                && $devKey->isEmpty()  // request doesn't not contain development key
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -806,7 +808,7 @@ App::shutdown()
                 $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
-                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
