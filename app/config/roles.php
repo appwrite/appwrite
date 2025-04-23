@@ -81,6 +81,8 @@ $admins = [
     'topics.read',
     'subscribers.write',
     'subscribers.read',
+    'tokens.read',
+    'tokens.write',
 ];
 
 return [

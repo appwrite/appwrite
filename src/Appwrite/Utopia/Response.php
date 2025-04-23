@@ -39,6 +39,7 @@ use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
+use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -85,6 +86,7 @@ use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
+use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
@@ -210,6 +212,8 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
+    public const MODEL_RESOURCE_TOKEN = 'resourceToken';
+    public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -306,6 +310,8 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_DEV_KEY = 'devKey';
+    public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
@@ -373,6 +379,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
             ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
+            ->setModel(new BaseList('Resource Tokens List', self::MODEL_RESOURCE_TOKEN_LIST, 'tokens', self::MODEL_RESOURCE_TOKEN))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
@@ -390,6 +397,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
+            ->setModel(new BaseList('Dev Keys List', self::MODEL_DEV_KEY_LIST, 'devKeys', self::MODEL_DEV_KEY, true, false))
             ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -447,6 +455,7 @@ class Response extends SwooleResponse
             ->setModel(new LocaleCode())
             ->setModel(new File())
             ->setModel(new Bucket())
+            ->setModel(new ResourceToken())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Site())
@@ -472,6 +481,7 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            ->setModel(new DevKey())
             ->setModel(new MockNumber())
             ->setModel(new AuthProvider())
             ->setModel(new Platform())
