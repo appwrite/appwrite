@@ -2461,7 +2461,7 @@ return [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ]
         ],
         'indexes' => [
