@@ -1375,7 +1375,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
 
-        if (!$fileSizeValidator->isValid($fileSize) && $fileSize !== 0) { // Check if file size is exceeding allowed limit
+        if (!$fileSizeValidator->isValid($fileSize) && $sizeLimit !== 0) { // Check if file size is exceeding allowed limit
             throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
         }
 
