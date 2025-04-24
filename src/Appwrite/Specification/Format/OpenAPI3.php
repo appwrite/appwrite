@@ -84,6 +84,9 @@ class OpenAPI3 extends Format
                 [
                     'url' => $this->getParam('endpoint', ''),
                 ],
+                [
+                    'url' => $this->getParam('endpoint.docs', ''),
+                ],
             ],
             'paths' => [],
             'tags' => $this->services,
