@@ -40,6 +40,12 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => 'file',
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token secret for the resource.',
+                'default' => '',
+                'example' => 'Bpw_g9c2TGXxfgLshDbSaL8tsCcqgczQ',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in ISO 8601 format.',
