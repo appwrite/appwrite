@@ -40,17 +40,17 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => 'file',
             ])
-            ->addRule('secret', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Token secret for the resource.',
-                'default' => '',
-                'example' => 'Bpw_g9c2TGXxfgLshDbSaL8tsCcqgczQ',
-            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_RESOURCE_TOKEN_ACCESS / 60 / 60 . ' hours.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE
             ])
         ;
     }

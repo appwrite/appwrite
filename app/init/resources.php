@@ -930,6 +930,12 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 return new Document([]);
             }
 
+            $accessedAt = $token->getAttribute('accessedAt', 0);
+            if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                $token->setAttribute('accessedAt', DatabaseDateTime::now());
+                Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+            }
+
             return new Document([
                 'bucketId' => $ids[0],
                 'fileId' => $ids[1],
