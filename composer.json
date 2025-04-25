@@ -14,7 +14,8 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
         "format": "vendor/bin/pint",
-        "bench": "vendor/bin/phpbench run --report=benchmark"
+        "bench": "vendor/bin/phpbench run --report=benchmark",
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
     },
     "autoload": {
         "psr-4": {
@@ -43,7 +44,7 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-        "appwrite/php-runtimes": "0.16.*",
+        "appwrite/php-runtimes": "0.19.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "0.52.*",
         "utopia-php/analytics": "0.10.*",
@@ -51,6 +52,7 @@
         "utopia-php/cache": "0.12.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
+        "utopia-php/detector": "0.1.*",
         "utopia-php/database": "0.66.*",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
@@ -60,7 +62,7 @@
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.16.*",
-        "utopia-php/migration": "0.8.*",
+        "utopia-php/migration": "0.9.1",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "0.8.*",
@@ -71,7 +73,7 @@
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.1.*",
-        "utopia-php/vcs": "0.9.*",
+        "utopia-php/vcs": "0.10.*",
         "utopia-php/websocket": "0.3.*",
         "matomo/device-detector": "6.1.*",
         "dragonmantank/cron-expression": "3.3.2",
@@ -87,6 +89,7 @@
         "appwrite/sdk-generator": "0.40.*",
         "phpunit/phpunit": "9.*",
         "swoole/ide-helper": "5.1.2",
+        "phpstan/phpstan": "1.8.*",
         "textalk/websocket": "1.5.*",
         "laravel/pint": "1.*",
         "phpbench/phpbench": "1.*"
@@ -99,8 +102,8 @@
             "php": "8.3"
         },
         "allow-plugins": {
-            "php-http/discovery": false,
-            "tbachert/spi": false
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }

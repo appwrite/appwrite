@@ -334,6 +334,14 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
+Server::setResource('deviceForSites', function (Document $project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
+
+Server::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
+}, ['project']);
+
 Server::setResource('deviceForFunctions', function (Document $project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
@@ -365,7 +373,7 @@ Server::setResource('certificates', function () {
 });
 
 Server::setResource('logError', function (Registry $register, Document $project) {
-    return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
+    return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
         $logger = $register->get('logger');
 
         if ($logger) {
@@ -387,7 +395,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('trace', $error->getTraceAsString());
 
 
-            foreach ($extras as $key => $value) {
+            foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
             }
 
