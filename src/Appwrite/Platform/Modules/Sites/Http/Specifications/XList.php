@@ -33,6 +33,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'frameworks',
                 name: 'listSpecifications',
                 description: <<<EOT
                 List allowed site specifications for this instance.

@@ -1490,6 +1490,7 @@ App::get('/v1/ping')
     ->label('event', 'projects.[projectId].ping')
     ->label('sdk', new Method(
         namespace: 'ping',
+        group: null,
         name: 'get',
         hide: true,
         description: <<<EOT

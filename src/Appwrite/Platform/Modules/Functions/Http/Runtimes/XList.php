@@ -33,6 +33,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'runtimes',
                 name: 'listRuntimes',
                 description: <<<EOT
                 Get a list of all runtimes that are currently active on your instance.

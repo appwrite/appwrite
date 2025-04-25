@@ -36,6 +36,7 @@ class XList extends Action
             ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
+                group: 'devKeys',
                 name: 'listDevKeys',
                 description: <<<EOT
                 List all the project\'s dev keys. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.'

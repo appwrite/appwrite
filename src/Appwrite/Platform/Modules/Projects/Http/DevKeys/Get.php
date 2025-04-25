@@ -31,6 +31,7 @@ class Get extends Action
             ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
+                group: 'devKeys',
                 name: 'getDevKey',
                 description: <<<EOT
                 Get a project\'s dev key by its unique ID. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development.

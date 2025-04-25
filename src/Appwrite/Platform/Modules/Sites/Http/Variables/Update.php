@@ -38,6 +38,7 @@ class Update extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'variables',
                 name: 'updateVariable',
                 description: <<<EOT
                 Update variable by its unique ID.

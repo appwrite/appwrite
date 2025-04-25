@@ -32,6 +32,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'frameworks',
                 name: 'listFrameworks',
                 description: <<<EOT
                 Get a list of all frameworks that are currently available on the server instance.

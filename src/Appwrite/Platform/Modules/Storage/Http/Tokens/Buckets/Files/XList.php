@@ -36,6 +36,7 @@ class XList extends Action
             ->label('usage.metric', 'tokens.requests.read')
             ->label('sdk', new Method(
                 namespace: 'tokens',
+                group: 'files',
                 name: 'list',
                 description: <<<EOT
                 List all the tokens created for a specific file or bucket. You can use the query params to filter your results.

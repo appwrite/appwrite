@@ -314,6 +314,7 @@ App::post('/v1/migrations/csv')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createCsvMigration',
         description: '/docs/references/migrations/migration-csv.md',
         auth: [AuthType::ADMIN],

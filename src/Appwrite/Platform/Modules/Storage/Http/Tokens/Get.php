@@ -33,6 +33,7 @@ class Get extends Action
         ->label('usage.params', ['tokenId:{request.tokenId}'])
         ->label('sdk', new Method(
             namespace: 'tokens',
+            group: 'tokens',
             name: 'get',
             description: <<<EOT
             Get a token by its unique ID.

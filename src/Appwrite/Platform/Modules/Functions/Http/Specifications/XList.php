@@ -33,6 +33,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'runtimes',
                 name: 'listSpecifications',
                 description: <<<EOT
                 List allowed function specifications for this instance.

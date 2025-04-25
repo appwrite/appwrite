@@ -17,6 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
+use Utopia\Database\Exception\Order as OrderException;
 
 class XList extends Action
 {
@@ -38,6 +39,7 @@ class XList extends Action
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'listDeployments',
                 description: <<<EOT
                 Get a list of all the site's code deployments. You can use the query params to filter your results.
@@ -107,8 +109,12 @@ class XList extends Action
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $results = $dbForProject->find('deployments', $queries);
-        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('deployments', $queries);
+            $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'deployments' => $results,

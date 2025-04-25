@@ -31,6 +31,7 @@ class Delete extends Action
             ->label('scope', 'projects.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
+                group: 'devKeys',
                 name: 'deleteDevKey',
                 description: <<<EOT
                 Delete a project\'s dev key by its unique ID. Once deleted, the key will no longer allow bypassing of rate limits and better logging of errors.

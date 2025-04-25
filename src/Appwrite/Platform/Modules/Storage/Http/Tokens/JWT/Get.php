@@ -36,6 +36,7 @@ class Get extends Action
         ->label('usage.params', ['tokenId:{request.tokenId}'])
         ->label('sdk', new Method(
             namespace: 'tokens',
+            group: 'tokens',
             name: 'getJWT',
             description: <<<EOT
             Get a JWT based token by its unique ID. You can use the JWT to authenticate on behalf of the user.

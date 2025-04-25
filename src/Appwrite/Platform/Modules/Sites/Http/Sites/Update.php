@@ -53,6 +53,7 @@ class Update extends Base
             ->label('audits.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'sites',
                 name: 'update',
                 description: <<<EOT
                 Update site by its unique ID.

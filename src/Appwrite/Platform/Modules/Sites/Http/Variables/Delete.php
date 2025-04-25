@@ -36,6 +36,7 @@ class Delete extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'variables',
                 name: 'deleteVariable',
                 description: <<<EOT
                 Delete a variable by its unique ID.

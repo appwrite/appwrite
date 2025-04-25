@@ -41,6 +41,7 @@ class Delete extends Action
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'deleteDeployment',
                 description: <<<EOT
                 Delete a code deployment by its unique ID.

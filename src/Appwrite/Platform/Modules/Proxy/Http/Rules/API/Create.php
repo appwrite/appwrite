@@ -44,6 +44,7 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
+                group: null,
                 name: 'createAPIRule',
                 description: <<<EOT
                 Create a new proxy rule for serving Appwrite's API on custom domain.
@@ -70,24 +71,33 @@ class Create extends Action
 
     public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
     {
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $deniedDomains = [
-            $mainDomain,
-            $sitesDomain,
-            $functionsDomain,
             'localhost',
-            APP_HOSTNAME_INTERNAL,
+            APP_HOSTNAME_INTERNAL
         ];
-
-        if (\in_array($domain, $deniedDomains)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
+        
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $deniedDomains[] = $mainDomain;
+        
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        if(!empty($functionsDomain)) {
+            $deniedDomains[] = $functionsDomain;
+        }
+        
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        if(!empty($functionsDomain)) {
+            $deniedDomains[] = $functionsDomain;
+        }
+        
+        $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
+        $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
+        foreach($denyListDomains as $domain) {
+            if(empty($domain)) continue;
+            $deniedDomains[] = $domain;
         }
 
-        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
+        if (\in_array($domain, $deniedDomains)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
         try {
