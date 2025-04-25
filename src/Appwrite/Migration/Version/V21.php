@@ -229,11 +229,15 @@ class V21 extends Migration
                 $document->setAttribute('accessedAt', DateTime::now());
                 break;
             case 'functions':
-                // Add scopes attribute
-                $document->setAttribute('scopes', []);
+                // Set scopes attribute
+                if (empty($document->getAttribute('scopes', []))) {
+                    $document->setAttribute('scopes', []);
+                }
 
-                // Add size attribute
-                $document->setAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT);
+                // Set specification attribute
+                if (empty($document->getAttribute('specification'))) {
+                    $document->setAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT);
+                }
         }
 
         return $document;
