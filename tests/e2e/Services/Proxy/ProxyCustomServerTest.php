@@ -69,7 +69,7 @@ class ProxyCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
         $this->assertNotEmpty($deploymentId);
-        
+
         $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
