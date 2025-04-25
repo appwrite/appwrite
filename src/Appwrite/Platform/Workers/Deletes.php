@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
+use Appwrite\Deletes\Identities;
+use Appwrite\Deletes\Targets;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -149,7 +151,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
-                \Appwrite\Deletes\Targets::deleteSubscribers($getProjectDB($project), $document);
+                Targets::deleteSubscribers($getProjectDB($project), $document);
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -274,12 +276,12 @@ class Deletes extends Action
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
-        \Appwrite\Deletes\Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
+        Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        \Appwrite\Deletes\Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
     }
 
     /**
@@ -662,10 +664,10 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete identities
-        \Appwrite\Deletes\Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+        Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
-        \Appwrite\Deletes\Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
     }
 
     /**
