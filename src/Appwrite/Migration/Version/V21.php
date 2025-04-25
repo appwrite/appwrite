@@ -74,12 +74,44 @@ class V21 extends Migration
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'rules':
+                    $attributesToCreate = ['owner', 'region'];
+                    foreach ($attributesToCreate as $attribute) {
+                        // Create attribute
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $indexesToCreate = ['_key_owner', '_key_region'];
+                    foreach ($indexesToCreate as $index) {
+                        // Create index
+                        try {
+                            $this->createIndexFromCollection($this->projectDB, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    break;
                 case 'platforms':
                     // Increase 'type' length to 255
                     try {
                         $this->projectDB->updateAttribute($id, 'type', size: 255);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'installations':
+                    $attributesToCreate = ['personalAccessToken', 'personalAccessTokenExpiry', 'personalRefreshToken'];
+                    foreach ($attributesToCreate as $attribute) {
+                        // Create attribute
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                        }
                     }
                     break;
                 case 'migrations':
@@ -217,11 +249,30 @@ class V21 extends Migration
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $bucketId = 'bucket_' . $bucket['$internalId'];
 
+            Console::log("Migrating Bucket {$bucketId} {$bucket->getId()} ({$bucket->getAttribute('name')})");
+
             try {
                 $this->projectDB->updateAttribute($bucketId, 'metadata', size: 65534);
+            } catch (\Throwable $th) {
+                Console::warning("'metadata' from {$bucketId}: {$th->getMessage()}");
+            }
+
+            try {
+                $this->createAttributeFromCollection($this->projectDB, $bucketId, 'transformedAt', 'files');
+            } catch (\Throwable $th) {
+                Console::warning("'transformedAt' from {$bucketId}: {$th->getMessage()}");
+            }
+
+            try {
+                $this->createIndexFromCollection($this->projectDB, $bucketId, '_key_transformedAt', 'files');
+            } catch (\Throwable $th) {
+                Console::warning("'_key_transformedAt' from {$bucketId}: {$th->getMessage()}");
+            }
+
+            try {
                 $this->projectDB->purgeCachedCollection($bucketId);
             } catch (\Throwable $th) {
-                Console::warning("'bucketId' from {$bucketId}: {$th->getMessage()}");
+                Console::warning("purging {$bucketId}: {$th->getMessage()}");
             }
         }
     }
