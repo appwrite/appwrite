@@ -254,7 +254,7 @@ App::init()
                 }
 
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
-                
+
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                     $dbKey->setAttribute('accessedAt', DateTime::now());
                     $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);

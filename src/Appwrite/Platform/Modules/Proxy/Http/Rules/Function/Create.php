@@ -80,25 +80,27 @@ class Create extends Action
             'localhost',
             APP_HOSTNAME_INTERNAL
         ];
-        
+
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         $deniedDomains[] = $mainDomain;
-        
+
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        if(!empty($functionsDomain)) {
-            $deniedDomains[] = $functionsDomain;
+        if (!empty($sitesDomain)) {
+            $deniedDomains[] = $sitesDomain;
         }
-        
+
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if(!empty($functionsDomain)) {
+        if (!empty($functionsDomain)) {
             $deniedDomains[] = $functionsDomain;
         }
-        
+
         $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
         $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
-        foreach($denyListDomains as $domain) {
-            if(empty($domain)) continue;
-            $deniedDomains[] = $domain;
+        foreach ($denyListDomains as $denyListDomain) {
+            if (empty($denyListDomain)) {
+                continue;
+            }
+            $deniedDomains[] = $denyListDomain;
         }
 
         if (\in_array($domain, $deniedDomains)) {

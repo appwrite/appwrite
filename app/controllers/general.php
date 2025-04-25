@@ -856,7 +856,7 @@ App::init()
                     if (!empty($functionsDomainFallback) && \str_ends_with($host, $functionsDomainFallback)) {
                         $functionsDomain = $functionsDomainFallback;
                     }
-                    
+
                     if (
                         (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) ||
                         (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))

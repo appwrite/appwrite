@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -19,7 +20,6 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Database\Exception\Order as OrderException;
 
 class XList extends Base
 {
@@ -112,7 +112,7 @@ class XList extends Base
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-        
+
         try {
             $results = $dbForProject->find('executions', $queries);
             $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);

@@ -10,6 +10,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
@@ -17,7 +18,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
-use Utopia\Database\Exception\Order as OrderException;
 
 class XList extends Action
 {
