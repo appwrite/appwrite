@@ -149,7 +149,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
-                $this->deleteTargetSubscribers($project, $getProjectDB, $document);
+                \Appwrite\Deletes\Targets::deleteSubscribers($getProjectDB($project), $document);
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -269,78 +269,17 @@ class Deletes extends Action
      * @param Document $project
      * @param callable $getProjectDB
      * @param Document $target
-     * @throws Exception
-     */
-    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
-    {
-        /** @var Database */
-        $dbForProject = $getProjectDB($project);
-
-        // Delete subscribers and decrement topic counts
-        $this->deleteByGroup(
-            'subscribers',
-            [
-                Query::equal('targetInternalId', [$target->getInternalId()]),
-                Query::orderAsc(),
-            ],
-            $dbForProject,
-            function (Document $subscriber) use ($dbForProject, $target) {
-                $topicId = $subscriber->getAttribute('topicId');
-                $topicInternalId = $subscriber->getAttribute('topicInternalId');
-                $topic = $dbForProject->getDocument('topics', $topicId);
-                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
-                    $totalAttribute = match ($target->getAttribute('providerType')) {
-                        MESSAGE_TYPE_EMAIL => 'emailTotal',
-                        MESSAGE_TYPE_SMS => 'smsTotal',
-                        MESSAGE_TYPE_PUSH => 'pushTotal',
-                        default => throw new Exception('Invalid target CertificatesAdapter type'),
-                    };
-                    $dbForProject->decreaseDocumentAttribute(
-                        'topics',
-                        $topicId,
-                        $totalAttribute,
-                        min: 0
-                    );
-                }
-            }
-        );
-    }
-
-    /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $target
      * @return void
      * @throws Exception
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('expired', [true]),
-                Query::orderAsc(),
-            ],
-            $getProjectDB($project),
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        \Appwrite\Deletes\Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('sessionInternalId', [$session->getInternalId()]),
-                Query::orderAsc(),
-            ],
-            $getProjectDB($project),
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        \Appwrite\Deletes\Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getInternalId()]));
     }
 
     /**
@@ -723,23 +662,10 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete identities
-        $this->deleteByGroup('identities', [
-            Query::equal('userInternalId', [$userInternalId]),
-            Query::orderAsc()
-        ], $dbForProject);
+        \Appwrite\Deletes\Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('userInternalId', [$userInternalId]),
-                Query::orderAsc()
-            ],
-            $dbForProject,
-            function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
-            }
-        );
+        \Appwrite\Deletes\Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
     }
 
     /**

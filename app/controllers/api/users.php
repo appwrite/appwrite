@@ -2275,6 +2275,8 @@ App::delete('/v1/users/:userId')
         $clone = clone $user;
 
         $dbForProject->deleteDocument('users', $userId);
+        \Appwrite\Deletes\Identities::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
+        \Appwrite\Deletes\Targets::delete($dbForProject, Query::equal('userInternalId', [$user->getInternalId()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
