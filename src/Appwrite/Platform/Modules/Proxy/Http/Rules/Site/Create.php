@@ -96,11 +96,11 @@ class Create extends Action
 
         $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
         $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
-        foreach ($denyListDomains as $domain) {
-            if (empty($domain)) {
+        foreach ($denyListDomains as $denyListDomain) {
+            if (empty($denyListDomain)) {
                 continue;
             }
-            $deniedDomains[] = $domain;
+            $deniedDomains[] = $denyListDomain;
         }
 
         if (\in_array($domain, $deniedDomains)) {
