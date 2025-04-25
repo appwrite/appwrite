@@ -1511,7 +1511,7 @@ class SitesCustomServerTest extends Scope
 
     public function testSiteTemplate(): void
     {
-        $template = $this->getTemplate('astro-starter');
+        $template = $this->getTemplate('playground-for-astro');
         $this->assertEquals(200, $template['headers']['status-code']);
 
         $template = $template['body'];
