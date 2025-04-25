@@ -145,7 +145,7 @@ class Create extends Action
         ) {
             $owner = 'Appwrite';
         }
-        
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
