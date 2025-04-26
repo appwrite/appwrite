@@ -805,7 +805,8 @@ App::init()
             if (version_compare($requestFormat, '1.6.0', '<')) {
                 $request->addFilter(new RequestV18());
             }
-            if (version_compare($requestFormat, '1.7.0', '<')) {
+            // alias filters on 1.7.x, so we use `<=` and not just `<`
+            if (version_compare($requestFormat, '1.7.0', '<=')) {
                 $request->addFilter(new RequestV19());
             }
         }
