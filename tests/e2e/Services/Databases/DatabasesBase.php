@@ -1373,7 +1373,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown attribute: Unknown. Verify the attribute name or create the attribute.', $unknown['body']['message']);
+        $this->assertEquals('Unknown column: Unknown. Verify the column name or create the column.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -2671,7 +2671,7 @@ trait DatabasesBase
         $this->assertEquals(400, $enumDefault['headers']['status-code']);
         $this->assertEquals(400, $enumDefaultStrict['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
-        $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
+        $this->assertEquals('Cannot set default value for array columns', $defaultArray['body']['message']);
         $this->assertEquals(400, $datetimeDefault['headers']['status-code']);
         // wait for worker to add attributes
         sleep(3);
