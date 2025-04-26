@@ -66,11 +66,11 @@ use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 /**
- * * Create attribute of varying type
+ * * Create column of varying type
  *
  * @param string $databaseId
- * @param string $collectionId
- * @param Document $attribute
+ * @param string $tableId
+ * @param Document $column
  * @param Response $response
  * @param Database $dbForProject
  * @param EventDatabase $queueForDatabase
@@ -85,19 +85,19 @@ use Utopia\Validator\WhiteList;
  * @throws ConflictException
  * @throws Exception
  */
-function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
+function createColumn(string $databaseId, string $tableId, Document $column, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
 {
-    $key = $attribute->getAttribute('key');
-    $type = $attribute->getAttribute('type', '');
-    $size = $attribute->getAttribute('size', 0);
-    $required = $attribute->getAttribute('required', true);
-    $signed = $attribute->getAttribute('signed', true); // integers are signed by default
-    $array = $attribute->getAttribute('array', false);
-    $format = $attribute->getAttribute('format', '');
-    $formatOptions = $attribute->getAttribute('formatOptions', []);
-    $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
-    $default = $attribute->getAttribute('default');
-    $options = $attribute->getAttribute('options', []);
+    $key = $column->getAttribute('key');
+    $type = $column->getAttribute('type', '');
+    $size = $column->getAttribute('size', 0);
+    $required = $column->getAttribute('required', true);
+    $signed = $column->getAttribute('signed', true); // integers are signed by default
+    $array = $column->getAttribute('array', false);
+    $format = $column->getAttribute('format', '');
+    $formatOptions = $column->getAttribute('formatOptions', []);
+    $filters = $column->getAttribute('filters', []); // filters are hidden from the endpoint
+    $default = $column->getAttribute('default');
+    $options = $column->getAttribute('options', []);
 
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -105,43 +105,43 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::DATABASE_NOT_FOUND);
     }
 
-    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+    $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
-    if ($collection->isEmpty()) {
+    if ($table->isEmpty()) {
         throw new Exception(Exception::COLLECTION_NOT_FOUND);
     }
 
     if (!empty($format)) {
         if (!Structure::hasFormat($format, $type)) {
-            throw new Exception(Exception::ATTRIBUTE_FORMAT_UNSUPPORTED, "Format {$format} not available for {$type} attributes.");
+            throw new Exception(Exception::ATTRIBUTE_FORMAT_UNSUPPORTED, "Format {$format} not available for {$type} columns.");
         }
     }
 
     // Must throw here since dbForProject->createAttribute is performed by db worker
     if ($required && isset($default)) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
     }
 
     if ($array && isset($default)) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
         $options['side'] = Database::RELATION_SIDE_PARENT;
-        $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
-        if ($relatedCollection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND, 'The related collection was not found.');
+        $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
+        if ($relatedTable->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND, 'The related table was not found.');
         }
     }
 
     try {
-        $attribute = new Document([
-            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+        $column = new Document([
+            '$id' => ID::custom($db->getInternalId() . '_' . $table->getInternalId() . '_' . $key),
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $db->getId(),
-            'collectionInternalId' => $collection->getInternalId(),
-            'collectionId' => $collectionId,
+            'collectionInternalId' => $table->getInternalId(),
+            'collectionId' => $tableId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -155,35 +155,35 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'options' => $options,
         ]);
 
-        $dbForProject->checkAttribute($collection, $attribute);
-        $attribute = $dbForProject->createDocument('attributes', $attribute);
+        $dbForProject->checkAttribute($table, $column);
+        $column = $dbForProject->createDocument('attributes', $column);
     } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     } catch (\Throwable $e) {
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $table->getInternalId());
         throw $e;
     }
 
-    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
+    $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $table->getInternalId());
 
     if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
         $twoWayKey = $options['twoWayKey'];
-        $options['relatedCollection'] = $collection->getId();
+        $options['relatedCollection'] = $table->getId();
         $options['twoWayKey'] = $key;
         $options['side'] = Database::RELATION_SIDE_CHILD;
 
         try {
             $twoWayAttribute = new Document([
-                '$id' => ID::custom($db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $twoWayKey),
+                '$id' => ID::custom($db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $twoWayKey),
                 'key' => $twoWayKey,
                 'databaseInternalId' => $db->getInternalId(),
                 'databaseId' => $db->getId(),
-                'collectionInternalId' => $relatedCollection->getInternalId(),
-                'collectionId' => $relatedCollection->getId(),
+                'collectionInternalId' => $relatedTable->getInternalId(),
+                'collectionId' => $relatedTable->getId(),
                 'type' => $type,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'size' => $size,
@@ -197,45 +197,45 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
                 'options' => $options,
             ]);
 
-            $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
+            $dbForProject->checkAttribute($relatedTable, $twoWayAttribute);
             $dbForProject->createDocument('attributes', $twoWayAttribute);
         } catch (DuplicateException) {
-            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            $dbForProject->deleteDocument('attributes', $column->getId());
             throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
         } catch (LimitException) {
-            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            $dbForProject->deleteDocument('attributes', $column->getId());
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (\Throwable $e) {
-            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
+            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
             throw $e;
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
     }
 
     $queueForDatabase
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
-        ->setCollection($collection)
-        ->setDocument($attribute);
+        ->setCollection($table)
+        ->setDocument($column);
 
     $queueForEvents
-        ->setContext('collection', $collection)
+        ->setContext('table', $table)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
-        ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId());
+        ->setParam('tableId', $table->getId())
+        ->setParam('columnId', $column->getId());
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
-    return $attribute;
+    return $column;
 }
 
-function updateAttribute(
+function updateColumn(
     string $databaseId,
-    string $collectionId,
+    string $tableId,
     string $key,
     Database $dbForProject,
     Event $queueForEvents,
@@ -256,59 +256,59 @@ function updateAttribute(
         throw new Exception(Exception::DATABASE_NOT_FOUND);
     }
 
-    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+    $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
-    if ($collection->isEmpty()) {
+    if ($table->isEmpty()) {
         throw new Exception(Exception::COLLECTION_NOT_FOUND);
     }
 
-    $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+    $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
 
-    if ($attribute->isEmpty()) {
+    if ($column->isEmpty()) {
         throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
     }
 
-    if ($attribute->getAttribute('status') !== 'available') {
+    if ($column->getAttribute('status') !== 'available') {
         throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
     }
 
-    if ($attribute->getAttribute(('type') !== $type)) {
+    if ($column->getAttribute(('type') !== $type)) {
         throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
     }
 
-    if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+    if ($column->getAttribute('type') === Database::VAR_STRING && $column->getAttribute(('filter') !== $filter)) {
         throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
     }
 
     if ($required && isset($default)) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
     }
 
-    if ($attribute->getAttribute('array', false) && isset($default)) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
+    if ($column->getAttribute('array', false) && isset($default)) {
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
     }
 
-    $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+    $tableId =  'database_' . $db->getInternalId() . '_collection_' . $table->getInternalId();
 
-    $attribute
+    $column
         ->setAttribute('default', $default)
         ->setAttribute('required', $required);
 
     if (!empty($size)) {
-        $attribute->setAttribute('size', $size);
+        $column->setAttribute('size', $size);
     }
 
-    switch ($attribute->getAttribute('format')) {
+    switch ($column->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
-            $min ??= $attribute->getAttribute('formatOptions')['min'];
-            $max ??= $attribute->getAttribute('formatOptions')['max'];
+            $min ??= $column->getAttribute('formatOptions')['min'];
+            $max ??= $column->getAttribute('formatOptions')['max'];
 
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
 
-            if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
+            if ($column->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
                 $validator = new Range($min, $max, Database::VAR_INTEGER);
             } else {
                 $validator = new Range($min, $max, Database::VAR_FLOAT);
@@ -326,7 +326,7 @@ function updateAttribute(
                 'min' => $min,
                 'max' => $max
             ];
-            $attribute->setAttribute('formatOptions', $options);
+            $column->setAttribute('formatOptions', $options);
 
             break;
         case APP_DATABASE_ATTRIBUTE_ENUM:
@@ -348,44 +348,44 @@ function updateAttribute(
                 'elements' => $elements
             ];
 
-            $attribute->setAttribute('formatOptions', $options);
+            $column->setAttribute('formatOptions', $options);
 
             break;
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
-        $attribute->setAttribute('options', $primaryDocumentOptions);
+        $primaryRowOptions = \array_merge($column->getAttribute('options', []), $options);
+        $column->setAttribute('options', $primaryRowOptions);
         try {
             $dbForProject->updateRelationship(
-                collection: $collectionId,
+                collection: $tableId,
                 id: $key,
                 newKey: $newKey,
-                onDelete: $primaryDocumentOptions['onDelete'],
+                onDelete: $primaryRowOptions['onDelete'],
             );
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         }
 
-        if ($primaryDocumentOptions['twoWay']) {
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+        if ($primaryRowOptions['twoWay']) {
+            $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryRowOptions['relatedCollection']);
 
-            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
+            $relatedColumn = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $primaryRowOptions['twoWayKey']);
 
             if (!empty($newKey) && $newKey !== $key) {
                 $options['twoWayKey'] = $newKey;
             }
 
-            $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
-            $relatedAttribute->setAttribute('options', $relatedOptions);
-            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
+            $relatedOptions = \array_merge($relatedColumn->getAttribute('options'), $options);
+            $relatedColumn->setAttribute('options', $relatedOptions);
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $primaryRowOptions['twoWayKey'], $relatedColumn);
 
-            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
         }
     } else {
         try {
             $dbForProject->updateAttribute(
-                collection: $collectionId,
+                collection: $tableId,
                 id: $key,
                 size: $size,
                 required: $required,
@@ -405,44 +405,44 @@ function updateAttribute(
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        $originalUid = $attribute->getId();
+        $originalUid = $column->getId();
 
-        $attribute
-            ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
+        $column
+            ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $table->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+        $dbForProject->updateDocument('attributes', $originalUid, $column);
 
         /**
          * @var Document $index
          */
-        foreach ($collection->getAttribute('indexes') as $index) {
+        foreach ($table->getAttribute('indexes') as $index) {
             /**
-             * @var string[] $attributes
+             * @var string[] $columns
              */
-            $attributes = $index->getAttribute('attributes', []);
-            $found = \array_search($key, $attributes);
+            $columns = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $columns);
 
             if ($found !== false) {
-                $attributes[$found] = $newKey;
-                $index->setAttribute('attributes', $attributes);
+                $columns[$found] = $newKey;
+                $index->setAttribute('attributes', $columns);
                 $dbForProject->updateDocument('indexes', $index->getId(), $index);
             }
         }
     } else {
-        $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+        $column = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key, $column);
     }
 
-    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collection->getId());
+    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $table->getId());
 
     $queueForEvents
-        ->setContext('collection', $collection)
+        ->setContext('table', $table)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
-        ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId());
+        ->setParam('tableId', $table->getId())
+        ->setParam('columnId', $column->getId());
 
-    return $attribute;
+    return $column;
 }
 
 App::init()
@@ -845,18 +845,19 @@ App::delete('/v1/databases/:databaseId')
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections')
-    ->desc('Create collection')
+App::post('/v1/databases/:databaseId/tables')
+    ->alias('/v1/databases/:databaseId/collections')
+    ->desc('Create table')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'collection.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+    ->label('audits.event', 'table.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'createCollection',
+        group: 'tables',
+        name: 'createTable',
         description: '/docs/references/databases/create-collection.md',
         auth: [AuthType::KEY],
         responses: [
@@ -868,8 +869,8 @@ App::post('/v1/databases/:databaseId/collections')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
+    ->param('tableId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Table name. Max length: 128 chars.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
@@ -877,7 +878,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -885,24 +886,24 @@ App::post('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
+        $tableId = $tableId == 'unique()' ? ID::unique() : $tableId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
 
         try {
-            $collection = $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
-                '$id' => $collectionId,
+            $table = $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
+                '$id' => $tableId,
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions,
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
-                'search' => implode(' ', [$collectionId, $name]),
+                'search' => implode(' ', [$tableId, $name]),
             ]));
 
-            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), permissions: $permissions, documentSecurity: $documentSecurity);
+            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), permissions: $permissions, documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception(Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException) {
@@ -912,23 +913,23 @@ App::post('/v1/databases/:databaseId/collections')
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId());
+            ->setParam('tableId', $table->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($collection, Response::MODEL_COLLECTION);
+            ->dynamic($table, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/databases/:databaseId/collections')
-    ->alias('/v1/database/collections')
-    ->desc('List collections')
+App::get('/v1/databases/:databaseId/tables')
+    ->alias('/v1/databases/:databaseId/collections')
+    ->desc('List tables')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'listCollections',
+        group: 'tables',
+        name: 'listTables',
         description: '/docs/references/databases/list-collections.md',
         auth: [AuthType::KEY],
         responses: [
@@ -974,11 +975,11 @@ App::get('/v1/databases/:databaseId/collections')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $collectionId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+            $tableId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$collectionId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Table '{$tableId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
@@ -987,27 +988,29 @@ App::get('/v1/databases/:databaseId/collections')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $collections = $dbForProject->find('database_' . $database->getInternalId(), $queries);
+            $tables = $dbForProject->find('database_' . $database->getInternalId(), $queries);
             $total = $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
+
+        // TODO: collections > tables
         $response->dynamic(new Document([
-            'collections' => $collections,
+            'collections' => $tables,
             'total' => $total,
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId')
-    ->alias('/v1/database/collections/:collectionId')
-    ->desc('Get collection')
+App::get('/v1/databases/:databaseId/tables/:tableId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId')
+    ->desc('Get table')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'getCollection',
+        group: 'tables',
+        name: 'getTable',
         description: '/docs/references/databases/get-collection.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1019,11 +1022,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('tableId', '', new UID(), 'Table ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $tableId, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1031,25 +1033,25 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($table, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
-    ->alias('/v1/database/collections/:collectionId/logs')
-    ->desc('List collection logs')
+App::get('/v1/databases/:databaseId/tables/:tableId/logs')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/logs')
+    ->desc('List table logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'listCollectionLogs',
+        group: 'tables',
+        name: 'listTableLogs',
         description: '/docs/references/databases/get-collection-logs.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -1061,13 +1063,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('tableId', '', new UID(), 'Table ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $tableId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1075,10 +1077,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+        $tableDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        $table = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $tableDocument->getInternalId());
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -1095,7 +1097,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         ]);
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
+        $resource = 'database/' . $databaseId . '/table/' . $tableId;
         $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
@@ -1150,19 +1152,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     });
 
 
-App::put('/v1/databases/:databaseId/collections/:collectionId')
-    ->alias('/v1/database/collections/:collectionId')
-    ->desc('Update collection')
+App::put('/v1/databases/:databaseId/tables/:tableId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId')
+    ->desc('Update table')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].update')
-    ->label('audits.event', 'collection.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].update')
+    ->label('audits.event', 'table.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'updateCollection',
+        group: 'tables',
+        name: 'updateTable',
         description: '/docs/references/databases/update-collection.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1174,7 +1176,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('tableId', '', new UID(), 'Table ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -1183,7 +1185,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1191,53 +1193,53 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $permissions ??= $collection->getPermissions() ?? [];
+        $permissions ??= $table->getPermissions() ?? [];
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
 
-        $enabled ??= $collection->getAttribute('enabled', true);
+        $enabled ??= $table->getAttribute('enabled', true);
 
-        $collection = $dbForProject->updateDocument(
+        $table = $dbForProject->updateDocument(
             'database_' . $database->getInternalId(),
-            $collectionId,
-            $collection
+            $tableId,
+            $table
             ->setAttribute('name', $name)
             ->setAttribute('$permissions', $permissions)
             ->setAttribute('documentSecurity', $documentSecurity)
             ->setAttribute('enabled', $enabled)
-            ->setAttribute('search', \implode(' ', [$collectionId, $name]))
+            ->setAttribute('search', \implode(' ', [$tableId, $name]))
         );
 
-        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
+        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId());
+            ->setParam('tableId', $table->getId());
 
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($table, Response::MODEL_COLLECTION);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId')
-    ->alias('/v1/database/collections/:collectionId')
-    ->desc('Delete collection')
+App::delete('/v1/databases/:databaseId/tables/:tableId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId')
+    ->desc('Delete table')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
-    ->label('audits.event', 'collection.delete')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].delete')
+    ->label('audits.event', 'table.delete')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
-        name: 'deleteCollection',
+        group: 'tables',
+        name: 'deleteTable',
         description: '/docs/references/databases/delete-collection.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1249,13 +1251,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('tableId', '', new UID(), 'Table ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
+    ->action(function (string $databaseId, string $tableId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1263,45 +1265,45 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $collectionId)) {
+        if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $tableId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_COLLECTION)
             ->setDatabase($database)
-            ->setCollection($collection);
+            ->setCollection($table);
 
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setPayload($response->output($collection, Response::MODEL_COLLECTION));
+            ->setParam('tableId', $table->getId())
+            ->setPayload($response->output($table, Response::MODEL_COLLECTION));
 
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
-    ->alias('/v1/database/collections/:collectionId/attributes/string')
-    ->desc('Create string attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/string')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/string')
+    ->desc('Create string column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createStringAttribute',
+        group: 'columns',
+        name: 'createStringColumn',
         description: '/docs/references/databases/create-string-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1312,18 +1314,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
-    ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Text(0, 0), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
+    ->param('encrypt', false, new Boolean(), 'Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
@@ -1337,7 +1339,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             $filters[] = 'encrypt';
         }
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -1349,22 +1351,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
-    ->alias('/v1/database/collections/:collectionId/attributes/email')
-    ->desc('Create email attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/email')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/email')
+    ->desc('Create email column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createEmailAttribute',
+        group: 'columns',
+        name: 'createEmailColumn',
         description: '/docs/references/databases/create-email-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1375,18 +1377,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Email(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 254,
@@ -1398,22 +1400,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
-    ->alias('/v1/database/collections/:collectionId/attributes/enum')
-    ->desc('Create enum attribute')
+App::post('/v1/databases/:databaseId/collections/:tableId/attributes/enum')
+    ->alias('/v1/database/collections/:tableId/attributes/enum')
+    ->desc('Create enum column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createEnumAttribute',
+        group: 'columns',
+        name: 'createEnumColumn',
         description: '/docs/references/databases/create-attribute-enum.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1424,22 +1426,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->param('elements', [], new ArrayList(new Text(DATABASE::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . DATABASE::LENGTH_KEY . ' characters long.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Text(0), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
         if (!is_null($default) && !in_array($default, $elements)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
         }
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => Database::LENGTH_KEY,
@@ -1452,22 +1454,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
-    ->alias('/v1/database/collections/:collectionId/attributes/ip')
-    ->desc('Create IP address attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/ip')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/ip')
+    ->desc('Create IP address column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createIpAttribute',
+        group: 'columns',
+        name: 'createIpColumn',
         description: '/docs/references/databases/create-ip-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1478,18 +1480,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new IP(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 39,
@@ -1501,22 +1503,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
-    ->alias('/v1/database/collections/:collectionId/attributes/url')
-    ->desc('Create URL attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/url')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/url')
+    ->desc('Create URL column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createUrlAttribute',
+        group: 'columns',
+        name: 'createUrlColumn',
         description: '/docs/references/databases/create-url-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1527,18 +1529,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new URL(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 2000,
@@ -1550,22 +1552,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
-    ->alias('/v1/database/collections/:collectionId/attributes/integer')
-    ->desc('Create integer attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/integer')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/integer')
+    ->desc('Create integer column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createIntegerAttribute',
+        group: 'columns',
+        name: 'createIntegerColumn',
         description: '/docs/references/databases/create-integer-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1576,18 +1578,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
-    ->param('default', null, new Integer(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('default', null, new Integer(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
         $min ??= PHP_INT_MIN;
@@ -1605,7 +1607,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
 
         $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
             'size' => $size,
@@ -1619,31 +1621,31 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
             ],
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
-        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        $formatOptions = $column->getAttribute('formatOptions', []);
 
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \intval($formatOptions['min']));
-            $attribute->setAttribute('max', \intval($formatOptions['max']));
+            $column->setAttribute('min', \intval($formatOptions['min']));
+            $column->setAttribute('max', \intval($formatOptions['max']));
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
-    ->alias('/v1/database/collections/:collectionId/attributes/float')
-    ->desc('Create float attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/float')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/float')
+    ->desc('Create float column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createFloatAttribute',
+        group: 'columns',
+        name: 'createFloatColumn',
         description: '/docs/references/databases/create-float-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1654,18 +1656,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
-    ->param('default', null, new FloatValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('default', null, new FloatValidator(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         // Ensure attribute default is within range
         $min ??= -PHP_FLOAT_MAX;
@@ -1681,7 +1683,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
         }
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
@@ -1695,31 +1697,31 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             ],
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
-        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        $formatOptions = $column->getAttribute('formatOptions', []);
 
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \floatval($formatOptions['min']));
-            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+            $column->setAttribute('min', \floatval($formatOptions['min']));
+            $column->setAttribute('max', \floatval($formatOptions['max']));
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
-    ->alias('/v1/database/collections/:collectionId/attributes/boolean')
-    ->desc('Create boolean attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/boolean')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/boolean')
+    ->desc('Create boolean column')
     ->groups(['api', 'database', 'schema'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createBooleanAttribute',
+        group: 'columns',
+        name: 'createBooleanColumn',
         description: '/docs/references/databases/create-boolean-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1730,18 +1732,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Boolean(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
@@ -1752,22 +1754,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
-    ->alias('/v1/database/collections/:collectionId/attributes/datetime')
-    ->desc('Create datetime attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/datetime')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/datetime')
+    ->desc('Create datetime column')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createDatetimeAttribute',
+        group: 'columns',
+        name: 'createDatetimeColumn',
         description: '/docs/references/databases/create-datetime-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1778,20 +1780,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, fn (Database $dbForProject) => new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime()), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when attribute is required.', true, ['dbForProject'])
-    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, fn (Database $dbForProject) => new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime()), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when column is required.', true, ['dbForProject'])
+    ->param('array', false, new Boolean(), 'Is column an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $filters[] = 'datetime';
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $column = createColumn($databaseId, $tableId, new Document([
             'key' => $key,
             'type' => Database::VAR_DATETIME,
             'size' => 0,
@@ -1803,22 +1805,22 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
-    ->alias('/v1/database/collections/:collectionId/attributes/relationship')
-    ->desc('Create relationship attribute')
+App::post('/v1/databases/:databaseId/tables/:tableId/columns/relationship')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/relationship')
+    ->desc('Create relationship column')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'column.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'createRelationshipAttribute',
+        group: 'columns',
+        name: 'createRelationshipColumn',
         description: '/docs/references/databases/create-relationship-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1829,12 +1831,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('relatedCollectionId', '', new UID(), 'Related Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('relatedTableId', '', new UID(), 'Related Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY], true), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-    ->param('key', null, new Key(), 'Attribute Key.', true)
-    ->param('twoWayKey', null, new Key(), 'Two Way Attribute Key.', true)
+    ->param('key', null, new Key(), 'Column Key.', true)
+    ->param('twoWayKey', null, new Key(), 'Two Way Column Key.', true)
     ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1842,8 +1844,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->inject('queueForEvents')
     ->action(function (
         string $databaseId,
-        string $collectionId,
-        string $relatedCollectionId,
+        string $tableId,
+        string $relatedTableId,
         string $type,
         bool $twoWay,
         ?string $key,
@@ -1854,8 +1856,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         EventDatabase $queueForDatabase,
         Event $queueForEvents
     ) {
-        $key ??= $relatedCollectionId;
-        $twoWayKey ??= $collectionId;
+        $key ??= $relatedTableId;
+        $twoWayKey ??= $tableId;
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1863,34 +1865,34 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        $table = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId());
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
-        $relatedCollection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollectionDocument->getInternalId());
+        $relatedTableDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId);
+        $relatedTable = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedTableDocument->getInternalId());
 
-        if ($relatedCollection->isEmpty()) {
+        if ($relatedTable->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attributes = $collection->getAttribute('attributes', []);
-        /** @var Document[] $attributes */
-        foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
+        $columns = $table->getAttribute('attributes', []);
+        /** @var Document[] $columns */
+        foreach ($columns as $column) {
+            if ($column->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
                 continue;
             }
 
-            if (\strtolower($attribute->getId()) === \strtolower($key)) {
+            if (\strtolower($column->getId()) === \strtolower($key)) {
                 throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
             }
 
             if (
-                \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
-                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+                \strtolower($column->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
+                $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
                 // Console should provide a unique twoWayKey input!
                 throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
@@ -1898,16 +1900,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
 
             if (
                 $type === Database::RELATION_MANY_TO_MANY &&
-                $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
-                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+                $column->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
+                $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same collection is currently not permitted.');
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same table is currently not permitted.');
             }
         }
 
-        $attribute = createAttribute(
+        $column = createColumn(
             $databaseId,
-            $collectionId,
+            $tableId,
             new Document([
                 'key' => $key,
                 'type' => Database::VAR_RELATIONSHIP,
@@ -1917,7 +1919,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 'array' => false,
                 'filters' => [],
                 'options' => [
-                    'relatedCollection' => $relatedCollectionId,
+                    'relatedCollection' => $relatedTableId,
                     'relationType' => $type,
                     'twoWay' => $twoWay,
                     'twoWayKey' => $twoWayKey,
@@ -1930,27 +1932,27 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             $queueForEvents
         );
 
-        $options = $attribute->getAttribute('options', []);
+        $options = $column->getAttribute('options', []);
 
         foreach ($options as $key => $option) {
-            $attribute->setAttribute($key, $option);
+            $column->setAttribute($key, $option);
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
-    ->alias('/v1/database/collections/:collectionId/attributes')
-    ->desc('List attributes')
+App::get('/v1/databases/:databaseId/tables/:tableId/columns')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes')
+    ->desc('List columns')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'listAttributes',
+        group: 'columns',
+        name: 'listColumns',
         description: '/docs/references/databases/list-attributes.md',
         auth: [AuthType::KEY],
         responses: [
@@ -1961,11 +1963,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new Attributes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Attributes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $tableId, array $queries, Response $response, Database $dbForProject) {
         /** @var Document $database */
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1973,9 +1975,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -1984,7 +1986,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         \array_push(
             $queries,
             Query::equal('databaseInternalId', [$database->getInternalId()]),
-            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('collectionInternalId', [$table->getInternalId()]),
         );
 
         /**
@@ -2002,16 +2004,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $attributeId = $cursor->getValue();
+            $columnId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('attributes', [
                 Query::equal('databaseInternalId', [$database->getInternalId()]),
-                Query::equal('collectionInternalId', [$collection->getInternalId()]),
-                Query::equal('key', [$attributeId]),
+                Query::equal('collectionInternalId', [$table->getInternalId()]),
+                Query::equal('key', [$columnId]),
                 Query::limit(1),
             ]));
 
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Column '{$columnId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument[0]);
@@ -2019,28 +2021,28 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $filters = Query::groupByType($queries)['filters'];
         try {
-            $attributes = $dbForProject->find('attributes', $queries);
+            $columns = $dbForProject->find('attributes', $queries);
             $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
         }
 
         $response->dynamic(new Document([
-            'attributes' => $attributes,
+            'attributes' => $columns,
             'total' => $total,
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
-    ->alias('/v1/database/collections/:collectionId/attributes/:key')
-    ->desc('Get attribute')
+App::get('/v1/databases/:databaseId/tables/:tableId/columns/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/:key')
+    ->desc('Get column')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'getAttribute',
+        group: 'columns',
+        name: 'getColumn',
         description: '/docs/references/databases/get-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2062,11 +2064,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         ]
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $tableId, string $key, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2074,25 +2076,25 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $column = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
 
-        if ($attribute->isEmpty()) {
+        if ($column->isEmpty()) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         }
 
         // Select response model based on type and format
-        $type = $attribute->getAttribute('type');
-        $format = $attribute->getAttribute('format');
-        $options = $attribute->getAttribute('options', []);
+        $type = $column->getAttribute('type');
+        $format = $column->getAttribute('format');
+        $options = $column->getAttribute('options', []);
 
         foreach ($options as $key => $option) {
-            $attribute->setAttribute($key, $option);
+            $column->setAttribute($key, $option);
         }
 
         $model = match ($type) {
@@ -2111,21 +2113,22 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             default => Response::MODEL_ATTRIBUTE,
         };
 
-        $response->dynamic($attribute, $model);
+        $response->dynamic($column, $model);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
-    ->desc('Update string attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/string/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/string/:key')
+    ->desc('Update string column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateStringAttribute',
+        group: 'columns',
+        name: 'updateStringColumn',
         description: '/docs/references/databases/update-string-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2137,20 +2140,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Maximum size of the string attribute.', true)
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
 
-        $attribute = updateAttribute(
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2163,21 +2166,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
-    ->desc('Update email attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/email/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/email/:key')
+    ->desc('Update email column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateEmailAttribute',
+        group: 'columns',
+        name: 'updateEmailColumn',
         description: '/docs/references/databases/update-email-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2189,18 +2193,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new Email()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2213,21 +2217,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
-    ->desc('Update enum attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/enum/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/enum/:key')
+    ->desc('Update enum column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateEnumAttribute',
+        group: 'columns',
+        name: 'updateEnumColumn',
         description: '/docs/references/databases/update-enum-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2239,19 +2244,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->param('elements', null, new ArrayList(new Text(DATABASE::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . DATABASE::LENGTH_KEY . ' characters long.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?array $elements, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2265,21 +2270,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
-    ->desc('Update IP address attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/ip/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/ip/:key')
+    ->desc('Update IP address column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateIpAttribute',
+        group: 'columns',
+        name: 'updateIpColumn',
         description: '/docs/references/databases/update-ip-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2291,18 +2297,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new IP()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2315,21 +2321,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
-    ->desc('Update URL attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/url/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/url/:key')
+    ->desc('Update URL column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateUrlAttribute',
+        group: 'columns',
+        name: 'updateUrlColumn',
         description: '/docs/references/databases/update-url-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2341,18 +2348,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new URL()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2365,21 +2372,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
-    ->desc('Update integer attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/integer/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/integer/:key')
+    ->desc('Update integer column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateIntegerAttribute',
+        group: 'columns',
+        name: 'updateIntegerColumn',
         description: '/docs/references/databases/update-integer-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2391,20 +2399,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
-    ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('default', null, new Nullable(new Integer()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2416,30 +2424,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
             newKey: $newKey
         );
 
-        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        $formatOptions = $column->getAttribute('formatOptions', []);
 
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \intval($formatOptions['min']));
-            $attribute->setAttribute('max', \intval($formatOptions['max']));
+            $column->setAttribute('min', \intval($formatOptions['min']));
+            $column->setAttribute('max', \intval($formatOptions['max']));
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
-    ->desc('Update float attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/float/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/float/:key')
+    ->desc('Update float column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateFloatAttribute',
+        group: 'columns',
+        name: 'updateFloatColumn',
         description: '/docs/references/databases/update-float-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2451,20 +2460,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
-    ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('default', null, new Nullable(new FloatValidator()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2476,30 +2485,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
             newKey: $newKey
         );
 
-        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        $formatOptions = $column->getAttribute('formatOptions', []);
 
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \floatval($formatOptions['min']));
-            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+            $column->setAttribute('min', \floatval($formatOptions['min']));
+            $column->setAttribute('max', \floatval($formatOptions['max']));
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
-    ->desc('Update boolean attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/boolean/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/boolean/:key')
+    ->desc('Update boolean column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateBooleanAttribute',
+        group: 'columns',
+        name: 'updateBooleanColumn',
         description: '/docs/references/databases/update-boolean-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2511,18 +2521,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, new Nullable(new Boolean()), 'Default value for column when not provided. Cannot be set when column is required.')
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?bool $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2534,21 +2544,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
-    ->desc('Update dateTime attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/datetime/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/datetime/:key')
+    ->desc('Update dateTime column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateDatetimeAttribute',
+        group: 'columns',
+        name: 'updateDatetimeColumn',
         description: '/docs/references/databases/update-datetime-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2560,18 +2571,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime())), 'Default value for attribute when not provided. Cannot be set when attribute is required.', injections: ['dbForProject'])
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
+    ->param('required', null, new Boolean(), 'Is column required?')
+    ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime())), 'Default value for column when not provided. Cannot be set when column is required.', injections: ['dbForProject'])
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
-        $attribute = updateAttribute(
+    ->action(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $column = updateColumn(
             databaseId: $databaseId,
-            collectionId: $collectionId,
+            tableId: $tableId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -2583,21 +2594,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
-    ->desc('Update relationship attribute')
+App::patch('/v1/databases/:databaseId/tables/:tableId/columns/:key/relationship')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/:key/relationship')
+    ->desc('Update relationship column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'updateRelationshipAttribute',
+        group: 'columns',
+        name: 'updateRelationshipColumn',
         description: '/docs/references/databases/update-relationship-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2609,16 +2621,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->param('newKey', null, new Key(), 'New Column Key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (
         string $databaseId,
-        string $collectionId,
+        string $tableId,
         string $key,
         ?string $onDelete,
         ?string $newKey,
@@ -2626,9 +2638,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         Database $dbForProject,
         Event $queueForEvents
     ) {
-        $attribute = updateAttribute(
+        $column = updateColumn(
             $databaseId,
-            $collectionId,
+            $tableId,
             $key,
             $dbForProject,
             $queueForEvents,
@@ -2640,30 +2652,30 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             newKey: $newKey
         );
 
-        $options = $attribute->getAttribute('options', []);
+        $options = $column->getAttribute('options', []);
 
         foreach ($options as $key => $option) {
-            $attribute->setAttribute($key, $option);
+            $column->setAttribute($key, $option);
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
+            ->dynamic($column, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
-    ->alias('/v1/database/collections/:collectionId/attributes/:key')
-    ->desc('Delete attribute')
+App::delete('/v1/databases/:databaseId/tables/:tableId/columns/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/attributes/:key')
+    ->desc('Delete column')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.delete')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+    ->label('audits.event', 'column.delete')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'attributes',
-        name: 'deleteAttribute',
+        group: 'columns',
+        name: 'deleteColumn',
         description: '/docs/references/databases/delete-attribute.md',
         auth: [AuthType::KEY],
         responses: [
@@ -2675,29 +2687,29 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Column Key.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $tableId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
 
-        if ($attribute->isEmpty()) {
+        if ($column->isEmpty()) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
         }
 
@@ -2705,55 +2717,55 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
          * Check index dependency
          */
         $validator = new IndexDependencyValidator(
-            $collection->getAttribute('indexes'),
+            $table->getAttribute('indexes'),
             $dbForProject->getAdapter()->getSupportForCastIndexArray(),
         );
 
-        if (! $validator->isValid($attribute)) {
+        if (! $validator->isValid($column)) {
             throw new Exception(Exception::INDEX_DEPENDENCY);
         }
 
         // Only update status if removing available attribute
-        if ($attribute->getAttribute('status') === 'available') {
-            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        if ($column->getAttribute('status') === 'available') {
+            $column = $dbForProject->updateDocument('attributes', $column->getId(), $column->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $table->getInternalId());
 
-        if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
-            $options = $attribute->getAttribute('options');
+        if ($column->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            $options = $column->getAttribute('options');
             if ($options['twoWay']) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+                $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
 
-                if ($relatedCollection->isEmpty()) {
+                if ($relatedTable->isEmpty()) {
                     throw new Exception(Exception::COLLECTION_NOT_FOUND);
                 }
 
-                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                $relatedColumn = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $options['twoWayKey']);
 
-                if ($relatedAttribute->isEmpty()) {
+                if ($relatedColumn->isEmpty()) {
                     throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
                 }
 
-                if ($relatedAttribute->getAttribute('status') === 'available') {
-                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                if ($relatedColumn->getAttribute('status') === 'available') {
+                    $dbForProject->updateDocument('attributes', $relatedColumn->getId(), $relatedColumn->setAttribute('status', 'deleting'));
                 }
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
             }
         }
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
-            ->setCollection($collection)
+            ->setCollection($table)
             ->setDatabase($db)
-            ->setDocument($attribute);
+            ->setDocument($column);
 
         // Select response model based on type and format
-        $type = $attribute->getAttribute('type');
-        $format = $attribute->getAttribute('format');
+        $type = $column->getAttribute('type');
+        $format = $column->getAttribute('format');
 
         $model = match ($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
@@ -2773,27 +2785,27 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('attributeId', $attribute->getId())
-            ->setContext('collection', $collection)
+            ->setParam('tableId', $table->getId())
+            ->setParam('columnId', $column->getId())
+            ->setContext('table', $table)
             ->setContext('database', $db)
-            ->setPayload($response->output($attribute, $model));
+            ->setPayload($response->output($column, $model));
 
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
-    ->alias('/v1/database/collections/:collectionId/indexes')
+App::post('/v1/databases/:databaseId/tables/:tableId/indexes')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/indexes')
     ->desc('Create index')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'index.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'collections',
+        group: 'tables',
         name: 'createIndex',
         description: '/docs/references/databases/create-index.md',
         auth: [AuthType::KEY],
@@ -2806,16 +2818,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
-    ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
+    ->param('columns', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of columns to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' columns are allowed, each 32 characters long.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2823,14 +2835,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
-            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('collectionInternalId', [$table->getInternalId()]),
             Query::equal('databaseInternalId', [$db->getInternalId()])
         ], 61);
 
@@ -2841,9 +2853,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldColumns = \array_map(fn ($a) => $a->getArrayCopy(), $table->getAttribute('attributes'));
 
-        $oldAttributes[] = [
+        $oldColumns[] = [
             'key' => '$id',
             'type' => Database::VAR_STRING,
             'status' => 'available',
@@ -2853,7 +2865,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'size' => Database::LENGTH_KEY
         ];
 
-        $oldAttributes[] = [
+        $oldColumns[] = [
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'status' => 'available',
@@ -2864,7 +2876,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'size' => 0
         ];
 
-        $oldAttributes[] = [
+        $oldColumns[] = [
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
             'status' => 'available',
@@ -2878,51 +2890,51 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         // lengths hidden by default
         $lengths = [];
 
-        foreach ($attributes as $i => $attribute) {
+        foreach ($columns as $i => $column) {
             // find attribute metadata in collection document
-            $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
+            $columnIndex = \array_search($column, array_column($oldColumns, 'key'));
 
-            if ($attributeIndex === false) {
-                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown attribute: ' . $attribute . '. Verify the attribute name or create the attribute.');
+            if ($columnIndex === false) {
+                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown column: ' . $column . '. Verify the column name or create the column.');
             }
 
-            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
-            $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
+            $columnStatus = $oldColumns[$columnIndex]['status'];
+            $columnType = $oldColumns[$columnIndex]['type'];
+            $columnArray = $oldColumns[$columnIndex]['array'] ?? false;
 
-            if ($attributeType === Database::VAR_RELATIONSHIP) {
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
+            if ($columnType === Database::VAR_RELATIONSHIP) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship column: ' . $oldColumns[$columnIndex]['key']);
             }
 
             // ensure attribute is available
-            if ($attributeStatus !== 'available') {
-                throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
+            if ($columnStatus !== 'available') {
+                throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Column not available: ' . $oldColumns[$columnIndex]['key']);
             }
 
             $lengths[$i] = null;
 
-            if ($attributeArray === true) {
+            if ($columnArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }
         }
 
         $index = new Document([
-            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+            '$id' => ID::custom($db->getInternalId() . '_' . $table->getInternalId() . '_' . $key),
             'key' => $key,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $databaseId,
-            'collectionInternalId' => $collection->getInternalId(),
-            'collectionId' => $collectionId,
+            'collectionInternalId' => $table->getInternalId(),
+            'collectionId' => $tableId,
             'type' => $type,
-            'attributes' => $attributes,
+            'attributes' => $columns,
             'lengths' => $lengths,
             'orders' => $orders,
         ]);
 
         $validator = new IndexValidator(
-            $collection->getAttribute('attributes'),
+            $table->getAttribute('attributes'),
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
@@ -2936,19 +2948,19 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::INDEX_ALREADY_EXISTS);
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_CREATE_INDEX)
             ->setDatabase($db)
-            ->setCollection($collection)
+            ->setCollection($table)
             ->setDocument($index);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $table->getId())
             ->setParam('indexId', $index->getId())
-            ->setContext('collection', $collection)
+            ->setContext('table', $table)
             ->setContext('database', $db);
 
         $response
@@ -2956,8 +2968,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->dynamic($index, Response::MODEL_INDEX);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
-    ->alias('/v1/database/collections/:collectionId/indexes')
+App::get('/v1/databases/:databaseId/tables/:tableId/indexes')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/indexes')
     ->desc('List indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -2977,11 +2989,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $tableId, array $queries, Response $response, Database $dbForProject) {
         /** @var Document $database */
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2989,9 +3001,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -3000,7 +3012,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         \array_push(
             $queries,
             Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId]),
+            Query::equal('collectionId', [$tableId]),
         );
 
         /**
@@ -3019,7 +3031,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
-                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('collectionInternalId', [$table->getInternalId()]),
                 Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
@@ -3037,7 +3049,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $total = $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT);
             $indexes = $dbForProject->find('indexes', $queries);
         } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
         }
 
         $response->dynamic(new Document([
@@ -3046,8 +3058,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         ]), Response::MODEL_INDEX_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
-    ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
+App::get('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/indexes/:key')
     ->desc('Get index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -3067,24 +3079,24 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $tableId, string $key, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $collection->find('key', $key, 'indexes');
+        $index = $table->find('key', $key, 'indexes');
         if (empty($index)) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
@@ -3093,15 +3105,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     });
 
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
-    ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
+App::delete('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/indexes/:key')
     ->desc('Delete index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
+    ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
     ->label('audits.event', 'index.delete')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('sdk', new Method(
         namespace: 'databases',
         group: 'indexes',
@@ -3117,26 +3129,26 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $tableId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
@@ -3147,34 +3159,34 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_INDEX)
             ->setDatabase($db)
-            ->setCollection($collection)
+            ->setCollection($table)
             ->setDocument($index);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $table->getId())
             ->setParam('indexId', $index->getId())
-            ->setContext('collection', $collection)
+            ->setContext('table', $table)
             ->setContext('database', $db)
             ->setPayload($response->output($index, Response::MODEL_INDEX));
 
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
-    ->desc('Create document')
+App::post('/v1/databases/:databaseId/tables/:tableId/rows')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents')
+    ->desc('Create row')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+    ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].create')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'document.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.event', 'row.create')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -3183,8 +3195,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         [
             new Method(
                 namespace: 'databases',
-                group: 'documents',
-                name: 'createDocument',
+                group: 'rows',
+                name: 'createRow',
                 description: '/docs/references/databases/create-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -3198,16 +3210,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ]
     )
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
-    ->param('data', [], new JSON(), 'Document data as JSON object.')
+    ->param('rowId', '', new CustomId(), 'Row ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define columns before creating rows.')
+    ->param('data', [], new JSON(), 'Row data as JSON object.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $rowId, string $tableId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3228,9 +3240,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -3273,38 +3285,38 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
+        $data['$collection'] = $table->getId(); // Adding this param to make API easier for developers
+        $data['$id'] = $rowId == 'unique()' ? ID::unique() : $rowId;
         $data['$permissions'] = $permissions;
-        $document = new Document($data);
+        $row = new Document($data);
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+        $checkPermissions = function (Document $table, Document $row, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
             $operations++;
 
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $documentSecurity = $table->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
-            $valid = $validator->isValid($collection->getPermissionsByType($permission));
+            $valid = $validator->isValid($table->getPermissionsByType($permission));
             if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$valid) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
             if ($permission === Database::PERMISSION_UPDATE) {
-                $valid = $valid || $validator->isValid($document->getUpdate());
+                $valid = $valid || $validator->isValid($row->getUpdate());
                 if ($documentSecurity && !$valid) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
             }
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -3318,9 +3330,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $relations = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -3334,7 +3346,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     }
                     if ($relation instanceof Document) {
                         $current = Authorization::skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
+                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedTable->getInternalId(), $relation->getId())
                         );
 
                         if ($current->isEmpty()) {
@@ -3346,26 +3358,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         } else {
                             $relation->removeAttribute('$collectionId');
                             $relation->removeAttribute('$databaseId');
-                            $relation->setAttribute('$collection', $relatedCollection->getId());
+                            $relation->setAttribute('$collection', $relatedTable->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
 
-                        $checkPermissions($relatedCollection, $relation, $type);
+                        $checkPermissions($relatedTable, $relation, $type);
                     }
                 }
 
                 if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
         };
 
-        $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
+        $checkPermissions($table, $row, Database::PERMISSION_CREATE);
 
         try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+            $row = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $row);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException $e) {
@@ -3375,18 +3387,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+        // Add $tableId and $databaseId for all rows
+        $processRow = function (Document $table, Document $row) use (&$processRow, $dbForProject, $database) {
+            $row->setAttribute('$databaseId', $database->getId());
+            $row->setAttribute('$collectionId', $table->getId());
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -3395,20 +3407,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $related = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
+                        $processRow($relatedTable, $relation);
                     }
                 }
             }
         };
 
-        $processDocument($collection, $document);
+        $processRow($table, $row);
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
@@ -3418,35 +3430,35 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($document, Response::MODEL_DOCUMENT);
+            ->dynamic($row, Response::MODEL_DOCUMENT);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
+            ->setParam('tableId', $table->getId())
+            ->setParam('rowId', $row->getId())
+            ->setContext('table', $table)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
-    ->desc('List documents')
+App::get('/v1/databases/:databaseId/tables/:tableId/rows')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents')
+    ->desc('List rows')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'documents',
-        name: 'listDocuments',
+        group: 'rows',
+        name: 'listRows',
         description: '/docs/references/databases/list-documents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
@@ -3458,12 +3470,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $tableId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3472,9 +3484,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -3499,44 +3511,44 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $documentId = $cursor->getValue();
+            $rowId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $cursorRow = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
+            if ($cursorRow->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Row '{$rowId}' for the 'cursor' value not found.");
             }
 
-            $cursor->setValue($cursorDocument);
+            $cursor->setValue($cursorRow);
         }
         try {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+            $rows = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $queries);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
         }
 
         $operations = 0;
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
-            if ($document->isEmpty()) {
+        // Add $tableId and $databaseId for all rows
+        $processRow = (function (Document $table, Document $row) use (&$processRow, $dbForProject, $database, &$operations): bool {
+            if ($row->isEmpty()) {
                 return false;
             }
 
             $operations++;
 
-            $document->removeAttribute('$collection');
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $row->removeAttribute('$collection');
+            $row->setAttribute('$databaseId', $database->getId());
+            $row->setAttribute('$collectionId', $table->getId());
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     if (\in_array(\gettype($related), ['array', 'object'])) {
@@ -3552,30 +3564,30 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $relations = $related;
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
                 // todo: Use local cache for this getDocument
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedTable = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId));
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
-                        if (!$processDocument($relatedCollection, $doc)) {
+                        if (!$processRow($relatedTable, $doc)) {
                             unset($relations[$index]);
                         }
                     }
                 }
 
                 if (\is_array($related)) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } elseif (empty($relations)) {
-                    $document->setAttribute($relationship->getAttribute('key'), null);
+                    $row->setAttribute($relationship->getAttribute('key'), null);
                 }
             }
 
             return true;
         });
 
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
+        foreach ($rows as $row) {
+            $processRow($table, $row);
         }
 
         $queueForStatsUsage
@@ -3590,43 +3602,43 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         // Check if the SELECT query includes $databaseId and $collectionId
         $hasDatabaseId = false;
-        $hasCollectionId = false;
+        $hasTableId = false;
         if ($select) {
             $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
                 return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
             }, false);
-            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
+            $hasTableId = \array_reduce($queries, function ($result, $query) {
                 return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
             }, false);
         }
 
         if ($select) {
-            foreach ($documents as $document) {
+            foreach ($rows as $row) {
                 if (!$hasDatabaseId) {
-                    $document->removeAttribute('$databaseId');
+                    $row->removeAttribute('$databaseId');
                 }
-                if (!$hasCollectionId) {
-                    $document->removeAttribute('$collectionId');
+                if (!$hasTableId) {
+                    $row->removeAttribute('$collectionId');
                 }
             }
         }
 
         $response->dynamic(new Document([
             'total' => $total,
-            'documents' => $documents,
+            'documents' => $rows,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
-    ->desc('Get document')
+App::get('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
+    ->desc('Get row')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'documents',
-        name: 'getDocument',
+        group: 'rows',
+        name: 'getRow',
         description: '/docs/references/databases/get-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
@@ -3638,13 +3650,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('rowId', '', new UID(), 'Row ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $tableId, string $rowId, array $queries, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3653,45 +3665,45 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         try {
             $queries = Query::parseQueries($queries);
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            $row = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId, $queries);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if ($document->isEmpty()) {
+        if ($row->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         $operations = 0;
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
-            if ($document->isEmpty()) {
+        // Add $tableId and $databaseId for all rows
+        $processRow = function (Document $table, Document $row) use (&$processRow, $dbForProject, $database, &$operations) {
+            if ($row->isEmpty()) {
                 return;
             }
 
             $operations++;
 
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $row->setAttribute('$databaseId', $database->getId());
+            $row->setAttribute('$collectionId', $table->getId());
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     if (\in_array(\gettype($related), ['array', 'object'])) {
@@ -3705,20 +3717,20 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                     $related = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
+                        $processRow($relatedTable, $relation);
                     }
                 }
             }
         };
 
-        $processDocument($collection, $document);
+        $processRow($table, $row);
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
@@ -3726,19 +3738,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $response->addHeader('X-Debug-Operations', $operations);
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($row, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId/logs', ['databaseId' => 'default'])
-    ->desc('List document logs')
+App::get('/v1/databases/:databaseId/tables/:tableId/rows/:rowId/logs')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId/logs')
+    ->desc('List row logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
         group: 'logs',
-        name: 'listDocumentLogs',
+        name: 'listRowLogs',
         description: '/docs/references/databases/get-document-logs.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -3750,14 +3762,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         contentType: ContentType::JSON,
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('tableId', '', new UID(), 'Collection ID.')
+    ->param('rowId', '', new UID(), 'Row ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $tableId, string $rowId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3765,15 +3777,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $row = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId);
 
-        if ($document->isEmpty()) {
+        if ($row->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
@@ -3790,7 +3802,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         ]);
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
+        $resource = 'database/' . $databaseId . '/table/' . $tableId . '/row/' . $row->getId();
         $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
@@ -3844,22 +3856,22 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId')
-    ->desc('Update document')
+App::patch('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
+    ->desc('Update row')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+    ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('audits.event', 'document.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('audits.event', 'row.update')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}/row/{response.$id}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'documents',
-        name: 'updateDocument',
+        group: 'rows',
+        name: 'updateRow',
         description: '/docs/references/databases/update-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
@@ -3871,16 +3883,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         contentType: ContentType::JSON
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
+    ->param('tableId', '', new UID(), 'Collection ID.')
+    ->param('rowId', '', new UID(), 'Row ID.')
+    ->param('data', [], new JSON(), 'Row data as JSON object. Include only columns and value pairs to be updated.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $tableId, string $rowId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3897,17 +3909,17 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for update
-        /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        /** @var Document $row */
+        $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
-        if ($document->isEmpty()) {
+        if ($row->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
@@ -3940,16 +3952,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
+            $permissions = $row->getPermissions() ?? [];
         }
 
-        $data['$id'] = $documentId;
+        $data['$id'] = $rowId;
         $data['$permissions'] = $permissions;
-        $newDocument = new Document($data);
+        $newRow = new Document($data);
 
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
+        $setTable = (function (Document $collection, Document $document) use (&$setTable, $dbForProject, $database, &$operations) {
 
             $operations++;
 
@@ -3973,9 +3985,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $relations = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -3989,8 +4001,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                        $oldRow = Authorization::skip(fn () => $dbForProject->getDocument(
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedTable->getInternalId(),
                             $relation->getId()
                         ));
                         $relation->removeAttribute('$collectionId');
@@ -3998,15 +4010,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedTable->getInternalId()
                         );
 
-                        if ($oldDocument->isEmpty()) {
+                        if ($oldRow->isEmpty()) {
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         }
-                        $setCollection($relatedCollection, $relation);
+                        $setTable($relatedTable, $relation);
                     }
                 }
 
@@ -4018,7 +4030,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         });
 
-        $setCollection($collection, $newDocument);
+        $setTable($table, $newRow);
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
@@ -4027,12 +4039,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $response->addHeader('X-Debug-Operations', $operations);
 
         try {
-            $document = $dbForProject->withRequestTimestamp(
+            $row = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
                 fn () => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
+                    'database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(),
+                    $row->getId(),
+                    $newRow
                 )
             );
         } catch (AuthorizationException) {
@@ -4045,18 +4057,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+        // Add $tableId and $databaseId for all rows
+        $processRow = function (Document $table, Document $row) use (&$processRow, $dbForProject, $database) {
+            $row->setAttribute('$databaseId', $database->getId());
+            $row->setAttribute('$collectionId', $table->getId());
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -4065,56 +4077,56 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $related = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
+                        $processRow($relatedTable, $relation);
                     }
                 }
             }
         };
 
-        $processDocument($collection, $document);
+        $processRow($table, $row);
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($row, Response::MODEL_DOCUMENT);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
+            ->setParam('tableId', $table->getId())
+            ->setParam('rowId', $row->getId())
+            ->setContext('table', $table)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
-    ->desc('Delete document')
+App::delete('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
+    ->desc('Delete row')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
-    ->label('audits.event', 'document.delete')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
+    ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].delete')
+    ->label('audits.event', 'row.delete')
+    ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}/row/{request.rowId}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
-        group: 'documents',
-        name: 'deleteDocument',
+        group: 'rows',
+        name: 'deleteRow',
         description: '/docs/references/databases/delete-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
@@ -4126,14 +4138,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         contentType: ContentType::NONE
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('rowId', '', new UID(), 'Row ID.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $tableId, string $rowId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4143,42 +4155,42 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
-        if ($document->isEmpty()) {
+        if ($row->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
+            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $table, $rowId) {
                 $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
+                    'database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(),
+                    $rowId
                 );
             });
         } catch (NotFoundException $e) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+        // Add $tableId and $databaseId for all rows
+        $processRow = function (Document $table, Document $row) use (&$processRow, $dbForProject, $database) {
+            $row->setAttribute('$databaseId', $database->getId());
+            $row->setAttribute('$collectionId', $table->getId());
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -4187,20 +4199,20 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                     $related = [$related];
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedTableId = $relationship->getAttribute('relatedCollection');
+                $relatedTable = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
                 );
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
+                        $processRow($relatedTable, $relation);
                     }
                 }
             }
         };
 
-        $processDocument($collection, $document);
+        $processRow($table, $row);
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
@@ -4211,18 +4223,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
+            ->setParam('tableId', $table->getId())
+            ->setParam('rowId', $row->getId())
+            ->setContext('table', $table)
             ->setContext('database', $database)
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
+            ->setPayload($response->output($row, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
         $response->noContent();
     });
@@ -4424,16 +4436,16 @@ App::get('/v1/databases/:databaseId/usage')
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
-    ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
-    ->desc('Get collection usage stats')
+App::get('/v1/databases/:databaseId/tables/:tableId/usage')
+    ->alias('/v1/databases/:databaseId/collections/:tableId/usage')
+    ->desc('Get table usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
         group: null,
-        name: 'getCollectionUsage',
+        name: 'getTableUsage',
         description: '/docs/references/databases/get-collection-usage.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -4446,16 +4458,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('tableId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $range, string $tableId, Response $response, Database $dbForProject) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
-        $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+        $tableDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        $table = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $tableDocument->getInternalId());
 
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -4463,7 +4475,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $tableDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
