@@ -107,7 +107,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => ID::unique(),
+                'tableId' => ID::unique(),
                 'name' => 'Actors',
                 'documentSecurity' => true,
                 'permissions' => [
@@ -127,7 +127,7 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -153,8 +153,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
-                'documentId' => ID::unique(),
+                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],
@@ -178,8 +178,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
-                'documentId' => $row['body']['data']['databasesCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'rowId' => $row['body']['data']['databasesCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -213,8 +213,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
-                'documentId' => ID::unique(),
+                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],
@@ -237,8 +237,8 @@ class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
-                'documentId' => $row['body']['data']['databasesCreateRow']['_id'],
+                'tableId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'rowId' => $row['body']['data']['databasesCreateRow']['_id'],
             ]
         ];
         $row = $this->client->call(Client::METHOD_POST, '/graphql', [
