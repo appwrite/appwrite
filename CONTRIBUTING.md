@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
+We would :heart: you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
 
 ## Here for Hacktoberfest?
 If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
@@ -9,13 +9,13 @@ You can [find issues using this query](https://github.com/search?q=org%3Aappwrit
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
+If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite on Twitter](https://twitter.com/appwrite) or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
 
 ## Code of Conduct
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md).
 
-## Submit a Pull Request 🚀
+## Submit a Pull Request :rocket:
 
 Branch naming convention is as following
 
@@ -65,13 +65,13 @@ Now, go a step further by running the linter using the following command to manu
 composer lint <your file path>
 ```
 
-This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [on PHP_Codesniffer usage Wiki](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
 ```
 
-5. Push changes to GitHub.
+5. Push changes to GitHub
 
 ```
 $ git push origin [name_of_your_new_branch]
@@ -301,7 +301,7 @@ Adding a new dependency should have vital value for the product with minimum pos
 
 ## Introducing New Features
 
-We would 💖 you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement 🙏.
+We would :sparkling_heart: you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement :pray:.
 
 For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
@@ -625,7 +625,7 @@ Pull requests are great, but there are many other ways you can help Appwrite.
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite on Twitter](https://twitter.com/appwrite) and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 

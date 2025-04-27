@@ -293,7 +293,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "consumes": [
                     "application\/json"
@@ -619,7 +619,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -687,7 +687,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -773,7 +773,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -838,7 +838,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -917,7 +917,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -994,7 +994,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -1049,7 +1049,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1102,7 +1102,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1155,7 +1155,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -5167,7 +5167,7 @@
                 "summary": "Create execution",
                 "operationId": "functionsCreateExecution",
                 "consumes": [
-                    "multipart\/form-data"
+                    "application\/json"
                 ],
                 "produces": [
                     "multipart\/form-data"
@@ -5226,65 +5226,59 @@
                         "in": "path"
                     },
                     {
-                        "name": "body",
-                        "description": "HTTP body of execution. Default value is empty string.",
-                        "required": false,
-                        "type": "payload",
-                        "default": "",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "async",
-                        "description": "Execute code in the background. Default value is false.",
-                        "required": false,
-                        "type": "boolean",
-                        "x-example": false,
-                        "default": false,
-                        "in": "formData"
-                    },
-                    {
-                        "name": "path",
-                        "description": "HTTP path of execution. Path can include query params. Default value is \/",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<PATH>",
-                        "default": "\/",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "method",
-                        "description": "HTTP method of execution. Default value is GET.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "GET",
-                        "enum": [
-                            "GET",
-                            "POST",
-                            "PUT",
-                            "PATCH",
-                            "DELETE",
-                            "OPTIONS"
-                        ],
-                        "x-enum-name": "ExecutionMethod",
-                        "x-enum-keys": [],
-                        "default": "POST",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "headers",
-                        "description": "HTTP headers of execution. Defaults to empty.",
-                        "required": false,
-                        "type": "object",
-                        "default": [],
-                        "x-example": "{}",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "scheduledAt",
-                        "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                        "required": false,
-                        "type": "string",
-                        "in": "formData"
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "body": {
+                                    "type": "object",
+                                    "description": "HTTP body of execution. Default value is empty string.",
+                                    "default": "",
+                                    "x-example": "{}"
+                                },
+                                "async": {
+                                    "type": "boolean",
+                                    "description": "Execute code in the background. Default value is false.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "description": "HTTP path of execution. Path can include query params. Default value is \/",
+                                    "default": "\/",
+                                    "x-example": "<PATH>"
+                                },
+                                "method": {
+                                    "type": "string",
+                                    "description": "HTTP method of execution. Default value is GET.",
+                                    "default": "POST",
+                                    "x-example": "GET",
+                                    "enum": [
+                                        "GET",
+                                        "POST",
+                                        "PUT",
+                                        "PATCH",
+                                        "DELETE",
+                                        "OPTIONS"
+                                    ],
+                                    "x-enum-name": "ExecutionMethod",
+                                    "x-enum-keys": []
+                                },
+                                "headers": {
+                                    "type": "object",
+                                    "description": "HTTP headers of execution. Defaults to empty.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "scheduledAt": {
+                                    "type": "string",
+                                    "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
                     }
                 ]
             }
@@ -5573,7 +5567,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "consumes": [
                     "application\/json"
@@ -6476,7 +6470,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "consumes": [
                     "application\/json"
