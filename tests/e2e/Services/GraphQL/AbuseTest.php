@@ -32,7 +32,7 @@ class AbuseTest extends Scope
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
@@ -133,7 +133,7 @@ class AbuseTest extends Scope
 
         $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -156,7 +156,7 @@ class AbuseTest extends Scope
 
         $collectionId = $response['body']['data']['databasesCreateCollection']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

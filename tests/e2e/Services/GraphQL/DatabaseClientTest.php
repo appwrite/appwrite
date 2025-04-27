@@ -48,7 +48,7 @@ class DatabaseClientTest extends Scope
     public function testCreateCollection($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

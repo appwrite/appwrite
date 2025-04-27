@@ -23,7 +23,7 @@ class AuthTest extends Scope
     private string $token2;
 
     private array $database;
-    private array $collection;
+    private array $table;
 
     public function setUp(): void
     {
@@ -101,7 +101,7 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         // Create collection
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::$CREATE_TABLE);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
@@ -115,19 +115,19 @@ class AuthTest extends Scope
                 ]
             ]
         ];
-        $this->collection = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $this->table = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
         // Create string attribute
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
+                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -147,13 +147,13 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create document as account 1
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
+                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -165,40 +165,41 @@ class AuthTest extends Scope
                 ]
             ]
         ];
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
         // Try to read as account 1
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::$GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
+                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'documentId' => $row['body']['data']['databasesCreateRow']['_id'],
             ]
         ];
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        $this->assertIsArray($document['body']['data']['databasesGetDocument']);
-        $this->assertArrayNotHasKey('errors', $document['body']);
+        $this->assertIsArray($row['body']['data']['databasesGetRow']);
+        $this->assertArrayNotHasKey('errors', $row['body']);
 
         // Try to read as account 2
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $this->token2,
         ], $gqlPayload);
 
-        $this->assertArrayHasKey('errors', $document['body']);
-        $this->assertEquals('Document with the requested ID could not be found.', $document['body']['errors'][0]['message']);
+        $this->assertArrayHasKey('errors', $row['body']);
+        $this->assertEquals('Document with the requested ID could not be found.', $row['body']['errors'][0]['message']);
     }
 
     public function testValidAuth()
@@ -206,13 +207,13 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Create document as account 1
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
+                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -224,29 +225,29 @@ class AuthTest extends Scope
                 ],
             ]
         ];
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
         // Try to delete as account 1
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::$DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
+                'collectionId' => $this->table['body']['data']['databasesCreateTable']['_id'],
+                'documentId' => $row['body']['data']['databasesCreateRow']['_id'],
             ]
         ];
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $row = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        $this->assertIsNotArray($document['body']);
-        $this->assertEquals(204, $document['headers']['status-code']);
+        $this->assertIsNotArray($row['body']);
+        $this->assertEquals(204, $row['headers']['status-code']);
     }
 }
