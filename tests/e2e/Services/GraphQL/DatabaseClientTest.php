@@ -53,7 +53,7 @@ class DatabaseClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'collectionId' => 'actors',
+                'tableId' => 'actors',
                 'name' => 'Actors',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -65,20 +65,20 @@ class DatabaseClientTest extends Scope
             ]
         ];
 
-        $collection = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $table = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $this->assertIsArray($collection['body']['data']);
-        $this->assertArrayNotHasKey('errors', $collection['body']);
-        $collection = $collection['body']['data']['databasesCreateCollection'];
-        $this->assertEquals('Actors', $collection['name']);
+        $this->assertIsArray($table['body']['data']);
+        $this->assertArrayNotHasKey('errors', $table['body']);
+        $table = $table['body']['data']['databasesCreateTable'];
+        $this->assertEquals('Actors', $table['name']);
 
         return [
             'database' => $database,
-            'collection' => $collection,
+            'table' => $table,
         ];
     }
 
@@ -88,12 +88,12 @@ class DatabaseClientTest extends Scope
     public function testCreateStringAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -108,7 +108,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databasesCreateStringAttribute']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateStringColumn']);
 
         return $data;
     }
@@ -119,12 +119,12 @@ class DatabaseClientTest extends Scope
     public function testCreateIntegerAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::$CREATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
                 'key' => 'age',
                 'min' => 18,
                 'max' => 150,
@@ -140,7 +140,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerAttribute']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerColumn']);
 
         return $data;
     }
@@ -154,13 +154,13 @@ class DatabaseClientTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::$CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'tableId' => $data['table']['_id'],
+                'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'age' => 35,
@@ -181,13 +181,13 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
 
-        $document = $document['body']['data']['databasesCreateDocument'];
+        $document = $document['body']['data']['databasesCreateRow'];
         $this->assertIsArray($document);
 
         return [
             'database' => $data['database'],
-            'collection' => $data['collection'],
-            'document' => $document,
+            'table' => $data['table'],
+            'row' => $document,
         ];
     }
 
@@ -198,12 +198,12 @@ class DatabaseClientTest extends Scope
     public function testGetDocuments($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENTS);
+        $query = $this->getQuery(self::$GET_ROWS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'tableId' => $data['table']['_id'],
             ]
         ];
 
@@ -214,7 +214,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $documents['body']);
         $this->assertIsArray($documents['body']['data']);
-        $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
+        $this->assertIsArray($documents['body']['data']['databasesListRows']);
     }
 
     /**
@@ -224,13 +224,13 @@ class DatabaseClientTest extends Scope
     public function testGetDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::$GET_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
             ]
         ];
 
@@ -241,7 +241,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['databasesGetDocument']);
+        $this->assertIsArray($document['body']['data']['databasesGetRow']);
     }
 
     /**
@@ -251,13 +251,13 @@ class DatabaseClientTest extends Scope
     public function testUpdateDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DOCUMENT);
+        $query = $this->getQuery(self::$UPDATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
                 'data' => [
                     'name' => 'New Document Name',
                 ],
@@ -271,7 +271,7 @@ class DatabaseClientTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $document = $document['body']['data']['databasesUpdateDocument'];
+        $document = $document['body']['data']['databasesUpdateRow'];
         $this->assertIsArray($document);
 
         $this->assertStringContainsString('New Document Name', $document['data']);
@@ -284,13 +284,13 @@ class DatabaseClientTest extends Scope
     public function testDeleteDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::$DELETE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'tableId' => $data['table']['_id'],
+                'rowId' => $data['row']['_id'],
             ]
         ];
 
