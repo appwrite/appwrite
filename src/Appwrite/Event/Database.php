@@ -10,8 +10,8 @@ class Database extends Event
 {
     protected string $type = '';
     protected ?Document $database = null;
-    protected ?Document $collection = null;
-    protected ?Document $document = null;
+    protected ?Document $table = null;
+    protected ?Document $row = null;
 
     public function __construct(protected Publisher $publisher)
     {
@@ -55,48 +55,48 @@ class Database extends Event
     }
 
     /**
-     * Set the collection for this database event.
+     * Set the table for this database event.
      *
-     * @param Document $collection
+     * @param Document $table
      * @return self
      */
-    public function setCollection(Document $collection): self
+    public function setTable(Document $table): self
     {
-        $this->collection = $collection;
+        $this->table = $table;
 
         return $this;
     }
 
     /**
-     * Returns set collection for this event.
+     * Returns set table for this event.
      *
      * @return null|Document
      */
-    public function getCollection(): ?Document
+    public function getTable(): ?Document
     {
-        return $this->collection;
+        return $this->table;
     }
 
     /**
-     * Set the document for this database event.
+     * Set the row for this database event.
      *
-     * @param Document $document
+     * @param Document $row
      * @return self
      */
-    public function setDocument(Document $document): self
+    public function setRow(Document $row): self
     {
-        $this->document = $document;
+        $this->row = $row;
 
         return $this;
     }
 
     /**
-     * Returns set document for this database event.
+     * Returns set row for this database event.
      * @return null|Document
      */
-    public function getDocument(): ?Document
+    public function getRow(): ?Document
     {
-        return $this->document;
+        return $this->row;
     }
 
     public function getQueue(): string
@@ -123,8 +123,8 @@ class Database extends Event
             'project' => $this->project,
             'user' => $this->user,
             'type' => $this->type,
-            'collection' => $this->collection,
-            'document' => $this->document,
+            'table' => $this->table,
+            'row' => $this->row,
             'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];

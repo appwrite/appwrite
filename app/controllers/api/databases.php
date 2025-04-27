@@ -218,8 +218,8 @@ function createColumn(string $databaseId, string $tableId, Document $column, Res
     $queueForDatabase
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
-        ->setCollection($table)
-        ->setDocument($column);
+        ->setTable($table)
+        ->setRow($column);
 
     $queueForEvents
         ->setContext('table', $table)
@@ -485,8 +485,7 @@ App::post('/v1/databases')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -1280,7 +1279,7 @@ App::delete('/v1/databases/:databaseId/tables/:tableId')
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_COLLECTION)
             ->setDatabase($database)
-            ->setCollection($table);
+            ->setTable($table);
 
         $queueForEvents
             ->setContext('database', $database)
@@ -2759,9 +2758,9 @@ App::delete('/v1/databases/:databaseId/tables/:tableId/columns/:key')
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
-            ->setCollection($table)
+            ->setTable($table)
             ->setDatabase($db)
-            ->setDocument($column);
+            ->setRow($column);
 
         // Select response model based on type and format
         $type = $column->getAttribute('type');
@@ -2953,8 +2952,8 @@ App::post('/v1/databases/:databaseId/tables/:tableId/indexes')
         $queueForDatabase
             ->setType(DATABASE_TYPE_CREATE_INDEX)
             ->setDatabase($db)
-            ->setCollection($table)
-            ->setDocument($index);
+            ->setTable($table)
+            ->setRow($index);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
@@ -3164,8 +3163,8 @@ App::delete('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_INDEX)
             ->setDatabase($db)
-            ->setCollection($table)
-            ->setDocument($index);
+            ->setTable($table)
+            ->setRow($index);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)

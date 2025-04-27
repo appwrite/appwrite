@@ -95,22 +95,22 @@ return [
         '$model' => Response::MODEL_DATABASE,
         '$resource' => true,
         '$description' => 'This event triggers on any database event.',
-        'collections' => [
+        'tables' => [
             '$model' => Response::MODEL_COLLECTION,
             '$resource' => true,
-            '$description' => 'This event triggers on any collection event.',
-            'documents' => [
+            '$description' => 'This event triggers on any table event.',
+            'rows' => [
                 '$model' => Response::MODEL_DOCUMENT,
                 '$resource' => true,
-                '$description' => 'This event triggers on any documents event.',
+                '$description' => 'This event triggers on any rows event.',
                 'create' => [
-                    '$description' => 'This event triggers when a document is created.',
+                    '$description' => 'This event triggers when a row is created.',
                 ],
                 'delete' => [
-                    '$description' => 'This event triggers when a document is deleted.'
+                    '$description' => 'This event triggers when a row is deleted.'
                 ],
                 'update' => [
-                    '$description' => 'This event triggers when a document is updated.'
+                    '$description' => 'This event triggers when a row is updated.'
                 ],
             ],
             'indexes' => [
@@ -124,25 +124,25 @@ return [
                     '$description' => 'This event triggers when an index is deleted.'
                 ]
             ],
-            'attributes' => [
+            'columns' => [
                 '$model' => Response::MODEL_ATTRIBUTE,
                 '$resource' => true,
-                '$description' => 'This event triggers on any attributes event.',
+                '$description' => 'This event triggers on any columns event.',
                 'create' => [
-                    '$description' => 'This event triggers when an attribute is created.',
+                    '$description' => 'This event triggers when an column is created.',
                 ],
                 'delete' => [
-                    '$description' => 'This event triggers when an attribute is deleted.'
+                    '$description' => 'This event triggers when an column is deleted.'
                 ]
             ],
             'create' => [
-                '$description' => 'This event triggers when a collection is created.'
+                '$description' => 'This event triggers when a table is created.'
             ],
             'delete' => [
-                '$description' => 'This event triggers when a collection is deleted.',
+                '$description' => 'This event triggers when a table is deleted.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a collection is updated.',
+                '$description' => 'This event triggers when a table is updated.',
             ]
         ],
         'create' => [

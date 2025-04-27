@@ -1395,7 +1395,7 @@ return [
         'score' => 5,
         'tagline' => 'Convert text to speech using the Hugging Face inference API.',
         'permissions' => ['any'],
-        'events' => ['databases.*.collections.*.documents.*.create'],
+        'events' => ['databases.*.tables.*.rows.*.create'],
         'cron' => '',
         'timeout' => 15,
         'useCases' => ['ai'],

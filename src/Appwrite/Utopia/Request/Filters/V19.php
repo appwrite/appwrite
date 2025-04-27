@@ -6,32 +6,18 @@ use Appwrite\Utopia\Request\Filter;
 
 class V19 extends Filter
 {
+    // Convert 1.6 params to 1.7
     public function parse(array $content, string $model): array
     {
-        return $this->overrideDatabaseParams($content, $model);
-    }
-
-    // Database terminology change handling.
-    protected function overrideDatabaseParams(array $content, string $model): array
-    {
-        if (!str_starts_with($model, 'databases.')) {
-            return $content;
+        /*
+        Uncomment with first request filter; current is just a copy of V18
+        switch ($model) {
+            case 'functions.create':
+                $content['something'] = $content['somethingElse'] ?? "";
+                unset($content['something']);
+                break;
         }
-
-        $map = [
-            'collectionId' => 'tableId',
-            'attributeId' => 'columnId',
-            'attributes' => 'columns',
-            'documentId' => 'rowId',
-            'relatedCollectionId' => 'relatedTableId'
-        ];
-
-        foreach ($map as $oldKey => $newKey) {
-            if (isset($content[$oldKey])) {
-                $content[$newKey] = $content[$oldKey];
-                unset($content[$oldKey]);
-            }
-        }
+        */
 
         return $content;
     }

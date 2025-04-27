@@ -76,7 +76,7 @@ class Realtime extends Event
         $payload = new Document($this->getPayload());
 
         $db = $this->getContext('database');
-        $collection = $this->getContext('collection');
+        $table = $this->getContext('table');
         $bucket = $this->getContext('bucket');
 
         $target = RealtimeAdapter::fromPayload(
@@ -85,7 +85,7 @@ class Realtime extends Event
             payload: $payload,
             project: $this->getProject(),
             database: $db,
-            collection: $collection,
+            table: $table,
             bucket: $bucket,
         );
 

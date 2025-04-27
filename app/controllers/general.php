@@ -18,6 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Request\Filters\DatabaseAliases;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
@@ -805,11 +806,13 @@ App::init()
             if (version_compare($requestFormat, '1.6.0', '<')) {
                 $request->addFilter(new RequestV18());
             }
-            // alias filters on 1.7.x, so we use `<=` and not just `<`
-            if (version_compare($requestFormat, '1.7.0', '<=')) {
+            if (version_compare($requestFormat, '1.7.0', '<')) {
                 $request->addFilter(new RequestV19());
             }
         }
+
+        // process on all databases endpoints!
+        $request->addFilter(new DatabaseAliases());
 
         $domain = $request->getHostname();
         $domains = Config::getParam('domains', []);

@@ -60,8 +60,8 @@ class Databases extends Action
         }
 
         $type = $payload['type'];
-        $collection = new Document($payload['collection'] ?? []);
-        $document = new Document($payload['document'] ?? []);
+        $row = new Document($payload['row'] ?? []);
+        $table = new Document($payload['table'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
         $log->addTag('projectId', $project->getId());
@@ -75,19 +75,19 @@ class Databases extends Action
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
-            DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
-            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
-            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
-            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_DELETE_COLLECTION => $this->deleteTable($database, $table, $project, $dbForProject),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createColumn($database, $table, $row, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteColumn($database, $table, $row, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $table, $row, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $table, $row, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
     }
 
     /**
      * @param Document $database
-     * @param Document $collection
-     * @param Document $attribute
+     * @param Document $table
+     * @param Document $column
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
@@ -98,64 +98,64 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      */
-    private function createAttribute(
+    private function createColumn(
         Document $database,
-        Document $collection,
-        Document $attribute,
+        Document $table,
+        Document $column,
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
         Realtime $queueForRealtime
     ): void {
-        if ($collection->isEmpty()) {
-            throw new Exception('Missing collection');
+        if ($table->isEmpty()) {
+            throw new Exception('Missing table');
         }
-        if ($attribute->isEmpty()) {
-            throw new Exception('Missing attribute');
+        if ($column->isEmpty()) {
+            throw new Exception('Missing column');
         }
 
         $projectId = $project->getId();
-        $event = "databases.[databaseId].collections.[collectionId].attributes.[attributeId].update";
+        $event = "databases.[databaseId].tables.[tableId].columns.[columnId].update";
         /**
          * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing informations.
          */
-        $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+        $column = $dbForProject->getDocument('attributes', $column->getId());
 
-        if ($attribute->isEmpty()) {
+        if ($column->isEmpty()) {
             // Attribute was deleted before job was processed
             return;
         }
 
-        $collectionId = $collection->getId();
-        $key = $attribute->getAttribute('key', '');
-        $type = $attribute->getAttribute('type', '');
-        $size = $attribute->getAttribute('size', 0);
-        $required = $attribute->getAttribute('required', false);
-        $default = $attribute->getAttribute('default', null);
-        $signed = $attribute->getAttribute('signed', true);
-        $array = $attribute->getAttribute('array', false);
-        $format = $attribute->getAttribute('format', '');
-        $formatOptions = $attribute->getAttribute('formatOptions', []);
-        $filters = $attribute->getAttribute('filters', []);
-        $options = $attribute->getAttribute('options', []);
+        $tableId = $table->getId();
+        $key = $column->getAttribute('key', '');
+        $type = $column->getAttribute('type', '');
+        $size = $column->getAttribute('size', 0);
+        $required = $column->getAttribute('required', false);
+        $default = $column->getAttribute('default', null);
+        $signed = $column->getAttribute('signed', true);
+        $array = $column->getAttribute('array', false);
+        $format = $column->getAttribute('format', '');
+        $formatOptions = $column->getAttribute('formatOptions', []);
+        $filters = $column->getAttribute('filters', []);
+        $options = $column->getAttribute('options', []);
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
-        $relatedAttribute = new Document();
-        $relatedCollection = new Document();
+        $relatedColumn = new Document();
+        $relatedTable = new Document();
 
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
-                    $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                    if ($relatedCollection->isEmpty()) {
-                        throw new DatabaseException('Collection not found');
+                    $relatedTable = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                    if ($relatedTable->isEmpty()) {
+                        throw new DatabaseException('Table not found');
                     }
 
                     if (
                         !$dbForProject->createRelationship(
-                            collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                            relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            collection: 'database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(),
+                            relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedTable->getInternalId(),
                             type: $options['relationType'],
                             twoWay: $options['twoWay'],
                             id: $key,
@@ -163,61 +163,61 @@ class Databases extends Action
                             onDelete: $options['onDelete'],
                         )
                     ) {
-                        throw new DatabaseException('Failed to create Attribute');
+                        throw new DatabaseException('Failed to create Column');
                     }
 
                     if ($options['twoWay']) {
-                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                        $relatedColumn = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $options['twoWayKey']);
+                        $dbForProject->updateDocument('attributes', $relatedColumn->getId(), $relatedColumn->setAttribute('status', 'available'));
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                        throw new Exception('Failed to create Attribute');
+                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                        throw new Exception('Failed to create Column');
                     }
             }
 
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            $dbForProject->updateDocument('attributes', $column->getId(), $column->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
-                $attribute->setAttribute('error', $e->getMessage());
-                if (! $relatedAttribute->isEmpty()) {
-                    $relatedAttribute->setAttribute('error', $e->getMessage());
+                $column->setAttribute('error', $e->getMessage());
+                if (! $relatedColumn->isEmpty()) {
+                    $relatedColumn->setAttribute('error', $e->getMessage());
                 }
             }
 
             $dbForProject->updateDocument(
                 'attributes',
-                $attribute->getId(),
-                $attribute->setAttribute('status', 'failed')
+                $column->getId(),
+                $column->setAttribute('status', 'failed')
             );
 
-            if (! $relatedAttribute->isEmpty()) {
+            if (! $relatedColumn->isEmpty()) {
                 $dbForProject->updateDocument(
                     'attributes',
-                    $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'failed')
+                    $relatedColumn->getId(),
+                    $relatedColumn->setAttribute('status', 'failed')
                 );
             }
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
+            $this->trigger($database, $table, $project, $event, $queueForRealtime, $column);
 
-            if (! $relatedCollection->isEmpty()) {
-                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            if (! $relatedTable->isEmpty()) {
+                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedTable->getId());
             }
 
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $tableId);
         }
     }
 
     /**
      * @param Document $database
-     * @param Document $collection
-     * @param Document $attribute
+     * @param Document $table
+     * @param Document $column
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
@@ -228,24 +228,24 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
+    private function deleteColumn(Document $database, Document $table, Document $column, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
     {
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception('Missing collection');
         }
-        if ($attribute->isEmpty()) {
+        if ($column->isEmpty()) {
             throw new Exception('Missing attribute');
         }
 
         $projectId = $project->getId();
-        $event = 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete';
-        $collectionId = $collection->getId();
-        $key = $attribute->getAttribute('key', '');
-        $type = $attribute->getAttribute('type', '');
+        $event = 'databases.[databaseId].tables.[tableId].columns.[columnId].delete';
+        $tableId = $table->getId();
+        $key = $column->getAttribute('key', '');
+        $type = $column->getAttribute('type', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
-        $options = $attribute->getAttribute('options', []);
-        $relatedAttribute = new Document();
-        $relatedCollection = new Document();
+        $options = $column->getAttribute('options', []);
+        $relatedColumn = new Document();
+        $relatedTable = new Document();
         // possible states at this point:
         // - available: should not land in queue; controller flips these to 'deleting'
         // - processing: hasn't finished creating
@@ -257,89 +257,89 @@ class Databases extends Action
             try {
                 if ($type === Database::VAR_RELATIONSHIP) {
                     if ($options['twoWay']) {
-                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                        if ($relatedCollection->isEmpty()) {
-                            throw new DatabaseException('Collection not found');
+                        $relatedTable = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                        if ($relatedTable->isEmpty()) {
+                            throw new DatabaseException('Table not found');
                         }
-                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                        $relatedColumn = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $key)) {
+                        $dbForProject->updateDocument('attributes', $relatedColumn->getId(), $relatedColumn->setAttribute('status', 'stuck'));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
-                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                    throw new DatabaseException('Failed to delete Attribute');
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $key)) {
+                    throw new DatabaseException('Failed to delete Column');
                 }
 
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
+                $dbForProject->deleteDocument('attributes', $column->getId());
 
-                if (!$relatedAttribute->isEmpty()) {
-                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+                if (!$relatedColumn->isEmpty()) {
+                    $dbForProject->deleteDocument('attributes', $relatedColumn->getId());
                 }
 
             } catch (NotFound $e) {
                 Console::error($e->getMessage());
 
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
+                $dbForProject->deleteDocument('attributes', $column->getId());
 
-                if (!$relatedAttribute->isEmpty()) {
-                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+                if (!$relatedColumn->isEmpty()) {
+                    $dbForProject->deleteDocument('attributes', $relatedColumn->getId());
                 }
 
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
                 if ($e instanceof DatabaseException) {
-                    $attribute->setAttribute('error', $e->getMessage());
-                    if (!$relatedAttribute->isEmpty()) {
-                        $relatedAttribute->setAttribute('error', $e->getMessage());
+                    $column->setAttribute('error', $e->getMessage());
+                    if (!$relatedColumn->isEmpty()) {
+                        $relatedColumn->setAttribute('error', $e->getMessage());
                     }
                 }
                 $dbForProject->updateDocument(
                     'attributes',
-                    $attribute->getId(),
-                    $attribute->setAttribute('status', 'stuck')
+                    $column->getId(),
+                    $column->setAttribute('status', 'stuck')
                 );
-                if (!$relatedAttribute->isEmpty()) {
+                if (!$relatedColumn->isEmpty()) {
                     $dbForProject->updateDocument(
                         'attributes',
-                        $relatedAttribute->getId(),
-                        $relatedAttribute->setAttribute('status', 'stuck')
+                        $relatedColumn->getId(),
+                        $relatedColumn->setAttribute('status', 'stuck')
                     );
                 }
 
                 throw $e;
             } finally {
-                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
+                $this->trigger($database, $table, $project, $event, $queueForRealtime, $column);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
             // Update indexes table with changes
             /** @var Document[] $indexes */
-            $indexes = $collection->getAttribute('indexes', []);
+            $indexes = $table->getAttribute('indexes', []);
 
             foreach ($indexes as $index) {
-                /** @var string[] $attributes */
-                $attributes = $index->getAttribute('attributes');
+                /** @var string[] $columns */
+                $columns = $index->getAttribute('attributes');
                 $lengths = $index->getAttribute('lengths');
                 $orders = $index->getAttribute('orders');
 
-                $found = \array_search($key, $attributes);
+                $found = \array_search($key, $columns);
 
                 if ($found !== false) {
                     // If found, remove entry from attributes, lengths, and orders
                     // array_values wraps array_diff to reindex array keys
                     // when found attribute is removed from array
-                    $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
+                    $columns = \array_values(\array_diff($columns, [$columns[$found]]));
                     $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
                     $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
 
-                    if (empty($attributes)) {
+                    if (empty($columns)) {
                         $dbForProject->deleteDocument('indexes', $index->getId());
                     } else {
                         $index
-                            ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
+                            ->setAttribute('attributes', $columns, Document::SET_TYPE_ASSIGN)
                             ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
                             ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
 
@@ -357,7 +357,7 @@ class Databases extends Action
                         }
 
                         if ($exists) { // Delete the duplicate if created, else update in db
-                            $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject, $queueForRealtime);
+                            $this->deleteIndex($database, $table, $index, $project, $dbForPlatform, $dbForProject, $queueForRealtime);
                         } else {
                             $dbForProject->updateDocument('indexes', $index->getId(), $index);
                         }
@@ -365,17 +365,17 @@ class Databases extends Action
                 }
             }
         } finally {
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $tableId);
 
-            if (! $relatedCollection->isEmpty()) {
-                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            if (! $relatedTable->isEmpty()) {
+                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedTable->getId());
             }
         }
     }
 
     /**
      * @param Document $database
-     * @param Document $collection
+     * @param Document $table
      * @param Document $index
      * @param Document $project
      * @param Database $dbForPlatform
@@ -388,9 +388,9 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws \Throwable
      */
-    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
+    private function createIndex(Document $database, Document $table, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
     {
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception('Missing collection');
         }
         if ($index->isEmpty()) {
@@ -398,8 +398,8 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update';
-        $collectionId = $collection->getId();
+        $event = 'databases.[databaseId].tables.[tableId].indexes.[indexId].update';
+        $collectionId = $table->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
         $attributes = $index->getAttribute('attributes', []);
@@ -408,7 +408,7 @@ class Databases extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
+            if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -425,14 +425,14 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
+            $this->trigger($database, $table, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
     }
 
     /**
      * @param Document $database
-     * @param Document $collection
+     * @param Document $table
      * @param Document $index
      * @param Document $project
      * @param Database $dbForPlatform
@@ -445,9 +445,9 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws \Throwable
      */
-    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
+    private function deleteIndex(Document $database, Document $table, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
     {
-        if ($collection->isEmpty()) {
+        if ($table->isEmpty()) {
             throw new Exception('Missing collection');
         }
         if ($index->isEmpty()) {
@@ -455,13 +455,13 @@ class Databases extends Action
         }
 
         $projectId = $project->getId();
-        $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
+        $event = 'databases.[databaseId].tables.[tableId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $key)) {
                 throw new DatabaseException('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
@@ -481,8 +481,8 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
+            $this->trigger($database, $table, $project, $event, $queueForRealtime, null, $index);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $table->getId());
         }
     }
 
@@ -496,7 +496,7 @@ class Databases extends Action
     protected function deleteDatabase(Document $database, Document $project, $dbForProject): void
     {
         $this->deleteByGroup('database_' . $database->getInternalId(), [], $dbForProject, function ($collection) use ($database, $project, $dbForProject) {
-            $this->deleteCollection($database, $collection, $project, $dbForProject);
+            $this->deleteTable($database, $collection, $project, $dbForProject);
         });
 
         $dbForProject->deleteCollection('database_' . $database->getInternalId());
@@ -504,7 +504,7 @@ class Databases extends Action
 
     /**
      * @param Document $database
-     * @param Document $collection
+     * @param Document $table
      * @param Document $project
      * @param Database $dbForProject
      * @return void
@@ -515,17 +515,17 @@ class Databases extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteCollection(Document $database, Document $collection, Document $project, Database $dbForProject): void
+    protected function deleteTable(Document $database, Document $table, Document $project, Database $dbForProject): void
     {
-        if ($collection->isEmpty()) {
-            throw new Exception('Missing collection');
+        if ($table->isEmpty()) {
+            throw new Exception('Missing table');
         }
 
-        $collectionId = $collection->getId();
-        $collectionInternalId = $collection->getInternalId();
+        $collectionId = $table->getId();
+        $collectionInternalId = $table->getInternalId();
         $databaseInternalId = $database->getInternalId();
 
-        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $table->getInternalId());
 
         /**
          * Related collections relating to current collection
@@ -558,50 +558,50 @@ class Databases extends Action
 
 
     /**
-     * @param string $collectionId
+     * @param string $tableId
      * @param array $queries
      * @param Database $database
      * @param callable|null $callback
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collectionId, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $tableId, array $queries, Database $database, callable $callback = null): void
     {
         $start = \microtime(true);
 
         try {
             $count = $database->deleteDocuments(
-                $collectionId,
+                $tableId,
                 $queries,
                 Database::DELETE_BATCH_SIZE,
                 $callback
             );
         } catch (\Throwable $th) {
             $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
-            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
+            Console::error("Failed to delete rows for table:{$database->getNamespace()}_{$tableId} {$tenant} :{$th->getMessage()}");
             return;
         }
 
         $end = \microtime(true);
-        Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
+        Console::info("Deleted {$count} rows by group in " . ($end - $start) . " seconds");
     }
 
     /**
      * @param Document $database
-     * @param Document $collection
+     * @param Document $table
      * @param Document $project
      * @param Realtime $queueForRealtime
-     * @param Document|null $attribute
+     * @param Document|null $column
      * @param Document|null $index
      * @return void
      */
     protected function trigger(
-        Document $database,
-        Document $collection,
-        Document $project,
-        string $event,
-        Realtime $queueForRealtime,
-        Document|null $attribute = null,
+        Document      $database,
+        Document      $table,
+        Document      $project,
+        string        $event,
+        Realtime      $queueForRealtime,
+        Document|null $column = null,
         Document|null $index = null,
     ): void {
         $queueForRealtime
@@ -609,14 +609,14 @@ class Databases extends Action
             ->setSubscribers(['console'])
             ->setEvent($event)
             ->setParam('databaseId', $database->getId())
-            ->setParam('collectionId', $collection->getId());
+            ->setParam('tableId', $table->getId());
 
-        if ($attribute !== null && !empty($attribute)) {
+        if (! empty($column)) {
             $queueForRealtime
-                ->setParam('attributeId', $attribute->getId())
-                ->setPayload($attribute->getArrayCopy());
+                ->setParam('columnId', $column->getId())
+                ->setPayload($column->getArrayCopy());
         }
-        if ($index !== null && !empty($index)) {
+        if (! empty($index)) {
             $queueForRealtime
                 ->setParam('indexId', $index->getId())
                 ->setPayload($index->getArrayCopy());
