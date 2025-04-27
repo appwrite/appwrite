@@ -31,7 +31,7 @@ class RealtimeCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session
         ];
 
-        $client = $this->getWebsocket(['documents'], $headers);
+        $client = $this->getWebsocket(['rows'], $headers);
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -40,7 +40,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('rows', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
 
         $client->close();
@@ -60,7 +60,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client->close();
 
-        $client = $this->getWebsocket(['account', 'documents', 'account.123'], $headers);
+        $client = $this->getWebsocket(['account', 'rows', 'account.123'], $headers);
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -69,7 +69,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
@@ -80,12 +80,12 @@ class RealtimeCustomClientTest extends Scope
             'account',
             'files',
             'files.1',
-            'collections',
-            'collections.1.documents',
-            'collections.2.documents',
-            'documents',
-            'collections.1.documents.1',
-            'collections.2.documents.2',
+            'tables',
+            'tables.1.rows',
+            'tables.2.rows',
+            'rows',
+            'tables.1.rows.1',
+            'tables.2.rows.2',
         ], $headers);
 
         $response = json_decode($client->receive(), true);
@@ -100,12 +100,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.1', $response['data']['channels']);
-        $this->assertContains('collections', $response['data']['channels']);
-        $this->assertContains('collections.1.documents', $response['data']['channels']);
-        $this->assertContains('collections.2.documents', $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.1.documents.1', $response['data']['channels']);
-        $this->assertContains('collections.2.documents.2', $response['data']['channels']);
+        $this->assertContains('tables', $response['data']['channels']);
+        $this->assertContains('tables.1.rows', $response['data']['channels']);
+        $this->assertContains('tables.2.rows', $response['data']['channels']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains('tables.1.rows.1', $response['data']['channels']);
+        $this->assertContains('tables.2.rows.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
 
         $client->close();
@@ -245,7 +245,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $client = $this->getWebsocket(['documents'], ['origin' => 'http://appwrite.unknown']);
+        $client = $this->getWebsocket(['rows'], ['origin' => 'http://appwrite.unknown']);
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $payload);
@@ -675,7 +675,7 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['documents', 'collections'], [
+        $client = $this->getWebsocket(['rows', 'tables'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
@@ -687,8 +687,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains('tables', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
@@ -770,19 +770,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
-        $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows.' . $documentId, $response['data']['channels']);
+        $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -814,19 +814,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -868,19 +868,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -895,7 +895,7 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['documents', 'collections'], [
+        $client = $this->getWebsocket(['rows', 'tables'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
@@ -907,8 +907,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains('tables', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
@@ -988,19 +988,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -1027,19 +1027,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -1077,19 +1077,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains('rows', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.{$documentId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*.rows.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
