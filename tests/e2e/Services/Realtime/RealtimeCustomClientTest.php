@@ -1322,11 +1322,13 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
         });
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+        ]), [
+            'deploymentId' => $deploymentId,
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
