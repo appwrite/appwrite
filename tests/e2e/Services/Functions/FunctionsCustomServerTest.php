@@ -676,20 +676,17 @@ class FunctionsCustomServerTest extends Scope
      */
     public function testUpdateDeployment($data): array
     {
-        var_dump("data");
-        var_dump($data);
         /**
          * Test for SUCCESS
          */
         $dateValidator = new DatetimeValidator();
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        var_dump("response");
-        var_dump($response);
+        ], $this->getHeaders()), [
+            'deploymentId' => $data['deploymentId'],
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
