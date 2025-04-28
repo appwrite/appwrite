@@ -161,6 +161,8 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals(200, $rule['headers']['status-code']);
             $this->assertEquals(0, $rule['body']['total']);
+            var_dump($rule['body']['total']);
+            var_dump($rule['body']);
         }, 10000, 500);
 
         $response = $this->client->call(Client::METHOD_GET, '/console/resources', [
