@@ -1749,7 +1749,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('buildInternalId'),
+                '$id' => ID::custom('buildInternalId'), // 1.6.x leftover
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1760,7 +1760,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('buildId'),
+                '$id' => ID::custom('buildId'), // 1.6.x leftover
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1772,7 +1772,7 @@ return [
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('commands'),
+                '$id' => ID::custom('commands'), // 1.6.x leftover
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // 2048
@@ -1782,7 +1782,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('path'),
+                '$id' => ID::custom('path'), // 1.6.x leftover
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // 2048
@@ -1793,7 +1793,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('size'),
+                '$id' => ID::custom('size'), // 1.6.x leftover
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1804,7 +1804,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('metadata'),
+                '$id' => ID::custom('metadata'), // 1.6.x leftover
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
@@ -1815,7 +1815,7 @@ return [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('chunksTotal'),
+                '$id' => ID::custom('chunksTotal'), // 1.6.x leftover
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1826,7 +1826,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('chunksUploaded'),
+                '$id' => ID::custom('chunksUploaded'), // 1.6.x leftover
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1908,14 +1908,14 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_size'),
+                '$id' => ID::custom('_key_size'), // 1.6.x leftover
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['size'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_buildId'),
+                '$id' => ID::custom('_key_buildId'), // 1.6.x leftover
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['buildId'],
                 'lengths' => [],
