@@ -258,3 +258,10 @@ const RESOURCE_TYPE_PROVIDERS = 'providers';
 const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
+
+// Resource types for Tokens
+
+const TOKENS_RESOURCE_TYPE_FILES = 'files';
+const TOKENS_RESOURCE_TYPE_SITES = 'sites';
+const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
+const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';

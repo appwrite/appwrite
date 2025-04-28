@@ -97,7 +97,7 @@ class Create extends Action
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
-            'resourceType' => 'files',
+            'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
             '$permissions' => $permissions
         ]));

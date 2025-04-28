@@ -62,7 +62,7 @@ class XList extends Action
         ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $bucketId, $fileId);
 
         $queries = Query::parseQueries($queries);
-        $queries[] = Query::equal('resourceType', ["files"]);
+        $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);
         $queries[] = Query::equal('resourceInternalId', [$bucket->getInternalId() . ':' . $file->getInternalId()]);
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
