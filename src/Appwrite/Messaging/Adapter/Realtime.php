@@ -8,6 +8,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Pools\Pool;
 
 class Realtime extends MessagingAdapter
 {
@@ -131,7 +132,7 @@ class Realtime extends MessagingAdapter
      * @return void
      * @throws \Exception
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;

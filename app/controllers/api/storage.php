@@ -63,6 +63,7 @@ App::post('/v1/storage/buckets')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'createBucket',
         description: '/docs/references/storage/create-bucket.md',
         auth: [AuthType::KEY],
@@ -165,6 +166,7 @@ App::get('/v1/storage/buckets')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'listBuckets',
         description: '/docs/references/storage/list-buckets.md',
         auth: [AuthType::KEY],
@@ -236,6 +238,7 @@ App::get('/v1/storage/buckets/:bucketId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'getBucket',
         description: '/docs/references/storage/get-bucket.md',
         auth: [AuthType::KEY],
@@ -270,6 +273,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'updateBucket',
         description: '/docs/references/storage/update-bucket.md',
         auth: [AuthType::KEY],
@@ -340,6 +344,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{request.bucketId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'deleteBucket',
         description: '/docs/references/storage/delete-bucket.md',
         auth: [AuthType::KEY],
@@ -393,6 +398,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
         type: MethodType::UPLOAD,
@@ -762,6 +768,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'listFiles',
         description: '/docs/references/storage/list-files.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -861,6 +868,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFile',
         description: '/docs/references/storage/get-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -917,6 +925,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache.resource', 'file/{request.fileId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFilePreview',
         description: '/docs/references/storage/get-file-preview.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1099,6 +1108,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileDownload',
         description: '/docs/references/storage/get-file-download.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1247,6 +1257,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileView',
         description: '/docs/references/storage/get-file-view.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1404,9 +1415,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->groups(['api', 'storage'])
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('jwt', '', new Text(2048, 0), 'JSON Web Token to validate', true)
@@ -1567,6 +1575,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'updateFile',
         description: '/docs/references/storage/update-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1681,6 +1690,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'deleteFile',
         description: '/docs/references/storage/delete-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1780,6 +1790,7 @@ App::get('/v1/storage/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/storage/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -1866,6 +1877,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getBucketUsage',
         description: '/docs/references/storage/get-bucket-usage.md',
         auth: [AuthType::ADMIN],

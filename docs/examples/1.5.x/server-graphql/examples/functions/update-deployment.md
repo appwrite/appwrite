@@ -13,6 +13,7 @@ mutation {
         logging
         runtime
         deployment
+        scopes
         vars {
             _id
             _createdAt
@@ -33,5 +34,6 @@ mutation {
         providerBranch
         providerRootDirectory
         providerSilentMode
+        specification
     }
 }

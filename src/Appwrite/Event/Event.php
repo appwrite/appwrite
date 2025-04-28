@@ -57,6 +57,9 @@ class Event
     protected ?string $userId = null;
     protected bool $paused = false;
 
+    /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
+    protected bool $critical = true;
+
     /**
      * @param Publisher $publisher
      * @return void
@@ -283,13 +286,6 @@ class Event
         return $this;
     }
 
-    public function setParamSensitive(string $key): self
-    {
-        $this->sensitive[$key] = true;
-
-        return $this;
-    }
-
     /**
      * Get param of event.
      *
@@ -351,7 +347,14 @@ class Event
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
 
-        return $this->publisher->enqueue($queue, $payload);
+        try {
+            return $this->publisher->enqueue($queue, $payload);
+        } catch (\Throwable $th) {
+            if ($this->critical) {
+                throw $th;
+            }
+            return false;
+        }
     }
 
     /**

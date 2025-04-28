@@ -35,6 +35,7 @@ App::get('/v1/health')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'get',
         description: '/docs/references/health/get.md',
         auth: [AuthType::KEY],
@@ -73,6 +74,7 @@ App::get('/v1/health/db')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getDB',
         description: '/docs/references/health/get-db.md',
         auth: [AuthType::KEY],
@@ -133,6 +135,7 @@ App::get('/v1/health/cache')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getCache',
         description: '/docs/references/health/get-cache.md',
         auth: [AuthType::KEY],
@@ -192,6 +195,7 @@ App::get('/v1/health/pubsub')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getPubSub',
         description: '/docs/references/health/get-pubsub.md',
         auth: [AuthType::KEY],
@@ -251,6 +255,7 @@ App::get('/v1/health/time')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getTime',
         description: '/docs/references/health/get-time.md',
         auth: [AuthType::KEY],
@@ -314,6 +319,7 @@ App::get('/v1/health/queue/webhooks')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueWebhooks',
         description: '/docs/references/health/get-queue-webhooks.md',
         auth: [AuthType::KEY],
@@ -346,6 +352,7 @@ App::get('/v1/health/queue/logs')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueLogs',
         description: '/docs/references/health/get-queue-logs.md',
         auth: [AuthType::KEY],
@@ -378,6 +385,7 @@ App::get('/v1/health/certificate')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getCertificate',
         description: '/docs/references/health/get-certificate.md',
         auth: [AuthType::KEY],
@@ -434,6 +442,7 @@ App::get('/v1/health/queue/certificates')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueCertificates',
         description: '/docs/references/health/get-queue-certificates.md',
         auth: [AuthType::KEY],
@@ -466,6 +475,7 @@ App::get('/v1/health/queue/builds')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueBuilds',
         description: '/docs/references/health/get-queue-builds.md',
         auth: [AuthType::KEY],
@@ -498,6 +508,7 @@ App::get('/v1/health/queue/databases')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueDatabases',
         description: '/docs/references/health/get-queue-databases.md',
         auth: [AuthType::KEY],
@@ -531,6 +542,7 @@ App::get('/v1/health/queue/deletes')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueDeletes',
         description: '/docs/references/health/get-queue-deletes.md',
         auth: [AuthType::KEY],
@@ -563,6 +575,7 @@ App::get('/v1/health/queue/mails')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueMails',
         description: '/docs/references/health/get-queue-mails.md',
         auth: [AuthType::KEY],
@@ -595,6 +608,7 @@ App::get('/v1/health/queue/messaging')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueMessaging',
         description: '/docs/references/health/get-queue-messaging.md',
         auth: [AuthType::KEY],
@@ -627,6 +641,7 @@ App::get('/v1/health/queue/migrations')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueMigrations',
         description: '/docs/references/health/get-queue-migrations.md',
         auth: [AuthType::KEY],
@@ -659,6 +674,7 @@ App::get('/v1/health/queue/functions')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueFunctions',
         description: '/docs/references/health/get-queue-functions.md',
         auth: [AuthType::KEY],
@@ -691,6 +707,7 @@ App::get('/v1/health/queue/stats-resources')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueStatsResources',
         description: '/docs/references/health/get-queue-stats-resources.md',
         auth: [AuthType::KEY],
@@ -723,6 +740,7 @@ App::get('/v1/health/queue/stats-usage')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getQueueUsage',
         description: '/docs/references/health/get-queue-stats-usage.md',
         auth: [AuthType::KEY],
@@ -755,6 +773,7 @@ App::get('/v1/health/storage/local')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'storage',
         name: 'getStorageLocal',
         description: '/docs/references/health/get-storage-local.md',
         auth: [AuthType::KEY],
@@ -804,6 +823,7 @@ App::get('/v1/health/storage')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'storage',
         name: 'getStorage',
         description: '/docs/references/health/get-storage.md',
         auth: [AuthType::KEY],
@@ -851,6 +871,7 @@ App::get('/v1/health/anti-virus')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'health',
         name: 'getAntivirus',
         description: '/docs/references/health/get-storage-anti-virus.md',
         auth: [AuthType::KEY],
@@ -896,6 +917,7 @@ App::get('/v1/health/queue/failed/:name')
     ->label('scope', 'health.read')
     ->label('sdk', new Method(
         namespace: 'health',
+        group: 'queue',
         name: 'getFailedJobs',
         description: '/docs/references/health/get-failed-queue-jobs.md',
         auth: [AuthType::KEY],
@@ -940,9 +962,6 @@ App::get('/v1/health/stats') // Currently only used internally
 ->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')
-    // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    // ->label('sdk.namespace', 'health')
-    // ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->inject('response')
     ->inject('register')

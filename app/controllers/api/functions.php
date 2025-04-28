@@ -151,6 +151,7 @@ App::post('/v1/functions')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'create',
         description: '/docs/references/functions/create-function.md',
         auth: [AuthType::KEY],
@@ -185,8 +186,8 @@ App::post('/v1/functions')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', 0),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', 0)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -432,6 +433,7 @@ App::get('/v1/functions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'list',
         description: '/docs/references/functions/list-functions.md',
         auth: [AuthType::KEY],
@@ -503,6 +505,7 @@ App::get('/v1/functions/runtimes')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listRuntimes',
         description: '/docs/references/functions/list-runtimes.md',
         auth: [AuthType::KEY],
@@ -542,6 +545,7 @@ App::get('/v1/functions/specifications')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'runtimes',
         name: 'listSpecifications',
         description: '/docs/references/functions/list-specifications.md',
         auth: [AuthType::KEY, AuthType::ADMIN],
@@ -565,8 +569,12 @@ App::get('/v1/functions/specifications')
                 $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
             }
 
+            $maxCpus = System::getEnv('_APP_FUNCTIONS_CPUS', 0);
+            $maxMemory = System::getEnv('_APP_FUNCTIONS_MEMORY', 0);
+
             // Only add specs that are within the limits set by environment variables
-            if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+            // Treat 0 as no limit
+            if ((empty($maxCpus) || $spec['cpus'] <= $maxCpus) && (empty($maxMemory) || $spec['memory'] <= $maxMemory)) {
                 $runtimeSpecs[] = $spec;
             }
         }
@@ -584,6 +592,7 @@ App::get('/v1/functions/:functionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'get',
         description: '/docs/references/functions/get-function.md',
         auth: [AuthType::KEY],
@@ -614,6 +623,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: null,
         name: 'getFunctionUsage',
         description: '/docs/references/functions/get-function-usage.md',
         auth: [AuthType::ADMIN],
@@ -725,6 +735,7 @@ App::get('/v1/functions/usage')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/functions/get-functions-usage.md',
         auth: [AuthType::ADMIN],
@@ -834,6 +845,7 @@ App::put('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'update',
         description: '/docs/references/functions/update-function.md',
         auth: [AuthType::KEY],
@@ -864,8 +876,8 @@ App::put('/v1/functions/:functionId')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', 0),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', 0)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -1034,11 +1046,12 @@ App::put('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
-    ->desc('Download deployment')
+    ->desc('Get deployment download')
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeploymentDownload',
         description: '/docs/references/functions/get-deployment-download.md',
         auth: [AuthType::KEY, AuthType::JWT],
@@ -1135,6 +1148,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeployment',
         description: '/docs/references/functions/update-function-deployment.md',
         auth: [AuthType::KEY],
@@ -1203,6 +1217,7 @@ App::delete('/v1/functions/:functionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'functions',
         name: 'delete',
         description: '/docs/references/functions/delete-function.md',
         auth: [AuthType::KEY],
@@ -1258,6 +1273,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createDeployment',
         description: '/docs/references/functions/create-deployment.md',
         auth: [AuthType::KEY],
@@ -1480,6 +1496,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'listDeployments',
         description: '/docs/references/functions/list-deployments.md',
         auth: [AuthType::KEY],
@@ -1572,6 +1589,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'getDeployment',
         description: '/docs/references/functions/get-deployment.md',
         auth: [AuthType::KEY],
@@ -1624,6 +1642,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'deleteDeployment',
         description: '/docs/references/functions/delete-deployment.md',
         auth: [AuthType::KEY],
@@ -1689,7 +1708,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->alias('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Rebuild deployment')
+    ->desc('Create deployment build')
     ->label('scope', 'functions.write')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
@@ -1697,6 +1716,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'createBuild',
         description: '/docs/references/functions/create-build.md',
         auth: [AuthType::KEY],
@@ -1772,6 +1792,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'deployments',
         name: 'updateDeploymentBuild',
         description: '/docs/references/functions/update-deployment-build.md',
         auth: [AuthType::KEY],
@@ -1867,6 +1888,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'createExecution',
         description: '/docs/references/functions/create-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2235,15 +2257,6 @@ App::post('/v1/functions/:functionId/executions')
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
-        }
-
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => $value];
@@ -2275,6 +2288,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'listExecutions',
         description: '/docs/references/functions/list-executions.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2347,17 +2361,6 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $results = array_map(function ($execution) {
-                $execution->setAttribute('logs', '');
-                $execution->setAttribute('errors', '');
-                return $execution;
-            }, $results);
-        }
-
         $response->dynamic(new Document([
             'executions' => $results,
             'total' => $total,
@@ -2371,6 +2374,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'getExecution',
         description: '/docs/references/functions/get-execution.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -2406,14 +2410,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
-        }
-
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
@@ -2427,6 +2423,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'executions',
         name: 'deleteExecution',
         description: '/docs/references/functions/delete-execution.md',
         auth: [AuthType::KEY],
@@ -2504,6 +2501,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'createVariable',
         description: '/docs/references/functions/create-variable.md',
         auth: [AuthType::KEY],
@@ -2574,6 +2572,7 @@ App::get('/v1/functions/:functionId/variables')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'listVariables',
             description: '/docs/references/functions/list-variables.md',
             auth: [AuthType::KEY],
@@ -2610,6 +2609,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         'sdk',
         new Method(
             namespace: 'functions',
+            group: 'variables',
             name: 'getVariable',
             description: '/docs/references/functions/get-variable.md',
             auth: [AuthType::KEY],
@@ -2658,6 +2658,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'updateVariable',
         description: '/docs/references/functions/update-variable.md',
         auth: [AuthType::KEY],
@@ -2725,6 +2726,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'variables',
         name: 'deleteVariable',
         description: '/docs/references/functions/delete-variable.md',
         auth: [AuthType::KEY],
@@ -2779,6 +2781,7 @@ App::get('/v1/functions/templates')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'listTemplates',
         description: '/docs/references/functions/list-templates.md',
         auth: [AuthType::ADMIN],
@@ -2822,6 +2825,7 @@ App::get('/v1/functions/templates/:templateId')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk', new Method(
         namespace: 'functions',
+        group: 'templates',
         name: 'getTemplate',
         description: '/docs/references/functions/get-template.md',
         auth: [AuthType::ADMIN],
