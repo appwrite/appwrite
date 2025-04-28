@@ -922,7 +922,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
             return new Document([]);
         }
 
-        if ($token->getAttribute('resourceType') === 'file') {
+        if ($token->getAttribute('resourceType') === 'files') {
             $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
             $ids = explode(':', $token->getAttribute('resourceId'));
 
