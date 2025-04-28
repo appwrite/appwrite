@@ -171,10 +171,7 @@ class Certificates extends Action
             $certificate->setAttribute('issueDate', DateTime::now());
             $success = true;
         } catch (Throwable $e) {
-            $logs = $e->getMessage();
-
-            // Set exception as log in certificate document
-            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
+            $certificate->setAttribute('logs', 'Failed to create custom domain');
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
