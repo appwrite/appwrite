@@ -676,6 +676,8 @@ class FunctionsCustomServerTest extends Scope
      */
     public function testUpdateDeployment($data): array
     {
+        var_dump("data");
+        var_dump($data);
         /**
          * Test for SUCCESS
          */
@@ -685,6 +687,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
+
+        var_dump("response");
+        var_dump($response);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
