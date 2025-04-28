@@ -4128,7 +4128,12 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents/' . $person2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                // explicitly select the nested document
+                Query::select(['libraries.*'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('$collection', $response['body']);
@@ -4138,7 +4143,12 @@ trait DatabasesBase
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/documents/library11', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                // explicitly select the nested document
+                Query::select(['person_one_to_many.$id'])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('person_one_to_many', $response['body']);
@@ -4288,19 +4298,37 @@ trait DatabasesBase
         $album = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents/album1', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select([
+                    '$id',
+                    'name',
+                    '$permissions',
+                    // explicitly select the nested document
+                    'artist.$id',
+                    'artist.name',
+                    'artist.$permissions'
+                ])->toString()
+            ]
+        ]);
 
         $this->assertEquals(200, $album['headers']['status-code']);
         $this->assertEquals('album1', $album['body']['$id']);
         $this->assertEquals('Album 1', $album['body']['name']);
-        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
         $this->assertEquals($permissions, $album['body']['$permissions']);
+        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
         $this->assertEquals($permissions, $album['body']['artist']['$permissions']);
 
         $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                // explicitly select the nested document
+                // Query::select(['albums'])->toString()
+                // TODO: using query on this side doesn't return the related doc as its not found
+            ]
+        ]);
 
         $this->assertEquals(200, $artist['headers']['status-code']);
         $this->assertEquals('Artist 1', $artist['body']['name']);
@@ -4482,6 +4510,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::select(['libraries.*'])->toString(),
                 Query::isNotNull('$id')->toString(),
                 Query::startsWith('fullName', 'Stevie')->toString(),
                 Query::endsWith('fullName', 'Wonder')->toString(),

@@ -3309,7 +3309,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
         try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+            $document = $dbForProject->ignoreNestedQueries(fn () => $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document));
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException $e) {
@@ -3601,7 +3601,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         try {
             $queries = Query::parseQueries($queries);
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            $document = $dbForProject->ignoreNestedQueries(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
@@ -3967,11 +3967,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
-                )
+                fn () =>
+                // TODO: itznotabug, jake - how much diff is this even making here?
+                //  I don't think we can remove the related docs when returning back the response?
+                $dbForProject->ignoreNestedQueries(fn () =>
+                    $dbForProject->updateDocument(
+                        'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                        $document->getId(),
+                        $newDocument
+                    ))
             );
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
