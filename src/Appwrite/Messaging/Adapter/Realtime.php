@@ -8,7 +8,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\Pools\Pool;
 
 class Realtime extends MessagingAdapter
 {
