@@ -1445,7 +1445,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
             $userWithMatchingEmail = $dbForProject->find('users', [
@@ -1453,7 +1453,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('$id', $userId),
             ]);
             if (!empty($userWithMatchingEmail)) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
             $sessionUpgrade = true;
@@ -1482,7 +1482,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             if (empty($email)) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
+                $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
             /**
@@ -1525,7 +1525,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$email]),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1597,7 +1597,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([

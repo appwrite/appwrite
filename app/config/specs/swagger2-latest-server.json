@@ -15,7 +15,8 @@
             "url": "https:\/\/raw.githubusercontent.com\/appwrite\/appwrite\/master\/LICENSE"
         }
     },
-    "host": "<REGION>.cloud.appwrite.io",
+    "host": "cloud.appwrite.io",
+    "x-host-docs": "<REGION>.cloud.appwrite.io",
     "basePath": "\/v1",
     "schemes": [
         "https"
@@ -82,9 +83,7 @@
             "get": {
                 "summary": "Get account",
                 "operationId": "accountGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -306,9 +305,7 @@
             "get": {
                 "summary": "List identities",
                 "operationId": "accountListIdentities",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -484,9 +481,7 @@
             "get": {
                 "summary": "List logs",
                 "operationId": "accountListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1000,9 +995,7 @@
             "get": {
                 "summary": "List factors",
                 "operationId": "accountListMfaFactors",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1054,9 +1047,7 @@
             "get": {
                 "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1447,9 +1438,7 @@
             "get": {
                 "summary": "Get account preferences",
                 "operationId": "accountGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1743,9 +1732,7 @@
             "get": {
                 "summary": "List sessions",
                 "operationId": "accountListSessions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -2207,9 +2194,7 @@
             "get": {
                 "summary": "Get session",
                 "operationId": "accountGetSession",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -2621,9 +2606,7 @@
             "get": {
                 "summary": "Create OAuth2 token",
                 "operationId": "accountCreateOAuth2Token",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "text\/html"
                 ],
@@ -3125,9 +3108,7 @@
             "get": {
                 "summary": "Get browser icon",
                 "operationId": "avatarsGetBrowser",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3254,9 +3235,7 @@
             "get": {
                 "summary": "Get credit card icon",
                 "operationId": "avatarsGetCreditCard",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3389,9 +3368,7 @@
             "get": {
                 "summary": "Get favicon",
                 "operationId": "avatarsGetFavicon",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -3456,9 +3433,7 @@
             "get": {
                 "summary": "Get country flag",
                 "operationId": "avatarsGetFlag",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3947,9 +3922,7 @@
             "get": {
                 "summary": "Get image from URL",
                 "operationId": "avatarsGetImage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -4034,9 +4007,7 @@
             "get": {
                 "summary": "Get user initials",
                 "operationId": "avatarsGetInitials",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4129,9 +4100,7 @@
             "get": {
                 "summary": "Get QR code",
                 "operationId": "avatarsGetQR",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4224,9 +4193,7 @@
             "get": {
                 "summary": "List databases",
                 "operationId": "databasesList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4382,9 +4349,7 @@
             "get": {
                 "summary": "Get database",
                 "operationId": "databasesGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4583,9 +4548,7 @@
             "get": {
                 "summary": "List collections",
                 "operationId": "databasesListCollections",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4772,9 +4735,7 @@
             "get": {
                 "summary": "Get collection",
                 "operationId": "databasesGetCollection",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5012,9 +4973,7 @@
             "get": {
                 "summary": "List attributes",
                 "operationId": "databasesListAttributes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7259,9 +7218,7 @@
             "get": {
                 "summary": "Get attribute",
                 "operationId": "databasesGetAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7542,9 +7499,7 @@
             "get": {
                 "summary": "List documents",
                 "operationId": "databasesListDocuments",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7734,9 +7689,7 @@
             "get": {
                 "summary": "Get document",
                 "operationId": "databasesGetDocument",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8007,9 +7960,7 @@
             "get": {
                 "summary": "List indexes",
                 "operationId": "databasesListIndexes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8208,9 +8159,7 @@
             "get": {
                 "summary": "Get index",
                 "operationId": "databasesGetIndex",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8355,9 +8304,7 @@
             "get": {
                 "summary": "List functions",
                 "operationId": "functionsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8700,9 +8647,7 @@
             "get": {
                 "summary": "List runtimes",
                 "operationId": "functionsListRuntimes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8752,9 +8697,7 @@
             "get": {
                 "summary": "List available function runtime specifications",
                 "operationId": "functionsListSpecifications",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8805,9 +8748,7 @@
             "get": {
                 "summary": "Get function",
                 "operationId": "functionsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9169,9 +9110,7 @@
             "get": {
                 "summary": "List deployments",
                 "operationId": "functionsListDeployments",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9343,9 +9282,7 @@
             "get": {
                 "summary": "Get deployment",
                 "operationId": "functionsGetDeployment",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9694,9 +9631,7 @@
             "get": {
                 "summary": "Get deployment download",
                 "operationId": "functionsGetDeploymentDownload",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -9766,9 +9701,7 @@
             "get": {
                 "summary": "List executions",
                 "operationId": "functionsListExecutions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9972,9 +9905,7 @@
             "get": {
                 "summary": "Get execution",
                 "operationId": "functionsGetExecution",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10109,9 +10040,7 @@
             "get": {
                 "summary": "List variables",
                 "operationId": "functionsListVariables",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10256,9 +10185,7 @@
             "get": {
                 "summary": "Get variable",
                 "operationId": "functionsGetVariable",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10633,9 +10560,7 @@
             "get": {
                 "summary": "Get HTTP",
                 "operationId": "healthGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10685,9 +10610,7 @@
             "get": {
                 "summary": "Get antivirus",
                 "operationId": "healthGetAntivirus",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10737,9 +10660,7 @@
             "get": {
                 "summary": "Get cache",
                 "operationId": "healthGetCache",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10789,9 +10710,7 @@
             "get": {
                 "summary": "Get the SSL certificate for a domain",
                 "operationId": "healthGetCertificate",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10850,9 +10769,7 @@
             "get": {
                 "summary": "Get DB",
                 "operationId": "healthGetDB",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10902,9 +10819,7 @@
             "get": {
                 "summary": "Get pubsub",
                 "operationId": "healthGetPubSub",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10954,9 +10869,7 @@
             "get": {
                 "summary": "Get builds queue",
                 "operationId": "healthGetQueueBuilds",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11017,9 +10930,7 @@
             "get": {
                 "summary": "Get certificates queue",
                 "operationId": "healthGetQueueCertificates",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11080,9 +10991,7 @@
             "get": {
                 "summary": "Get databases queue",
                 "operationId": "healthGetQueueDatabases",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11152,9 +11061,7 @@
             "get": {
                 "summary": "Get deletes queue",
                 "operationId": "healthGetQueueDeletes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11215,9 +11122,7 @@
             "get": {
                 "summary": "Get number of failed queue jobs",
                 "operationId": "healthGetFailedJobs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11302,9 +11207,7 @@
             "get": {
                 "summary": "Get functions queue",
                 "operationId": "healthGetQueueFunctions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11365,9 +11268,7 @@
             "get": {
                 "summary": "Get logs queue",
                 "operationId": "healthGetQueueLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11428,9 +11329,7 @@
             "get": {
                 "summary": "Get mails queue",
                 "operationId": "healthGetQueueMails",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11491,9 +11390,7 @@
             "get": {
                 "summary": "Get messaging queue",
                 "operationId": "healthGetQueueMessaging",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11554,9 +11451,7 @@
             "get": {
                 "summary": "Get migrations queue",
                 "operationId": "healthGetQueueMigrations",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11617,9 +11512,7 @@
             "get": {
                 "summary": "Get stats  resources queue",
                 "operationId": "healthGetQueueStatsResources",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11680,9 +11573,7 @@
             "get": {
                 "summary": "Get stats usage queue",
                 "operationId": "healthGetQueueUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11743,9 +11634,7 @@
             "get": {
                 "summary": "Get webhooks queue",
                 "operationId": "healthGetQueueWebhooks",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11806,9 +11695,7 @@
             "get": {
                 "summary": "Get storage",
                 "operationId": "healthGetStorage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11858,9 +11745,7 @@
             "get": {
                 "summary": "Get local storage",
                 "operationId": "healthGetStorageLocal",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11910,9 +11795,7 @@
             "get": {
                 "summary": "Get time",
                 "operationId": "healthGetTime",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11962,9 +11845,7 @@
             "get": {
                 "summary": "Get user locale",
                 "operationId": "localeGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12018,9 +11899,7 @@
             "get": {
                 "summary": "List locale codes",
                 "operationId": "localeListCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12074,9 +11953,7 @@
             "get": {
                 "summary": "List continents",
                 "operationId": "localeListContinents",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12130,9 +12007,7 @@
             "get": {
                 "summary": "List countries",
                 "operationId": "localeListCountries",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12186,9 +12061,7 @@
             "get": {
                 "summary": "List EU countries",
                 "operationId": "localeListCountriesEU",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12242,9 +12115,7 @@
             "get": {
                 "summary": "List countries phone codes",
                 "operationId": "localeListCountriesPhones",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12298,9 +12169,7 @@
             "get": {
                 "summary": "List currencies",
                 "operationId": "localeListCurrencies",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12354,9 +12223,7 @@
             "get": {
                 "summary": "List languages",
                 "operationId": "localeListLanguages",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12410,9 +12277,7 @@
             "get": {
                 "summary": "List messages",
                 "operationId": "messagingListMessages",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13428,9 +13293,7 @@
             "get": {
                 "summary": "Get message",
                 "operationId": "messagingGetMessage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13547,9 +13410,7 @@
             "get": {
                 "summary": "List message logs",
                 "operationId": "messagingListMessageLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13622,9 +13483,7 @@
             "get": {
                 "summary": "List message targets",
                 "operationId": "messagingListTargets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13697,9 +13556,7 @@
             "get": {
                 "summary": "List providers",
                 "operationId": "messagingListProviders",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16016,9 +15873,7 @@
             "get": {
                 "summary": "Get provider",
                 "operationId": "messagingGetProvider",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16135,9 +15990,7 @@
             "get": {
                 "summary": "List provider logs",
                 "operationId": "messagingListProviderLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16210,9 +16063,7 @@
             "get": {
                 "summary": "List subscriber logs",
                 "operationId": "messagingListSubscriberLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16285,9 +16136,7 @@
             "get": {
                 "summary": "List topics",
                 "operationId": "messagingListTopics",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16450,9 +16299,7 @@
             "get": {
                 "summary": "Get topic",
                 "operationId": "messagingGetTopic",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16654,9 +16501,7 @@
             "get": {
                 "summary": "List topic logs",
                 "operationId": "messagingListTopicLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16729,9 +16574,7 @@
             "get": {
                 "summary": "List subscribers",
                 "operationId": "messagingListSubscribers",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -16903,9 +16746,7 @@
             "get": {
                 "summary": "Get subscriber",
                 "operationId": "messagingGetSubscriber",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17042,9 +16883,7 @@
             "get": {
                 "summary": "List buckets",
                 "operationId": "storageListBuckets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17255,9 +17094,7 @@
             "get": {
                 "summary": "Get bucket",
                 "operationId": "storageGetBucket",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17511,9 +17348,7 @@
             "get": {
                 "summary": "List files",
                 "operationId": "storageListFiles",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17690,9 +17525,7 @@
             "get": {
                 "summary": "Get file",
                 "operationId": "storageGetFile",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17927,9 +17760,7 @@
             "get": {
                 "summary": "Get file for download",
                 "operationId": "storageGetFileDownload",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -18001,9 +17832,7 @@
             "get": {
                 "summary": "Get file preview",
                 "operationId": "storageGetFilePreview",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -18203,9 +18032,7 @@
             "get": {
                 "summary": "Get file for view",
                 "operationId": "storageGetFileView",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -18277,9 +18104,7 @@
             "get": {
                 "summary": "List teams",
                 "operationId": "teamsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18448,9 +18273,7 @@
             "get": {
                 "summary": "Get team",
                 "operationId": "teamsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18655,9 +18478,7 @@
             "get": {
                 "summary": "List team memberships",
                 "operationId": "teamsListMemberships",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18857,9 +18678,7 @@
             "get": {
                 "summary": "Get team membership",
                 "operationId": "teamsGetMembership",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19188,9 +19007,7 @@
             "get": {
                 "summary": "Get team preferences",
                 "operationId": "teamsGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19332,9 +19149,7 @@
             "get": {
                 "summary": "List users",
                 "operationId": "usersList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19685,9 +19500,7 @@
             "get": {
                 "summary": "List identities",
                 "operationId": "usersListIdentities",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -20354,9 +20167,7 @@
             "get": {
                 "summary": "Get user",
                 "operationId": "usersGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -20717,9 +20528,7 @@
             "get": {
                 "summary": "List user logs",
                 "operationId": "usersListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -20791,9 +20600,7 @@
             "get": {
                 "summary": "List user memberships",
                 "operationId": "usersListMemberships",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21003,9 +20810,7 @@
             "get": {
                 "summary": "List factors",
                 "operationId": "usersListMfaFactors",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21065,9 +20870,7 @@
             "get": {
                 "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21487,9 +21290,7 @@
             "get": {
                 "summary": "Get user preferences",
                 "operationId": "usersGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21627,9 +21428,7 @@
             "get": {
                 "summary": "List user sessions",
                 "operationId": "usersListSessions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21949,9 +21748,7 @@
             "get": {
                 "summary": "List user targets",
                 "operationId": "usersListTargets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -22136,9 +21933,7 @@
             "get": {
                 "summary": "Get user target",
                 "operationId": "usersGetTarget",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
