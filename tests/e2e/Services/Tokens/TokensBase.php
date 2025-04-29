@@ -5,18 +5,11 @@ namespace Tests\E2E\Services\Tokens;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 
 trait TokensBase
 {
     public function testCreateBucketAndFile(): array
     {
-        $guestHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ];
-
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -25,9 +18,6 @@ trait TokensBase
             'name' => 'Test Bucket',
             'bucketId' => ID::unique(),
             'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
-            'permissions' => [
-                Permission::create(Role::any()),
-            ],
         ]);
 
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -35,11 +25,11 @@ trait TokensBase
 
         $bucketId = $bucket['body']['$id'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), [
+        ], [
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ]);
@@ -49,11 +39,11 @@ trait TokensBase
 
         $fileId = $file['body']['$id'];
 
-        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
-            'content-type' => 'multipart/form-data',
+        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()));
+        ]);
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals('files', $token['body']['resourceType']);
@@ -61,8 +51,11 @@ trait TokensBase
         return [
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'guestHeaders' => $guestHeaders,
             'tokenId' => $token['body']['$id'],
+            'guestHeaders' => [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ],
         ];
     }
 
@@ -94,9 +87,10 @@ trait TokensBase
         $tokenId = $data['tokenId'];
         $bucketId = $data['bucketId'];
         $guestHeaders = $data['guestHeaders'];
+        $adminHeaders = array_merge($guestHeaders, ['x-appwrite-key' => $this->getProject()['apiKey']]);
 
         // Generate JWT as an admin user.
-        $tokenJWT = $this->client->call(Client::METHOD_GET, '/tokens/' . $tokenId . '/jwt/', array_merge($guestHeaders, $this->getHeaders()));
+        $tokenJWT = $this->client->call(Client::METHOD_GET, '/tokens/' . $tokenId . '/jwt/', $adminHeaders);
         $this->assertEquals(200, $tokenJWT['headers']['status-code']);
         $this->assertArrayHasKey('jwt', $tokenJWT['body']);
 
