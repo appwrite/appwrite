@@ -1361,7 +1361,7 @@ return [
                 '$id' => ID::custom('sourcePath'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
