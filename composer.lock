@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ed8b411e74c4f6e7d514749f28e933a",
+    "content-hash": "f86338f8299f81c9fe28fb41bf59a00b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3300,16 +3300,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "231e1e0bb97e79438399ffe4de3079063b5dc0b1"
+                "reference": "02415e1a89cdbc14e3e16a7856ecf7f868869449"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/231e1e0bb97e79438399ffe4de3079063b5dc0b1",
-                "reference": "231e1e0bb97e79438399ffe4de3079063b5dc0b1",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/02415e1a89cdbc14e3e16a7856ecf7f868869449",
+                "reference": "02415e1a89cdbc14e3e16a7856ecf7f868869449",
                 "shasum": ""
             },
             "require": {
@@ -3349,9 +3349,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/auth/issues",
-                "source": "https://github.com/utopia-php/auth/tree/0.3.0"
+                "source": "https://github.com/utopia-php/auth/tree/0.4.0"
             },
-            "time": "2025-03-09T21:44:43+00:00"
+            "time": "2025-04-29T19:29:28+00:00"
         },
         {
             "name": "utopia-php/cache",
