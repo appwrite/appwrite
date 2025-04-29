@@ -34,6 +34,7 @@ class RequestTest extends TestCase
         $route = new Route(Request::METHOD_GET, '/test');
         $route->label('sdk', new Method(
             namespace: 'namespace',
+            group: 'group',
             name: 'method',
             description: 'description',
             auth: [],

@@ -13,9 +13,11 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
-use Appwrite\Event\Usage;
-use Appwrite\Event\UsageDump;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
@@ -31,8 +33,8 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
+use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -108,6 +110,8 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
             ->setNamespace('_' . $project->getInternalId());
     }
 
+    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
@@ -169,20 +173,58 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
                 ->setNamespace('_' . $project->getInternalId());
         }
 
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+
         return $database;
     };
 }, ['pools', 'dbForPlatform', 'cache']);
 
+Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+    $database = null;
+    return function (?Document $project = null) use ($pools, $cache, $database) {
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
+
+        $database
+            ->setSharedTables(true)
+            ->setNamespace('logsV1')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        // set tenant
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getInternalId());
+        }
+
+        return $database;
+    };
+}, ['pools', 'cache']);
+
 Server::setResource('abuseRetention', function () {
-    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
 
-Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
-});
+Server::setResource('auditRetention', function (Document $project) {
+    if ($project->getId() === 'console') {
+        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+    }
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+}, ['project']);
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {
@@ -224,57 +266,65 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
-Server::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
-
-Server::setResource('queueForUsageDump', function (Connection $queue) {
-    return new UsageDump($queue);
-}, ['queue']);
-
-Server::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
+Server::setResource('publisher', function (Group $pools) {
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
 
-Server::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
+Server::setResource('consumer', function (Group $pools) {
+    return $pools->get('consumer')->pop()->getResource();
+}, ['pools']);
 
-Server::setResource('queueForMessaging', function (Connection $queue) {
-    return new Messaging($queue);
-}, ['queue']);
+Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
+    return new StatsUsage($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
+Server::setResource('queueForDatabase', function (Publisher $publisher) {
+    return new EventDatabase($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
+Server::setResource('queueForMessaging', function (Publisher $publisher) {
+    return new Messaging($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
+Server::setResource('queueForMails', function (Publisher $publisher) {
+    return new Mail($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
+Server::setResource('queueForBuilds', function (Publisher $publisher) {
+    return new Build($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
+Server::setResource('queueForDeletes', function (Publisher $publisher) {
+    return new Delete($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
+Server::setResource('queueForEvents', function (Publisher $publisher) {
+    return new Event($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
+Server::setResource('queueForAudits', function (Publisher $publisher) {
+    return new Audit($publisher);
+}, ['publisher']);
 
-Server::setResource('queueForMigrations', function (Connection $queue) {
-    return new Migration($queue);
-}, ['queue']);
+Server::setResource('queueForWebhooks', function (Publisher $publisher) {
+    return new Webhook($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForFunctions', function (Publisher $publisher) {
+    return new Func($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
+
+Server::setResource('queueForCertificates', function (Publisher $publisher) {
+    return new Certificate($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForMigrations', function (Publisher $publisher) {
+    return new Migration($publisher);
+}, ['publisher']);
 
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
@@ -359,6 +409,8 @@ Server::setResource('logError', function (Registry $register, Document $project)
     };
 }, ['register', 'project']);
 
+Server::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
@@ -386,7 +438,7 @@ try {
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => $pools->get('queue')->pop()->getResource(),
+        'connection' => $pools->get('consumer')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);

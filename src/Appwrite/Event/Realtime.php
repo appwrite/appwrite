@@ -2,15 +2,29 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 
 class Realtime extends Event
 {
+    protected array $subscribers = [];
+
+    private Adapter $realtime;
+
+    protected bool $critical = false;
+
     public function __construct()
     {
+        $this->realtime = new Adapter\Realtime();
     }
 
+    /**
+     * Get Realtime payload for this event.
+     *
+     * @return array
+     */
     public function getRealtimePayload(): array
     {
         $payload = [];
@@ -25,10 +39,32 @@ class Realtime extends Event
     }
 
     /**
+     * Set subscribers for this realtime event.
+     *
+     * @param array $subscribers
+     * @return array
+     */
+    public function setSubscribers(array $subscribers): self
+    {
+        $this->subscribers = $subscribers;
+        return $this;
+    }
+
+    /**
+     * Get subscribers for this realtime event.
+     *
+     * @return array
+     */
+    public function getSubscribers(): array
+    {
+        return $this->subscribers;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
-     * @throws InvalidArgumentException
+     * @throws Exception
      */
     public function trigger(): string|bool
     {
@@ -53,17 +89,23 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
-        RealtimeAdapter::send(
-            projectId: $target['projectId'] ?? $this->getProject()->getId(),
-            payload: $this->getRealtimePayload(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles'],
-            options: [
-                'permissionsChanged' => $target['permissionsChanged'],
-                'userId' => $this->getParam('userId')
-            ]
-        );
+        $projectIds = !empty($this->getSubscribers())
+            ? $this->getSubscribers()
+            : [$target['projectId'] ?? $this->getProject()->getId()];
+
+        foreach ($projectIds as $projectId) {
+            $this->realtime->send(
+                projectId: $projectId,
+                payload: $this->getRealtimePayload(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles'],
+                options: [
+                    'permissionsChanged' => $target['permissionsChanged'],
+                    'userId' => $this->getParam('userId')
+                ]
+            );
+        }
 
         return true;
     }

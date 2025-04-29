@@ -90,6 +90,12 @@ trait DatabasesBase
      */
     public function testConsoleProject(array $data)
     {
+        if ($this->getSide() === 'server') {
+            // Server side can't get past the invalid key check anyway
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
@@ -397,6 +403,73 @@ trait DatabasesBase
         ]);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testPatchAttribute(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'patch',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals($collection['body']['name'], 'patch');
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'required' => true,
+            'size' => 100,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->assertEquals($attribute['body']['size'], 100);
+
+        sleep(1);
+
+        $index = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'titleIndex',
+            'type' => 'key',
+            'attributes' => ['title'],
+        ]);
+        $this->assertEquals(202, $index['headers']['status-code']);
+
+        sleep(1);
+
+        /**
+         * Update attribute size to exceed Index maximum length
+         */
+        $attribute = $this->client->call(Client::METHOD_PATCH, '/databases/'.$databaseId.'/collections/'.$collection['body']['$id'].'/attributes/string/'.$attribute['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'size' => 1000,
+            'required' => true,
+            'default' => null,
+        ]);
+
+        $this->assertEquals(400, $attribute['headers']['status-code']);
+        $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
     }
 
     public function testUpdateAttributeEnum(): void
@@ -1300,7 +1373,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown attribute: Unknown', $unknown['body']['message']);
+        $this->assertEquals('Unknown attribute: Unknown. Verify the attribute name or create the attribute.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1568,8 +1641,53 @@ trait DatabasesBase
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
+        // changing description attribute to be null by default instead of empty string
+        $patchNull = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string/description', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'default' => null,
+            'required' => false,
+        ]);
+        // creating a dummy doc with null description
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Dummy',
+                'releaseYear' => 1944,
+                'birthDay' => '1975-06-12 14:12:55+02:00',
+                'actors' => [
+                    'Dummy',
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(201, $document1['headers']['status-code']);
+        // fetching docs with cursor after the dummy doc with order attr description which is null
+        $documentsPaginated = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('dummy')->toString(),
+                Query::cursorAfter(new Document(['$id' => $document1['body']['$id']]))->toString()
+            ],
+        ]);
+        // should throw 400 as the order attr description of the selected doc is null
+        $this->assertEquals(400, $documentsPaginated['headers']['status-code']);
+
+        // deleting the dummy doc created
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $document1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
     }
+
 
     /**
      * @depends testListDocuments

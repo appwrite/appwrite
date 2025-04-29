@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Connection;
+use Utopia\Queue\Publisher;
 
 class Audit extends Event
 {
@@ -12,9 +12,11 @@ class Audit extends Event
     protected string $ip = '';
     protected string $hostname = '';
 
-    public function __construct(protected Connection $connection)
+    protected bool $critical = false;
+
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct($connection);
+        parent::__construct($publisher);
 
         $this
             ->setQueue(Event::AUDITS_QUEUE_NAME)

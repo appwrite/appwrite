@@ -1,9 +1,9 @@
 POST /v1/functions HTTP/1.1
-Host: cloud.appwrite.io
+Host: &lt;REGION&gt;.cloud.appwrite.io
 Content-Type: application/json
-X-Appwrite-Response-Format: 1.5.0
-X-Appwrite-Project: 5df5acd0d48c2
-X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
+X-Appwrite-Response-Format: 1.6.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "functionId": "<FUNCTION_ID>",
@@ -17,6 +17,7 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "logging": false,
   "entrypoint": "<ENTRYPOINT>",
   "commands": "<COMMANDS>",
+  "scopes": [],
   "installationId": "<INSTALLATION_ID>",
   "providerRepositoryId": "<PROVIDER_REPOSITORY_ID>",
   "providerBranch": "<PROVIDER_BRANCH>",
@@ -25,5 +26,6 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "templateRepository": "<TEMPLATE_REPOSITORY>",
   "templateOwner": "<TEMPLATE_OWNER>",
   "templateRootDirectory": "<TEMPLATE_ROOT_DIRECTORY>",
-  "templateBranch": "<TEMPLATE_BRANCH>"
+  "templateVersion": "<TEMPLATE_VERSION>",
+  "specification": 
 }

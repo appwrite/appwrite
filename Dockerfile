@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.9.5 AS final
+FROM appwrite/base:0.10.1 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -85,8 +85,9 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-usage && \
-    chmod +x /usr/local/bin/worker-usage-dump
+    chmod +x /usr/local/bin/worker-stats-usage && \
+    chmod +x /usr/local/bin/stats-resources && \
+    chmod +x /usr/local/bin/worker-stats-resources
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

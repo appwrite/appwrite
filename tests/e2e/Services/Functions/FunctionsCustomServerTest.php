@@ -13,7 +13,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -1686,9 +1685,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(1, count($executions['body']['executions']));
         });
 
-        // Await Aggregation
-        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
-
         $this->assertEventually(function () use ($functionId) {
             $response = $this->getFunctionUsage($functionId, [
                 'range' => '24h'
@@ -1981,6 +1977,49 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEmpty($execution['logs']);
             $this->assertEmpty($execution['errors']);
         }
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionSpecifications()
+    {
+        // Check if the function specifications are correctly set in builds
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'runtime' => 'node-18.0',
+            'name' => 'Specification Test',
+            'entrypoint' => 'index.js',
+            'logging' => false,
+            'execute' => ['any'],
+            'specification' => Specification::S_2VCPU_2GB,
+            'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['specification']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $functionId = $function['body']['$id'] ?? '';
+
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertTrue(str_contains($deployment['body']['buildLogs'], '2048:2'));
+        }, 10000, 500);
+
+        // Check if the function specifications are correctly set in executions
+        $execution = $this->createExecution($functionId);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $this->assertEquals('2048', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
+        $this->assertEquals('2', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
         $this->cleanupFunction($functionId);
     }

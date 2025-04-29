@@ -8,7 +8,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Usage;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Workers\Deletes;
@@ -33,6 +33,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -62,6 +63,7 @@ App::post('/v1/teams')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'create',
         description: '/docs/references/teams/create-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -152,6 +154,7 @@ App::get('/v1/teams')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'list',
         description: '/docs/references/teams/list-teams.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -204,9 +207,12 @@ App::get('/v1/teams')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('teams', $queries);
+            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -220,6 +226,7 @@ App::get('/v1/teams/:teamId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'get',
         description: '/docs/references/teams/get-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -250,6 +257,7 @@ App::get('/v1/teams/:teamId/prefs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'getPrefs',
         description: '/docs/references/teams/get-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -285,6 +293,7 @@ App::put('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updateName',
         description: '/docs/references/teams/update-team-name.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -332,6 +341,7 @@ App::put('/v1/teams/:teamId/prefs')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updatePrefs',
         description: '/docs/references/teams/update-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -371,6 +381,7 @@ App::delete('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'delete',
         description: '/docs/references/teams/delete-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -429,6 +440,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'createMembership',
         description: '/docs/references/teams/create-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -466,9 +478,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
     ->inject('timelimit')
-    ->inject('queueForUsage')
+    ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Usage $queueForUsage, array $plan) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -488,7 +500,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $email = \strtolower($email);
-        $name = (empty($name)) ? $email : $name;
+        $name = empty($name) ? $email : $name;
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -507,7 +519,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
-            $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
+            $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
             if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
@@ -588,9 +600,8 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getInternalId()]),
         ]);
 
+        $secret = Auth::tokenGenerator();
         if ($membership->isEmpty()) {
-            $secret = Auth::tokenGenerator();
-
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -616,9 +627,13 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                 $dbForProject->createDocument('memberships', $membership);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        } else {
+            if ($isPrivilegedUser || $isAppUser) {
+                Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            }
+
+        } elseif ($membership->getAttribute('confirm') === false) {
+            $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {
@@ -629,8 +644,9 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
                 $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        } else {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
-
 
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
@@ -714,7 +730,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name'))
+                    ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
 
@@ -757,11 +773,11 @@ App::post('/v1/teams/:teamId/memberships')
                         $countryCode = $helper->parse($phone)->getCountryCode();
 
                         if (!empty($countryCode)) {
-                            $queueForUsage
+                            $queueForStatsUsage
                                 ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                         }
                     }
-                    $queueForUsage
+                    $queueForStatsUsage
                         ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();
@@ -792,6 +808,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/teams/list-team-members.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -855,17 +872,20 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $memberships = $dbForProject->find(
+                collection: 'memberships',
+                queries: $queries,
+            );
+            $total = $dbForProject->count(
+                collection: 'memberships',
+                queries: $filterQueries,
+                max: APP_LIMIT_COUNT
+            );
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
-        $memberships = $dbForProject->find(
-            collection: 'memberships',
-            queries: $queries,
-        );
-
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
@@ -930,6 +950,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'getMembership',
         description: '/docs/references/teams/get-team-member.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1016,6 +1037,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembership',
         description: '/docs/references/teams/update-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1030,7 +1052,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
@@ -1042,9 +1063,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -1064,6 +1086,21 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
+
+        if ($project->getId() === 'console') {
+            // Quick check: fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [Query::contains('roles', ['owner'])],
+                max: 2
+            );
+
+            // Prevent role change if there's only one owner left,
+            // the requester is that owner, and the new `$roles` no longer include 'owner'!
+            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+            }
+        }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
@@ -1104,6 +1141,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembershipStatus',
         description: '/docs/references/teams/update-team-membership-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -1261,6 +1299,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'deleteMembership',
         description: '/docs/references/teams/delete-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1331,6 +1370,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/teams/get-team-logs.md',
         auth: [AuthType::ADMIN],
@@ -1361,13 +1401,15 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -1414,7 +1456,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

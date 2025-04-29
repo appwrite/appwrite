@@ -1,12 +1,12 @@
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
 
 let account = Account(client)
 
-let result = try await account.updateMfaChallenge(
+let session = try await account.updateMfaChallenge(
     challengeId: "<CHALLENGE_ID>",
     otp: "<OTP>"
 )

@@ -226,10 +226,6 @@ trait TeamsBaseClient
         $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
         $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
 
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
-
         /**
          * Test with UserId
          * Create user
@@ -307,6 +303,11 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmail();
+        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
+        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
+        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
         /**
          * Test for FAILURE

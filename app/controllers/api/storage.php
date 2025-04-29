@@ -6,7 +6,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -25,6 +24,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -63,6 +63,7 @@ App::post('/v1/storage/buckets')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'createBucket',
         description: '/docs/references/storage/create-bucket.md',
         auth: [AuthType::KEY],
@@ -165,6 +166,7 @@ App::get('/v1/storage/buckets')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'listBuckets',
         description: '/docs/references/storage/list-buckets.md',
         auth: [AuthType::KEY],
@@ -217,10 +219,15 @@ App::get('/v1/storage/buckets')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $buckets = $dbForProject->find('buckets', $queries);
+            $total = $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', $queries),
-            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
+            'buckets' => $buckets,
+            'total' => $total,
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -231,6 +238,7 @@ App::get('/v1/storage/buckets/:bucketId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'getBucket',
         description: '/docs/references/storage/get-bucket.md',
         auth: [AuthType::KEY],
@@ -265,6 +273,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'updateBucket',
         description: '/docs/references/storage/update-bucket.md',
         auth: [AuthType::KEY],
@@ -335,6 +344,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{request.bucketId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'deleteBucket',
         description: '/docs/references/storage/delete-bucket.md',
         auth: [AuthType::KEY],
@@ -388,6 +398,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
         type: MethodType::UPLOAD,
@@ -757,6 +768,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'listFiles',
         description: '/docs/references/storage/list-files.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -838,6 +850,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
@@ -854,6 +868,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFile',
         description: '/docs/references/storage/get-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -910,6 +925,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache.resource', 'file/{request.fileId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFilePreview',
         description: '/docs/references/storage/get-file-preview.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -935,15 +951,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    ->inject('request')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForProject')
-    ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->inject('queueForUsage')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, Usage $queueForUsage) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -1071,22 +1083,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        $queueForUsage
-            ->addMetric(METRIC_FILES_TRANSFORMATIONS, 1)
-            ->addMetric(str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_TRANSFORMATIONS), 1)
-        ;
-
-        $transformedAt = $file->getAttribute('transformedAt', '');
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-            $file->setAttribute('transformedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' .  $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+        //Do not update transformedAt if it's a console user
+        if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            $transformedAt = $file->getAttribute('transformedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                $file->setAttribute('transformedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+            }
         }
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType($contentType)
-            ->file($data)
-        ;
+            ->file($data);
 
         unset($image);
     });
@@ -1099,6 +1108,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileDownload',
         description: '/docs/references/storage/get-file-download.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1247,6 +1257,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileView',
         description: '/docs/references/storage/get-file-view.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1404,9 +1415,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->groups(['api', 'storage'])
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('jwt', '', new Text(2048, 0), 'JSON Web Token to validate', true)
@@ -1567,6 +1575,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'updateFile',
         description: '/docs/references/storage/update-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1681,6 +1690,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'deleteFile',
         description: '/docs/references/storage/delete-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1780,6 +1790,7 @@ App::get('/v1/storage/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/storage/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -1866,6 +1877,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getBucketUsage',
         description: '/docs/references/storage/get-bucket-usage.md',
         auth: [AuthType::ADMIN],
@@ -1879,9 +1891,12 @@ App::get('/v1/storage/:bucketId/usage')
     ->param('bucketId', '', new UID(), 'Bucket ID.')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
+    ->inject('getLogsDB')
+    ->action(function (string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, callable $getLogsDB) {
 
+        $dbForLogs = call_user_func($getLogsDB, $project);
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -1894,12 +1909,16 @@ App::get('/v1/storage/:bucketId/usage')
         $metrics = [
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
+            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED),
         ];
 
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $db = ($metric === str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
+                    ? $dbForLogs
+                    : $dbForProject;
+
+                $result =  $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1907,7 +1926,7 @@ App::get('/v1/storage/:bucketId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $db->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -1948,5 +1967,7 @@ App::get('/v1/storage/:bucketId/usage')
             'filesStorageTotal' => $usage[$metrics[1]]['total'],
             'files' => $usage[$metrics[0]]['data'],
             'storage' => $usage[$metrics[1]]['data'],
+            'imageTransformations' => $usage[$metrics[2]]['data'],
+            'imageTransformationsTotal' => $usage[$metrics[2]]['total'],
         ]), Response::MODEL_USAGE_BUCKETS);
     });

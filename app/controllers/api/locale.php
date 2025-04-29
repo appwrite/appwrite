@@ -17,6 +17,7 @@ App::get('/v1/locale')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'get',
         description: '/docs/references/locale/get-locale.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -80,6 +81,7 @@ App::get('/v1/locale/codes')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listCodes',
         description: '/docs/references/locale/list-locale-codes.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -105,6 +107,7 @@ App::get('/v1/locale/countries')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listCountries',
         description: '/docs/references/locale/list-countries.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -118,7 +121,7 @@ App::get('/v1/locale/countries')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-countries'); /* @var $list array */
+        $list = array_keys(Config::getParam('locale-countries')); /* @var $list array */
         $output = [];
 
         foreach ($list as $value) {
@@ -141,6 +144,7 @@ App::get('/v1/locale/countries/eu')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listCountriesEU',
         description: '/docs/references/locale/list-countries-eu.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -179,6 +183,7 @@ App::get('/v1/locale/countries/phones')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listCountriesPhones',
         description: '/docs/references/locale/list-countries-phones.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -216,6 +221,7 @@ App::get('/v1/locale/continents')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listContinents',
         description: '/docs/references/locale/list-continents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -229,7 +235,7 @@ App::get('/v1/locale/continents')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-        $list = Config::getParam('locale-continents');
+        $list = array_keys(Config::getParam('locale-continents'));
 
         foreach ($list as $value) {
             $output[] = new Document([
@@ -251,6 +257,7 @@ App::get('/v1/locale/currencies')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listCurrencies',
         description: '/docs/references/locale/list-currencies.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -277,6 +284,7 @@ App::get('/v1/locale/languages')
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(
         namespace: 'locale',
+        group: null,
         name: 'listLanguages',
         description: '/docs/references/locale/list-languages.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],

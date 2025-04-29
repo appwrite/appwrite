@@ -356,7 +356,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
+        'description' => 'The team invitation secret is invalid. Please request a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -592,6 +592,11 @@ return [
         'name' => Exception::DATABASE_TIMEOUT,
         'description' => 'Database timed out. Try adjusting your queries or adding an index.',
         'code' => 408
+    ],
+    Exception::DATABASE_QUERY_ORDER_NULL => [
+        'name' => Exception::DATABASE_QUERY_ORDER_NULL,
+        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'code' => 400,
     ],
 
     /** Collections */

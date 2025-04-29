@@ -103,8 +103,15 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
 
+            // Temporarly accepting both 'fra' and 'default'
+            // When all migrated, only use _APP_REGION with 'default' as default value
+            $regions = [System::getEnv('_APP_REGION', 'default')];
+            if (!in_array('default', $regions)) {
+                $regions[] = 'default';
+            }
+
             $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', $regions),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -153,8 +160,15 @@ abstract class ScheduleBase extends Action
                         $paginationQueries[] = Query::cursorAfter($latestDocument);
                     }
 
+                    // Temporarly accepting both 'fra' and 'default'
+                    // When all migrated, only use _APP_REGION with 'default' as default value
+                    $regions = [System::getEnv('_APP_REGION', 'default')];
+                    if (!in_array('default', $regions)) {
+                        $regions[] = 'default';
+                    }
+
                     $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', $regions),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));

@@ -30,6 +30,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -63,6 +64,7 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createMailgunProvider',
         description: '/docs/references/messaging/create-mailgun-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -156,6 +158,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createSendgridProvider',
         description: '/docs/references/messaging/create-sendgrid-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -237,6 +240,7 @@ App::post('/v1/messaging/providers/smtp')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createSmtpProvider',
         description: '/docs/references/messaging/create-smtp-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -331,6 +335,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('event', 'providers.[providerId].create')
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createMsg91Provider',
         description: '/docs/references/messaging/create-msg91-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -413,6 +418,7 @@ App::post('/v1/messaging/providers/telesign')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createTelesignProvider',
         description: '/docs/references/messaging/create-telesign-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -496,6 +502,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createTextmagicProvider',
         description: '/docs/references/messaging/create-textmagic-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -579,6 +586,7 @@ App::post('/v1/messaging/providers/twilio')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createTwilioProvider',
         description: '/docs/references/messaging/create-twilio-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -662,6 +670,7 @@ App::post('/v1/messaging/providers/vonage')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createVonageProvider',
         description: '/docs/references/messaging/create-vonage-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -745,6 +754,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createFcmProvider',
         description: '/docs/references/messaging/create-fcm-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -814,6 +824,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'createApnsProvider',
         description: '/docs/references/messaging/create-apns-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -903,6 +914,7 @@ App::get('/v1/messaging/providers')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'listProviders',
         description: '/docs/references/messaging/list-providers.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -951,10 +963,15 @@ App::get('/v1/messaging/providers')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $providers = $dbForProject->find('providers', $queries);
+            $total = $dbForProject->count('providers', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'providers' => $dbForProject->find('providers', $queries),
-            'total' => $dbForProject->count('providers', $queries, APP_LIMIT_COUNT),
+            'providers' => $providers,
+            'total' => $total,
         ]), Response::MODEL_PROVIDER_LIST);
     });
 
@@ -965,6 +982,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'listProviderLogs',
         description: '/docs/references/messaging/list-provider-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -994,13 +1012,15 @@ App::get('/v1/messaging/providers/:providerId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -1047,7 +1067,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1059,6 +1079,7 @@ App::get('/v1/messaging/providers/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'getProvider',
         description: '/docs/references/messaging/get-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1092,6 +1113,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateMailgunProvider',
         description: '/docs/references/messaging/update-mailgun-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1204,6 +1226,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateSendgridProvider',
         description: '/docs/references/messaging/update-sendgrid-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1301,6 +1324,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateSmtpProvider',
         description: '/docs/references/messaging/update-smtp-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1429,6 +1453,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateMsg91Provider',
         description: '/docs/references/messaging/update-msg91-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1515,6 +1540,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateTelesignProvider',
         description: '/docs/references/messaging/update-telesign-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1603,6 +1629,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateTextmagicProvider',
         description: '/docs/references/messaging/update-textmagic-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1691,6 +1718,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateTwilioProvider',
         description: '/docs/references/messaging/update-twilio-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1779,6 +1807,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateVonageProvider',
         description: '/docs/references/messaging/update-vonage-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1867,6 +1896,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateFcmProvider',
         description: '/docs/references/messaging/update-fcm-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -1942,6 +1972,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'updateApnsProvider',
         description: '/docs/references/messaging/update-apns-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2043,6 +2074,7 @@ App::delete('/v1/messaging/providers/:providerId')
     ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'providers',
         name: 'deleteProvider',
         description: '/docs/references/messaging/delete-provider.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2085,6 +2117,7 @@ App::post('/v1/messaging/topics')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'createTopic',
         description: '/docs/references/messaging/create-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2131,6 +2164,7 @@ App::get('/v1/messaging/topics')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'listTopics',
         description: '/docs/references/messaging/list-topics.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2179,10 +2213,15 @@ App::get('/v1/messaging/topics')
 
             $cursor->setValue($cursorDocument[0]);
         }
-
+        try {
+            $topics = $dbForProject->find('topics', $queries);
+            $total = $dbForProject->count('topics', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'topics' => $dbForProject->find('topics', $queries),
-            'total' => $dbForProject->count('topics', $queries, APP_LIMIT_COUNT),
+            'topics' => $topics,
+            'total' => $total,
         ]), Response::MODEL_TOPIC_LIST);
     });
 
@@ -2193,6 +2232,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'listTopicLogs',
         description: '/docs/references/messaging/list-topic-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2222,13 +2262,15 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -2276,7 +2318,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2288,6 +2330,7 @@ App::get('/v1/messaging/topics/:topicId')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'getTopic',
         description: '/docs/references/messaging/get-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2322,6 +2365,7 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'updateTopic',
         description: '/docs/references/messaging/update-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2372,6 +2416,7 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('resourceType', RESOURCE_TYPE_TOPICS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'topics',
         name: 'deleteTopic',
         description: '/docs/references/messaging/delete-topic.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2419,6 +2464,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'subscribers',
         name: 'createSubscriber',
         description: '/docs/references/messaging/create-subscriber.md',
         auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
@@ -2518,6 +2564,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'subscribers',
         name: 'listSubscribers',
         description: '/docs/references/messaging/list-subscribers.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2575,8 +2622,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
             $cursor->setValue($cursorDocument);
         }
-
-        $subscribers = $dbForProject->find('subscribers', $queries);
+        try {
+            $subscribers = $dbForProject->find('subscribers', $queries);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
             return function () use ($subscriber, $dbForProject) {
@@ -2603,6 +2653,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'subscribers',
         name: 'listSubscriberLogs',
         description: '/docs/references/messaging/list-subscriber-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2632,13 +2683,15 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -2686,7 +2739,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2698,6 +2751,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'subscribers',
         name: 'getSubscriber',
         description: '/docs/references/messaging/get-subscriber.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2746,6 +2800,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->label('resourceType', RESOURCE_TYPE_SUBSCRIBERS)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'subscribers',
         name: 'deleteSubscriber',
         description: '/docs/references/messaging/delete-subscriber.md',
         auth: [AuthType::JWT, AuthType::SESSION, AuthType::ADMIN, AuthType::KEY],
@@ -2812,6 +2867,7 @@ App::post('/v1/messaging/messages/email')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'createEmail',
         description: '/docs/references/messaging/create-email.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -2930,7 +2986,7 @@ App::post('/v1/messaging/messages/email')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2970,6 +3026,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'createSms',
         description: '/docs/references/messaging/create-sms.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3052,7 +3109,7 @@ App::post('/v1/messaging/messages/sms')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -3092,6 +3149,7 @@ App::post('/v1/messaging/messages/push')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'createPush',
         description: '/docs/references/messaging/create-push.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3269,7 +3327,7 @@ App::post('/v1/messaging/messages/push')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -3306,6 +3364,7 @@ App::get('/v1/messaging/messages')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'listMessages',
         description: '/docs/references/messaging/list-messages.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3354,10 +3413,15 @@ App::get('/v1/messaging/messages')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $messages = $dbForProject->find('messages', $queries);
+            $total = $dbForProject->count('messages', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'messages' => $dbForProject->find('messages', $queries),
-            'total' => $dbForProject->count('messages', $queries, APP_LIMIT_COUNT),
+            'messages' => $messages,
+            'total' => $total,
         ]), Response::MODEL_MESSAGE_LIST);
     });
 
@@ -3368,6 +3432,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'logs',
         name: 'listMessageLogs',
         description: '/docs/references/messaging/list-message-logs.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3397,13 +3462,15 @@ App::get('/v1/messaging/messages/:messageId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        // Temp fix for logs
+        $queries[] = Query::or([
+            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
+            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
+        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -3451,7 +3518,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3463,6 +3530,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'listTargets',
         description: '/docs/references/messaging/list-message-targets.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3525,10 +3593,15 @@ App::get('/v1/messaging/messages/:messageId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-
+        try {
+            $targets = $dbForProject->find('targets', $queries);
+            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'targets' => $dbForProject->find('targets', $queries),
-            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+            'targets' => $targets,
+            'total' => $total,
         ]), Response::MODEL_TARGET_LIST);
     });
 
@@ -3539,6 +3612,7 @@ App::get('/v1/messaging/messages/:messageId')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'getMessage',
         description: '/docs/references/messaging/get-message.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3572,6 +3646,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'updateEmail',
         description: '/docs/references/messaging/update-email.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3653,7 +3728,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                'region' => System::getEnv('_APP_REGION', 'default'),
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3778,6 +3853,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'updateSms',
         description: '/docs/references/messaging/update-sms.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -3854,7 +3930,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                'region' => System::getEnv('_APP_REGION', 'default'),
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3939,6 +4015,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'updatePush',
         description: '/docs/references/messaging/update-push.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
@@ -4027,7 +4104,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
-                'region' => System::getEnv('_APP_REGION', 'default'),
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -4198,6 +4275,7 @@ App::delete('/v1/messaging/messages/:messageId')
     ->label('resourceType', RESOURCE_TYPE_MESSAGES)
     ->label('sdk', new Method(
         namespace: 'messaging',
+        group: 'messages',
         name: 'delete',
         description: '/docs/references/messaging/delete-message.md',
         auth: [AuthType::ADMIN, AuthType::KEY],
