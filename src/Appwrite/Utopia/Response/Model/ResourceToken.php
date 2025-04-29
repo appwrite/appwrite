@@ -28,17 +28,11 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => '5e5ea5c168bb8:5e5ea5c168bb8',
             ])
-            ->addRule('resourceInternalId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'File ID.',
-                'default' => '',
-                'example' => '1:1',
-            ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource type.',
                 'default' => '',
-                'example' => 'file',
+                'example' => TOKENS_RESOURCE_TYPE_FILES,
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
