@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter as PubSubAdapter;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -393,58 +394,58 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $register->get('pools')->get('pubsub')->use(function (PubSubAdapter $pubsub) use ($server, $workerId, $stats, $register, $realtime) {
-                if ($pubsub->ping(true)) {
-                    $attempts = 0;
-                    Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
-                } else {
-                    Console::error('Pub/sub failed (worker: ' . $workerId . ')');
+            $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
+
+            if ($pubsub->ping(true)) {
+                $attempts = 0;
+                Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
+            } else {
+                Console::error('Pub/sub failed (worker: ' . $workerId . ')');
+            }
+
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+                $event = json_decode($payload, true);
+
+                if ($event['permissionsChanged'] && isset($event['userId'])) {
+                    $projectId = $event['project'];
+                    $userId = $event['userId'];
+
+                    if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
+                        $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
+                        $consoleDatabase = getConsoleDB();
+                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                        $database = getProjectDB($project);
+
+                        $user = $database->getDocument('users', $userId);
+
+                        $roles = Auth::getRoles($user);
+                        $channels = $realtime->connections[$connection]['channels'];
+
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
+                    }
                 }
 
-                $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
-                    $event = json_decode($payload, true);
+                $receivers = $realtime->getSubscribers($event);
 
-                    if ($event['permissionsChanged'] && isset($event['userId'])) {
-                        $projectId = $event['project'];
-                        $userId = $event['userId'];
+                if (App::isDevelopment() && !empty($receivers)) {
+                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                }
 
-                        if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
-                            $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                            $consoleDatabase = getConsoleDB();
-                            $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                            $database = getProjectDB($project);
+                $server->send(
+                    $receivers,
+                    json_encode([
+                        'type' => 'event',
+                        'data' => $event['data']
+                    ])
+                );
 
-                            $user = $database->getDocument('users', $userId);
-
-                            $roles = Auth::getRoles($user);
-                            $channels = $realtime->connections[$connection]['channels'];
-
-                            $realtime->unsubscribe($connection);
-                            $realtime->subscribe($projectId, $connection, $roles, $channels);
-                        }
-                    }
-
-                    $receivers = $realtime->getSubscribers($event);
-
-                    if (App::isDevelopment() && !empty($receivers)) {
-                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                        Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                    }
-
-                    $server->send(
-                        $receivers,
-                        json_encode([
-                            'type' => 'event',
-                            'data' => $event['data']
-                        ])
-                    );
-
-                    if (($num = count($receivers)) > 0) {
-                        $register->get('telemetry.messageSentCounter')->add($num);
-                        $stats->incr($event['project'], 'messages', $num);
-                    }
-                });
+                if (($num = count($receivers)) > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($num);
+                    $stats->incr($event['project'], 'messages', $num);
+                }
             });
         } catch (Throwable $th) {
             $logError($th, "pubSubConnection");

@@ -3,7 +3,7 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
-use Appwrite\PubSub\Adapter as PubSubAdapter;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -35,6 +35,13 @@ class Realtime extends MessagingAdapter
      *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
      */
     public array $subscriptions = [];
+
+    private PubSubPool $redis;
+
+    public function __construct()
+    {
+        $this->redis = new PubSubPool($register->get('pools')->get('pubsub'));
+    }
 
     /**
      * Adds a subscription.
@@ -139,24 +146,19 @@ class Realtime extends MessagingAdapter
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
-
-        global $register;
-
-        $register->get('pools')->get('pubsub')->use(
-            fn (PubSubAdapter $redis) =>
-            $redis->publish('realtime', json_encode([
-                'project' => $projectId,
-                'roles' => $roles,
-                'permissionsChanged' => $permissionsChanged,
-                'userId' => $userId,
-                'data' => [
-                    'events' => $events,
-                    'channels' => $channels,
-                    'timestamp' => DateTime::formatTz(DateTime::now()),
-                    'payload' => $payload
-                ]
-            ]))
-        );
+        
+        $this->redis->publish('realtime', json_encode([
+            'project' => $projectId,
+            'roles' => $roles,
+            'permissionsChanged' => $permissionsChanged,
+            'userId' => $userId,
+            'data' => [
+                'events' => $events,
+                'channels' => $channels,
+                'timestamp' => DateTime::formatTz(DateTime::now()),
+                'payload' => $payload
+            ]
+        ]));
     }
 
     /**
