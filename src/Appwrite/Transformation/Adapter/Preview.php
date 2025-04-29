@@ -36,6 +36,12 @@ class Preview extends Adapter
             @import url(https://fonts.bunny.net/css?family=fira-code:400|inter:400);
             
             #appwrite-preview {
+                min-width: auto;
+                min-height: auto;
+                max-width: none;
+                max-height: none;
+                width: auto;
+                height: auto;
                 padding: 0;
                 margin: 0;
                 position: fixed;

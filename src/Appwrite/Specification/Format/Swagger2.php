@@ -80,6 +80,7 @@ class Swagger2 extends Format
                 ],
             ],
             'host' => \parse_url($this->getParam('endpoint', ''), PHP_URL_HOST),
+            'x-host-docs' => \parse_url($this->getParam('endpoint.docs', ''), PHP_URL_HOST),
             'basePath' => \parse_url($this->getParam('endpoint', ''), PHP_URL_PATH),
             'schemes' => [\parse_url($this->getParam('endpoint', ''), PHP_URL_SCHEME)],
             'consumes' => ['application/json', 'multipart/form-data'],
@@ -136,7 +137,10 @@ class Swagger2 extends Format
                 $sdk = $mainSdk;
             }
 
-            $consumes = [$sdk->getRequestType()];
+            $consumes = [];
+            if (strtoupper($route->getMethod()) !== 'GET' && strtoupper($route->getMethod()) !== 'HEAD') {
+                $consumes = [$sdk->getRequestType()];
+            }
 
             $method = $sdk->getMethodName() ?? \uniqid();
 
@@ -144,7 +148,7 @@ class Swagger2 extends Format
                 $method = array_keys($method)[0];
             }
 
-            $desc = $sdk->getDescriptionFilePath();
+            $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
@@ -173,7 +177,7 @@ class Swagger2 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc = $desc ?? '';
+            $desc ??= '';
             $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
 
             $temp = [
@@ -186,6 +190,7 @@ class Swagger2 extends Format
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
+                    'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',

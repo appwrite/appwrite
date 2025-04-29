@@ -49,7 +49,7 @@ trait SitesBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, 150000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {

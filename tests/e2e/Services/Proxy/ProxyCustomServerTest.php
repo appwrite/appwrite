@@ -53,21 +53,30 @@ class ProxyCustomServerTest extends Scope
 
     public function testCreateRuleApex(): void
     {
-        $rule = $this->createAPIRule('myapp.com');
-        $this->assertEquals(400, $rule['headers']['status-code']);
+        $domain = \uniqid() . '.com';
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
     }
 
     public function testCreateRuleVcs(): void
     {
         $domain = \uniqid() . '-vcs.myapp.com';
 
-        $rule = $this->createAPIRule('commit-' . $domain);
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        $rule = $this->createAPIRule('branch-' . $domain);
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        $rule = $this->createAPIRule('anything-' . $domain);
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->cleanupRule($rule['body']['$id']);
     }
@@ -337,7 +346,7 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create + update
-        $domain = \uniqid() . '-cname-api.custom.localhost';
+        $domain = \uniqid() . '-cname-api.custom.com';
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
@@ -346,7 +355,7 @@ class ProxyCustomServerTest extends Scope
         $ruleId = $rule['body']['$id'];
 
         $rule = $this->updateRuleVerification($ruleId);
-        $this->assertEquals(401, $rule['headers']['status-code']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
 
         $this->cleanupRule($ruleId);
     }

@@ -35,6 +35,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'templates',
                 name: 'listTemplates',
                 description: <<<EOT
                 List available site templates. You can use template details in [createSite](/docs/references/cloud/server-nodejs/sites#create) method.
@@ -80,11 +81,11 @@ class XList extends Base
             return $b['score'] <=> $a['score'];
         });
 
+        $total = \count($templates);
         $templates = \array_slice($templates, $offset, $limit);
-
         $response->dynamic(new Document([
             'templates' => $templates,
-            'total' => \count($templates),
+            'total' => $total,
         ]), Response::MODEL_TEMPLATE_SITE_LIST);
     }
 }

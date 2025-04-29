@@ -488,6 +488,18 @@ return [
         'code' => 403,
     ],
 
+    /** Tokens */
+    Exception::TOKEN_NOT_FOUND => [
+        'name' => Exception::TOKEN_NOT_FOUND,
+        'description' => 'The requested file token could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOKEN_EXPIRED => [
+        'name' => Exception::TOKEN_EXPIRED,
+        'description' => 'The requested file token has expired.',
+        'code' => 401,
+    ],
+
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,
@@ -546,6 +558,11 @@ return [
         'description' => 'Function runtime could not be detected.',
         'code' => 400,
     ],
+    Exception::FUNCTION_EXECUTE_PERMISSION_MISSING => [
+        'name' => Exception::FUNCTION_EXECUTE_PERMISSION_MISSING,
+        'description' => 'To execute function using domain, execute permissions must include "any" or "guests".',
+        'code' => 401,
+    ],
 
     /** Sites */
     Exception::SITE_NOT_FOUND => [
@@ -578,6 +595,11 @@ return [
     Exception::BUILD_ALREADY_COMPLETED => [
         'name' => Exception::BUILD_ALREADY_COMPLETED,
         'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
+    Exception::BUILD_CANCELED => [
+        'name' => Exception::BUILD_CANCELED,
+        'description' => 'Build with the requested ID has been canceled.',
         'code' => 400,
     ],
     Exception::BUILD_FAILED => [
@@ -628,6 +650,11 @@ return [
         'name' => Exception::DATABASE_TIMEOUT,
         'description' => 'Database timed out. Try adjusting your queries or adding an index.',
         'code' => 408
+    ],
+    Exception::DATABASE_QUERY_ORDER_NULL => [
+        'name' => Exception::DATABASE_QUERY_ORDER_NULL,
+        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'code' => 400,
     ],
 
     /** Collections */

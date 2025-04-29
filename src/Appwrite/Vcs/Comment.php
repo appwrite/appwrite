@@ -9,10 +9,11 @@ use Utopia\System\System;
 
 class Comment
 {
+    // TODO: Add more tips
     protected array $tips = [
-        'Appwrite has a Discord community with over 16 000 members. [Come join us!](https://appwrite.io/discord)',
-        'You can use [Avatars API](https://appwrite.io/docs/client/avatars?sdk=web-default#avatarsGetQR) to generate QR code for any text or URLs',
-        '[Cursor pagination](https://appwrite.io/docs/pagination#cursor-pagination) performs better than offset pagination when loading further pages',
+        'Appwrite has a Discord community with over 16 000 members.',
+        'You can use Avatars API to generate QR code for any text or URLs.',
+        'Cursor pagination performs better than offset pagination when loading further pages.',
     ];
 
     protected string $statePrefix = '[appwrite]: #';
@@ -27,7 +28,7 @@ class Comment
         return \count($this->builds) === 0;
     }
 
-    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl, string $previewQrCode): void
+    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl): void
     {
         // Unique index
         $id = $project->getId() . '_' . $resource->getId();
@@ -41,7 +42,6 @@ class Comment
             'buildStatus' => $buildStatus,
             'deploymentId' => $deploymentId,
             'action' => $action,
-            'previewQrCode' => $previewQrCode,
             'previewUrl' => $previewUrl,
         ];
     }
@@ -70,7 +70,6 @@ class Comment
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
                     'previewUrl' => $build['previewUrl'],
-                    'previewQrCode' => $build['previewQrCode']
                 ];
             } elseif ($build['resourceType'] === 'function') {
                 $projects[$build['projectId']]['function'][$build['resourceId']] = [
@@ -82,32 +81,36 @@ class Comment
             }
         }
 
+        $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
 
-            $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+            $text .= "## {$project['name']}\n\n";
+            $text .= "Project ID: `{$projectId}`\n\n";
+
+            $isOpen = $i === 0;
 
             if (\count($project['site']) > 0) {
+                $text .= "<details" . ($isOpen ? ' open' : '') . ">\n";
+                $text .= "<summary>Sites (" . \count($project['site']) . ")</summary>\n\n";
+                $text .= "<br>\n\n";
 
-                $text .= "| Site | ID | Status | Previews | Action |\n";
+                $text .= "| Site | Status | Logs | Preview | QR\n";
                 $text .= "| :- | :-  | :-  | :-  | :- |\n";
 
                 foreach ($project['site'] as $siteId => $site) {
-                    $generateImage = function (string $status) use ($protocol, $hostname) {
-                        $extention = $status === 'building' ? 'gif' : 'png';
-                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
-                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
 
-                        return $imageUrl;
-                    };
+                    $pathLight = '/images/vcs/status-' . $site['status'] . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $site['status'] . '-dark.' . $extension;
 
                     $status = match ($site['status']) {
-                        'waiting' => $generateImage('waiting') . ' Waiting to build',
-                        'processing' => $generateImage('processing') . ' Processing',
-                        'building' => $generateImage('building') . ' Building',
-                        'ready' => $generateImage('ready') . ' Ready',
-                        'failed' => $generateImage('failed') . ' Failed',
+                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
+                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
+                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
+                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
+                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
                     };
 
                     if ($site['action']['type'] === 'logs') {
@@ -116,33 +119,44 @@ class Comment
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
 
-                    $previews = '[Preview URL](' . $site['previewUrl'] . ') [QR Code](' . $site['previewQrCode'] . ')';
+                    $qrImagePathLight = '/images/vcs/qr-light.svg';
+                    $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $text .= "| {$site['name']} | `{$siteId}` | {$status} | {$previews} | {$action} |\n";
+                    $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
+                    $qr = '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')';
+
+                    $preview = '[Preview URL](' . $site['previewUrl'] . ')';
+
+                    $text .= "| &nbsp;**{$site['name']}**<br>`$siteId`";
+                    $text .= "| {$status}";
+                    $text .= "| {$action}";
+                    $text .= "| {$preview}";
+                    $text .= "| {$qr}";
+                    $text .= "|\n";
                 }
 
-                $text .= "\n\n";
+                $text .= "\n</details>\n\n";
             }
 
             if (\count($project['function']) > 0) {
-
-                $text .= "| Function | ID | Status | Action |\n";
+                $text .= "<details" . ($isOpen ? ' open' : '') . ">\n";
+                $text .= "<summary>Functions (" . \count($project['function']) . ")</summary>\n\n";
+                $text .= "<br>\n\n";
+                $text .= "| Function | ID | Status | Logs |\n";
                 $text .= "| :- | :-  | :-  | :- |\n";
 
                 foreach ($project['function'] as $functionId => $function) {
-                    $generateImage = function (string $status) use ($protocol, $hostname) {
-                        $extention = $status === 'building' ? 'gif' : 'png';
-                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
-                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
-                        return $imageUrl;
-                    };
+                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
 
-                    $status = match ($function['status']) {
-                        'waiting' => $generateImage('waiting') . ' Waiting to build',
-                        'processing' => $generateImage('processing') . ' Processing',
-                        'building' => $generateImage('building') . ' Building',
-                        'ready' => $generateImage('ready') . ' Ready',
-                        'failed' => $generateImage('failed') . ' Failed',
+                    $pathLight = '/images/vcs/status-' . $site['status'] . '-light.' . $extension;
+                    $pathDark = '/images/vcs/status-' . $site['status'] . '-dark.' . $extension;
+
+                    $status = match ($site['status']) {
+                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
+                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
+                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
+                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
+                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
                     };
 
                     if ($function['action']['type'] === 'logs') {
@@ -151,20 +165,43 @@ class Comment
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
 
-                    $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$action} |\n";
+                    $text .= "| &nbsp;**{$function['name']}**<br>`$functionId`";
+                    $text .= "| {$status}";
+                    $text .= "| {$action}";
+                    $text .= "|\n";
                 }
 
-                $text .= "\n\n";
+                $text .= "</details>\n\n";
             }
 
+            $text .= "</details>\n\n";
+
+            $isLast = $i === \count($projects) - 1;
+
+            if (\count($projects) > 1 && $isLast) {
+                $text .= "---\n\n";
+            }
+
+            $i++;
         }
 
-        $text .= "Only deployments on the production branch are activated automatically. Learn more about Appwrite [Functions](https://appwrite.io/docs/functions) and [Sites](https://appwrite.io/docs/sites).\n\n";
-
         $tip = $this->tips[array_rand($this->tips)];
-        $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";
+        $text .= "\n<br>\n\n> [!NOTE]\n> $tip\n\n";
 
         return $text;
+    }
+
+    public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
+    {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
+
+        $imageLight = $protocol . '://' . $hostname . $pathLight;
+        $imageDark = $protocol . '://' . $hostname . $pathDark;
+
+        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="center" src="' . $imageLight . '"></picture>';
+
+        return $imageUrl;
     }
 
     public function parseComment(string $comment): self

@@ -30,11 +30,12 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/templates')
             ->desc('List templates')
-            ->groups(['api', 'functions'])
+            ->groups(['api'])
             ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'templates',
                 name: 'listTemplates',
                 description: <<<EOT
                 List available function templates. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.
@@ -75,10 +76,11 @@ class XList extends Base
             return $b['score'] <=> $a['score'];
         });
 
+        $total = \count($templates);
         $templates = \array_slice($templates, $offset, $limit);
         $response->dynamic(new Document([
             'templates' => $templates,
-            'total' => \count($templates),
+            'total' => $total,
         ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     }
 }

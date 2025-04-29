@@ -147,7 +147,7 @@ class Screenshot extends Action
             'installCommand' => $framework['installCommand'] ?? '',
             'outputDirectory' => $framework['outputDirectory'] ?? '',
             'providerRootDirectory' => $framework['providerRootDirectory'],
-            'timeout' => 60
+            'timeout' => 30
         ]);
 
         if ($site['headers']['status-code'] !== 201) {
@@ -224,8 +224,12 @@ class Screenshot extends Action
         $idLight = '';
         $idDark = '';
 
-        if ($templateId === 'starter-for-react-native') {
-            Console::warning("React Native template takes long to build, increasing waiting time ...");
+        $slowTemplates = [
+            'starter-for-react-native',
+            'playground-for-react-native'
+        ];
+        if (\in_array($templateId, $slowTemplates)) {
+            Console::warning("Build for this template is slow, increasing waiting time ...");
             $attempts = 180; // 15 min
         }
 

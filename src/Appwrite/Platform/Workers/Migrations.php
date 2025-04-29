@@ -18,12 +18,14 @@ use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 
 class Migrations extends Action
@@ -31,6 +33,8 @@ class Migrations extends Action
     protected Database $dbForProject;
 
     protected Database $dbForPlatform;
+
+    protected Device $deviceForImports;
 
     protected Document $project;
 
@@ -57,15 +61,17 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForRealtime')
+            ->inject('deviceForImports')
             ->callback([$this, 'action']);
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
     {
         $payload = $message->getPayload() ?? [];
+        $this->deviceForImports = $deviceForImports;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -99,7 +105,9 @@ class Migrations extends Action
     protected function processSource(Document $migration): Source
     {
         $source = $migration->getAttribute('source');
+        $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
+        $migrationOptions = $migration->getAttribute('options');
 
         return match ($source) {
             Firebase::getName() => new Firebase(
@@ -127,6 +135,12 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+            ),
+            CSV::getName() => new CSV(
+                $resourceId,
+                $migrationOptions['path'],
+                $this->deviceForImports,
+                $this->dbForProject
             ),
             default => throw new \Exception('Invalid source type'),
         };
@@ -202,7 +216,10 @@ class Migrations extends Action
                 'databases.read',
                 'collections.read',
                 'documents.read',
-            ],
+                'documents.write',
+                'tokens.read',
+                'tokens.write',
+            ]
         ]);
 
         return API_KEY_DYNAMIC . '_' . $apiKey;

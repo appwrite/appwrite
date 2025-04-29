@@ -9,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -40,6 +39,7 @@ class Update extends Action
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'updateDeploymentStatus',
                 description: <<<EOT
                 Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.
@@ -58,6 +58,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
+            ->inject('executor')
             ->callback([$this, 'action']);
     }
 
@@ -67,7 +68,8 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Document $project,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Executor $executor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -85,7 +87,7 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartAt'));
+        $startTime = new \DateTime($deployment->getAttribute('buildStartAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
@@ -101,7 +103,6 @@ class Update extends Action
         }
 
         try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
         } catch (\Throwable $th) {
             // Don't throw if the deployment doesn't exist

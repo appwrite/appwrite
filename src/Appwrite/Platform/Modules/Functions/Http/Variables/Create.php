@@ -44,6 +44,7 @@ class Create extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'variables',
                 name: 'createVariable',
                 description: <<<EOT
                 Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.
@@ -63,6 +64,7 @@ class Create extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback([$this, 'action']);
     }
 
@@ -73,7 +75,8 @@ class Create extends Base
         bool $secret,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -83,12 +86,15 @@ class Create extends Base
 
         $variableId = ID::unique();
 
+        $teamId = $project->getAttribute('teamId', '');
         $variable = new Document([
             '$id' => $variableId,
             '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
             'resourceInternalId' => $function->getInternalId(),
             'resourceId' => $function->getId(),

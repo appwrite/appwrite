@@ -27,12 +27,13 @@ class XList extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/runtimes')
-            ->groups(['api', 'functions'])
+            ->groups(['api'])
             ->desc('List runtimes')
-            ->label('scope', 'functions.read')
+            ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'runtimes',
                 name: 'listRuntimes',
                 description: <<<EOT
                 Get a list of all runtimes that are currently active on your instance.

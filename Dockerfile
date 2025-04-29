@@ -44,12 +44,14 @@ COPY ./dev /usr/src/code/dev
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
+    mkdir -p /storage/imports && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
+    chown -Rf www-data.www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
@@ -87,7 +89,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/worker-stats-usage && \
-    chmod +x /usr/local/bin/worker-stats-usage-dump && \
     chmod +x /usr/local/bin/stats-resources && \
     chmod +x /usr/local/bin/worker-stats-resources
 

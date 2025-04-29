@@ -46,6 +46,7 @@ class Create extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.

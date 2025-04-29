@@ -36,6 +36,7 @@ class XList extends Base
                 'sdk',
                 new Method(
                     namespace: 'sites',
+                    group: 'variables',
                     name: 'listVariables',
                     description: <<<EOT
                     Get a list of all variables of a specific site.

@@ -33,6 +33,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'sites',
                 name: 'get',
                 description: <<<EOT
                 Get a site by its unique ID.

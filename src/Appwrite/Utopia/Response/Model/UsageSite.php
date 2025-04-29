@@ -3,93 +3,48 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class UsageSite extends Model
+class UsageSite extends UsageFunction
 {
     public function __construct()
     {
+        parent::__construct();
         $this
-            ->addRule('range', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
-                'default' => '',
-                'example' => '30d',
-            ])
-            ->addRule('deploymentsTotal', [
+            ->addRule('requestsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of site deployments.',
+                'description' => 'Total aggregated number of requests.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('deploymentsStorageTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated sum of site deployments storage.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('buildsTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of site builds.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('buildsStorageTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'total aggregated sum of site builds storage.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('buildsTimeTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated sum of site builds compute time.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('buildsMbSecondsTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated sum of site builds mbSeconds.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('deployments', [
+            ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of site deployments per period.',
+                'description' => 'Aggregated number of requests per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('deploymentsStorage', [
+            ->addRule('inboundTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated inbound bandwidth.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('inbound', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of site deployments storage per period.',
+                'description' => 'Aggregated number of inbound bandwidth per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('builds', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of site builds per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+            ->addRule('outboundTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated outbound bandwidth.',
+                'default' => 0,
+                'example' => 0,
             ])
-            ->addRule('buildsStorage', [
+            ->addRule('outbound', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated sum of site builds storage per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('buildsTime', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated sum of site builds compute time per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('buildsMbSeconds', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of site builds mbSeconds per period.',
+                'description' => 'Aggregated number of outbound bandwidth per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

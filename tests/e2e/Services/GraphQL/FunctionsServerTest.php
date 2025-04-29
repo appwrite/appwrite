@@ -252,7 +252,7 @@ class FunctionsServerTest extends Scope
         $runtimes = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        ]), $gqlPayload);
 
         $this->assertIsArray($runtimes['body']['data']);
         $this->assertArrayNotHasKey('errors', $runtimes['body']);

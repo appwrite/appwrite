@@ -33,6 +33,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'logs',
                 name: 'getLog',
                 description: <<<EOT
                 Get a site request log by its unique ID.

@@ -42,6 +42,7 @@ class Create extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'variables',
                 name: 'createVariable',
                 description: <<<EOT
                 Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.
@@ -60,10 +61,11 @@ class Create extends Base
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject)
+    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Document $project)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -73,12 +75,15 @@ class Create extends Base
 
         $variableId = ID::unique();
 
+        $teamId = $project->getAttribute('teamId', '');
         $variable = new Document([
             '$id' => $variableId,
             '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
             'resourceInternalId' => $site->getInternalId(),
             'resourceId' => $site->getId(),

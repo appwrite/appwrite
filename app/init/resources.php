@@ -21,6 +21,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
+use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Auth\Hashes\Argon2;
@@ -34,6 +35,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -44,6 +46,7 @@ use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
@@ -52,7 +55,10 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 // Runtime Execution
@@ -485,7 +491,9 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('telemetry', fn () => new NoTelemetry());
+
+App::setResource('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -493,12 +501,15 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
+    $cache = new Cache(new Sharding($adapters));
+
+    $cache->setTelemetry($telemetry);
+
+    return $cache;
+}, ['pools', 'telemetry']);
 
 App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -531,6 +542,10 @@ App::setResource('deviceForFiles', function ($project) {
 
 App::setResource('deviceForSites', function ($project) {
     return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceForImports', function (Document $project) {
+    return getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
@@ -567,7 +582,12 @@ function getDevice(string $root, string $connection = ''): Device
 
         switch ($device) {
             case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl, $url);
+                if (!empty($url)) {
+                    return new S3($root, $accessKey, $accessSecret, $url, $region, $acl);
+                } else {
+                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                }
+                // no break
             case STORAGE::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
@@ -594,7 +614,12 @@ function getDevice(string $root, string $connection = ''): Device
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
                 $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
-                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, $s3EndpointUrl);
+                if (!empty($s3EndpointUrl)) {
+                    return new S3($root, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
+                } else {
+                    return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                }
+                // no break
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
                 $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
@@ -796,6 +821,49 @@ App::setResource('smsRates', function () {
     return [];
 });
 
+App::setResource('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform) {
+    $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+
+    // Check if given key match project's development keys
+    $key = $project->find('secret', $devKey, 'devKeys');
+    if (!$key) {
+        return new Document([]);
+    }
+
+    // check expiration
+    $expire = $key->getAttribute('expire');
+    if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+        return new Document([]);
+    }
+
+    // update access time
+    $accessedAt = $key->getAttribute('accessedAt', 0);
+    if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+        $key->setAttribute('accessedAt', DatabaseDateTime::now());
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+    }
+
+    // add sdk to key
+    $sdkValidator = new WhiteList($servers, true);
+    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
+    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+        $sdks = $key->getAttribute('sdks', []);
+
+        if (!in_array($sdk, $sdks)) {
+            $sdks[] = $sdk;
+            $key->setAttribute('sdks', $sdks);
+
+            /** Update access time as well */
+            $key->setAttribute('accessedAt', DatabaseDateTime::now());
+            $key = Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+        }
+    }
+    return $key;
+}, ['request', 'project', 'servers', 'dbForPlatform']);
+
 App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
@@ -858,6 +926,7 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
+<<<<<<< HEAD
 
 App::setResource('store', function (): Store {
     return new Store();
@@ -888,3 +957,49 @@ App::setResource('proofForCode', function (): Code {
     $code->setHash(new Sha());
     return $code;
 });
+=======
+App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+
+App::setResource('resourceToken', function ($project, $dbForProject, $request) {
+    $tokenJWT = $request->getParam('token');
+
+    if (!empty($tokenJWT) && !$project->isEmpty()) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($tokenJWT);
+        } catch (JWTException $error) {
+            return new Document([]);
+        }
+
+        $tokenId = $payload['tokenId'] ?? '';
+        $secret = $payload['secret'] ?? '';
+        if (empty($tokenId) || empty($secret)) {
+            return new Document([]);
+        }
+
+        $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+
+        if ($token->isEmpty() || $token->getAttribute('secret') !== $secret) {
+            return new Document([]);
+        }
+
+        if ($token->getAttribute('resourceType') === 'file') {
+            $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+            $ids = explode(':', $token->getAttribute('resourceId'));
+
+            if (count($internalIds) !== 2 || count($ids) !== 2) {
+                return new Document([]);
+            }
+
+            return new Document([
+                'bucketId' => $ids[0],
+                'fileId' => $ids[1],
+                'bucketInternalId' => $internalIds[0],
+                'fileInternalId' => $internalIds[1],
+            ]);
+        }
+    }
+    return new Document([]);
+}, ['project', 'dbForProject', 'request']);
+>>>>>>> origin/1.7.x

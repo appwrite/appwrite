@@ -184,7 +184,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/sites',
         'tests' => false,
         'optional' => true,
-        'icon' => '', // TODO: Update icon later
+        'icon' => '/images/services/sites.png',
     ],
     'functions' => [
         'key' => 'functions',

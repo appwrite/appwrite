@@ -27,11 +27,12 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/frameworks')
             ->desc('List frameworks')
-            ->groups(['api', 'sites'])
-            ->label('scope', 'sites.read')
+            ->groups(['api'])
+            ->label('scope', 'public')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'frameworks',
                 name: 'listFrameworks',
                 description: <<<EOT
                 Get a list of all frameworks that are currently available on the server instance.

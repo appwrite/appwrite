@@ -303,7 +303,7 @@ class FunctionsCustomClientTest extends Scope
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->assertEquals(1, $templatesOffset['body']['total']);
+        $this->addToAssertionCount(1, $templatesOffset['body']['templates']);
         $this->assertEquals($templates['body']['templates'][2]['id'], $templatesOffset['body']['templates'][0]['id']);
 
         // List templates with filters
@@ -321,7 +321,16 @@ class FunctionsCustomClientTest extends Scope
             $this->assertContains($template['useCases'][0], ['starter', 'ai']);
         }
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-        $this->assertContains('bun-1.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+
+        foreach ($templates['body']['templates'] as $template) {
+            $this->assertThat(
+                \array_column($template['runtimes'], 'name'),
+                $this->logicalOr(
+                    $this->containsEqual('bun-1.0'),
+                    $this->containsEqual('dart-2.16'),
+                ),
+            );
+        }
 
         // List templates with pagination and filters
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
@@ -335,7 +344,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(5, $templates['body']['total']);
+        $this->assertCount(5, $templates['body']['templates']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
 

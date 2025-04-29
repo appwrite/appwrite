@@ -4,7 +4,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\DNS;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -21,6 +21,8 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
+use Utopia\Validator\IP;
 use Utopia\Validator\Text;
 
 App::get('/v1/proxy/rules')
@@ -29,6 +31,7 @@ App::get('/v1/proxy/rules')
     ->label('scope', 'rules.read')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'listRules',
         description: '/docs/references/proxy/list-rules.md',
         auth: [AuthType::ADMIN],
@@ -103,6 +106,7 @@ App::get('/v1/proxy/rules/:ruleId')
     ->label('scope', 'rules.read')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'getRule',
         description: '/docs/references/proxy/get-rule.md',
         auth: [AuthType::ADMIN],
@@ -140,6 +144,7 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->label('audits.resource', 'rule/{request.ruleId}')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'deleteRule',
         description: '/docs/references/proxy/delete-rule.md',
         auth: [AuthType::ADMIN],
@@ -184,6 +189,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('audits.resource', 'rule/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'updateRuleVerification',
         description: '/docs/references/proxy/update-rule-verification.md',
         auth: [AuthType::ADMIN],
@@ -208,17 +214,27 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
+        $validators = [];
+        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+        if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+            $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+        }
+        if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
+            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+        }
+        if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
+            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+        }
 
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');
+        if (empty($validators)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
         }
 
         if ($rule->getAttribute('verification') === true) {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 
-        $validator = new CNAME($target->get()); // Verify Domain with DNS records
+        $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
         $domain = new Domain($rule->getAttribute('domain', ''));
 
         $validationStart = \microtime(true);
@@ -226,7 +242,14 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
             $log->addTag('dnsDomain', $domain->get());
 
-            $error = $validator->getLogs();
+            $errors = [];
+            foreach ($validators as $validator) {
+                if (!empty($validator->getLogs())) {
+                    $errors[] = $validator->getLogs();
+                }
+            }
+
+            $error = \implode("\n", $errors);
             $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);

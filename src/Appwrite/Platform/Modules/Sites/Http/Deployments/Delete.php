@@ -41,6 +41,7 @@ class Delete extends Action
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'deleteDeployment',
                 description: <<<EOT
                 Delete a site deployment by its unique ID.

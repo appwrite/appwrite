@@ -165,6 +165,7 @@ class Exception extends \Exception
     public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
     public const FUNCTION_TEMPLATE_NOT_FOUND       = 'function_template_not_found';
     public const FUNCTION_RUNTIME_NOT_DETECTED     = 'function_runtime_not_detected';
+    public const FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -174,6 +175,7 @@ class Exception extends \Exception
     public const BUILD_NOT_READY                   = 'build_not_ready';
     public const BUILD_IN_PROGRESS                 = 'build_in_progress';
     public const BUILD_ALREADY_COMPLETED           = 'build_already_completed';
+    public const BUILD_CANCELED                    = 'build_canceled';
     public const BUILD_FAILED                      = 'build_failed';
 
     /** Execution */
@@ -187,6 +189,7 @@ class Exception extends \Exception
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
     public const DATABASE_TIMEOUT                  = 'database_timeout';
+    public const DATABASE_QUERY_ORDER_NULL         = 'database_query_order_null';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
@@ -316,15 +319,22 @@ class Exception extends \Exception
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';
 
+    /** Tokens */
+    public const TOKEN_NOT_FOUND = 'token_not_found';
+    public const TOKEN_EXPIRED = 'token_expired';
+
 
     protected string $type = '';
     protected array $errors = [];
     protected bool $publish;
+    private array $ctas = [];
+    private ?string $view = null;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null, ?string $view = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
+        $this->view = $view;
         $this->code = $code ?? $this->errors[$type]['code'];
 
         // Mark string errors like HY001 from PDO as 500 errors
@@ -373,5 +383,24 @@ class Exception extends \Exception
     public function isPublishable(): bool
     {
         return $this->publish;
+    }
+
+    public function addCTA(string $label, ?string $url = null): self
+    {
+        $this->ctas[] = [
+            'label' => $label,
+            'url' => $url
+        ];
+        return $this;
+    }
+
+    public function getCTAs(): array
+    {
+        return $this->ctas;
+    }
+
+    public function getView(): ?string
+    {
+        return $this->view;
     }
 }

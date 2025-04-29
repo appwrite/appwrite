@@ -32,6 +32,7 @@ class Get extends Action
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'getDeployment',
                 description: <<<EOT
                 Get a site deployment by its unique ID.
@@ -61,11 +62,11 @@ class Get extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->isEmpty()) {
+        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
