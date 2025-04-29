@@ -3,7 +3,6 @@
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\PubSub\Adapter as PubSubAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,10 +10,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Cache\Adapter as CacheAdapter;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter as DatabaseAdapter;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;

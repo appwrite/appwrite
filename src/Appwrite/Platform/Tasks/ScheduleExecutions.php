@@ -6,7 +6,6 @@ use Appwrite\Event\Func;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
 
 class ScheduleExecutions extends ScheduleBase
 {

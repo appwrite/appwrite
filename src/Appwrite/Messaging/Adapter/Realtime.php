@@ -146,7 +146,7 @@ class Realtime extends MessagingAdapter
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
-        
+
         $this->redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
