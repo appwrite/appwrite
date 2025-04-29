@@ -47,6 +47,7 @@ trait TokensBase
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals('files', $token['body']['resourceType']);
+        $this->assertEquals($bucketId . ':' . $fileId, $token['body']['resourceId']);
 
         return [
             'fileId' => $fileId,
