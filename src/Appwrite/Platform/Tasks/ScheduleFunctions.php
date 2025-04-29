@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 
 class ScheduleFunctions extends ScheduleBase
@@ -72,8 +73,7 @@ class ScheduleFunctions extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
-                \sleep($delay); // in seconds
-
+                \Co::sleep($delay); // in seconds
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -85,17 +85,17 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $pools->get('publisher')->use(function (Publisher $publisher) use ($schedule) {
-                        $queueForFunctions = new Func($publisher);
+                    $publisher = new BrokerPool($pools->get('publisher'));
 
-                        $queueForFunctions
-                            ->setType('schedule')
-                            ->setFunction($schedule['resource'])
-                            ->setMethod('POST')
-                            ->setPath('/')
-                            ->setProject($schedule['project'])
-                            ->trigger();
-                    });
+                    $queueForFunctions = new Func($publisher);
+
+                    $queueForFunctions
+                        ->setType('schedule')
+                        ->setFunction($schedule['resource'])
+                        ->setMethod('POST')
+                        ->setPath('/')
+                        ->setProject($schedule['project'])
+                        ->trigger();
                 }
             });
         }

@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
-use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 
 class ScheduleExecutions extends ScheduleBase
@@ -58,24 +58,23 @@ class ScheduleExecutions extends ScheduleBase
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($schedule, $delay, $data, $pools) {
-                Co::sleep($delay);
+                \Co::sleep($delay);
 
-                $pools->get('publisher')->use(function (Publisher $publisher) use ($schedule, $data) {
-                    $queueForFunctions = new Func($publisher);
+                $publisher = new BrokerPool($pools->get('publisher'));
 
-                    $queueForFunctions->setType('schedule')
-                        // Set functionId instead of function as we don't have $dbForProject
-                        // TODO: Refactor to use function instead of functionId
-                        ->setFunctionId($schedule['resource']['functionId'])
-                        ->setExecution($schedule['resource'])
-                        ->setMethod($data['method'] ?? 'POST')
-                        ->setPath($data['path'] ?? '/')
-                        ->setHeaders($data['headers'] ?? [])
-                        ->setBody($data['body'] ?? '')
-                        ->setProject($schedule['project'])
-                        ->setUserId($data['userId'] ?? '')
-                        ->trigger();
-                });
+                $queueForFunctions = new Func($publisher);
+
+                $queueForFunctions->setType('schedule')
+                    // Set functionId instead of function as we don't have $dbForProject
+                    // TODO: Refactor to use function instead of functionId
+                    ->setFunctionId($schedule['resource']['functionId'])
+                    ->setExecution($schedule['resource'])
+                    ->setMethod($data['method'] ?? 'POST')
+                    ->setPath($data['path'] ?? '/')
+                    ->setHeaders($data['headers'] ?? [])
+                    ->setBody($data['body'] ?? '')
+                    ->setProject($schedule['project'])
+                    ->setUserId($data['userId'] ?? '');
             });
 
             $dbForPlatform->deleteDocument(

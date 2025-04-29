@@ -3,17 +3,19 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
-use Appwrite\PubSub\Adapter as PubSubAdapter;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter as DatabaseAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -136,13 +138,13 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $pools->get($database)->use(function (DatabaseAdapter $adapter) use ($key, $database) {
-                        if ($adapter->ping()) {
-                            Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
-                        } else {
-                            Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
-                        }
-                    });
+                    $adapter = new DatabasePool($pools->get($database));
+
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
+                    }
                 } catch (\Throwable) {
                     Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
                 }
@@ -161,13 +163,17 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $pool) {
                 try {
-                    $pools->get($pool)->use(function (PubSubAdapter $adapter) use ($key, $pool) {
-                        if ($adapter->ping()) {
-                            Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
-                        } else {
-                            Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
-                        }
-                    });
+                    $adapter = match($key) {
+                        'Cache' => new CachePool($pools->get($pool)),
+                        'Queue' => new BrokerPool($pools->get($pool)),
+                        'PubSub' => new PubSubPool($pools->get($pool)),
+                    };
+
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                    }
                 } catch (\Throwable) {
                     Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                 }
