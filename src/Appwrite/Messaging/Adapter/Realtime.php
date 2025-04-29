@@ -40,6 +40,7 @@ class Realtime extends MessagingAdapter
 
     public function __construct()
     {
+        global $register;
         $this->redis = new PubSubPool($register->get('pools')->get('pubsub'));
     }
 
