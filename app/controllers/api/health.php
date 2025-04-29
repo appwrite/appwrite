@@ -4,6 +4,7 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\PubSub\Adapter as PubSubAdapter;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -11,8 +12,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Cache\Adapter as CacheAdapter;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter as DatabaseAdapter;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
@@ -100,19 +103,19 @@ App::get('/v1/health/db')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $pools->get($database)->use(function (DatabaseAdapter $adapter) use ($key, $database, &$output, &$failures) {
-                        $checkStart = \microtime(true);
+                    $adapter = new DatabasePool($pools->get($database));
 
-                        if ($adapter->ping()) {
-                            $output[] = new Document([
-                                'name' => $key . " ($database)",
-                                'status' => 'pass',
-                                'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                            ]);
-                        } else {
-                            $failures[] = $database;
-                        }
-                    });
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $failures[] = $database;
+                    }
                 } catch (\Throwable) {
                     $failures[] = $database;
                 }
@@ -160,19 +163,19 @@ App::get('/v1/health/cache')
         foreach ($configs as $key => $config) {
             foreach ($config as $cache) {
                 try {
-                    $pools->get($cache)->use(function (CacheAdapter $adapter) use ($key, $cache, &$output, &$failures) {
-                        $checkStart = \microtime(true);
+                    $adapter = new CachePool($pools->get($cache));
 
-                        if ($adapter->ping()) {
-                            $output[] = new Document([
-                                'name' => $key . " ($cache)",
-                                'status' => 'pass',
-                                'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                            ]);
-                        } else {
-                            $failures[] = $cache;
-                        }
-                    });
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($cache)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $failures[] = $cache;
+                    }
                 } catch (\Throwable) {
                     $failures[] = $cache;
                 }
@@ -220,19 +223,19 @@ App::get('/v1/health/pubsub')
         foreach ($configs as $key => $config) {
             foreach ($config as $pubsub) {
                 try {
-                    $pools->get($pubsub)->use(function (PubSubAdapter $adapter) use ($key, $pubsub, &$output, &$failures) {
-                        $checkStart = \microtime(true);
+                    $adapter = new PubSubPool($pools->get($pubsub));
 
-                        if ($adapter->ping()) {
-                            $output[] = new Document([
-                                'name' => $key . " ($pubsub)",
-                                'status' => 'pass',
-                                'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                            ]);
-                        } else {
-                            $failures[] = $pubsub;
-                        }
-                    });
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($pubsub)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $failures[] = $pubsub;
+                    }
                 } catch (\Throwable) {
                     $failures[] = $pubsub;
                 }
