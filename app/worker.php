@@ -422,13 +422,6 @@ try {
 $worker = $platform->getWorker();
 
 $worker
-    ->shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->get('consumer')->reclaim();
-    });
-
-$worker
     ->error()
     ->inject('error')
     ->inject('logger')
@@ -436,8 +429,6 @@ $worker
     ->inject('pools')
     ->inject('project')
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
-        $pools->get('consumer')->reclaim();
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {
