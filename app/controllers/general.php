@@ -149,17 +149,31 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $dbForProject = $getProjectDB($project);
 
         /** @var Document $deployment */
-        if(!empty($rule->getAttribute('deploymentId', ''))) {
-             $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+        if (!empty($rule->getAttribute('deploymentId', ''))) {
+            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
         } else {
             // 1.6.x DB schema compatibility
             // TODO: Make sure deploymentId is never empty, and remove this code
-            $resource = $rule->getAttribute('deploymentResourceType', '') === 'function' ?
-                Authorization::skip(fn () => $dbForProject->getDocument('functions', $rule->getAttribute('deploymentResourceId', ''))) :
-                Authorization::skip(fn () => $dbForProject->getDocument('sites', $rule->getAttribute('deploymentResourceId', '')));
-            $deploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
-            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
-        }  
+
+            // Check if site or function; should never be site, but better safe than sorry
+            // Attempts to use attribute from both schemas (1.6 and 1.7)
+            $resourceType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('resourceType', ''));
+
+            // ID of site or function
+            $resourceId = $rule->getAttribute('deploymentResourceId', '');
+
+            // Document of site or function
+            $resource = $resourceType === 'function' ?
+                Authorization::skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
+                Authorization::skip(fn () => $dbForProject->getDocument('sites', $resourceId));
+
+            // ID of active deployments
+            // Attempts to use attribute from both schemas (1.6 and 1.7)
+            $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
+
+            // Get deployment document, as intended originally
+            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
+        }
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
