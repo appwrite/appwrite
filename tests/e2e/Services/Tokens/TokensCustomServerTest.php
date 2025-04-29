@@ -83,6 +83,7 @@ class TokensCustomServerTest extends Scope
     {
         $tokenId = $data['tokenId'];
 
+        // Finite expiry
         $expiry = DateTime::addSeconds(new \DateTime(), 3600);
         $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
             'content-type' => 'application/json',
@@ -93,6 +94,17 @@ class TokensCustomServerTest extends Scope
 
         $dateValidator = new DatetimeValidator();
         $this->assertTrue($dateValidator->isValid($token['body']['expire']));
+
+        // Infinite expiry
+        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'expire' => null,
+        ]);
+
+        $this->assertEmpty($token['body']['expire']);
+
         return $data;
     }
 
