@@ -149,7 +149,17 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $dbForProject = $getProjectDB($project);
 
         /** @var Document $deployment */
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+        if(!empty($rule->getAttribute('deploymentId', ''))) {
+             $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+        } else {
+            // 1.6.x DB schema compatibility
+            // TODO: Make sure deploymentId is never empty, and remove this code
+            $resource = $rule->getAttribute('deploymentResourceType', '') === 'function' ?
+                Authorization::skip(fn () => $dbForProject->getDocument('functions', $rule->getAttribute('deploymentResourceId', ''))) :
+                Authorization::skip(fn () => $dbForProject->getDocument('sites', $rule->getAttribute('deploymentResourceId', '')));
+            $deploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
+            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+        }  
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
