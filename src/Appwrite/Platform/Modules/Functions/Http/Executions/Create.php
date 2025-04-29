@@ -96,12 +96,9 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
-<<<<<<< HEAD
             ->inject('store')
             ->inject('proofForToken')
-=======
             ->inject('executor')
->>>>>>> origin/1.7.x
             ->callback([$this, 'action']);
     }
 
@@ -123,12 +120,9 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
-<<<<<<< HEAD
         Store $store,
-        Token $proofForToken
-=======
+        Token $proofForToken,
         Executor $executor
->>>>>>> origin/1.7.x
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 

@@ -5,11 +5,8 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-<<<<<<< HEAD
-=======
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
->>>>>>> origin/1.7.x
 
 class V23 extends Migration
 {
@@ -18,9 +15,6 @@ class V23 extends Migration
      */
     public function execute(): void
     {
-<<<<<<< HEAD
-        // TBD
-=======
         /**
         * Disable SubQueries for Performance.
         */
@@ -34,7 +28,6 @@ class V23 extends Migration
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
->>>>>>> origin/1.7.x
     }
 
     /**
@@ -45,9 +38,6 @@ class V23 extends Migration
      */
     private function migrateCollections(): void
     {
-<<<<<<< HEAD
-        // TBD
-=======
         $internalProjectId = $this->project->getInternalId();
         $collectionType = match ($internalProjectId) {
             'console' => 'console',
@@ -75,6 +65,5 @@ class V23 extends Migration
 
             usleep(50000);
         }
->>>>>>> origin/1.7.x
     }
 }

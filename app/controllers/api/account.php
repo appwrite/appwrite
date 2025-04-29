@@ -158,15 +158,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->trigger();
 };
 
-
-<<<<<<< HEAD
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken) {
-    $roles = Authorization::getRoles();
-    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-    $isAppUser = Auth::isAppUser($roles);
-=======
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
->>>>>>> origin/1.7.x
 
     /** @var Utopia\Database\Document $user */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -287,11 +279,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('current', true)
         ->setAttribute('countryName', $countryName)
         ->setAttribute('expire', $expire)
-<<<<<<< HEAD
-        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $encoded : '')
-=======
-        ->setAttribute('secret', Auth::encodeSession($user->getId(), $sessionSecret))
->>>>>>> origin/1.7.x
+        ->setAttribute('secret', $encoded)
     ;
 
     $response->dynamic($session, Response::MODEL_SESSION);
@@ -999,11 +987,7 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-<<<<<<< HEAD
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $encoded : '')
-=======
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
->>>>>>> origin/1.7.x
+            ->setAttribute('secret', $encoded)
         ;
 
         $queueForEvents
@@ -1166,11 +1150,7 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-<<<<<<< HEAD
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $encoded : '')
-=======
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
->>>>>>> origin/1.7.x
+            ->setAttribute('secret', $encoded)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -2654,18 +2634,8 @@ App::post('/v1/account/tokens/phone')
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-<<<<<<< HEAD
-        $encoded = $store
-            ->setProperty('id', $user->getId())
-            ->setProperty('secret', $secret)
-            ->encode();
-
-        // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $encoded : '');
-=======
         // Encode secret for clients
-        $token->setAttribute('secret', Auth::encodeSession($user->getId(), $secret));
->>>>>>> origin/1.7.x
+        $token->setAttribute('secret', $encoded);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3532,16 +3502,8 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
-<<<<<<< HEAD
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = $proofForToken->generate();
         $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
-=======
-        $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
->>>>>>> origin/1.7.x
 
         $verification = new Document([
             '$id' => ID::unique(),

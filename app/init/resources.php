@@ -926,7 +926,6 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
     return Key::decode($project, $key);
 }, ['request', 'project']);
 
-<<<<<<< HEAD
 
 App::setResource('store', function (): Store {
     return new Store();
@@ -957,7 +956,6 @@ App::setResource('proofForCode', function (): Code {
     $code->setHash(new Sha());
     return $code;
 });
-=======
 App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
 
 App::setResource('resourceToken', function ($project, $dbForProject, $request) {
@@ -1002,4 +1000,3 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
     }
     return new Document([]);
 }, ['project', 'dbForProject', 'request']);
->>>>>>> origin/1.7.x

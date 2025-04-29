@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "51959289a3f882160f5a9eeb605d41d7",
+    "content-hash": "2ed8b411e74c4f6e7d514749f28e933a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3300,16 +3300,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "dev-dev",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "19fb580de44fac5928f9c0211fd0fdfd5022efdb"
+                "reference": "231e1e0bb97e79438399ffe4de3079063b5dc0b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/19fb580de44fac5928f9c0211fd0fdfd5022efdb",
-                "reference": "19fb580de44fac5928f9c0211fd0fdfd5022efdb",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/231e1e0bb97e79438399ffe4de3079063b5dc0b1",
+                "reference": "231e1e0bb97e79438399ffe4de3079063b5dc0b1",
                 "shasum": ""
             },
             "require": {
@@ -3349,9 +3349,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/auth/issues",
-                "source": "https://github.com/utopia-php/auth/tree/dev"
+                "source": "https://github.com/utopia-php/auth/tree/0.3.0"
             },
-            "time": "2025-03-19T06:47:02+00:00"
+            "time": "2025-03-09T21:44:43+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -3760,16 +3760,16 @@
         },
         {
             "name": "utopia-php/fetch",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303"
+                "reference": "83986d1be75a2fae4e684107fe70dd78a8e19b77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/65095dac14037db0c822fb5e209e5bd3187a0303",
-                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/83986d1be75a2fae4e684107fe70dd78a8e19b77",
+                "reference": "83986d1be75a2fae4e684107fe70dd78a8e19b77",
                 "shasum": ""
             },
             "require": {
@@ -3793,9 +3793,9 @@
             "description": "A simple library that provides an interface for making HTTP Requests.",
             "support": {
                 "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.4.1"
+                "source": "https://github.com/utopia-php/fetch/tree/0.4.2"
             },
-            "time": "2025-04-14T07:34:27+00:00"
+            "time": "2025-04-25T13:48:02+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -5330,16 +5330,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.0",
+            "version": "1.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "024473a478be9df5fdaca2c793f2232fe788e414"
+                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/024473a478be9df5fdaca2c793f2232fe788e414",
-                "reference": "024473a478be9df5fdaca2c793f2232fe788e414",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/1720ddd719e16cf0db4eb1c6eca108031636d46c",
+                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c",
                 "shasum": ""
             },
             "require": {
@@ -5378,7 +5378,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.0"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.1"
             },
             "funding": [
                 {
@@ -5386,7 +5386,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-12T12:17:51+00:00"
+            "time": "2025-04-29T12:36:36+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -8284,13 +8284,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-<<<<<<< HEAD
-    "stability-flags": {
-        "utopia-php/auth": 20
-    },
-=======
-    "stability-flags": [],
->>>>>>> origin/1.7.x
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8314,5 +8308,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
