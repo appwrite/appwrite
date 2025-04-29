@@ -32,6 +32,7 @@ class Get extends Action
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'getDeployment',
                 description: <<<EOT
                 Get a site deployment by its unique ID.

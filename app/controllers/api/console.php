@@ -29,6 +29,7 @@ App::get('/v1/console/variables')
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(
         namespace: 'console',
+        group: 'console',
         name: 'variables',
         description: '/docs/references/console/variables.md',
         auth: [AuthType::ADMIN],
@@ -86,11 +87,12 @@ App::get('/v1/console/variables')
     });
 
 App::post('/v1/console/assistant')
-    ->desc('Ask query')
+    ->desc('Create assistant query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
     ->label('sdk', new Method(
         namespace: 'assistant',
+        group: 'console',
         name: 'chat',
         description: '/docs/references/assistant/chat.md',
         auth: [AuthType::ADMIN],

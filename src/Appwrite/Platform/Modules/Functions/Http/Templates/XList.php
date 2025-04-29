@@ -35,6 +35,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'templates',
                 name: 'listTemplates',
                 description: <<<EOT
                 List available function templates. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.

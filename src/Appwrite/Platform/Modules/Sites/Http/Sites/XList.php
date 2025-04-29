@@ -11,6 +11,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Sites;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
@@ -38,6 +39,7 @@ class XList extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'sites',
                 name: 'list',
                 description: <<<EOT
                 Get a list of all the project's sites. You can use the query params to filter your results.
@@ -96,9 +98,16 @@ class XList extends Base
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        try {
+            $sites = $dbForProject->find('sites', $queries);
+            $total = $dbForProject->count('sites', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
         $response->dynamic(new Document([
-            'sites' => $dbForProject->find('sites', $queries),
-            'total' => $dbForProject->count('sites', $filterQueries, APP_LIMIT_COUNT),
+            'sites' => $sites,
+            'total' => $total,
         ]), Response::MODEL_SITE_LIST);
     }
 }

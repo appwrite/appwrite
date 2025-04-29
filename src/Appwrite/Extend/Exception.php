@@ -189,6 +189,7 @@ class Exception extends \Exception
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
     public const DATABASE_TIMEOUT                  = 'database_timeout';
+    public const DATABASE_QUERY_ORDER_NULL         = 'database_query_order_null';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';

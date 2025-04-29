@@ -34,6 +34,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'templates',
                 name: 'getTemplate',
                 description: <<<EOT
                 Get a function template using ID. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.

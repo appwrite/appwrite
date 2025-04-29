@@ -47,6 +47,7 @@ class Update extends Action
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
         ->label('sdk', new Method(
             namespace: 'tokens',
+            group: 'tokens',
             name: 'update',
             description: <<<EOT
             Update a token by its unique ID. Use this endpoint to update a token's expiry date or permissions.

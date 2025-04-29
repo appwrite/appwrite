@@ -82,6 +82,14 @@ class V21 extends Migration
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'migrations':
+                    // Create destination attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'destination');
+                    } catch (Throwable $th) {
+                        Console::warning("'destination' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 case 'schedules':
                     // Create data attribute
                     try {
@@ -91,7 +99,14 @@ class V21 extends Migration
                     }
 
                     break;
-
+                case 'databases':
+                    // Create originalId attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'originalId');
+                    } catch (Throwable $th) {
+                        Console::warning("'originalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 case 'functions':
                     // Create scopes attribute
                     try {

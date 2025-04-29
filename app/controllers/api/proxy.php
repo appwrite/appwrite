@@ -31,6 +31,7 @@ App::get('/v1/proxy/rules')
     ->label('scope', 'rules.read')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'listRules',
         description: '/docs/references/proxy/list-rules.md',
         auth: [AuthType::ADMIN],
@@ -105,6 +106,7 @@ App::get('/v1/proxy/rules/:ruleId')
     ->label('scope', 'rules.read')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'getRule',
         description: '/docs/references/proxy/get-rule.md',
         auth: [AuthType::ADMIN],
@@ -142,6 +144,7 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->label('audits.resource', 'rule/{request.ruleId}')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'deleteRule',
         description: '/docs/references/proxy/delete-rule.md',
         auth: [AuthType::ADMIN],
@@ -186,6 +189,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('audits.resource', 'rule/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'proxy',
+        group: null,
         name: 'updateRuleVerification',
         description: '/docs/references/proxy/update-rule-verification.md',
         auth: [AuthType::ADMIN],

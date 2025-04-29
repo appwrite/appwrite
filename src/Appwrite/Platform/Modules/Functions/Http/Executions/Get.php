@@ -35,6 +35,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'executions',
                 name: 'getExecution',
                 description: <<<EOT
                 Get a function execution log by its unique ID.
@@ -77,14 +78,6 @@ class Get extends Base
 
         if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
-        }
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

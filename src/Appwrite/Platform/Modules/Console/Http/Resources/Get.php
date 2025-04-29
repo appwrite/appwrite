@@ -36,6 +36,7 @@ class Get extends Action
             ->label('scope', 'rules.read')
             ->label('sdk', new Method(
                 namespace: 'console',
+                group: null,
                 name: 'getResource',
                 description: <<<EOT
                 Check if a resource ID is available.

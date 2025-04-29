@@ -37,6 +37,7 @@ class Create extends Action
             ->label('scope', 'projects.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
+                group: 'devKeys',
                 name: 'createDevKey',
                 description: <<<EOT
                 Create a new project dev key. Dev keys are project specific and allow you to bypass rate limits and get better error logging during development. Strictly meant for development purposes only.

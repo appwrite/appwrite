@@ -79,11 +79,18 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $url = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', '');
 
     if ($rule->isEmpty()) {
-        if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '') || $host === System::getEnv('_APP_DOMAIN_SITES', '')) {
+        $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+        $appDomainFunctions = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $appDomainSites = System::getEnv('_APP_DOMAIN_SITES', '');
+        if (!empty($appDomainFunctionsFallback) && \str_ends_with($host, $appDomainFunctionsFallback)) {
+            $appDomainFunctions = $appDomainFunctionsFallback;
+        }
+
+        if ($host === $appDomainFunctions || $host === $appDomainSites) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
         }
 
-        if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) || \str_ends_with($host, System::getEnv('_APP_DOMAIN_SITES', ''))) {
+        if (\str_ends_with($host, $appDomainFunctions) || \str_ends_with($host, $appDomainSites)) {
             $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
             $exception->addCTA('Start with this domain', $url . '/console');
@@ -142,7 +149,31 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $dbForProject = $getProjectDB($project);
 
         /** @var Document $deployment */
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+        if (!empty($rule->getAttribute('deploymentId', ''))) {
+            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+        } else {
+            // 1.6.x DB schema compatibility
+            // TODO: Make sure deploymentId is never empty, and remove this code
+
+            // Check if site or function; should never be site, but better safe than sorry
+            // Attempts to use attribute from both schemas (1.6 and 1.7)
+            $resourceType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('resourceType', ''));
+
+            // ID of site or function
+            $resourceId = $rule->getAttribute('deploymentResourceId', '');
+
+            // Document of site or function
+            $resource = $resourceType === 'function' ?
+                Authorization::skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
+                Authorization::skip(fn () => $dbForProject->getDocument('sites', $resourceId));
+
+            // ID of active deployments
+            // Attempts to use attribute from both schemas (1.6 and 1.7)
+            $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
+
+            // Get deployment document, as intended originally
+            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
+        }
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
             $type = 'function';
@@ -843,8 +874,17 @@ App::init()
                     }
 
                     $owner = '';
+                    $functionsDomainFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
                     $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-                    if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+                    $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                    if (!empty($functionsDomainFallback) && \str_ends_with($host, $functionsDomainFallback)) {
+                        $functionsDomain = $functionsDomainFallback;
+                    }
+
+                    if (
+                        (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) ||
+                        (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
+                    ) {
                         $owner = 'Appwrite';
                     }
 
@@ -1474,6 +1514,7 @@ App::get('/v1/ping')
     ->label('event', 'projects.[projectId].ping')
     ->label('sdk', new Method(
         namespace: 'ping',
+        group: null,
         name: 'get',
         hide: true,
         description: <<<EOT

@@ -4,7 +4,9 @@ mutation {
         collectionId: "<COLLECTION_ID>",
         key: "",
         required: false,
-        default: "<DEFAULT>"
+        default: "<DEFAULT>",
+        size: 1,
+        newKey: ""
     ) {
         key
         type
@@ -12,6 +14,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         size
         default
     }

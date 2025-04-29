@@ -6,6 +6,8 @@ use Utopia\Queue\Publisher;
 
 class StatsResources extends Event
 {
+    protected bool $critical = false;
+
     public function __construct(protected Publisher $publisher)
     {
         parent::__construct($publisher);

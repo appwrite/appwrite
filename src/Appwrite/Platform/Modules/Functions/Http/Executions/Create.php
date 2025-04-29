@@ -62,6 +62,7 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'executions',
                 name: 'createExecution',
                 description: <<<EOT
                 Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
@@ -449,15 +450,6 @@ class Create extends Base
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-        }
-
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-
-        if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
         }
 
         $headers = [];
