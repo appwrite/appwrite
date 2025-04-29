@@ -15,7 +15,6 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
-use Appwrite\Event\StatsUsageDump;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Executor\Executor;
@@ -277,10 +276,6 @@ Server::setResource('consumer', function (Group $pools) {
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
-}, ['publisher']);
-
-Server::setResource('queueForStatsUsageDump', function (Publisher $publisher) {
-    return new StatsUsageDump($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForDatabase', function (Publisher $publisher) {

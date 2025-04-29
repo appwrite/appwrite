@@ -44,6 +44,7 @@ class Create extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'createVcsDeployment',
                 description: <<<EOT
                 Create a deployment when a function is connected to VCS.

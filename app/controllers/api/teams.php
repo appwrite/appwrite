@@ -33,6 +33,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -63,6 +64,7 @@ App::post('/v1/teams')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'create',
         description: '/docs/references/teams/create-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -153,6 +155,7 @@ App::get('/v1/teams')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'list',
         description: '/docs/references/teams/list-teams.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -205,9 +208,12 @@ App::get('/v1/teams')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('teams', $queries);
+            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -221,6 +227,7 @@ App::get('/v1/teams/:teamId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'get',
         description: '/docs/references/teams/get-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -251,6 +258,7 @@ App::get('/v1/teams/:teamId/prefs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'getPrefs',
         description: '/docs/references/teams/get-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -286,6 +294,7 @@ App::put('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updateName',
         description: '/docs/references/teams/update-team-name.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -333,6 +342,7 @@ App::put('/v1/teams/:teamId/prefs')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updatePrefs',
         description: '/docs/references/teams/update-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -372,6 +382,7 @@ App::delete('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'delete',
         description: '/docs/references/teams/delete-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -430,6 +441,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'createMembership',
         description: '/docs/references/teams/create-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -797,6 +809,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/teams/list-team-members.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -860,17 +873,20 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $memberships = $dbForProject->find(
+                collection: 'memberships',
+                queries: $queries,
+            );
+            $total = $dbForProject->count(
+                collection: 'memberships',
+                queries: $filterQueries,
+                max: APP_LIMIT_COUNT
+            );
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
-        $memberships = $dbForProject->find(
-            collection: 'memberships',
-            queries: $queries,
-        );
-
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
@@ -935,6 +951,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'getMembership',
         description: '/docs/references/teams/get-team-member.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1021,6 +1038,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembership',
         description: '/docs/references/teams/update-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1124,6 +1142,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembershipStatus',
         description: '/docs/references/teams/update-team-membership-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -1281,6 +1300,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'deleteMembership',
         description: '/docs/references/teams/delete-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1351,6 +1371,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/teams/get-team-logs.md',
         auth: [AuthType::ADMIN],

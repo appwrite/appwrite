@@ -39,6 +39,7 @@ class Update extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'sites',
                 name: 'updateSiteDeployment',
                 description: <<<EOT
                 Update the site active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your site.

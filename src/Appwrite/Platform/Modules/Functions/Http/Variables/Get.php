@@ -35,6 +35,7 @@ class Get extends Base
                 'sdk',
                 new Method(
                     namespace: 'functions',
+                    group: 'variables',
                     name: 'getVariable',
                     description: <<<EOT
                     Get a variable by its unique ID.

@@ -37,6 +37,7 @@ class Delete extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'logs',
                 name: 'deleteLog',
                 description: <<<EOT
                 Delete a site log by its unique ID.

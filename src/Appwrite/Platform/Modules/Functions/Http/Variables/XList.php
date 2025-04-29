@@ -36,6 +36,7 @@ class XList extends Base
                 'sdk',
                 new Method(
                     namespace: 'functions',
+                    group: 'variables',
                     name: 'listVariables',
                     description: <<<EOT
                     Get a list of all variables of a specific function.

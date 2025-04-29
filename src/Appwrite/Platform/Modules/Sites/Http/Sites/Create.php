@@ -49,6 +49,7 @@ class Create extends Base
             ->label('audits.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'sites',
                 name: 'create',
                 description: <<<EOT
                 Create a new site.

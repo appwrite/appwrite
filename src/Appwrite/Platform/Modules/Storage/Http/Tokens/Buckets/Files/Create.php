@@ -46,6 +46,7 @@ class Create extends Action
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
         ->label('sdk', new Method(
             namespace: 'tokens',
+            group: 'files',
             name: 'createFileToken',
             description: <<<EOT
             Create a new token. A token is linked to a file or a bucket and manages permissions for those file(s). Token can be passed as a header or request get parameter.

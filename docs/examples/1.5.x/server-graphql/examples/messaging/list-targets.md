@@ -13,6 +13,7 @@ query {
             providerId
             providerType
             identifier
+            expired
         }
     }
 }

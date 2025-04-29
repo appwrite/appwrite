@@ -42,6 +42,7 @@ class Update extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'functions',
                 name: 'updateFunctionDeployment',
                 description: <<<EOT
                 Update the function active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your function.

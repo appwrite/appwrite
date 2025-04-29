@@ -63,13 +63,20 @@ class ProxyCustomServerTest extends Scope
     {
         $domain = \uniqid() . '-vcs.myapp.com';
 
-        $rule = $this->createAPIRule('commit-' . $domain);
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        $rule = $this->createAPIRule('branch-' . $domain);
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        $rule = $this->createAPIRule('anything-' . $domain);
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->cleanupRule($rule['body']['$id']);
     }

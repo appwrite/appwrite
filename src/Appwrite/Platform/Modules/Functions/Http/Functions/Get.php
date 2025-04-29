@@ -33,6 +33,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'functions',
                 name: 'get',
                 description: <<<EOT
                 Get a function by its unique ID.

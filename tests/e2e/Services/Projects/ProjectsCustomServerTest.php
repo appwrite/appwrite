@@ -17,6 +17,8 @@ class ProjectsCustomServerTest extends Scope
 
     public function testCreateProjectRule()
     {
+        $testId = \uniqid();
+
         $headers = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -25,21 +27,23 @@ class ProjectsCustomServerTest extends Scope
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
-            'domain' => 'api.appwrite.test',
+            'domain' => $testId . '-api.appwrite.test',
         ]);
+
+        \var_dump($response);
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'resourceType' => 'api',
-            'domain' => 'abc.test.io',
+            'domain' => $testId . '-abc.test.io',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // duplicate rule
         $response2 = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
-            'domain' => 'abc.test.io',
+            'domain' => $testId . '-abc.test.io',
         ]);
 
         $this->assertEquals(409, $response2['headers']['status-code']);
