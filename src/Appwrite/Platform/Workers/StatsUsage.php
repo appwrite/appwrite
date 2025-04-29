@@ -429,7 +429,7 @@ class StatsUsage extends Action
             Console::log('Dual Writing is disabled. Skipping...');
             return;
         }
-        
+
         $dbForLogs = ($this->getLogsDB)()
             ->setTenant(null)
             ->setTenantPerDocument(true);
