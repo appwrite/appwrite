@@ -32,6 +32,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
@@ -467,6 +468,7 @@ App::post('/v1/databases')
     ->label('audits.resource', 'database/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'databases',
         name: 'create',
         description: '/docs/references/databases/create.md',
         auth: [AuthType::KEY],
@@ -548,6 +550,7 @@ App::get('/v1/databases')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'databases',
         name: 'list',
         description: '/docs/references/databases/list.md',
         auth: [AuthType::KEY],
@@ -597,9 +600,15 @@ App::get('/v1/databases')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        try {
+            $databases = $dbForProject->find('databases', $queries);
+            $total = $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'databases' => $dbForProject->find('databases', $queries),
-            'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
+            'databases' => $databases,
+            'total' => $total,
         ]), Response::MODEL_DATABASE_LIST);
     });
 
@@ -610,6 +619,7 @@ App::get('/v1/databases/:databaseId')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'databases',
         name: 'get',
         description: '/docs/references/databases/get.md',
         auth: [AuthType::KEY],
@@ -642,6 +652,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/databases/get-logs.md',
         auth: [AuthType::ADMIN],
@@ -745,6 +756,7 @@ App::put('/v1/databases/:databaseId')
     ->label('audits.resource', 'database/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'databases',
         name: 'update',
         description: '/docs/references/databases/update.md',
         auth: [AuthType::KEY],
@@ -790,6 +802,7 @@ App::delete('/v1/databases/:databaseId')
     ->label('audits.resource', 'database/{request.databaseId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'databases',
         name: 'delete',
         description: '/docs/references/databases/delete.md',
         auth: [AuthType::KEY],
@@ -843,6 +856,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'createCollection',
         description: '/docs/references/databases/create-collection.md',
         auth: [AuthType::KEY],
@@ -914,6 +928,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'listCollections',
         description: '/docs/references/databases/list-collections.md',
         auth: [AuthType::KEY],
@@ -972,9 +987,15 @@ App::get('/v1/databases/:databaseId/collections')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        try {
+            $collections = $dbForProject->find('database_' . $database->getInternalId(), $queries);
+            $total = $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
-            'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
+            'collections' => $collections,
+            'total' => $total,
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -986,6 +1007,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'getCollection',
         description: '/docs/references/databases/get-collection.md',
         auth: [AuthType::KEY],
@@ -1027,6 +1049,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'listCollectionLogs',
         description: '/docs/references/databases/get-collection-logs.md',
         auth: [AuthType::ADMIN],
@@ -1139,6 +1162,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'updateCollection',
         description: '/docs/references/databases/update-collection.md',
         auth: [AuthType::KEY],
@@ -1213,6 +1237,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'deleteCollection',
         description: '/docs/references/databases/delete-collection.md',
         auth: [AuthType::KEY],
@@ -1276,6 +1301,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createStringAttribute',
         description: '/docs/references/databases/create-string-attribute.md',
         auth: [AuthType::KEY],
@@ -1338,6 +1364,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createEmailAttribute',
         description: '/docs/references/databases/create-email-attribute.md',
         auth: [AuthType::KEY],
@@ -1386,6 +1413,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createEnumAttribute',
         description: '/docs/references/databases/create-attribute-enum.md',
         auth: [AuthType::KEY],
@@ -1439,6 +1467,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createIpAttribute',
         description: '/docs/references/databases/create-ip-attribute.md',
         auth: [AuthType::KEY],
@@ -1487,6 +1516,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createUrlAttribute',
         description: '/docs/references/databases/create-url-attribute.md',
         auth: [AuthType::KEY],
@@ -1535,6 +1565,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createIntegerAttribute',
         description: '/docs/references/databases/create-integer-attribute.md',
         auth: [AuthType::KEY],
@@ -1612,6 +1643,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createFloatAttribute',
         description: '/docs/references/databases/create-float-attribute.md',
         auth: [AuthType::KEY],
@@ -1687,6 +1719,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createBooleanAttribute',
         description: '/docs/references/databases/create-boolean-attribute.md',
         auth: [AuthType::KEY],
@@ -1734,6 +1767,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createDatetimeAttribute',
         description: '/docs/references/databases/create-datetime-attribute.md',
         auth: [AuthType::KEY],
@@ -1784,6 +1818,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'createRelationshipAttribute',
         description: '/docs/references/databases/create-relationship-attribute.md',
         auth: [AuthType::KEY],
@@ -1915,6 +1950,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'listAttributes',
         description: '/docs/references/databases/list-attributes.md',
         auth: [AuthType::KEY],
@@ -1983,9 +2019,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         }
 
         $filters = Query::groupByType($queries)['filters'];
-
-        $attributes = $dbForProject->find('attributes', $queries);
-        $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
+        try {
+            $attributes = $dbForProject->find('attributes', $queries);
+            $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'attributes' => $attributes,
@@ -2001,6 +2040,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'getAttribute',
         description: '/docs/references/databases/get-attribute.md',
         auth: [AuthType::KEY],
@@ -2085,6 +2125,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateStringAttribute',
         description: '/docs/references/databases/update-string-attribute.md',
         auth: [AuthType::KEY],
@@ -2136,6 +2177,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateEmailAttribute',
         description: '/docs/references/databases/update-email-attribute.md',
         auth: [AuthType::KEY],
@@ -2185,6 +2227,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateEnumAttribute',
         description: '/docs/references/databases/update-enum-attribute.md',
         auth: [AuthType::KEY],
@@ -2236,6 +2279,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateIpAttribute',
         description: '/docs/references/databases/update-ip-attribute.md',
         auth: [AuthType::KEY],
@@ -2285,6 +2329,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateUrlAttribute',
         description: '/docs/references/databases/update-url-attribute.md',
         auth: [AuthType::KEY],
@@ -2334,6 +2379,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateIntegerAttribute',
         description: '/docs/references/databases/update-integer-attribute.md',
         auth: [AuthType::KEY],
@@ -2393,6 +2439,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateFloatAttribute',
         description: '/docs/references/databases/update-float-attribute.md',
         auth: [AuthType::KEY],
@@ -2452,6 +2499,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateBooleanAttribute',
         description: '/docs/references/databases/update-boolean-attribute.md',
         auth: [AuthType::KEY],
@@ -2500,6 +2548,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateDatetimeAttribute',
         description: '/docs/references/databases/update-datetime-attribute.md',
         auth: [AuthType::KEY],
@@ -2548,6 +2597,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'updateRelationshipAttribute',
         description: '/docs/references/databases/update-relationship-attribute.md',
         auth: [AuthType::KEY],
@@ -2613,6 +2663,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'attributes',
         name: 'deleteAttribute',
         description: '/docs/references/databases/delete-attribute.md',
         auth: [AuthType::KEY],
@@ -2743,6 +2794,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'collections',
         name: 'createIndex',
         description: '/docs/references/databases/create-index.md',
         auth: [AuthType::KEY],
@@ -2913,6 +2965,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'indexes',
         name: 'listIndexes',
         description: '/docs/references/databases/list-indexes.md',
         auth: [AuthType::KEY],
@@ -2981,9 +3034,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $total = $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT);
+            $indexes = $dbForProject->find('indexes', $queries);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
         $response->dynamic(new Document([
-            'total' => $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT),
-            'indexes' => $dbForProject->find('indexes', $queries),
+            'total' => $total,
+            'indexes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
     });
 
@@ -2995,6 +3055,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'indexes',
         name: 'getIndex',
         description: '/docs/references/databases/get-index.md',
         auth: [AuthType::KEY],
@@ -3044,6 +3105,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'indexes',
         name: 'deleteIndex',
         description: '/docs/references/databases/delete-index.md',
         auth: [AuthType::KEY],
@@ -3121,6 +3183,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         [
             new Method(
                 namespace: 'databases',
+                group: 'documents',
                 name: 'createDocument',
                 description: '/docs/references/databases/create-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -3141,6 +3204,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ),
             new Method(
                 namespace: 'databases',
+                group: 'documents',
                 name: 'createDocuments',
                 description: '/docs/references/databases/create-document.md',
                 auth: [AuthType::KEY],
@@ -3486,6 +3550,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'listDocuments',
         description: '/docs/references/databases/list-documents.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -3549,9 +3614,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $cursor->setValue($cursorDocument);
         }
-
-        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+        try {
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $operations = 0;
 
@@ -3661,6 +3729,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'getDocument',
         description: '/docs/references/databases/get-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -3772,6 +3841,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'logs',
         name: 'listDocumentLogs',
         description: '/docs/references/databases/get-document-logs.md',
         auth: [AuthType::ADMIN],
@@ -3892,6 +3962,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'updateDocument',
         description: '/docs/references/databases/update-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -4144,6 +4215,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'updateDocuments',
         description: '/docs/references/databases/update-documents.md',
         auth: [AuthType::KEY],
@@ -4304,6 +4376,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'deleteDocument',
         description: '/docs/references/databases/delete-document.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -4432,6 +4505,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: 'documents',
         name: 'deleteDocuments',
         description: '/docs/references/databases/delete-documents.md',
         auth: [AuthType::KEY],
@@ -4553,6 +4627,7 @@ App::get('/v1/databases/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/databases/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -4648,6 +4723,7 @@ App::get('/v1/databases/:databaseId/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: null,
         name: 'getDatabaseUsage',
         description: '/docs/references/databases/get-database-usage.md',
         auth: [AuthType::ADMIN],
@@ -4749,6 +4825,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk', new Method(
         namespace: 'databases',
+        group: null,
         name: 'getCollectionUsage',
         description: '/docs/references/databases/get-collection-usage.md',
         auth: [AuthType::ADMIN],

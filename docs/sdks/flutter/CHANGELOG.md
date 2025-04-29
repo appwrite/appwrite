@@ -1,5 +1,17 @@
+## 15.0.2
+
+* Avoid setting empty `User-Agent` header and only encode it when present.
+* Update doc examples to use new multi-region endpoint: `https://<REGION>.cloud.appwrite.io/v1`.
+
+## 15.0.1
+
+* Removed `Content-Type` header from GET and HEAD requests.
+* Add validation for setting endpoint in `setEndpoint` and `setEndPointRealtime` methods.
+* Include Figma in list of available OAuth providers.
+
 ## 15.0.0
 
+* Encode `User-Agent` header to fix invalid HTTP header field value error.
 * Breaking changes:
   * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
 

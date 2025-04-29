@@ -16,6 +16,7 @@ class Method
      * Initialise a new SDK method
      *
      * @param string $namespace
+     * @param ?string $group
      * @param string $name
      * @param string $description
      * @param array<AuthType> $auth
@@ -31,6 +32,7 @@ class Method
      */
     public function __construct(
         protected string $namespace,
+        protected ?string $group,
         protected string $name,
         protected string $description,
         protected array $auth,
@@ -121,6 +123,11 @@ class Method
     public function getNamespace(): string
     {
         return $this->namespace;
+    }
+
+    public function getGroup(): ?string
+    {
+        return $this->group;
     }
 
     public function getMethodName(): string

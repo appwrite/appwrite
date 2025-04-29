@@ -16,6 +16,7 @@
         }
     },
     "host": "cloud.appwrite.io",
+    "x-host-docs": "<REGION>.cloud.appwrite.io",
     "basePath": "\/v1",
     "schemes": [
         "https"
@@ -79,9 +80,7 @@
             "get": {
                 "summary": "Get account",
                 "operationId": "accountGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -99,6 +98,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "account",
                     "weight": 9,
                     "cookies": false,
                     "type": "",
@@ -148,6 +148,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "account",
                     "weight": 8,
                     "cookies": false,
                     "type": "",
@@ -231,6 +232,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "account",
                     "weight": 10,
                     "cookies": false,
                     "type": "",
@@ -280,6 +282,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "account",
                     "weight": 34,
                     "cookies": false,
                     "type": "",
@@ -338,9 +341,7 @@
             "get": {
                 "summary": "List identities",
                 "operationId": "accountListIdentities",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -358,6 +359,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
+                    "group": "identities",
                     "weight": 57,
                     "cookies": false,
                     "type": "",
@@ -418,6 +420,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
+                    "group": "identities",
                     "weight": 58,
                     "cookies": false,
                     "type": "",
@@ -479,6 +482,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "tokens",
                     "weight": 29,
                     "cookies": false,
                     "type": "",
@@ -509,9 +513,7 @@
             "get": {
                 "summary": "List logs",
                 "operationId": "accountListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -529,6 +531,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 31,
                     "cookies": false,
                     "type": "",
@@ -594,6 +597,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMFA",
+                    "group": "mfa",
                     "weight": 44,
                     "cookies": false,
                     "type": "",
@@ -665,6 +669,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 46,
                     "cookies": false,
                     "type": "",
@@ -707,7 +712,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify authenticator",
+                "summary": "Update authenticator (confirmation)",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -729,6 +734,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 47,
                     "cookies": false,
                     "type": "",
@@ -806,6 +812,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 51,
                     "cookies": false,
                     "type": "",
@@ -872,6 +879,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaChallenge",
+                    "group": "mfa",
                     "weight": 52,
                     "cookies": false,
                     "type": "",
@@ -926,7 +934,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA challenge (confirmation)",
+                "summary": "Update MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -948,6 +956,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
+                    "group": "mfa",
                     "weight": 53,
                     "cookies": false,
                     "type": "",
@@ -1006,9 +1015,7 @@
             "get": {
                 "summary": "List factors",
                 "operationId": "accountListMfaFactors",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1026,6 +1033,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
+                    "group": "mfa",
                     "weight": 45,
                     "cookies": false,
                     "type": "",
@@ -1055,11 +1063,9 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA recovery codes",
+                "summary": "List MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1077,6 +1083,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 50,
                     "cookies": false,
                     "type": "",
@@ -1126,6 +1133,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 48,
                     "cookies": false,
                     "type": "",
@@ -1153,7 +1161,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1175,6 +1183,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 49,
                     "cookies": false,
                     "type": "",
@@ -1226,6 +1235,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "account",
                     "weight": 32,
                     "cookies": false,
                     "type": "",
@@ -1297,6 +1307,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
+                    "group": "account",
                     "weight": 33,
                     "cookies": false,
                     "type": "",
@@ -1374,6 +1385,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
+                    "group": "account",
                     "weight": 35,
                     "cookies": false,
                     "type": "",
@@ -1432,9 +1444,7 @@
             "get": {
                 "summary": "Get account preferences",
                 "operationId": "accountGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1452,6 +1462,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "account",
                     "weight": 30,
                     "cookies": false,
                     "type": "",
@@ -1501,6 +1512,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "account",
                     "weight": 36,
                     "cookies": false,
                     "type": "",
@@ -1572,6 +1584,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRecovery",
+                    "group": "recovery",
                     "weight": 38,
                     "cookies": false,
                     "type": "",
@@ -1629,7 +1642,7 @@
                 ]
             },
             "put": {
-                "summary": "Create password recovery (confirmation)",
+                "summary": "Update password recovery (confirmation)",
                 "operationId": "accountUpdateRecovery",
                 "consumes": [
                     "application\/json"
@@ -1651,6 +1664,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRecovery",
+                    "group": "recovery",
                     "weight": 39,
                     "cookies": false,
                     "type": "",
@@ -1716,9 +1730,7 @@
             "get": {
                 "summary": "List sessions",
                 "operationId": "accountListSessions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -1736,6 +1748,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
+                    "group": "sessions",
                     "weight": 11,
                     "cookies": false,
                     "type": "",
@@ -1780,6 +1793,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
+                    "group": "sessions",
                     "weight": 12,
                     "cookies": false,
                     "type": "",
@@ -1831,6 +1845,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAnonymousSession",
+                    "group": "sessions",
                     "weight": 17,
                     "cookies": false,
                     "type": "",
@@ -1881,6 +1896,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
+                    "group": "sessions",
                     "weight": 16,
                     "cookies": false,
                     "type": "",
@@ -1958,6 +1974,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
+                    "group": "sessions",
                     "weight": 26,
                     "cookies": false,
                     "type": "",
@@ -2015,9 +2032,7 @@
             "get": {
                 "summary": "Create OAuth2 session",
                 "operationId": "accountCreateOAuth2Session",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "text\/html"
                 ],
@@ -2032,6 +2047,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Session",
+                    "group": "sessions",
                     "weight": 19,
                     "cookies": false,
                     "type": "webAuth",
@@ -2168,6 +2184,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneSession",
+                    "group": "sessions",
                     "weight": 27,
                     "cookies": false,
                     "type": "",
@@ -2245,6 +2262,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
+                    "group": "sessions",
                     "weight": 18,
                     "cookies": false,
                     "type": "",
@@ -2302,9 +2320,7 @@
             "get": {
                 "summary": "Get session",
                 "operationId": "accountGetSession",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -2322,6 +2338,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSession",
+                    "group": "sessions",
                     "weight": 13,
                     "cookies": false,
                     "type": "",
@@ -2381,6 +2398,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSession",
+                    "group": "sessions",
                     "weight": 15,
                     "cookies": false,
                     "type": "",
@@ -2435,6 +2453,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
+                    "group": "sessions",
                     "weight": 14,
                     "cookies": false,
                     "type": "",
@@ -2496,6 +2515,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
+                    "group": "account",
                     "weight": 37,
                     "cookies": false,
                     "type": "",
@@ -2547,6 +2567,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPushTarget",
+                    "group": "pushTargets",
                     "weight": 54,
                     "cookies": false,
                     "type": "",
@@ -2629,6 +2650,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePushTarget",
+                    "group": "pushTargets",
                     "weight": 55,
                     "cookies": false,
                     "type": "",
@@ -2699,6 +2721,7 @@
                 },
                 "x-appwrite": {
                     "method": "deletePushTarget",
+                    "group": "pushTargets",
                     "weight": 56,
                     "cookies": false,
                     "type": "",
@@ -2758,6 +2781,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
+                    "group": "tokens",
                     "weight": 25,
                     "cookies": false,
                     "type": "",
@@ -2841,6 +2865,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
+                    "group": "tokens",
                     "weight": 24,
                     "cookies": false,
                     "type": "",
@@ -2913,9 +2938,7 @@
             "get": {
                 "summary": "Create OAuth2 token",
                 "operationId": "accountCreateOAuth2Token",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "text\/html"
                 ],
@@ -2930,6 +2953,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
+                    "group": "tokens",
                     "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
@@ -3066,6 +3090,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
+                    "group": "tokens",
                     "weight": 28,
                     "cookies": false,
                     "type": "",
@@ -3146,6 +3171,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVerification",
+                    "group": "verification",
                     "weight": 40,
                     "cookies": false,
                     "type": "",
@@ -3193,7 +3219,7 @@
                 ]
             },
             "put": {
-                "summary": "Create email verification (confirmation)",
+                "summary": "Update email verification (confirmation)",
                 "operationId": "accountUpdateVerification",
                 "consumes": [
                     "application\/json"
@@ -3215,6 +3241,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVerification",
+                    "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
@@ -3293,6 +3320,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneVerification",
+                    "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
@@ -3345,6 +3373,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
+                    "group": "verification",
                     "weight": 43,
                     "cookies": false,
                     "type": "",
@@ -3403,9 +3432,7 @@
             "get": {
                 "summary": "Get browser icon",
                 "operationId": "avatarsGetBrowser",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3423,6 +3450,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
+                    "group": null,
                     "weight": 60,
                     "cookies": false,
                     "type": "location",
@@ -3529,9 +3557,7 @@
             "get": {
                 "summary": "Get credit card icon",
                 "operationId": "avatarsGetCreditCard",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3549,6 +3575,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
+                    "group": null,
                     "weight": 59,
                     "cookies": false,
                     "type": "location",
@@ -3661,9 +3688,7 @@
             "get": {
                 "summary": "Get favicon",
                 "operationId": "avatarsGetFavicon",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -3681,6 +3706,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
+                    "group": null,
                     "weight": 63,
                     "cookies": false,
                     "type": "location",
@@ -3725,9 +3751,7 @@
             "get": {
                 "summary": "Get country flag",
                 "operationId": "avatarsGetFlag",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -3745,6 +3769,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
+                    "group": null,
                     "weight": 61,
                     "cookies": false,
                     "type": "location",
@@ -4213,9 +4238,7 @@
             "get": {
                 "summary": "Get image from URL",
                 "operationId": "avatarsGetImage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -4233,6 +4256,7 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
+                    "group": null,
                     "weight": 62,
                     "cookies": false,
                     "type": "location",
@@ -4297,9 +4321,7 @@
             "get": {
                 "summary": "Get user initials",
                 "operationId": "avatarsGetInitials",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4317,6 +4339,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
+                    "group": null,
                     "weight": 65,
                     "cookies": false,
                     "type": "location",
@@ -4389,9 +4412,7 @@
             "get": {
                 "summary": "Get QR code",
                 "operationId": "avatarsGetQR",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/png"
                 ],
@@ -4409,6 +4430,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
+                    "group": null,
                     "weight": 64,
                     "cookies": false,
                     "type": "location",
@@ -4479,7 +4501,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask query",
+                "summary": "Create assistant query",
                 "operationId": "assistantChat",
                 "consumes": [
                     "application\/json"
@@ -4501,6 +4523,7 @@
                 },
                 "x-appwrite": {
                     "method": "chat",
+                    "group": "console",
                     "weight": 334,
                     "cookies": false,
                     "type": "",
@@ -4550,9 +4573,7 @@
             "get": {
                 "summary": "Get variables",
                 "operationId": "consoleVariables",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4570,6 +4591,7 @@
                 },
                 "x-appwrite": {
                     "method": "variables",
+                    "group": "console",
                     "weight": 333,
                     "cookies": false,
                     "type": "",
@@ -4599,9 +4621,7 @@
             "get": {
                 "summary": "List databases",
                 "operationId": "databasesList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4619,6 +4639,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "databases",
                     "weight": 70,
                     "cookies": false,
                     "type": "",
@@ -4690,6 +4711,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "databases",
                     "weight": 69,
                     "cookies": false,
                     "type": "",
@@ -4753,9 +4775,7 @@
             "get": {
                 "summary": "Get databases usage stats",
                 "operationId": "databasesGetUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4773,6 +4793,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": null,
                     "weight": 116,
                     "cookies": false,
                     "type": "",
@@ -4824,9 +4845,7 @@
             "get": {
                 "summary": "Get database",
                 "operationId": "databasesGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -4844,6 +4863,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "databases",
                     "weight": 71,
                     "cookies": false,
                     "type": "",
@@ -4902,6 +4922,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "databases",
                     "weight": 73,
                     "cookies": false,
                     "type": "",
@@ -4979,6 +5000,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "databases",
                     "weight": 74,
                     "cookies": false,
                     "type": "",
@@ -5019,9 +5041,7 @@
             "get": {
                 "summary": "List collections",
                 "operationId": "databasesListCollections",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5039,6 +5059,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCollections",
+                    "group": "collections",
                     "weight": 76,
                     "cookies": false,
                     "type": "",
@@ -5118,6 +5139,7 @@
                 },
                 "x-appwrite": {
                     "method": "createCollection",
+                    "group": "collections",
                     "weight": 75,
                     "cookies": false,
                     "type": "",
@@ -5204,9 +5226,7 @@
             "get": {
                 "summary": "Get collection",
                 "operationId": "databasesGetCollection",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5224,6 +5244,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCollection",
+                    "group": "collections",
                     "weight": 77,
                     "cookies": false,
                     "type": "",
@@ -5290,6 +5311,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateCollection",
+                    "group": "collections",
                     "weight": 79,
                     "cookies": false,
                     "type": "",
@@ -5390,6 +5412,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteCollection",
+                    "group": "collections",
                     "weight": 80,
                     "cookies": false,
                     "type": "",
@@ -5438,9 +5461,7 @@
             "get": {
                 "summary": "List attributes",
                 "operationId": "databasesListAttributes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -5458,6 +5479,7 @@
                 },
                 "x-appwrite": {
                     "method": "listAttributes",
+                    "group": "attributes",
                     "weight": 91,
                     "cookies": false,
                     "type": "",
@@ -5538,6 +5560,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBooleanAttribute",
+                    "group": "attributes",
                     "weight": 88,
                     "cookies": false,
                     "type": "",
@@ -5643,6 +5666,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateBooleanAttribute",
+                    "group": "attributes",
                     "weight": 100,
                     "cookies": false,
                     "type": "",
@@ -5750,6 +5774,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDatetimeAttribute",
+                    "group": "attributes",
                     "weight": 89,
                     "cookies": false,
                     "type": "",
@@ -5855,6 +5880,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDatetimeAttribute",
+                    "group": "attributes",
                     "weight": 101,
                     "cookies": false,
                     "type": "",
@@ -5962,6 +5988,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailAttribute",
+                    "group": "attributes",
                     "weight": 82,
                     "cookies": false,
                     "type": "",
@@ -6067,6 +6094,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailAttribute",
+                    "group": "attributes",
                     "weight": 94,
                     "cookies": false,
                     "type": "",
@@ -6174,6 +6202,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEnumAttribute",
+                    "group": "attributes",
                     "weight": 83,
                     "cookies": false,
                     "type": "",
@@ -6289,6 +6318,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEnumAttribute",
+                    "group": "attributes",
                     "weight": 95,
                     "cookies": false,
                     "type": "",
@@ -6406,6 +6436,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFloatAttribute",
+                    "group": "attributes",
                     "weight": 87,
                     "cookies": false,
                     "type": "",
@@ -6523,6 +6554,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFloatAttribute",
+                    "group": "attributes",
                     "weight": 99,
                     "cookies": false,
                     "type": "",
@@ -6642,6 +6674,7 @@
                 },
                 "x-appwrite": {
                     "method": "createIntegerAttribute",
+                    "group": "attributes",
                     "weight": 86,
                     "cookies": false,
                     "type": "",
@@ -6759,6 +6792,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateIntegerAttribute",
+                    "group": "attributes",
                     "weight": 98,
                     "cookies": false,
                     "type": "",
@@ -6878,6 +6912,7 @@
                 },
                 "x-appwrite": {
                     "method": "createIpAttribute",
+                    "group": "attributes",
                     "weight": 84,
                     "cookies": false,
                     "type": "",
@@ -6983,6 +7018,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateIpAttribute",
+                    "group": "attributes",
                     "weight": 96,
                     "cookies": false,
                     "type": "",
@@ -7090,6 +7126,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRelationshipAttribute",
+                    "group": "attributes",
                     "weight": 90,
                     "cookies": false,
                     "type": "",
@@ -7222,6 +7259,7 @@
                 },
                 "x-appwrite": {
                     "method": "createStringAttribute",
+                    "group": "attributes",
                     "weight": 81,
                     "cookies": false,
                     "type": "",
@@ -7340,6 +7378,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStringAttribute",
+                    "group": "attributes",
                     "weight": 93,
                     "cookies": false,
                     "type": "",
@@ -7453,6 +7492,7 @@
                 },
                 "x-appwrite": {
                     "method": "createUrlAttribute",
+                    "group": "attributes",
                     "weight": 85,
                     "cookies": false,
                     "type": "",
@@ -7558,6 +7598,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateUrlAttribute",
+                    "group": "attributes",
                     "weight": 97,
                     "cookies": false,
                     "type": "",
@@ -7645,9 +7686,7 @@
             "get": {
                 "summary": "Get attribute",
                 "operationId": "databasesGetAttribute",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7696,6 +7735,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAttribute",
+                    "group": "attributes",
                     "weight": 92,
                     "cookies": false,
                     "type": "",
@@ -7764,6 +7804,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteAttribute",
+                    "group": "attributes",
                     "weight": 103,
                     "cookies": false,
                     "type": "",
@@ -7839,6 +7880,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRelationshipAttribute",
+                    "group": "attributes",
                     "weight": 102,
                     "cookies": false,
                     "type": "",
@@ -7922,9 +7964,7 @@
             "get": {
                 "summary": "List documents",
                 "operationId": "databasesListDocuments",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -7942,6 +7982,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDocuments",
+                    "group": "documents",
                     "weight": 109,
                     "cookies": false,
                     "type": "",
@@ -8023,6 +8064,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDocument",
+                    "group": "documents",
                     "weight": 108,
                     "cookies": false,
                     "type": "",
@@ -8176,6 +8218,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDocuments",
+                    "group": "documents",
                     "weight": 113,
                     "cookies": false,
                     "type": "",
@@ -8266,6 +8309,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDocuments",
+                    "group": "documents",
                     "weight": 115,
                     "cookies": false,
                     "type": "",
@@ -8332,9 +8376,7 @@
             "get": {
                 "summary": "Get document",
                 "operationId": "databasesGetDocument",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8352,6 +8394,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDocument",
+                    "group": "documents",
                     "weight": 110,
                     "cookies": false,
                     "type": "",
@@ -8441,6 +8484,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDocument",
+                    "group": "documents",
                     "weight": 112,
                     "cookies": false,
                     "type": "",
@@ -8537,6 +8581,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDocument",
+                    "group": "documents",
                     "weight": 114,
                     "cookies": false,
                     "type": "",
@@ -8596,9 +8641,7 @@
             "get": {
                 "summary": "List document logs",
                 "operationId": "databasesListDocumentLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8616,6 +8659,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDocumentLogs",
+                    "group": "logs",
                     "weight": 111,
                     "cookies": false,
                     "type": "",
@@ -8683,9 +8727,7 @@
             "get": {
                 "summary": "List indexes",
                 "operationId": "databasesListIndexes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8703,6 +8745,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIndexes",
+                    "group": "indexes",
                     "weight": 105,
                     "cookies": false,
                     "type": "",
@@ -8781,6 +8824,7 @@
                 },
                 "x-appwrite": {
                     "method": "createIndex",
+                    "group": "collections",
                     "weight": 104,
                     "cookies": false,
                     "type": "",
@@ -8880,9 +8924,7 @@
             "get": {
                 "summary": "Get index",
                 "operationId": "databasesGetIndex",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -8900,6 +8942,7 @@
                 },
                 "x-appwrite": {
                     "method": "getIndex",
+                    "group": "indexes",
                     "weight": 106,
                     "cookies": false,
                     "type": "",
@@ -8968,6 +9011,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIndex",
+                    "group": "indexes",
                     "weight": 107,
                     "cookies": false,
                     "type": "",
@@ -9023,9 +9067,7 @@
             "get": {
                 "summary": "List collection logs",
                 "operationId": "databasesListCollectionLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9043,6 +9085,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCollectionLogs",
+                    "group": "collections",
                     "weight": 78,
                     "cookies": false,
                     "type": "",
@@ -9102,9 +9145,7 @@
             "get": {
                 "summary": "Get collection usage stats",
                 "operationId": "databasesGetCollectionUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9122,6 +9163,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCollectionUsage",
+                    "group": null,
                     "weight": 118,
                     "cookies": false,
                     "type": "",
@@ -9189,9 +9231,7 @@
             "get": {
                 "summary": "List database logs",
                 "operationId": "databasesListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9209,6 +9249,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 72,
                     "cookies": false,
                     "type": "",
@@ -9260,9 +9301,7 @@
             "get": {
                 "summary": "Get database usage stats",
                 "operationId": "databasesGetDatabaseUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9280,6 +9319,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDatabaseUsage",
+                    "group": null,
                     "weight": 117,
                     "cookies": false,
                     "type": "",
@@ -9339,9 +9379,7 @@
             "get": {
                 "summary": "List functions",
                 "operationId": "functionsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9359,6 +9397,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "functions",
                     "weight": 290,
                     "cookies": false,
                     "type": "",
@@ -9430,6 +9469,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "functions",
                     "weight": 289,
                     "cookies": false,
                     "type": "",
@@ -9680,9 +9720,7 @@
             "get": {
                 "summary": "List runtimes",
                 "operationId": "functionsListRuntimes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9700,6 +9738,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
+                    "group": "runtimes",
                     "weight": 291,
                     "cookies": false,
                     "type": "",
@@ -9730,9 +9769,7 @@
             "get": {
                 "summary": "List available function runtime specifications",
                 "operationId": "functionsListSpecifications",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9750,6 +9787,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
+                    "group": "runtimes",
                     "weight": 292,
                     "cookies": false,
                     "type": "",
@@ -9781,9 +9819,7 @@
             "get": {
                 "summary": "List function templates",
                 "operationId": "functionsListTemplates",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9801,6 +9837,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
+                    "group": "templates",
                     "weight": 315,
                     "cookies": false,
                     "type": "",
@@ -9876,9 +9913,7 @@
             "get": {
                 "summary": "Get function template",
                 "operationId": "functionsGetTemplate",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9896,6 +9931,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
+                    "group": "templates",
                     "weight": 316,
                     "cookies": false,
                     "type": "",
@@ -9935,9 +9971,7 @@
             "get": {
                 "summary": "Get functions usage",
                 "operationId": "functionsGetUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -9955,6 +9989,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": null,
                     "weight": 295,
                     "cookies": false,
                     "type": "",
@@ -10006,9 +10041,7 @@
             "get": {
                 "summary": "Get function",
                 "operationId": "functionsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10026,6 +10059,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "functions",
                     "weight": 293,
                     "cookies": false,
                     "type": "",
@@ -10084,6 +10118,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "functions",
                     "weight": 296,
                     "cookies": false,
                     "type": "",
@@ -10324,6 +10359,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "functions",
                     "weight": 299,
                     "cookies": false,
                     "type": "",
@@ -10364,9 +10400,7 @@
             "get": {
                 "summary": "List deployments",
                 "operationId": "functionsListDeployments",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10384,6 +10418,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
+                    "group": "deployments",
                     "weight": 301,
                     "cookies": false,
                     "type": "",
@@ -10463,6 +10498,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
+                    "group": "deployments",
                     "weight": 300,
                     "cookies": false,
                     "type": "upload",
@@ -10534,9 +10570,7 @@
             "get": {
                 "summary": "Get deployment",
                 "operationId": "functionsGetDeployment",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10554,6 +10588,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
+                    "group": "deployments",
                     "weight": 302,
                     "cookies": false,
                     "type": "",
@@ -10620,6 +10655,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeployment",
+                    "group": "deployments",
                     "weight": 298,
                     "cookies": false,
                     "type": "",
@@ -10681,6 +10717,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
+                    "group": "deployments",
                     "weight": 303,
                     "cookies": false,
                     "type": "",
@@ -10727,7 +10764,7 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/build": {
             "post": {
-                "summary": "Rebuild deployment",
+                "summary": "Create deployment build",
                 "operationId": "functionsCreateBuild",
                 "consumes": [
                     "application\/json"
@@ -10746,6 +10783,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBuild",
+                    "group": "deployments",
                     "weight": 304,
                     "cookies": false,
                     "type": "",
@@ -10827,6 +10865,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentBuild",
+                    "group": "deployments",
                     "weight": 305,
                     "cookies": false,
                     "type": "",
@@ -10873,11 +10912,9 @@
         },
         "\/functions\/{functionId}\/deployments\/{deploymentId}\/download": {
             "get": {
-                "summary": "Download deployment",
+                "summary": "Get deployment download",
                 "operationId": "functionsGetDeploymentDownload",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -10895,6 +10932,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
+                    "group": "deployments",
                     "weight": 297,
                     "cookies": false,
                     "type": "location",
@@ -10945,9 +10983,7 @@
             "get": {
                 "summary": "List executions",
                 "operationId": "functionsListExecutions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -10965,6 +11001,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
+                    "group": "executions",
                     "weight": 307,
                     "cookies": false,
                     "type": "",
@@ -11047,6 +11084,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
+                    "group": "executions",
                     "weight": 306,
                     "cookies": false,
                     "type": "",
@@ -11145,9 +11183,7 @@
             "get": {
                 "summary": "Get execution",
                 "operationId": "functionsGetExecution",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11165,6 +11201,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
+                    "group": "executions",
                     "weight": 308,
                     "cookies": false,
                     "type": "",
@@ -11229,6 +11266,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
+                    "group": "executions",
                     "weight": 309,
                     "cookies": false,
                     "type": "",
@@ -11277,9 +11315,7 @@
             "get": {
                 "summary": "Get function usage",
                 "operationId": "functionsGetFunctionUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11297,6 +11333,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFunctionUsage",
+                    "group": null,
                     "weight": 294,
                     "cookies": false,
                     "type": "",
@@ -11356,9 +11393,7 @@
             "get": {
                 "summary": "List variables",
                 "operationId": "functionsListVariables",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11376,6 +11411,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
+                    "group": "variables",
                     "weight": 311,
                     "cookies": false,
                     "type": "",
@@ -11434,6 +11470,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
+                    "group": "variables",
                     "weight": 310,
                     "cookies": false,
                     "type": "",
@@ -11499,9 +11536,7 @@
             "get": {
                 "summary": "Get variable",
                 "operationId": "functionsGetVariable",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11519,6 +11554,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
+                    "group": "variables",
                     "weight": 312,
                     "cookies": false,
                     "type": "",
@@ -11585,6 +11621,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
+                    "group": "variables",
                     "weight": 313,
                     "cookies": false,
                     "type": "",
@@ -11670,6 +11707,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
+                    "group": "variables",
                     "weight": 314,
                     "cookies": false,
                     "type": "",
@@ -11738,6 +11776,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
+                    "group": "graphql",
                     "weight": 332,
                     "cookies": false,
                     "type": "graphql",
@@ -11811,6 +11850,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
+                    "group": "graphql",
                     "weight": 331,
                     "cookies": false,
                     "type": "graphql",
@@ -11864,9 +11904,7 @@
             "get": {
                 "summary": "Get HTTP",
                 "operationId": "healthGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11884,6 +11922,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "health",
                     "weight": 127,
                     "cookies": false,
                     "type": "",
@@ -11914,9 +11953,7 @@
             "get": {
                 "summary": "Get antivirus",
                 "operationId": "healthGetAntivirus",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11934,6 +11971,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAntivirus",
+                    "group": "health",
                     "weight": 148,
                     "cookies": false,
                     "type": "",
@@ -11964,9 +12002,7 @@
             "get": {
                 "summary": "Get cache",
                 "operationId": "healthGetCache",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -11984,6 +12020,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCache",
+                    "group": "health",
                     "weight": 130,
                     "cookies": false,
                     "type": "",
@@ -12014,9 +12051,7 @@
             "get": {
                 "summary": "Get the SSL certificate for a domain",
                 "operationId": "healthGetCertificate",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12034,6 +12069,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCertificate",
+                    "group": "health",
                     "weight": 135,
                     "cookies": false,
                     "type": "",
@@ -12073,9 +12109,7 @@
             "get": {
                 "summary": "Get DB",
                 "operationId": "healthGetDB",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12093,6 +12127,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDB",
+                    "group": "health",
                     "weight": 129,
                     "cookies": false,
                     "type": "",
@@ -12123,9 +12158,7 @@
             "get": {
                 "summary": "Get pubsub",
                 "operationId": "healthGetPubSub",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12143,6 +12176,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPubSub",
+                    "group": "health",
                     "weight": 131,
                     "cookies": false,
                     "type": "",
@@ -12173,9 +12207,7 @@
             "get": {
                 "summary": "Get builds queue",
                 "operationId": "healthGetQueueBuilds",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12193,6 +12225,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueBuilds",
+                    "group": "queue",
                     "weight": 137,
                     "cookies": false,
                     "type": "",
@@ -12234,9 +12267,7 @@
             "get": {
                 "summary": "Get certificates queue",
                 "operationId": "healthGetQueueCertificates",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12254,6 +12285,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueCertificates",
+                    "group": "queue",
                     "weight": 136,
                     "cookies": false,
                     "type": "",
@@ -12295,9 +12327,7 @@
             "get": {
                 "summary": "Get databases queue",
                 "operationId": "healthGetQueueDatabases",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12315,6 +12345,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDatabases",
+                    "group": "queue",
                     "weight": 138,
                     "cookies": false,
                     "type": "",
@@ -12365,9 +12396,7 @@
             "get": {
                 "summary": "Get deletes queue",
                 "operationId": "healthGetQueueDeletes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12385,6 +12414,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueDeletes",
+                    "group": "queue",
                     "weight": 139,
                     "cookies": false,
                     "type": "",
@@ -12426,9 +12456,7 @@
             "get": {
                 "summary": "Get number of failed queue jobs",
                 "operationId": "healthGetFailedJobs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12446,6 +12474,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFailedJobs",
+                    "group": "queue",
                     "weight": 149,
                     "cookies": false,
                     "type": "",
@@ -12511,9 +12540,7 @@
             "get": {
                 "summary": "Get functions queue",
                 "operationId": "healthGetQueueFunctions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12531,6 +12558,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueFunctions",
+                    "group": "queue",
                     "weight": 143,
                     "cookies": false,
                     "type": "",
@@ -12572,9 +12600,7 @@
             "get": {
                 "summary": "Get logs queue",
                 "operationId": "healthGetQueueLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12592,6 +12618,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueLogs",
+                    "group": "queue",
                     "weight": 134,
                     "cookies": false,
                     "type": "",
@@ -12633,9 +12660,7 @@
             "get": {
                 "summary": "Get mails queue",
                 "operationId": "healthGetQueueMails",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12653,6 +12678,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMails",
+                    "group": "queue",
                     "weight": 140,
                     "cookies": false,
                     "type": "",
@@ -12694,9 +12720,7 @@
             "get": {
                 "summary": "Get messaging queue",
                 "operationId": "healthGetQueueMessaging",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12714,6 +12738,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMessaging",
+                    "group": "queue",
                     "weight": 141,
                     "cookies": false,
                     "type": "",
@@ -12755,9 +12780,7 @@
             "get": {
                 "summary": "Get migrations queue",
                 "operationId": "healthGetQueueMigrations",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12775,6 +12798,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueMigrations",
+                    "group": "queue",
                     "weight": 142,
                     "cookies": false,
                     "type": "",
@@ -12816,9 +12840,7 @@
             "get": {
                 "summary": "Get stats  resources queue",
                 "operationId": "healthGetQueueStatsResources",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12836,6 +12858,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
+                    "group": "queue",
                     "weight": 144,
                     "cookies": false,
                     "type": "",
@@ -12877,9 +12900,7 @@
             "get": {
                 "summary": "Get stats usage queue",
                 "operationId": "healthGetQueueUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12897,6 +12918,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueUsage",
+                    "group": "queue",
                     "weight": 145,
                     "cookies": false,
                     "type": "",
@@ -12938,9 +12960,7 @@
             "get": {
                 "summary": "Get webhooks queue",
                 "operationId": "healthGetQueueWebhooks",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -12958,6 +12978,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
+                    "group": "queue",
                     "weight": 133,
                     "cookies": false,
                     "type": "",
@@ -12999,9 +13020,7 @@
             "get": {
                 "summary": "Get storage",
                 "operationId": "healthGetStorage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13019,6 +13038,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorage",
+                    "group": "storage",
                     "weight": 147,
                     "cookies": false,
                     "type": "",
@@ -13049,9 +13069,7 @@
             "get": {
                 "summary": "Get local storage",
                 "operationId": "healthGetStorageLocal",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13069,6 +13087,7 @@
                 },
                 "x-appwrite": {
                     "method": "getStorageLocal",
+                    "group": "storage",
                     "weight": 146,
                     "cookies": false,
                     "type": "",
@@ -13099,9 +13118,7 @@
             "get": {
                 "summary": "Get time",
                 "operationId": "healthGetTime",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13119,6 +13136,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTime",
+                    "group": "health",
                     "weight": 132,
                     "cookies": false,
                     "type": "",
@@ -13149,9 +13167,7 @@
             "get": {
                 "summary": "Get user locale",
                 "operationId": "localeGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13169,6 +13185,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": null,
                     "weight": 119,
                     "cookies": false,
                     "type": "",
@@ -13202,9 +13219,7 @@
             "get": {
                 "summary": "List locale codes",
                 "operationId": "localeListCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13222,6 +13237,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
+                    "group": null,
                     "weight": 120,
                     "cookies": false,
                     "type": "",
@@ -13255,9 +13271,7 @@
             "get": {
                 "summary": "List continents",
                 "operationId": "localeListContinents",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13275,6 +13289,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
+                    "group": null,
                     "weight": 124,
                     "cookies": false,
                     "type": "",
@@ -13308,9 +13323,7 @@
             "get": {
                 "summary": "List countries",
                 "operationId": "localeListCountries",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13328,6 +13341,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
+                    "group": null,
                     "weight": 121,
                     "cookies": false,
                     "type": "",
@@ -13361,9 +13375,7 @@
             "get": {
                 "summary": "List EU countries",
                 "operationId": "localeListCountriesEU",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13381,6 +13393,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
+                    "group": null,
                     "weight": 122,
                     "cookies": false,
                     "type": "",
@@ -13414,9 +13427,7 @@
             "get": {
                 "summary": "List countries phone codes",
                 "operationId": "localeListCountriesPhones",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13434,6 +13445,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
+                    "group": null,
                     "weight": 123,
                     "cookies": false,
                     "type": "",
@@ -13467,9 +13479,7 @@
             "get": {
                 "summary": "List currencies",
                 "operationId": "localeListCurrencies",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13487,6 +13497,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
+                    "group": null,
                     "weight": 125,
                     "cookies": false,
                     "type": "",
@@ -13520,9 +13531,7 @@
             "get": {
                 "summary": "List languages",
                 "operationId": "localeListLanguages",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13540,6 +13549,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
+                    "group": null,
                     "weight": 126,
                     "cookies": false,
                     "type": "",
@@ -13573,9 +13583,7 @@
             "get": {
                 "summary": "List messages",
                 "operationId": "messagingListMessages",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -13593,6 +13601,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
+                    "group": "messages",
                     "weight": 385,
                     "cookies": false,
                     "type": "",
@@ -13667,6 +13676,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
+                    "group": "messages",
                     "weight": 382,
                     "cookies": false,
                     "type": "",
@@ -13824,6 +13834,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "messages",
                     "weight": 389,
                     "cookies": false,
                     "type": "",
@@ -13978,6 +13989,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
+                    "group": "messages",
                     "weight": 384,
                     "cookies": false,
                     "type": "",
@@ -14172,6 +14184,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
+                    "group": "messages",
                     "weight": 391,
                     "cookies": false,
                     "type": "",
@@ -14365,6 +14378,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
+                    "group": "messages",
                     "weight": 383,
                     "cookies": false,
                     "type": "",
@@ -14482,6 +14496,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
+                    "group": "messages",
                     "weight": 390,
                     "cookies": false,
                     "type": "",
@@ -14577,9 +14592,7 @@
             "get": {
                 "summary": "Get message",
                 "operationId": "messagingGetMessage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -14597,6 +14610,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
+                    "group": "messages",
                     "weight": 388,
                     "cookies": false,
                     "type": "",
@@ -14651,6 +14665,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "messages",
                     "weight": 392,
                     "cookies": false,
                     "type": "",
@@ -14692,9 +14707,7 @@
             "get": {
                 "summary": "List message logs",
                 "operationId": "messagingListMessageLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -14712,6 +14725,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
+                    "group": "logs",
                     "weight": 386,
                     "cookies": false,
                     "type": "",
@@ -14765,9 +14779,7 @@
             "get": {
                 "summary": "List message targets",
                 "operationId": "messagingListTargets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -14785,6 +14797,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
+                    "group": "messages",
                     "weight": 387,
                     "cookies": false,
                     "type": "",
@@ -14838,9 +14851,7 @@
             "get": {
                 "summary": "List providers",
                 "operationId": "messagingListProviders",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -14858,6 +14869,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
+                    "group": "providers",
                     "weight": 357,
                     "cookies": false,
                     "type": "",
@@ -14932,6 +14944,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
+                    "group": "providers",
                     "weight": 356,
                     "cookies": false,
                     "type": "",
@@ -15046,6 +15059,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
+                    "group": "providers",
                     "weight": 369,
                     "cookies": false,
                     "type": "",
@@ -15158,6 +15172,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
+                    "group": "providers",
                     "weight": 355,
                     "cookies": false,
                     "type": "",
@@ -15248,6 +15263,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
+                    "group": "providers",
                     "weight": 368,
                     "cookies": false,
                     "type": "",
@@ -15336,6 +15352,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
+                    "group": "providers",
                     "weight": 347,
                     "cookies": false,
                     "type": "",
@@ -15462,6 +15479,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
+                    "group": "providers",
                     "weight": 360,
                     "cookies": false,
                     "type": "",
@@ -15586,6 +15604,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
+                    "group": "providers",
                     "weight": 350,
                     "cookies": false,
                     "type": "",
@@ -15688,6 +15707,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
+                    "group": "providers",
                     "weight": 363,
                     "cookies": false,
                     "type": "",
@@ -15788,6 +15808,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
+                    "group": "providers",
                     "weight": 348,
                     "cookies": false,
                     "type": "",
@@ -15902,6 +15923,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
+                    "group": "providers",
                     "weight": 361,
                     "cookies": false,
                     "type": "",
@@ -16014,6 +16036,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
+                    "group": "providers",
                     "weight": 349,
                     "cookies": false,
                     "type": "",
@@ -16172,6 +16195,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
+                    "group": "providers",
                     "weight": 362,
                     "cookies": false,
                     "type": "",
@@ -16327,6 +16351,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
+                    "group": "providers",
                     "weight": 351,
                     "cookies": false,
                     "type": "",
@@ -16429,6 +16454,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
+                    "group": "providers",
                     "weight": 364,
                     "cookies": false,
                     "type": "",
@@ -16529,6 +16555,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
+                    "group": "providers",
                     "weight": 352,
                     "cookies": false,
                     "type": "",
@@ -16631,6 +16658,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
+                    "group": "providers",
                     "weight": 365,
                     "cookies": false,
                     "type": "",
@@ -16731,6 +16759,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
+                    "group": "providers",
                     "weight": 353,
                     "cookies": false,
                     "type": "",
@@ -16833,6 +16862,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
+                    "group": "providers",
                     "weight": 366,
                     "cookies": false,
                     "type": "",
@@ -16933,6 +16963,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
+                    "group": "providers",
                     "weight": 354,
                     "cookies": false,
                     "type": "",
@@ -17035,6 +17066,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
+                    "group": "providers",
                     "weight": 367,
                     "cookies": false,
                     "type": "",
@@ -17115,9 +17147,7 @@
             "get": {
                 "summary": "Get provider",
                 "operationId": "messagingGetProvider",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17135,6 +17165,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
+                    "group": "providers",
                     "weight": 359,
                     "cookies": false,
                     "type": "",
@@ -17189,6 +17220,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
+                    "group": "providers",
                     "weight": 370,
                     "cookies": false,
                     "type": "",
@@ -17230,9 +17262,7 @@
             "get": {
                 "summary": "List provider logs",
                 "operationId": "messagingListProviderLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17250,6 +17280,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
+                    "group": "providers",
                     "weight": 358,
                     "cookies": false,
                     "type": "",
@@ -17303,9 +17334,7 @@
             "get": {
                 "summary": "List subscriber logs",
                 "operationId": "messagingListSubscriberLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17323,6 +17352,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
+                    "group": "subscribers",
                     "weight": 379,
                     "cookies": false,
                     "type": "",
@@ -17376,9 +17406,7 @@
             "get": {
                 "summary": "List topics",
                 "operationId": "messagingListTopics",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17396,6 +17424,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
+                    "group": "topics",
                     "weight": 372,
                     "cookies": false,
                     "type": "",
@@ -17468,6 +17497,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
+                    "group": "topics",
                     "weight": 371,
                     "cookies": false,
                     "type": "",
@@ -17537,9 +17567,7 @@
             "get": {
                 "summary": "Get topic",
                 "operationId": "messagingGetTopic",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17557,6 +17585,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
+                    "group": "topics",
                     "weight": 374,
                     "cookies": false,
                     "type": "",
@@ -17616,6 +17645,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
+                    "group": "topics",
                     "weight": 375,
                     "cookies": false,
                     "type": "",
@@ -17694,6 +17724,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
+                    "group": "topics",
                     "weight": 376,
                     "cookies": false,
                     "type": "",
@@ -17735,9 +17766,7 @@
             "get": {
                 "summary": "List topic logs",
                 "operationId": "messagingListTopicLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17755,6 +17784,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
+                    "group": "topics",
                     "weight": 373,
                     "cookies": false,
                     "type": "",
@@ -17808,9 +17838,7 @@
             "get": {
                 "summary": "List subscribers",
                 "operationId": "messagingListSubscribers",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17828,6 +17856,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
+                    "group": "subscribers",
                     "weight": 378,
                     "cookies": false,
                     "type": "",
@@ -17908,6 +17937,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
+                    "group": "subscribers",
                     "weight": 377,
                     "cookies": false,
                     "type": "",
@@ -17977,9 +18007,7 @@
             "get": {
                 "summary": "Get subscriber",
                 "operationId": "messagingGetSubscriber",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -17997,6 +18025,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
+                    "group": "subscribers",
                     "weight": 380,
                     "cookies": false,
                     "type": "",
@@ -18059,6 +18088,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
+                    "group": "subscribers",
                     "weight": 381,
                     "cookies": false,
                     "type": "",
@@ -18111,9 +18141,7 @@
             "get": {
                 "summary": "List migrations",
                 "operationId": "migrationsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18131,6 +18159,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": null,
                     "weight": 339,
                     "cookies": false,
                     "type": "",
@@ -18181,7 +18210,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite data",
+                "summary": "Create Appwrite migration",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "consumes": [
                     "application\/json"
@@ -18203,6 +18232,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAppwriteMigration",
+                    "group": null,
                     "weight": 335,
                     "cookies": false,
                     "type": "",
@@ -18274,11 +18304,9 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite data",
+                "summary": "Get Appwrite migration report",
                 "operationId": "migrationsGetAppwriteReport",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18296,6 +18324,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
+                    "group": null,
                     "weight": 341,
                     "cookies": false,
                     "type": "",
@@ -18361,7 +18390,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase data",
+                "summary": "Create Firebase migration",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18383,6 +18412,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
+                    "group": null,
                     "weight": 336,
                     "cookies": false,
                     "type": "",
@@ -18440,11 +18470,9 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase data",
+                "summary": "Get Firebase migration report",
                 "operationId": "migrationsGetFirebaseReport",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18462,6 +18490,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
+                    "group": null,
                     "weight": 342,
                     "cookies": false,
                     "type": "",
@@ -18510,7 +18539,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost data",
+                "summary": "Create NHost migration",
                 "operationId": "migrationsCreateNHostMigration",
                 "consumes": [
                     "application\/json"
@@ -18532,6 +18561,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
+                    "group": null,
                     "weight": 338,
                     "cookies": false,
                     "type": "",
@@ -18630,11 +18660,9 @@
         },
         "\/migrations\/nhost\/report": {
             "get": {
-                "summary": "Generate a report on NHost Data",
+                "summary": "Get NHost migration report",
                 "operationId": "migrationsGetNHostReport",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18652,6 +18680,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
+                    "group": null,
                     "weight": 344,
                     "cookies": false,
                     "type": "",
@@ -18749,7 +18778,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase data",
+                "summary": "Create Supabase migration",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18771,6 +18800,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
+                    "group": null,
                     "weight": 337,
                     "cookies": false,
                     "type": "",
@@ -18862,11 +18892,9 @@
         },
         "\/migrations\/supabase\/report": {
             "get": {
-                "summary": "Generate a report on Supabase Data",
+                "summary": "Get Supabase migration report",
                 "operationId": "migrationsGetSupabaseReport",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18884,6 +18912,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
+                    "group": null,
                     "weight": 343,
                     "cookies": false,
                     "type": "",
@@ -18976,9 +19005,7 @@
             "get": {
                 "summary": "Get migration",
                 "operationId": "migrationsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -18996,6 +19023,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": null,
                     "weight": 340,
                     "cookies": false,
                     "type": "",
@@ -19031,7 +19059,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry migration",
+                "summary": "Update retry migration",
                 "operationId": "migrationsRetry",
                 "consumes": [
                     "application\/json"
@@ -19053,6 +19081,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
+                    "group": null,
                     "weight": 345,
                     "cookies": false,
                     "type": "",
@@ -19105,6 +19134,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": null,
                     "weight": 346,
                     "cookies": false,
                     "type": "",
@@ -19144,9 +19174,7 @@
             "get": {
                 "summary": "Get project usage stats",
                 "operationId": "projectGetUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19164,6 +19192,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": null,
                     "weight": 197,
                     "cookies": false,
                     "type": "",
@@ -19227,9 +19256,7 @@
             "get": {
                 "summary": "List variables",
                 "operationId": "projectListVariables",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19247,6 +19274,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
+                    "group": null,
                     "weight": 199,
                     "cookies": false,
                     "type": "",
@@ -19294,6 +19322,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
+                    "group": null,
                     "weight": 198,
                     "cookies": false,
                     "type": "",
@@ -19350,9 +19379,7 @@
             "get": {
                 "summary": "Get variable",
                 "operationId": "projectGetVariable",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19370,6 +19397,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
+                    "group": null,
                     "weight": 200,
                     "cookies": false,
                     "type": "",
@@ -19427,6 +19455,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
+                    "group": null,
                     "weight": 201,
                     "cookies": false,
                     "type": "",
@@ -19503,6 +19532,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
+                    "group": null,
                     "weight": 202,
                     "cookies": false,
                     "type": "",
@@ -19542,9 +19572,7 @@
             "get": {
                 "summary": "List projects",
                 "operationId": "projectsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19562,6 +19590,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "projects",
                     "weight": 152,
                     "cookies": false,
                     "type": "",
@@ -19632,6 +19661,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "projects",
                     "weight": 151,
                     "cookies": false,
                     "type": "",
@@ -19760,9 +19790,7 @@
             "get": {
                 "summary": "Get project",
                 "operationId": "projectsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -19780,6 +19808,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "projects",
                     "weight": 153,
                     "cookies": false,
                     "type": "",
@@ -19837,6 +19866,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
+                    "group": "projects",
                     "weight": 154,
                     "cookies": false,
                     "type": "",
@@ -19961,6 +19991,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "projects",
                     "weight": 171,
                     "cookies": false,
                     "type": "",
@@ -20020,6 +20051,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApiStatus",
+                    "group": "projects",
                     "weight": 158,
                     "cookies": false,
                     "type": "",
@@ -20111,6 +20143,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApiStatusAll",
+                    "group": "projects",
                     "weight": 159,
                     "cookies": false,
                     "type": "",
@@ -20188,6 +20221,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthDuration",
+                    "group": "auth",
                     "weight": 164,
                     "cookies": false,
                     "type": "",
@@ -20265,6 +20299,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthLimit",
+                    "group": "auth",
                     "weight": 163,
                     "cookies": false,
                     "type": "",
@@ -20342,6 +20377,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthSessionsLimit",
+                    "group": "auth",
                     "weight": 169,
                     "cookies": false,
                     "type": "",
@@ -20419,6 +20455,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipsPrivacy",
+                    "group": "auth",
                     "weight": 162,
                     "cookies": false,
                     "type": "",
@@ -20510,6 +20547,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMockNumbers",
+                    "group": "auth",
                     "weight": 170,
                     "cookies": false,
                     "type": "",
@@ -20590,6 +20628,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthPasswordDictionary",
+                    "group": "auth",
                     "weight": 167,
                     "cookies": false,
                     "type": "",
@@ -20667,6 +20706,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthPasswordHistory",
+                    "group": "auth",
                     "weight": 166,
                     "cookies": false,
                     "type": "",
@@ -20722,7 +20762,7 @@
         },
         "\/projects\/{projectId}\/auth\/personal-data": {
             "patch": {
-                "summary": "Enable or disable checking user passwords for similarity with their personal data.",
+                "summary": "Update personal data check",
                 "operationId": "projectsUpdatePersonalDataCheck",
                 "consumes": [
                     "application\/json"
@@ -20744,6 +20784,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePersonalDataCheck",
+                    "group": "auth",
                     "weight": 168,
                     "cookies": false,
                     "type": "",
@@ -20821,6 +20862,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSessionAlerts",
+                    "group": "auth",
                     "weight": 161,
                     "cookies": false,
                     "type": "",
@@ -20898,6 +20940,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateAuthStatus",
+                    "group": "auth",
                     "weight": 165,
                     "cookies": false,
                     "type": "",
@@ -20994,6 +21037,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "auth",
                     "weight": 183,
                     "cookies": false,
                     "type": "",
@@ -21060,9 +21104,7 @@
             "get": {
                 "summary": "List keys",
                 "operationId": "projectsListKeys",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21080,6 +21122,7 @@
                 },
                 "x-appwrite": {
                     "method": "listKeys",
+                    "group": "keys",
                     "weight": 179,
                     "cookies": false,
                     "type": "",
@@ -21137,6 +21180,7 @@
                 },
                 "x-appwrite": {
                     "method": "createKey",
+                    "group": "keys",
                     "weight": 178,
                     "cookies": false,
                     "type": "",
@@ -21210,9 +21254,7 @@
             "get": {
                 "summary": "Get key",
                 "operationId": "projectsGetKey",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21230,6 +21272,7 @@
                 },
                 "x-appwrite": {
                     "method": "getKey",
+                    "group": "keys",
                     "weight": 180,
                     "cookies": false,
                     "type": "",
@@ -21295,6 +21338,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateKey",
+                    "group": "keys",
                     "weight": 181,
                     "cookies": false,
                     "type": "",
@@ -21389,6 +21433,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteKey",
+                    "group": "keys",
                     "weight": 182,
                     "cookies": false,
                     "type": "",
@@ -21456,6 +21501,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateOAuth2",
+                    "group": "auth",
                     "weight": 160,
                     "cookies": false,
                     "type": "",
@@ -21575,9 +21621,7 @@
             "get": {
                 "summary": "List platforms",
                 "operationId": "projectsListPlatforms",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21595,6 +21639,7 @@
                 },
                 "x-appwrite": {
                     "method": "listPlatforms",
+                    "group": "platforms",
                     "weight": 185,
                     "cookies": false,
                     "type": "",
@@ -21652,6 +21697,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPlatform",
+                    "group": "platforms",
                     "weight": 184,
                     "cookies": false,
                     "type": "",
@@ -21753,9 +21799,7 @@
             "get": {
                 "summary": "Get platform",
                 "operationId": "projectsGetPlatform",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -21773,6 +21817,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPlatform",
+                    "group": "platforms",
                     "weight": 186,
                     "cookies": false,
                     "type": "",
@@ -21838,6 +21883,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePlatform",
+                    "group": "platforms",
                     "weight": 187,
                     "cookies": false,
                     "type": "",
@@ -21934,6 +21980,7 @@
                 },
                 "x-appwrite": {
                     "method": "deletePlatform",
+                    "group": "platforms",
                     "weight": 188,
                     "cookies": false,
                     "type": "",
@@ -22001,6 +22048,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateServiceStatus",
+                    "group": "projects",
                     "weight": 156,
                     "cookies": false,
                     "type": "",
@@ -22100,6 +22148,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateServiceStatusAll",
+                    "group": "projects",
                     "weight": 157,
                     "cookies": false,
                     "type": "",
@@ -22177,6 +22226,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtp",
+                    "group": "templates",
                     "weight": 189,
                     "cookies": false,
                     "type": "",
@@ -22305,6 +22355,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpTest",
+                    "group": "templates",
                     "weight": 190,
                     "cookies": false,
                     "type": "",
@@ -22442,6 +22493,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTeam",
+                    "group": "projects",
                     "weight": 155,
                     "cookies": false,
                     "type": "",
@@ -22499,9 +22551,7 @@
             "get": {
                 "summary": "Get custom email template",
                 "operationId": "projectsGetEmailTemplate",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -22519,6 +22569,7 @@
                 },
                 "x-appwrite": {
                     "method": "getEmailTemplate",
+                    "group": "templates",
                     "weight": 192,
                     "cookies": false,
                     "type": "",
@@ -22738,6 +22789,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailTemplate",
+                    "group": "templates",
                     "weight": 194,
                     "cookies": false,
                     "type": "",
@@ -22978,7 +23030,7 @@
                 ]
             },
             "delete": {
-                "summary": "Reset custom email template",
+                "summary": "Delete custom email template",
                 "operationId": "projectsDeleteEmailTemplate",
                 "consumes": [
                     "application\/json"
@@ -23000,6 +23052,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteEmailTemplate",
+                    "group": "templates",
                     "weight": 196,
                     "cookies": false,
                     "type": "",
@@ -23201,9 +23254,7 @@
             "get": {
                 "summary": "Get custom SMS template",
                 "operationId": "projectsGetSmsTemplate",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -23221,6 +23272,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSmsTemplate",
+                    "group": "templates",
                     "weight": 191,
                     "cookies": false,
                     "type": "",
@@ -23437,6 +23489,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmsTemplate",
+                    "group": "templates",
                     "weight": 193,
                     "cookies": false,
                     "type": "",
@@ -23671,6 +23724,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSmsTemplate",
+                    "group": "templates",
                     "weight": 195,
                     "cookies": false,
                     "type": "",
@@ -23869,9 +23923,7 @@
             "get": {
                 "summary": "List webhooks",
                 "operationId": "projectsListWebhooks",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -23889,6 +23941,7 @@
                 },
                 "x-appwrite": {
                     "method": "listWebhooks",
+                    "group": "webhooks",
                     "weight": 173,
                     "cookies": false,
                     "type": "",
@@ -23946,6 +23999,7 @@
                 },
                 "x-appwrite": {
                     "method": "createWebhook",
+                    "group": "webhooks",
                     "weight": 172,
                     "cookies": false,
                     "type": "",
@@ -24045,9 +24099,7 @@
             "get": {
                 "summary": "Get webhook",
                 "operationId": "projectsGetWebhook",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -24065,6 +24117,7 @@
                 },
                 "x-appwrite": {
                     "method": "getWebhook",
+                    "group": "webhooks",
                     "weight": 174,
                     "cookies": false,
                     "type": "",
@@ -24130,6 +24183,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateWebhook",
+                    "group": "webhooks",
                     "weight": 175,
                     "cookies": false,
                     "type": "",
@@ -24250,6 +24304,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteWebhook",
+                    "group": "webhooks",
                     "weight": 177,
                     "cookies": false,
                     "type": "",
@@ -24317,6 +24372,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateWebhookSignature",
+                    "group": "webhooks",
                     "weight": 176,
                     "cookies": false,
                     "type": "",
@@ -24364,9 +24420,7 @@
             "get": {
                 "summary": "List rules",
                 "operationId": "proxyListRules",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -24384,6 +24438,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRules",
+                    "group": null,
                     "weight": 318,
                     "cookies": false,
                     "type": "",
@@ -24454,6 +24509,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRule",
+                    "group": null,
                     "weight": 317,
                     "cookies": false,
                     "type": "",
@@ -24522,9 +24578,7 @@
             "get": {
                 "summary": "Get rule",
                 "operationId": "proxyGetRule",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -24542,6 +24596,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRule",
+                    "group": null,
                     "weight": 319,
                     "cookies": false,
                     "type": "",
@@ -24594,6 +24649,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteRule",
+                    "group": null,
                     "weight": 320,
                     "cookies": false,
                     "type": "",
@@ -24653,6 +24709,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRuleVerification",
+                    "group": null,
                     "weight": 321,
                     "cookies": false,
                     "type": "",
@@ -24692,9 +24749,7 @@
             "get": {
                 "summary": "List buckets",
                 "operationId": "storageListBuckets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -24712,6 +24767,7 @@
                 },
                 "x-appwrite": {
                     "method": "listBuckets",
+                    "group": "buckets",
                     "weight": 204,
                     "cookies": false,
                     "type": "",
@@ -24783,6 +24839,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBucket",
+                    "group": "buckets",
                     "weight": 203,
                     "cookies": false,
                     "type": "",
@@ -24901,9 +24958,7 @@
             "get": {
                 "summary": "Get bucket",
                 "operationId": "storageGetBucket",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -24921,6 +24976,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucket",
+                    "group": "buckets",
                     "weight": 205,
                     "cookies": false,
                     "type": "",
@@ -24979,6 +25035,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateBucket",
+                    "group": "buckets",
                     "weight": 206,
                     "cookies": false,
                     "type": "",
@@ -25111,6 +25168,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteBucket",
+                    "group": "buckets",
                     "weight": 207,
                     "cookies": false,
                     "type": "",
@@ -25151,9 +25209,7 @@
             "get": {
                 "summary": "List files",
                 "operationId": "storageListFiles",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -25171,6 +25227,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
+                    "group": "files",
                     "weight": 209,
                     "cookies": false,
                     "type": "",
@@ -25253,6 +25310,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
+                    "group": "files",
                     "weight": 208,
                     "cookies": false,
                     "type": "upload",
@@ -25324,9 +25382,7 @@
             "get": {
                 "summary": "Get file",
                 "operationId": "storageGetFile",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -25344,6 +25400,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
+                    "group": "files",
                     "weight": 210,
                     "cookies": false,
                     "type": "",
@@ -25413,6 +25470,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
+                    "group": "files",
                     "weight": 215,
                     "cookies": false,
                     "type": "",
@@ -25501,6 +25559,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
+                    "group": "files",
                     "weight": 216,
                     "cookies": false,
                     "type": "",
@@ -25552,9 +25611,7 @@
             "get": {
                 "summary": "Get file for download",
                 "operationId": "storageGetFileDownload",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -25572,6 +25629,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
+                    "group": "files",
                     "weight": 212,
                     "cookies": false,
                     "type": "location",
@@ -25623,9 +25681,7 @@
             "get": {
                 "summary": "Get file preview",
                 "operationId": "storageGetFilePreview",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "image\/*"
                 ],
@@ -25643,6 +25699,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
+                    "group": "files",
                     "weight": 211,
                     "cookies": false,
                     "type": "location",
@@ -25822,9 +25879,7 @@
             "get": {
                 "summary": "Get file for view",
                 "operationId": "storageGetFileView",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "*\/*"
                 ],
@@ -25842,6 +25897,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
+                    "group": "files",
                     "weight": 213,
                     "cookies": false,
                     "type": "location",
@@ -25893,9 +25949,7 @@
             "get": {
                 "summary": "Get storage usage stats",
                 "operationId": "storageGetUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -25913,6 +25967,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": null,
                     "weight": 217,
                     "cookies": false,
                     "type": "",
@@ -25964,9 +26019,7 @@
             "get": {
                 "summary": "Get bucket usage stats",
                 "operationId": "storageGetBucketUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -25984,6 +26037,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBucketUsage",
+                    "group": null,
                     "weight": 218,
                     "cookies": false,
                     "type": "",
@@ -26043,9 +26097,7 @@
             "get": {
                 "summary": "List teams",
                 "operationId": "teamsList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -26063,6 +26115,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "teams",
                     "weight": 220,
                     "cookies": false,
                     "type": "",
@@ -26137,6 +26190,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "teams",
                     "weight": 219,
                     "cookies": false,
                     "type": "",
@@ -26208,9 +26262,7 @@
             "get": {
                 "summary": "Get team",
                 "operationId": "teamsGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -26228,6 +26280,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "teams",
                     "weight": 221,
                     "cookies": false,
                     "type": "",
@@ -26289,6 +26342,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "teams",
                     "weight": 223,
                     "cookies": false,
                     "type": "",
@@ -26363,6 +26417,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "teams",
                     "weight": 225,
                     "cookies": false,
                     "type": "",
@@ -26406,9 +26461,7 @@
             "get": {
                 "summary": "List team logs",
                 "operationId": "teamsListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -26426,6 +26479,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 232,
                     "cookies": false,
                     "type": "",
@@ -26477,9 +26531,7 @@
             "get": {
                 "summary": "List team memberships",
                 "operationId": "teamsListMemberships",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -26497,6 +26549,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
+                    "group": "memberships",
                     "weight": 227,
                     "cookies": false,
                     "type": "",
@@ -26579,6 +26632,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
+                    "group": "memberships",
                     "weight": 226,
                     "cookies": false,
                     "type": "",
@@ -26673,9 +26727,7 @@
             "get": {
                 "summary": "Get team membership",
                 "operationId": "teamsGetMembership",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -26693,6 +26745,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
+                    "group": "memberships",
                     "weight": 228,
                     "cookies": false,
                     "type": "",
@@ -26762,6 +26815,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
+                    "group": "memberships",
                     "weight": 229,
                     "cookies": false,
                     "type": "",
@@ -26847,6 +26901,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
+                    "group": "memberships",
                     "weight": 231,
                     "cookies": false,
                     "type": "",
@@ -26918,6 +26973,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
+                    "group": "memberships",
                     "weight": 230,
                     "cookies": false,
                     "type": "",
@@ -26992,9 +27048,7 @@
             "get": {
                 "summary": "Get team preferences",
                 "operationId": "teamsGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -27012,6 +27066,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "teams",
                     "weight": 222,
                     "cookies": false,
                     "type": "",
@@ -27071,6 +27126,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "teams",
                     "weight": 224,
                     "cookies": false,
                     "type": "",
@@ -27130,9 +27186,7 @@
             "get": {
                 "summary": "List users",
                 "operationId": "usersList",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -27150,6 +27204,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
+                    "group": "users",
                     "weight": 242,
                     "cookies": false,
                     "type": "",
@@ -27221,6 +27276,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
+                    "group": "users",
                     "weight": 233,
                     "cookies": false,
                     "type": "",
@@ -27315,6 +27371,7 @@
                 },
                 "x-appwrite": {
                     "method": "createArgon2User",
+                    "group": "users",
                     "weight": 236,
                     "cookies": false,
                     "type": "",
@@ -27405,6 +27462,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBcryptUser",
+                    "group": "users",
                     "weight": 234,
                     "cookies": false,
                     "type": "",
@@ -27475,9 +27533,7 @@
             "get": {
                 "summary": "List identities",
                 "operationId": "usersListIdentities",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -27495,6 +27551,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
+                    "group": "identities",
                     "weight": 250,
                     "cookies": false,
                     "type": "",
@@ -27563,6 +27620,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
+                    "group": "identities",
                     "weight": 273,
                     "cookies": false,
                     "type": "",
@@ -27623,6 +27681,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMD5User",
+                    "group": "users",
                     "weight": 235,
                     "cookies": false,
                     "type": "",
@@ -27713,6 +27772,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPHPassUser",
+                    "group": "users",
                     "weight": 238,
                     "cookies": false,
                     "type": "",
@@ -27803,6 +27863,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptUser",
+                    "group": "users",
                     "weight": 239,
                     "cookies": false,
                     "type": "",
@@ -27928,6 +27989,7 @@
                 },
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
+                    "group": "users",
                     "weight": 240,
                     "cookies": false,
                     "type": "",
@@ -28039,6 +28101,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSHAUser",
+                    "group": "users",
                     "weight": 237,
                     "cookies": false,
                     "type": "",
@@ -28130,9 +28193,7 @@
             "get": {
                 "summary": "Get users usage stats",
                 "operationId": "usersGetUsage",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28150,6 +28211,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
+                    "group": null,
                     "weight": 275,
                     "cookies": false,
                     "type": "",
@@ -28201,9 +28263,7 @@
             "get": {
                 "summary": "Get user",
                 "operationId": "usersGet",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28221,6 +28281,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
+                    "group": "users",
                     "weight": 243,
                     "cookies": false,
                     "type": "",
@@ -28274,6 +28335,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
+                    "group": "users",
                     "weight": 271,
                     "cookies": false,
                     "type": "",
@@ -28334,6 +28396,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
+                    "group": "users",
                     "weight": 256,
                     "cookies": false,
                     "type": "",
@@ -28412,6 +28475,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
+                    "group": "sessions",
                     "weight": 274,
                     "cookies": false,
                     "type": "",
@@ -28493,6 +28557,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateLabels",
+                    "group": "users",
                     "weight": 252,
                     "cookies": false,
                     "type": "",
@@ -28554,9 +28619,7 @@
             "get": {
                 "summary": "List user logs",
                 "operationId": "usersListLogs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28574,6 +28637,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
+                    "group": "logs",
                     "weight": 248,
                     "cookies": false,
                     "type": "",
@@ -28626,9 +28690,7 @@
             "get": {
                 "summary": "List user memberships",
                 "operationId": "usersListMemberships",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28646,6 +28708,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
+                    "group": "memberships",
                     "weight": 247,
                     "cookies": false,
                     "type": "",
@@ -28706,6 +28769,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfa",
+                    "group": "users",
                     "weight": 261,
                     "cookies": false,
                     "type": "",
@@ -28779,6 +28843,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
+                    "group": "mfa",
                     "weight": 266,
                     "cookies": false,
                     "type": "",
@@ -28832,9 +28897,7 @@
             "get": {
                 "summary": "List factors",
                 "operationId": "usersListMfaFactors",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28852,6 +28915,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
+                    "group": "mfa",
                     "weight": 262,
                     "cookies": false,
                     "type": "",
@@ -28892,9 +28956,7 @@
             "get": {
                 "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -28912,6 +28974,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 263,
                     "cookies": false,
                     "type": "",
@@ -28948,7 +29011,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA recovery codes",
+                "summary": "Update MFA recovery codes (regenerate)",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -28970,6 +29033,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 265,
                     "cookies": false,
                     "type": "",
@@ -29028,6 +29092,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
+                    "group": "mfa",
                     "weight": 264,
                     "cookies": false,
                     "type": "",
@@ -29088,6 +29153,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
+                    "group": "users",
                     "weight": 254,
                     "cookies": false,
                     "type": "",
@@ -29166,6 +29232,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
+                    "group": "users",
                     "weight": 255,
                     "cookies": false,
                     "type": "",
@@ -29244,6 +29311,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
+                    "group": "users",
                     "weight": 257,
                     "cookies": false,
                     "type": "",
@@ -29302,9 +29370,7 @@
             "get": {
                 "summary": "Get user preferences",
                 "operationId": "usersGetPrefs",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -29322,6 +29388,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
+                    "group": "users",
                     "weight": 244,
                     "cookies": false,
                     "type": "",
@@ -29380,6 +29447,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
+                    "group": "users",
                     "weight": 259,
                     "cookies": false,
                     "type": "",
@@ -29438,9 +29506,7 @@
             "get": {
                 "summary": "List user sessions",
                 "operationId": "usersListSessions",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -29458,6 +29524,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
+                    "group": "sessions",
                     "weight": 246,
                     "cookies": false,
                     "type": "",
@@ -29516,6 +29583,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
+                    "group": "sessions",
                     "weight": 267,
                     "cookies": false,
                     "type": "",
@@ -29569,6 +29637,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
+                    "group": "sessions",
                     "weight": 270,
                     "cookies": false,
                     "type": "",
@@ -29624,6 +29693,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
+                    "group": "sessions",
                     "weight": 269,
                     "cookies": false,
                     "type": "",
@@ -29692,6 +29762,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
+                    "group": "users",
                     "weight": 251,
                     "cookies": false,
                     "type": "",
@@ -29750,9 +29821,7 @@
             "get": {
                 "summary": "List user targets",
                 "operationId": "usersListTargets",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -29770,6 +29839,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
+                    "group": "targets",
                     "weight": 249,
                     "cookies": false,
                     "type": "",
@@ -29841,6 +29911,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTarget",
+                    "group": "targets",
                     "weight": 241,
                     "cookies": false,
                     "type": "",
@@ -29933,9 +30004,7 @@
             "get": {
                 "summary": "Get user target",
                 "operationId": "usersGetTarget",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -29953,6 +30022,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTarget",
+                    "group": "targets",
                     "weight": 245,
                     "cookies": false,
                     "type": "",
@@ -30020,6 +30090,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTarget",
+                    "group": "targets",
                     "weight": 260,
                     "cookies": false,
                     "type": "",
@@ -30109,6 +30180,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTarget",
+                    "group": "targets",
                     "weight": 272,
                     "cookies": false,
                     "type": "",
@@ -30178,6 +30250,7 @@
                 },
                 "x-appwrite": {
                     "method": "createToken",
+                    "group": "sessions",
                     "weight": 268,
                     "cookies": false,
                     "type": "",
@@ -30259,6 +30332,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmailVerification",
+                    "group": "users",
                     "weight": 258,
                     "cookies": false,
                     "type": "",
@@ -30337,6 +30411,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
+                    "group": "users",
                     "weight": 253,
                     "cookies": false,
                     "type": "",
@@ -30395,9 +30470,7 @@
             "get": {
                 "summary": "List repositories",
                 "operationId": "vcsListRepositories",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -30415,6 +30488,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRepositories",
+                    "group": "repositories",
                     "weight": 280,
                     "cookies": false,
                     "type": "",
@@ -30481,6 +30555,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRepository",
+                    "group": "repositories",
                     "weight": 281,
                     "cookies": false,
                     "type": "",
@@ -30545,9 +30620,7 @@
             "get": {
                 "summary": "Get repository",
                 "operationId": "vcsGetRepository",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -30565,6 +30638,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRepository",
+                    "group": "repositories",
                     "weight": 282,
                     "cookies": false,
                     "type": "",
@@ -30612,9 +30686,7 @@
             "get": {
                 "summary": "List repository branches",
                 "operationId": "vcsListRepositoryBranches",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -30632,6 +30704,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRepositoryBranches",
+                    "group": "repositories",
                     "weight": 283,
                     "cookies": false,
                     "type": "",
@@ -30679,9 +30752,7 @@
             "get": {
                 "summary": "Get files and directories of a VCS repository",
                 "operationId": "vcsGetRepositoryContents",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -30699,6 +30770,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRepositoryContents",
+                    "group": "repositories",
                     "weight": 278,
                     "cookies": false,
                     "type": "",
@@ -30753,7 +30825,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/detection": {
             "post": {
-                "summary": "Detect runtime settings from source code",
+                "summary": "Create runtime settings detection",
                 "operationId": "vcsCreateRepositoryDetection",
                 "consumes": [
                     "application\/json"
@@ -30775,6 +30847,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRepositoryDetection",
+                    "group": "repositories",
                     "weight": 279,
                     "cookies": false,
                     "type": "",
@@ -30835,7 +30908,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/repositories\/{repositoryId}": {
             "patch": {
-                "summary": "Authorize external deployment",
+                "summary": "Update external deployment (authorize)",
                 "operationId": "vcsUpdateExternalDeployments",
                 "consumes": [
                     "application\/json"
@@ -30854,6 +30927,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateExternalDeployments",
+                    "group": "repositories",
                     "weight": 288,
                     "cookies": false,
                     "type": "",
@@ -30919,9 +30993,7 @@
             "get": {
                 "summary": "List installations",
                 "operationId": "vcsListInstallations",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -30939,6 +31011,7 @@
                 },
                 "x-appwrite": {
                     "method": "listInstallations",
+                    "group": "installations",
                     "weight": 285,
                     "cookies": false,
                     "type": "",
@@ -30991,9 +31064,7 @@
             "get": {
                 "summary": "Get installation",
                 "operationId": "vcsGetInstallation",
-                "consumes": [
-                    "application\/json"
-                ],
+                "consumes": [],
                 "produces": [
                     "application\/json"
                 ],
@@ -31011,6 +31082,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInstallation",
+                    "group": "installations",
                     "weight": 286,
                     "cookies": false,
                     "type": "",
@@ -31063,6 +31135,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteInstallation",
+                    "group": "installations",
                     "weight": 287,
                     "cookies": false,
                     "type": "",

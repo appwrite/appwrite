@@ -51,6 +51,9 @@ class OpenAPI3 extends Format
                 [
                     'url' => $this->getParam('endpoint', ''),
                 ],
+                [
+                    'url' => $this->getParam('endpoint.docs', ''),
+                ],
             ],
             'paths' => [],
             'tags' => $this->services,
@@ -149,6 +152,7 @@ class OpenAPI3 extends Format
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
+                    'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
