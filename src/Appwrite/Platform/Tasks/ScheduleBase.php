@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -22,6 +23,8 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
+
+    protected BrokerPool $publisher;
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
@@ -60,6 +63,8 @@ abstract class ScheduleBase extends Action
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
+
+        $this->publisher = new BrokerPool($pools->get('publisher'));
 
         /**
          * Extract only necessary attributes to lower memory used.
@@ -132,8 +137,6 @@ abstract class ScheduleBase extends Action
             $latestDocument = \end($results);
         }
 
-        $pools->reclaim();
-
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
@@ -197,8 +200,6 @@ abstract class ScheduleBase extends Action
 
                 $lastSyncUpdate = $time;
                 $timerEnd = \microtime(true);
-
-                $pools->reclaim();
 
                 Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
             });

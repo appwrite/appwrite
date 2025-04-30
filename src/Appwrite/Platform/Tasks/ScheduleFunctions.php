@@ -71,10 +71,7 @@ class ScheduleFunctions extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
-                \sleep($delay); // in seconds
-
-                $queue = $pools->get('publisher')->pop();
-                $connection = $queue->getResource();
+                \Co::sleep($delay); // in seconds
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -86,7 +83,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($connection);
+                    $queueForFunctions = new Func($this->publisher);
 
                     $queueForFunctions
                         ->setType('schedule')
@@ -96,8 +93,6 @@ class ScheduleFunctions extends ScheduleBase
                         ->setProject($schedule['project'])
                         ->trigger();
                 }
-
-                $queue->reclaim();
             });
         }
 
