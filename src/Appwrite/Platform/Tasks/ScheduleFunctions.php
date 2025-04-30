@@ -72,7 +72,7 @@ class ScheduleFunctions extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
-                \sleep($delay); // in seconds
+                \Co::sleep($delay); // in seconds
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -84,9 +84,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $publisher = new BrokerPool($pools->get('publisher'));
-
-                    $queueForFunctions = new Func($publisher);
+                    $queueForFunctions = new Func($this->publisher);
 
                     $queueForFunctions
                         ->setType('schedule')
