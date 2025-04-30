@@ -3234,7 +3234,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, int $maxBatchSize) {
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -3264,7 +3264,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if (!empty($data)) {
             // Single document provided, convert to single item array
-            // But remember that it was single, to respond with single document
+            // But remember that it was single to respond with a single document
             $isBulk = false;
             $documents = [$data];
         }
@@ -4544,7 +4544,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, fn() =>
+        $documents = $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn () =>
             $dbForProject->deleteDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $queries
