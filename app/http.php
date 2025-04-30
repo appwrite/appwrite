@@ -14,11 +14,9 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -169,7 +167,7 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
     $sleep = 1;
     $attempts = 0;
 
-    while (true) {
+    do {
         try {
             $attempts++;
             $resource = $app->getResource($resourceKey);
@@ -178,12 +176,13 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             break; // exit loop on success
         } catch (\Exception $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+            $pools->reclaim();
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
             sleep($sleep);
         }
-    }
+    } while ($attempts < $max);
 
     Console::success("[Setup] - $dbName database init started...");
 
@@ -319,7 +318,11 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $cache = $app->getResource('cache');
 
         foreach ($sharedTablesV2 as $hostname) {
-            $adapter = new DatabasePool($pools->get($hostname));
+            $adapter = $pools
+                ->get($hostname)
+                ->pop()
+                ->getResource();
+
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
                 ->setSharedTables(true)
@@ -329,7 +332,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
-            } catch (DuplicateException) {
+            } catch (Duplicate) {
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
@@ -355,6 +358,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             }
         }
 
+        $pools->reclaim();
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -469,7 +473,6 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         Console::error('[Error] Message: ' . $th->getMessage());
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
-        Console::error('[Error] Trace: ' . $th->getTraceAsString());
 
         $swooleResponse->setStatusCode(500);
 
@@ -487,11 +490,13 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         ];
 
         $swooleResponse->end(\json_encode($output));
+    } finally {
+        $pools->reclaim();
     }
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
+$http->on('Task', function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
