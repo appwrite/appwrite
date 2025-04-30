@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\Specification\Format\OpenAPI3;
-use Appwrite\Specification\Format\Swagger2;
-use Appwrite\Specification\Specification;
+use Appwrite\SDK\Specification\Format\OpenAPI3;
+use Appwrite\SDK\Specification\Format\Swagger2;
+use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
