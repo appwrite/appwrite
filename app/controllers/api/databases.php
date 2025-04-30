@@ -4298,13 +4298,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $partialDocument = new Document($data);
 
-        $documents = $dbForProject->withRequestTimestamp(
-            $requestTimestamp,
-            fn () => $dbForProject->updateDocuments(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $partialDocument,
-                $queries,
-            )
+        $documents = [];
+
+        $dbForProject->updateDocuments(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $partialDocument,
+            $queries,
+            onNext: function (Document $document) use (&$documents) {
+                $documents[] = $document;
+            },
         );
 
         $operations = 0;
@@ -4549,13 +4551,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $documents = $dbForProject->withRequestTimestamp(
-            $requestTimestamp,
-            fn () =>
-            $dbForProject->deleteDocuments(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $queries
-            )
+        $documents = [];
+
+        $dbForProject->deleteDocuments(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $queries,
+            onNext: function (Document $document) use (&$documents) {
+                $documents[] = $document;
+            },
         );
 
         $operations = 0;
