@@ -2005,7 +2005,14 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals('index.html', $site['body']['fallbackFile']);
 
-        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId1);
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-sdk-language' => 'cli'
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId1,
+        ]);
+
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         $deploymentId2 = $deployment['body']['$id'];
@@ -2016,6 +2023,7 @@ class SitesCustomServerTest extends Scope
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertEquals(0, $deployment['body']['buildSize']);
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
+        $this->assertEquals('cli', $deployment['body']['type']);
 
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
