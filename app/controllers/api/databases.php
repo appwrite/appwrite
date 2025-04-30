@@ -4225,8 +4225,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('maxBatchSize')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, int $maxBatchSize) {
+    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4256,7 +4255,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         );
 
         if ($hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk update is not supported for collections with relationship attributes');
         }
 
         try {
@@ -4307,7 +4306,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $partialDocument,
                 $queries,
-                $maxBatchSize
             )
         );
 
@@ -4515,8 +4513,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->inject('maxBatchSize')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, int $maxBatchSize) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4538,7 +4535,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         );
 
         if ($hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for collections with relationship attributes');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk delete is not supported for collections with relationship attributes');
         }
 
         try {
@@ -4547,13 +4544,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries, $maxBatchSize) {
-            return $dbForProject->deleteDocuments(
+        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, fn() =>
+            $dbForProject->deleteDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $queries,
-                $maxBatchSize
-            );
-        });
+                $queries
+            )
+        );
 
         // DB Storage Calculation
         $queueForStatsUsage
