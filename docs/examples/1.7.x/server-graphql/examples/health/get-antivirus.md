@@ -1,0 +1,6 @@
+query {
+    healthGetAntivirus {
+        version
+        status
+    }
+}
