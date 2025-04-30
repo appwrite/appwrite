@@ -51,6 +51,12 @@ if (!function_exists('getConsoleDB')) {
     {
         global $register;
 
+        static $database = null;
+
+        if ($database !== null) {
+            return $database;
+        }
+
         /** @var Group $pools */
         $pools = $register->get('pools');
 
@@ -70,6 +76,12 @@ if (!function_exists('getProjectDB')) {
     function getProjectDB(Document $project): Database
     {
         global $register;
+
+        static $databases = [];
+
+        if (isset($databases[$project->getInternalId()])) {
+            return $databases[$project->getInternalId()];
+        }
 
         /** @var Group $pools */
         $pools = $register->get('pools');
@@ -106,7 +118,7 @@ if (!function_exists('getProjectDB')) {
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
-        return $database;
+        return $databases[$project->getInternalId()] = $database;
     }
 }
 
@@ -115,6 +127,12 @@ if (!function_exists('getCache')) {
     function getCache(): Cache
     {
         global $register;
+
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
 
         $pools = $register->get('pools'); /** @var Group $pools */
 
@@ -125,7 +143,7 @@ if (!function_exists('getCache')) {
             $adapters[] = new CachePool($pools->get($value));
         }
 
-        return new Cache(new Sharding($adapters));
+        return $cache = new Cache(new Sharding($adapters));
     }
 }
 
@@ -133,6 +151,12 @@ if (!function_exists('getCache')) {
 if (!function_exists('getRedis')) {
     function getRedis(): \Redis
     {
+        static $redis = null;
+
+        if ($redis !== null) {
+            return $redis;
+        }
+
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
         $port = System::getEnv('_APP_REDIS_PORT', 6379);
         $pass = System::getEnv('_APP_REDIS_PASS', '');
@@ -151,21 +175,39 @@ if (!function_exists('getRedis')) {
 if (!function_exists('getTimelimit')) {
     function getTimelimit(): TimeLimitRedis
     {
-        return new TimeLimitRedis("", 0, 1, getRedis());
+        static $timelimit = null;
+
+        if ($timelimit !== null) {
+            return $timelimit;
+        }
+
+        return $timelimit = new TimeLimitRedis("", 0, 1, getRedis());
     }
 }
 
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
-        return new Realtime();
+        static $realtime = null;
+
+        if ($realtime !== null) {
+            return $realtime;
+        }
+
+        return $realtime = new Realtime();
     }
 }
 
 if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
-        return new NoTelemetry();
+        static $telemetry = null;
+
+        if ($telemetry !== null) {
+            return $telemetry;
+        }
+
+        return $telemetry = new NoTelemetry();
     }
 }
 
