@@ -10,13 +10,11 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
-use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -24,7 +22,6 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -44,7 +41,10 @@ CLI::setResource('cache', function ($pools) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = new CachePool($pools->get($value));
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -64,8 +64,12 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
         $attempts++;
         try {
             // Prepare database connection
-            $adapter = new DatabasePool($pools->get('console'));
-            $dbForPlatform = new Database($adapter, $cache);
+            $dbAdapter = $pools
+                ->get('console')
+                ->pop()
+                ->getResource();
+
+            $dbForPlatform = new Database($dbAdapter, $cache);
 
             $dbForPlatform
                 ->setNamespace('_console')
@@ -83,6 +87,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
             $ready = true;
         } catch (\Throwable $err) {
             Console::warning($err->getMessage());
+            $pools->get('console')->reclaim();
             sleep($sleep);
         }
     } while ($attempts < $maxAttempts && !$ready);
@@ -132,8 +137,12 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
+        $dbAdapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -159,15 +168,21 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
 CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
-
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getInternalId());
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
 
         $database
             ->setSharedTables(true)
@@ -184,14 +199,14 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
+CLI::setResource('queueForStatsUsage', function (Connection $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
 CLI::setResource('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
