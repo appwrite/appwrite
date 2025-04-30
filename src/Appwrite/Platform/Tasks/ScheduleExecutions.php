@@ -70,7 +70,8 @@ class ScheduleExecutions extends ScheduleBase
                     ->setHeaders($data['headers'] ?? [])
                     ->setBody($data['body'] ?? '')
                     ->setProject($schedule['project'])
-                    ->setUserId($data['userId'] ?? '');
+                    ->setUserId($data['userId'] ?? '')
+                    ->trigger();
             });
 
             $dbForPlatform->deleteDocument(
