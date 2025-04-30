@@ -3469,7 +3469,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database);
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
@@ -4122,13 +4122,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $response->addHeader('X-Debug-Operations', $operations);
 
         try {
-            $document = $dbForProject->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
-                )
+            $document = $dbForProject->updateDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $newDocument
             );
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -4175,8 +4172,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $processDocument($collection, $document);
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
-
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
@@ -4192,6 +4187,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->getPayload(), sensitive: $relationships);
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -4420,12 +4417,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
-                );
-            });
+            $dbForProject->deleteDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $documentId
+            );
         } catch (NotFoundException $e) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
@@ -4488,9 +4483,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('collection', $collection)
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
-
-        $queueForStatsUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
     });
