@@ -1133,8 +1133,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
+    ->inject('resourceToken')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Device $deviceForFiles) {
+    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1145,10 +1146,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -1156,6 +1158,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {
