@@ -8,7 +8,6 @@ use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
 use Appwrite\Platform\Modules\Sites;
-use Appwrite\Platform\Modules\Storage;
 use Utopia\Platform\Platform;
 
 class Appwrite extends Platform
