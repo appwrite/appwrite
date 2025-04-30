@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Specification\Format;
+namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\MethodType;
-use Appwrite\Specification\Format;
+use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
