@@ -1699,7 +1699,7 @@ return [
                 'format' => '',
                 'size' => 16,
                 'signed' => true,
-                'required' => true,
+                'required' => false,
                 'default' => 'waiting',
                 'array' => false,
                 'filters' => [],
