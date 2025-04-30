@@ -3227,14 +3227,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.', true)
-    ->param('documents', [], new ArrayList(new JSON(), APP_LIMIT_DOCUMENTS_CREATE), 'Array of documents data as JSON object.', true)
+    ->param('documents', [], fn (int $limit) => new ArrayList(new JSON(), $limit), 'Array of documents data as JSON object.', optional: true, injections: ['maxBatchSize'])
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->inject('maxBatchSize')
     ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, int $maxBatchSize) {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -3268,10 +3267,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             // But remember that it was single, to respond with single document
             $isBulk = false;
             $documents = [$data];
-        }
-
-        if ($isBulk && \count($documents) > $maxBatchSize) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is limited to ' . $maxBatchSize . ' documents');
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument(
@@ -3447,11 +3442,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             // Assign a unique id if needed, otherwise use the provided id.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
-
             $document = new Document($document);
-
             $setPermissions($document, $permissions);
-
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
             return $document;
@@ -3460,8 +3452,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         try {
             $dbForProject->createDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $documents,
-                $maxBatchSize
+                $documents
             );
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
