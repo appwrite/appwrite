@@ -4225,7 +4225,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4309,7 +4310,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             )
         );
 
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $operations = 0;
+
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -4345,10 +4350,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
-        $response->dynamic(new Document([
-            'total' => \count($documents),
-            'documents' => $documents
-        ]), Response::MODEL_DOCUMENT_LIST);
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+        $response
+            ->addHeader('X-Debug-Operations', $operations)
+            ->dynamic(new Document([
+                'total' => \count($documents),
+                'documents' => $documents
+            ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
@@ -4419,8 +4430,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $operations = 0;
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
+            $operations++;
+
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -4455,10 +4470,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $processDocument($collection, $document);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
-
-        $response->addHeader('X-Debug-Operations', 1);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
@@ -4553,14 +4566,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             )
         );
 
-        // DB Storage Calculation
-        $queueForStatsUsage
-            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+        $operations = 0;
 
-        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
             }
+
+            $operations++;
 
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
@@ -4603,10 +4616,16 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             return true;
         });
 
-        $response->dynamic(new Document([
-            'total' => \count($documents),
-            'documents' => $documents,
-        ]), Response::MODEL_DOCUMENT_LIST);
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+        $response
+            ->addHeader('X-Debug-Operations', $operations)
+            ->dynamic(new Document([
+                'total' => \count($documents),
+                'documents' => $documents,
+            ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::get('/v1/databases/usage')
