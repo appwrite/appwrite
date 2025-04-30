@@ -72,7 +72,7 @@ class ScheduleFunctions extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
             \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
-                \Co::sleep($delay); // in seconds
+                \sleep($delay); // in seconds
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
