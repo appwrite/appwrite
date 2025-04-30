@@ -63,18 +63,32 @@ trait TokensBase
     /**
      * @depends testCreateBucketAndFile
      */
-    public function testPreviewAccessFailureWithoutToken(array $data): array
+    public function testFailuresWithoutToken(array $data): array
     {
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $guestHeaders = $data['guestHeaders'];
 
-        // Fail, anonymous user.
+        // File preview. Should fail as an anonymous user with no form of any access to the file.
         $fileFailedPreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $guestHeaders);
         $this->assertEquals(401, $fileFailedPreview['body']['code']);
         $this->assertEquals(401, $fileFailedPreview['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $fileFailedPreview['body']['type']);
         $this->assertEquals('The current user is not authorized to perform the requested action.', $fileFailedPreview['body']['message']);
+
+        // File view. Should fail as an anonymous user with no form of any access to the file.
+        $fileFailedView = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $guestHeaders);
+        $this->assertEquals(401, $fileFailedView['body']['code']);
+        $this->assertEquals(401, $fileFailedView['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $fileFailedView['body']['type']);
+        $this->assertEquals('The current user is not authorized to perform the requested action.', $fileFailedView['body']['message']);
+
+        // File download. Should fail as an anonymous user with no form of any access to the file.
+        $fileFailedDownload = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', $guestHeaders);
+        $this->assertEquals(401, $fileFailedDownload['body']['code']);
+        $this->assertEquals(401, $fileFailedDownload['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $fileFailedDownload['body']['type']);
+        $this->assertEquals('The current user is not authorized to perform the requested action.', $fileFailedDownload['body']['message']);
 
         return $data;
     }
@@ -82,7 +96,7 @@ trait TokensBase
     /**
      * @depends testCreateBucketAndFile
      */
-    public function testPreviewAccessFileWithToken(array $data): array
+    public function testPreviewFileWithToken(array $data): array
     {
         $fileId = $data['fileId'];
         $tokenId = $data['tokenId'];
@@ -116,9 +130,9 @@ trait TokensBase
     }
 
     /**
-     * @depends testPreviewAccessFileWithToken
+     * @depends testPreviewFileWithToken
      */
-    public function testViewAccessFileWithToken(array $data): void
+    public function testViewFileWithToken(array $data): void
     {
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
@@ -139,26 +153,25 @@ trait TokensBase
     }
 
     /**
-     * @depends testPreviewAccessFileWithToken
+     * @depends testPreviewFileWithToken
      */
-    public function testDownloadAccessFileWithToken(array $data): void
+    public function testDownloadFileWithToken(array $data): void
     {
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $jwtToken = $data['jwtToken'];
         $guestHeaders = $data['guestHeaders'];
 
-        /**
-         * Test should fail because -
-         *
-         * 1. There's no token logic on download endpoint
-         * 2. The user does not have permissions as a guest user
-         */
         $fileFailedDownload = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download?token=' . $jwtToken, $guestHeaders);
 
-        $this->assertEquals(401, $fileFailedDownload['body']['code']);
-        $this->assertEquals(401, $fileFailedDownload['headers']['status-code']);
-        $this->assertEquals('user_unauthorized', $fileFailedDownload['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $fileFailedDownload['body']['message']);
+        $this->assertEquals(200, $fileFailedDownload['headers']['status-code']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($fileFailedDownload['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
     }
 }
