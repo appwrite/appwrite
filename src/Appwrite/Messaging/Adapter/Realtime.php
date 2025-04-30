@@ -36,12 +36,12 @@ class Realtime extends Adapter
      */
     public array $subscriptions = [];
 
-    private Pool $pubsubPool;
+    private PubSubPool $pubSubPool;
 
     public function __construct()
     {
         global $register;
-        $this->pubsubPool = $register->get('pools')->get('pubsub');
+        $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
     }
 
     /**
@@ -147,7 +147,7 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $message = [
+        $this->pubSubPool->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
