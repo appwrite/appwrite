@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -59,9 +58,7 @@ class ScheduleExecutions extends ScheduleBase
             \go(function () use ($schedule, $delay, $data, $pools) {
                 \Co::sleep($delay);
 
-                $publisher = new BrokerPool($pools->get('publisher'));
-
-                $queueForFunctions = new Func($publisher);
+                $queueForFunctions = new Func($this->publisher);
 
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject

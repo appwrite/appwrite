@@ -42,9 +42,7 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($schedule, $pools, $dbForPlatform) {
-                $publisher = new BrokerPool($pools->get('publisher'));
-
-                $queueForMessaging = new Messaging($publisher);
+                $queueForMessaging = new Messaging($this->publisher);
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
