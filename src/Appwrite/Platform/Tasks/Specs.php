@@ -105,7 +105,7 @@ class Specs extends Action
                 ],
                 'DevKey' => [
                     'type' => 'apiKey',
-                    'name' => 'X-Appwrite-DevKey',
+                    'name' => 'X-Appwrite-Dev-Key',
                     'description' => 'Your secret development API key',
                     'in' => 'header',
                 ],
