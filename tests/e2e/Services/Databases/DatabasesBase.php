@@ -1553,6 +1553,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
+        $this->assertTrue(array_key_exists('$internalId', $document1['body']));
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
@@ -1570,6 +1571,7 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['birthDay'], null);
         $this->assertEquals($document2['body']['integers'][0], 50);
         $this->assertEquals($document2['body']['integers'][1], 60);
+        $this->assertTrue(array_key_exists('$internalId', $document2['body']));
 
         $this->assertEquals(201, $document3['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document3['body']['$collectionId']);
@@ -1584,6 +1586,7 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
+        $this->assertTrue(array_key_exists('$internalId', $document3['body']));
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
@@ -1615,9 +1618,9 @@ trait DatabasesBase
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
-        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][0]));
-        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][1]));
-        $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][2]));
+        $this->assertTrue(array_key_exists('$internalId', $documents['body']['documents'][0]));
+        $this->assertTrue(array_key_exists('$internalId', $documents['body']['documents'][1]));
+        $this->assertTrue(array_key_exists('$internalId', $documents['body']['documents'][2]));
         $this->assertCount(3, $documents['body']['documents']);
 
         foreach ($documents['body']['documents'] as $document) {
@@ -1710,7 +1713,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
             $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
-            $this->assertFalse(array_key_exists('$internalId', $response['body']));
+            $this->assertTrue(array_key_exists('$internalId', $response['body']));
             $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
     }
@@ -1723,6 +1726,7 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $document = $data['documents'][0];
 
+        // not selecting internal id
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1736,6 +1740,39 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+        $this->assertFalse(array_key_exists('$internalId', $response['body']));
+
+        // selecting internal id as well
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['title', 'releaseYear', '$id','$internalId'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($document['title'], $response['body']['title']);
+        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
+        $this->assertArrayNotHasKey('birthDay', $response['body']);
+        $this->assertTrue(array_key_exists('$internalId', $response['body']));
+        $internalId = $response['body']['$internalId'];
+
+        // Query by internalId
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$internalId', [$internalId])
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($document['title'], $response['body']['title']);
+        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
+        $this->assertTrue(array_key_exists('$internalId', $response['body']));
     }
 
     /**
@@ -4005,8 +4042,8 @@ trait DatabasesBase
 
         $this->assertArrayNotHasKey('$collection', $person1['body']);
         $this->assertArrayNotHasKey('$collection', $person1['body']['library']);
-        $this->assertArrayNotHasKey('$internalId', $person1['body']);
-        $this->assertArrayNotHasKey('$internalId', $person1['body']['library']);
+        $this->assertArrayHasKey('$internalId', $person1['body']);
+        $this->assertArrayHasKey('$internalId', $person1['body']['library']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
