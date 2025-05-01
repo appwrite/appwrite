@@ -43,7 +43,7 @@ class Migrations extends Action
      *
      * @type array<string, int>
      */
-    protected array $sourceReport = [];
+    private array $sourceReport = [];
 
     /**
      * @var callable
