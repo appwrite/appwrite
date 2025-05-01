@@ -73,6 +73,12 @@
             "x-appwrite": {
                 "demo": ""
             }
+        },
+        "DevKey": {
+            "type": "apiKey",
+            "name": "X-Appwrite-Dev-Key",
+            "description": "Your secret development API key",
+            "in": "header"
         }
     },
     "paths": {

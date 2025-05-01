@@ -179,6 +179,13 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                // NOTE: Temporarily added for testing
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret development API key',
+                    'in' => 'header',
+                ],
             ],
         ];
 
