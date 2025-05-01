@@ -256,8 +256,6 @@ class Migrations extends Action
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
 
-            $source->report();
-
             $transfer = new Transfer(
                 $source,
                 $destination
