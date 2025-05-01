@@ -29,7 +29,7 @@ class Migrate extends Action
         $this
             ->desc('Migrate Appwrite to new version')
             /** @TODO APP_VERSION_STABLE needs to be defined */
-            ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->param('version', APP_VERSION_STABLE, new Text(9), 'Version to migrate to.', true)
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
