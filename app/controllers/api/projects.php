@@ -1,5 +1,6 @@
 <?php
 
+
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\MockNumber;
@@ -1682,17 +1683,18 @@ App::patch('/v1/projects/:projectId/smtp')
         // validate SMTP settings
         if ($enabled) {
             $mail = new PHPMailer(true);
-            $mail->isSMTP();
+            $mail->isSMTP();        
             $mail->Username = $username;
             $mail->Password = $password;
             $mail->Host = $host;
             $mail->Port = $port;
             $mail->SMTPSecure = $secure;
+            $mail->SMTPAuth = (!empty($username) && !empty($password));
             $mail->SMTPAutoTLS = false;
             $mail->Timeout = 5;
 
             try {
-                $valid = $mail->SmtpConnect();
+                $valid = $mail->SmtpConnect(); 
 
                 if (!$valid) {
                     throw new Exception('Connection is not valid.');
