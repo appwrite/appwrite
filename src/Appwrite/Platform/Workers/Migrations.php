@@ -35,9 +35,9 @@ class Migrations extends Action
     protected Document $project;
 
     /**
-     * Accessed on cloud for telemetry.
+     * Cached for performance.
      *
-     * @type array<string, int>
+     * @var array<string, int>
      */
     private array $sourceReport = [];
 
