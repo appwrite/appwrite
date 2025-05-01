@@ -46,6 +46,7 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
+                group: null,
                 name: 'createRedirectRule',
                 description: <<<EOT
                 Create a new proxy rule for to redirect from custom domain to another domain.
@@ -74,20 +75,39 @@ class Create extends Action
 
     public function action(string $domain, string $url, int $statusCode, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
     {
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $deniedDomains = [
-            $mainDomain,
-            $sitesDomain,
-            $functionsDomain,
             'localhost',
-            APP_HOSTNAME_INTERNAL,
+            APP_HOSTNAME_INTERNAL
         ];
 
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        $deniedDomains[] = $mainDomain;
+
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        if (!empty($sitesDomain)) {
+            $deniedDomains[] = $sitesDomain;
+        }
+
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        if (!empty($functionsDomain)) {
+            $deniedDomains[] = $functionsDomain;
+        }
+
+        $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
+        $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
+        foreach ($denyListDomains as $denyListDomain) {
+            if (empty($denyListDomain)) {
+                continue;
+            }
+            $deniedDomains[] = $denyListDomain;
+        }
+
         if (\in_array($domain, $deniedDomains)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
+        }
+
+        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
         try {

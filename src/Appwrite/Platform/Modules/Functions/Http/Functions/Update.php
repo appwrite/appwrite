@@ -60,6 +60,7 @@ class Update extends Base
             ->label('audits.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'functions',
                 name: 'update',
                 description: <<<EOT
                 Update function by its unique ID.

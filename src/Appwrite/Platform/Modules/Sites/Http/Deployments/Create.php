@@ -53,6 +53,7 @@ class Create extends Action
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'createDeployment',
                 description: <<<EOT
                 Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.

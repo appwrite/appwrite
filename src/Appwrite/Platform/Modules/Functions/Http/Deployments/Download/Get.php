@@ -33,11 +33,12 @@ class Get extends Action
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', ['type' => 'output'])
             ->groups(['api', 'functions'])
-            ->desc('Download deployment')
+            ->desc('Get deployment download')
             ->label('scope', 'functions.read')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'getDeploymentDownload',
                 description: <<<EOT
                 Get a function deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.

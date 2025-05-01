@@ -42,6 +42,7 @@ class Create extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'variables',
                 name: 'createVariable',
                 description: <<<EOT
                 Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.

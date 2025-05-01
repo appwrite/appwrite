@@ -511,21 +511,22 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param Document $document
-     * @return void
-     * @throws Authorization
-     * @throws DatabaseException
-     * @throws Conflict
-     * @throws Restricted
-     * @throws Structure
-     * @throws Exception
-     */
-    private function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
+    * @param Database $dbForPlatform
+    * @param Document $document
+    * @return void
+    * @throws Authorization
+    * @throws DatabaseException
+    * @throws Conflict
+    * @throws Restricted
+    * @throws Structure
+    * @throws Exception
+    */
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
 
         $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId()])
+            Query::equal('teamInternalId', [$document->getInternalId()]),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
         ]);
 
         foreach ($projects as $project) {
@@ -1202,18 +1203,15 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
-        $count = 0;
-
+        /**
+         * deleteDocuments uses a cursor, we need to add a unique order by field or use default
+         */
         try {
-            $database->deleteDocuments(
-                collection: $collection,
-                queries: $queries,
-                onNext: function (Document $document) use (&$count, $callback) {
-                    $count++;
-                    if (\is_callable($callback)) {
-                        $callback($document);
-                    }
-                }
+            $count = $database->deleteDocuments(
+                $collection,
+                $queries,
+                Database::DELETE_BATCH_SIZE,
+                $callback
             );
         } catch (Throwable $th) {
             $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
@@ -1222,7 +1220,6 @@ class Deletes extends Action
         }
 
         $end = \microtime(true);
-
         Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 

@@ -44,6 +44,7 @@ class Create extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'variables',
                 name: 'createVariable',
                 description: <<<EOT
                 Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.

@@ -34,6 +34,7 @@ class Get extends Base
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'templates',
                 name: 'getTemplate',
                 description: <<<EOT
                 Get a site template using ID. You can use template details in [createSite](/docs/references/cloud/server-nodejs/sites#create) method.

@@ -32,6 +32,7 @@ class Get extends Action
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'deployments',
                 name: 'getDeployment',
                 description: <<<EOT
                 Get a function deployment by its unique ID.

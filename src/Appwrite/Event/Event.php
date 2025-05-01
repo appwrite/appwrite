@@ -24,22 +24,11 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
-    /** remove */
-    public const USAGE_QUEUE_NAME = 'v1-usage';
-    public const USAGE_CLASS_NAME = 'UsageV1';
-
-    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
-    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
-    /** /remove */
-
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
 
     public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
     public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
-
-    public const STATS_USAGE_DUMP_QUEUE_NAME = 'v1-stats-usage-dump';
-    public const STATS_USAGE_DUMP_CLASS_NAME = 'StatsUsageDumpV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
@@ -67,6 +56,9 @@ class Event
     protected ?Document $user = null;
     protected ?string $userId = null;
     protected bool $paused = false;
+
+    /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
+    protected bool $critical = true;
 
     /**
      * @param Publisher $publisher
@@ -351,6 +343,7 @@ class Event
      */
     public function trigger(): string|bool
     {
+
         if ($this->paused) {
             return false;
         }
@@ -360,7 +353,15 @@ class Event
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
-        return $this->publisher->enqueue($queue, $payload);
+
+        try {
+            return $this->publisher->enqueue($queue, $payload);
+        } catch (\Throwable $th) {
+            if ($this->critical) {
+                throw $th;
+            }
+            return false;
+        }
     }
 
     /**

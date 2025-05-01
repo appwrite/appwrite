@@ -249,34 +249,36 @@ App::init()
                     subject: 'keys'
                 );
 
-                if ($dbKey) {
-                    $accessedAt = $dbKey->getAttribute('accessedAt', 0);
+                if (!$dbKey) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
 
-                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                        $dbKey->setAttribute('accessedAt', DateTime::now());
+                $accessedAt = $dbKey->getAttribute('accessedAt', 0);
+
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+                    $dbKey->setAttribute('accessedAt', DateTime::now());
+                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
+                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList($servers, true);
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+
+                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+                    $sdks = $dbKey->getAttribute('sdks', []);
+
+                    if (!in_array($sdk, $sdks)) {
+                        $sdks[] = $sdk;
+                        $dbKey->setAttribute('sdks', $sdks);
+
+                        /** Update access time as well */
+                        $dbKey->setAttribute('accessedAt', Datetime::now());
                         $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
                         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
-
-                    $sdkValidator = new WhiteList($servers, true);
-                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-
-                    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
-                        $sdks = $dbKey->getAttribute('sdks', []);
-
-                        if (!in_array($sdk, $sdks)) {
-                            $sdks[] = $sdk;
-                            $dbKey->setAttribute('sdks', $sdks);
-
-                            /** Update access time as well */
-                            $dbKey->setAttribute('accessedAt', Datetime::now());
-                            $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-                        }
-                    }
-
-                    $queueForAudits->setUser($user);
                 }
+
+                $queueForAudits->setUser($user);
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
@@ -548,7 +550,7 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
-                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
+                $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {

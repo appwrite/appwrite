@@ -42,6 +42,7 @@ class Delete extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'executions',
                 name: 'deleteExecution',
                 description: <<<EOT
                 Delete a function execution by its unique ID.

@@ -40,6 +40,7 @@ class Update extends Base
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
+                group: 'variables',
                 name: 'updateVariable',
                 description: <<<EOT
                 Update variable by its unique ID.

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -124,6 +125,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 
 /**
@@ -354,6 +356,11 @@ class Response extends SwooleResponse
      * @var array
      */
     protected array $payload = [];
+
+    /**
+     * @var bool
+     */
+    protected static bool $showSensitive = false;
 
     /**
      * Response constructor.
@@ -714,6 +721,16 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['sensitive']) {
+                $roles = Authorization::getRoles();
+                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+                $isAppUser = Auth::isAppUser($roles);
+
+                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                    $data->setAttribute($key, '');
+                }
+            }
+
             $output[$key] = $data[$key];
         }
 
@@ -868,5 +885,21 @@ class Response extends SwooleResponse
     public function setHeader(string $key, string $value): void
     {
         $this->sendHeader($key, $value);
+    }
+
+    /**
+     * Static wrapper to show sensitive data in response
+     *
+     * @param callable The callback to show sensitive information for
+     * @return array
+     */
+    public static function showSensitive(callable $callback): array
+    {
+        try {
+            self::$showSensitive = true;
+            return $callback();
+        } finally {
+            self::$showSensitive = false;
+        }
     }
 }

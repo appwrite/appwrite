@@ -36,6 +36,7 @@ class XList extends Action
             ->label('usage.metric', 'tokens.requests.read')
             ->label('sdk', new Method(
                 namespace: 'tokens',
+                group: 'files',
                 name: 'list',
                 description: <<<EOT
                 List all the tokens created for a specific file or bucket. You can use the query params to filter your results.
@@ -63,7 +64,7 @@ class XList extends Action
 
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', ["files"]);
-        $queries[] = Query::equal('resourceId', [$bucket->getInternalId() . ':' . $file->getInternalId()]);
+        $queries[] = Query::equal('resourceInternalId', [$bucket->getInternalId() . ':' . $file->getInternalId()]);
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);

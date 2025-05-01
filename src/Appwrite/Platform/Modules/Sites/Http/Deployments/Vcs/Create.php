@@ -44,6 +44,7 @@ class Create extends Base
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'createVcsDeployment',
                 description: <<<EOT
                 Create a deployment when a site is connected to VCS.

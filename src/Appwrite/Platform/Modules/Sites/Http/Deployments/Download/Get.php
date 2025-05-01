@@ -31,12 +31,13 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/download')
-            ->desc('Download deployment')
+            ->desc('Get deployment download')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
+                group: 'deployments',
                 name: 'getDeploymentDownload',
                 description: <<<EOT
                 Get a site deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
