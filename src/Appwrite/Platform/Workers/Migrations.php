@@ -39,6 +39,13 @@ class Migrations extends Action
     protected Document $project;
 
     /**
+     * Accessed on cloud for telemetry.
+     *
+     * @type array<string, int>
+     */
+    protected array $sourceReport = [];
+
+    /**
      * @var callable
      */
     protected $logError;
@@ -109,7 +116,7 @@ class Migrations extends Action
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
 
-        return match ($source) {
+        $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
             ),
@@ -144,6 +151,10 @@ class Migrations extends Action
             ),
             default => throw new \Exception('Invalid source type'),
         };
+
+        $this->sourceReport = $migrationSource->report();
+
+        return $migrationSource;
     }
 
     /**
@@ -261,8 +272,6 @@ class Migrations extends Action
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
-
-            $source->report();
 
             $transfer = new Transfer(
                 $source,
@@ -397,5 +406,17 @@ class Migrations extends Action
                 $source?->success();
             }
         }
+    }
+
+    /**
+     * Returns a report of resources in the source.
+     *
+     * Should be called after `processSource()` to ensure the data is populated.
+     *
+     * @return array<string, int> Resource type mapped to their counts.
+     */
+    protected function getSourceReport(): array
+    {
+        return $this->sourceReport;
     }
 }
