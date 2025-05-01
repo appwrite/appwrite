@@ -39,7 +39,7 @@ class Migrations extends Action
      *
      * @var array<string, int>
      */
-    private array $sourceReport = [];
+    protected array $sourceReport = [];
 
     /**
      * @var callable
@@ -389,17 +389,5 @@ class Migrations extends Action
                 $source?->success();
             }
         }
-    }
-
-    /**
-     * Returns a report of resources in the source.
-     *
-     * Should be called after `processSource()` to ensure the data is populated.
-     *
-     * @return array<string, int> Resource type mapped to their counts.
-     */
-    protected function getSourceReport(): array
-    {
-        return $this->sourceReport;
     }
 }
