@@ -3510,7 +3510,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
         try {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+
+            $selects = Query::groupByType($queries)['selections'] ?? [];
+
+            if (! empty($selects)) {
+                // has selects, allow relationship on documents!
+                $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+            } else {
+                // has no selects, disable relationship looping on documents!
+                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
+            }
+
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -3659,9 +3669,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+
         try {
             $queries = Query::parseQueries($queries);
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            $selects = Query::groupByType($queries)['selections'] ?? [];
+
+            if (! empty($selects)) {
+                // has selects, allow relationship on documents!
+                $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            } else {
+                // has no selects, disable relationship looping on documents!
+                $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
+            }
+
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
@@ -4031,9 +4051,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 $requestTimestamp,
                 fn () =>
                 $dbForProject->updateDocument(
-                        'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                        $document->getId(),
-                        $newDocument
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $document->getId(),
+                    $newDocument
                 )
             );
         } catch (AuthorizationException) {
