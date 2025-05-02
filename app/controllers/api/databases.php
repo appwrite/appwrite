@@ -4049,8 +4049,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
-                fn () =>
-                $dbForProject->updateDocument(
+                fn () => $dbForProject->updateDocument(
                     'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                     $document->getId(),
                     $newDocument
