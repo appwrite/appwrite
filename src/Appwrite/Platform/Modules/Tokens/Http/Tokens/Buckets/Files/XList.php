@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files;
+namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
 use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\SDK\AuthType;
