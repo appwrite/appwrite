@@ -79,10 +79,10 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -992,22 +992,21 @@ services:
       - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: postgres:16.4 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
       - appwrite
     volumes:
-      - appwrite-mariadb:/var/lib/mysql:rw
+      - appwrite-postgres:/var/lib/postgresql/data:rw
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
-      - MYSQL_PASSWORD=${_APP_DB_PASS}
-      - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_INITDB_ARGS="--auth-host=scram-sha-256"
+    command: "postgres"
 
   redis:
     image: redis:7.2.4-alpine
@@ -1105,3 +1104,4 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
+  appwrite-postgres:
