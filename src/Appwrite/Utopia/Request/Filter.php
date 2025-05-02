@@ -26,14 +26,23 @@ abstract class Filter
      */
     abstract public function parse(array $content, string $model): array;
 
+    /**
+     * Get the current route context.
+     *
+     * @return null|Route
+     */
     public function getRoute(): ?Route
     {
         return $this->route;
     }
 
+    /**
+     * Get the database for the current project.
+     *
+     * @return null|Database
+     */
     public function getDbForProject(): ?Database
     {
-
         return $this->dbForProject;
     }
 }
