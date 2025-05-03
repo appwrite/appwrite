@@ -7,7 +7,7 @@ use Utopia\Route;
 
 abstract class Filter
 {
-    private ?Route $route;
+    protected ?Route $route;
     private ?Database $dbForProject;
 
     public function __construct(Database $dbForProject = null, Route $route = null)
@@ -27,16 +27,6 @@ abstract class Filter
     abstract public function parse(array $content, string $model): array;
 
     /**
-     * Get the current route context.
-     *
-     * @return null|Route
-     */
-    public function getRoute(): ?Route
-    {
-        return $this->route;
-    }
-
-    /**
      * Get the database for the current project.
      *
      * @return null|Database
@@ -44,5 +34,24 @@ abstract class Filter
     public function getDbForProject(): ?Database
     {
         return $this->dbForProject;
+    }
+
+    /**
+     * Returns the value of the given route param key, or a default if not found or on error.
+     *
+     * @param string $key
+     * @param mixed $default
+     *
+     * @return mixed
+     */
+    public function getParamValue(string $key, mixed $default = ''): mixed
+    {
+        try {
+            $value = $this->route?->getParamValue($key) ?? $default;
+        } catch (\Exception $e) {
+            $value = $default;
+        }
+
+        return $value;
     }
 }

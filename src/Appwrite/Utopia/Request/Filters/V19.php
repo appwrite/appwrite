@@ -2,10 +2,9 @@
 
 namespace Appwrite\Utopia\Request\Filters;
 
-use Appwrite\Query as AppwriteQuery;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
-use Utopia\Database\Query as UtopiaQuery;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 class V19 extends Filter
@@ -18,6 +17,14 @@ class V19 extends Filter
         return $content;
     }
 
+    /**
+     * From 1.7.x onward, related documents are no longer returned by default to improve performance.
+     *
+     * Use `Query::select(['related.*'])` for full documents or `Query::select(['related.key'])` for specific fields.
+     *
+     * This filter preserves 1.6.x behavior by including all related documents for backward compatibility with
+     * `listDocuments` and `getDocument` calls.
+     */
     protected function manageSelectQueries(array $content, string $model): array
     {
         $isDatabaseModel = \str_starts_with($model, 'databases.');
@@ -30,16 +37,20 @@ class V19 extends Filter
         $hasWildcard = false;
         if (! isset($content['queries'])) {
             $hasWildcard = true;
-            $content['queries'] = [AppwriteQuery::select(['*'])];
+            $content['queries'] = [Query::select(['*'])];
         }
 
-        $parsed = UtopiaQuery::parseQueries($content['queries']);
-        $selections = UtopiaQuery::groupByType($parsed)['selections'] ?? [];
+        $parsed = Query::parseQueries($content['queries']);
+        $selections = Query::groupByType($parsed)['selections'] ?? [];
 
         if (! $hasWildcard) {
             // check if any select includes a wildcard as we added one above
-            $hasWildcard = \array_reduce($selections, fn (bool $carry, $select) =>
-                $carry || \in_array('*', $select->getValues(), true), false);
+            foreach ($selections as $select) {
+                if (\in_array('*', $select->getValues(), true)) {
+                    $hasWildcard = true;
+                    break;
+                }
+            }
         }
 
         if ($hasWildcard && $model === 'databases.listDocuments') {
@@ -51,12 +62,11 @@ class V19 extends Filter
                 // remove previous select queries
                 $parsed = \array_filter(
                     $parsed,
-                    fn ($query) =>
-                    $query->getMethod() !== UtopiaQuery::TYPE_SELECT
+                    fn ($query) => $query->getMethod() !== Query::TYPE_SELECT
                 );
 
                 // add wildcard + relationship(s) selects
-                $parsed[] = AppwriteQuery::select($selects);
+                $parsed[] = Query::select($selects);
             }
         }
 
@@ -65,18 +75,19 @@ class V19 extends Filter
         return $content;
     }
 
+    /**
+     * Returns all relationship attribute keys in `key.*` format for use with `Query::select`.
+     */
     private function getRelatedCollectionKeys(): array
     {
-        $route = $this->getRoute();
         $dbForProject = $this->getDbForProject();
 
-        if ($dbForProject === null || $route === null) {
+        if ($dbForProject === null) {
             return [];
         }
 
-        $params = $route->getParamsValues();
-        $databaseId = $params['databaseId'] ?? '';
-        $collectionId = $params['collectionId'] ?? '';
+        $databaseId = $this->getParamValue('databaseId');
+        $collectionId = $this->getParamValue('collectionId');
 
         if (empty($databaseId) || empty($collectionId)) {
             return [];
@@ -95,8 +106,7 @@ class V19 extends Filter
             fn ($attr) => $attr['key'] . '.*',
             \array_filter(
                 $attributes,
-                fn ($attr) =>
-                ($attr['type'] ?? null) === Database::VAR_RELATIONSHIP
+                fn ($attr) => ($attr['type'] ?? null) === Database::VAR_RELATIONSHIP
             )
         ));
     }
