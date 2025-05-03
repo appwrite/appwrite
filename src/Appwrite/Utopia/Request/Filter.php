@@ -7,7 +7,7 @@ use Utopia\Route;
 
 abstract class Filter
 {
-    protected ?Route $route;
+    private ?Route $route;
     private ?Database $dbForProject;
 
     public function __construct(Database $dbForProject = null, Route $route = null)
