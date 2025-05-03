@@ -830,7 +830,8 @@ App::init()
                 $request->addFilter(new RequestV18());
             }
             if (version_compare($requestFormat, '1.7.0', '<')) {
-                $request->addFilter(new RequestV19());
+                $dbForProject = $getProjectDB($project);
+                $request->addFilter(new RequestV19($dbForProject, $route));
             }
         }
 
