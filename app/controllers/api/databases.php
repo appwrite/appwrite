@@ -50,18 +50,6 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::init()
-    ->groups(['api', 'database'])
-    ->inject('request')
-    ->inject('dbForProject')
-    ->action(function (Request $request, Database $dbForProject) {
-        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
-
-        if (!empty($timeout) && App::isDevelopment()) {
-            $dbForProject->setTimeout($timeout);
-        }
-    });
-
 App::post('/v1/databases')
     ->desc('Create database')
     ->groups(['api', 'database'])

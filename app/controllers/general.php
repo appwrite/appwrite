@@ -1576,6 +1576,20 @@ foreach (Config::getParam('services', []) as $service) {
     }
 }
 
+// legacy controller init hooks as the endpoint controller logic is now moved to a module structure.
+// 1. databases
+App::init()
+    ->groups(['api', 'database'])
+    ->inject('request')
+    ->inject('dbForProject')
+    ->action(function (Request $request, Database $dbForProject) {
+        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+
+        if (!empty($timeout) && App::isDevelopment()) {
+            $dbForProject->setTimeout($timeout);
+        }
+    });
+
 // Check for any errors found while we were initialising the SDK Methods.
 if (!empty(Method::getErrors())) {
     throw new \Exception('Errors found during SDK initialization:' . PHP_EOL . implode(PHP_EOL, Method::getErrors()));
