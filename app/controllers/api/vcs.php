@@ -14,11 +14,12 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -26,22 +27,35 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Detector\Adapter\Bun;
-use Utopia\Detector\Adapter\CPP;
-use Utopia\Detector\Adapter\Dart;
-use Utopia\Detector\Adapter\Deno;
-use Utopia\Detector\Adapter\Dotnet;
-use Utopia\Detector\Adapter\Java;
-use Utopia\Detector\Adapter\JavaScript;
-use Utopia\Detector\Adapter\PHP;
-use Utopia\Detector\Adapter\Python;
-use Utopia\Detector\Adapter\Ruby;
-use Utopia\Detector\Adapter\Swift;
-use Utopia\Detector\Detector;
+use Utopia\Detector\Detection\Framework\Astro;
+use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\NextJs;
+use Utopia\Detector\Detection\Framework\Nuxt;
+use Utopia\Detector\Detection\Framework\Remix;
+use Utopia\Detector\Detection\Framework\SvelteKit;
+use Utopia\Detector\Detection\Packager\NPM;
+use Utopia\Detector\Detection\Packager\PNPM;
+use Utopia\Detector\Detection\Packager\Yarn;
+use Utopia\Detector\Detection\Runtime\Bun;
+use Utopia\Detector\Detection\Runtime\CPP;
+use Utopia\Detector\Detection\Runtime\Dart;
+use Utopia\Detector\Detection\Runtime\Deno;
+use Utopia\Detector\Detection\Runtime\Dotnet;
+use Utopia\Detector\Detection\Runtime\Java;
+use Utopia\Detector\Detection\Runtime\Node;
+use Utopia\Detector\Detection\Runtime\PHP;
+use Utopia\Detector\Detection\Runtime\Python;
+use Utopia\Detector\Detection\Runtime\Ruby;
+use Utopia\Detector\Detection\Runtime\Swift;
+use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Packager;
+use Utopia\Detector\Detector\Runtime;
+use Utopia\Detector\Detector\Strategy;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -49,29 +63,30 @@ use function Swoole\Coroutine\batch;
 
 $createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForPlatform, Build $queueForBuilds, callable $getProjectDB, Request $request) {
     $errors = [];
-    foreach ($repositories as $resource) {
+    foreach ($repositories as $repository) {
         try {
-            $resourceType = $resource->getAttribute('resourceType');
+            $resourceType = $repository->getAttribute('resourceType');
 
-            if ($resourceType !== "function") {
+            if ($resourceType !== "function" && $resourceType !== "site") {
                 continue;
             }
 
-            $projectId = $resource->getAttribute('projectId');
+            $projectId = $repository->getAttribute('projectId');
             $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
-            $functionId = $resource->getAttribute('resourceId');
-            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-            $functionInternalId = $function->getInternalId();
+            $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
+            $resourceId = $repository->getAttribute('resourceId');
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resourceInternalId = $resource->getInternalId();
 
             $deploymentId = ID::unique();
-            $repositoryId = $resource->getId();
-            $repositoryInternalId = $resource->getInternalId();
-            $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-            $installationId = $resource->getAttribute('installationId');
-            $installationInternalId = $resource->getAttribute('installationInternalId');
-            $productionBranch = $function->getAttribute('providerBranch');
+            $repositoryId = $repository->getId();
+            $repositoryInternalId = $repository->getInternalId();
+            $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+            $installationId = $repository->getAttribute('installationId');
+            $installationInternalId = $repository->getAttribute('installationInternalId');
+            $productionBranch = $resource->getAttribute('providerBranch');
             $activate = false;
 
             if ($providerBranch == $productionBranch && $external === false) {
@@ -95,7 +110,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $isAuthorized = !$external;
 
             if (!$isAuthorized && !empty($providerPullRequestId)) {
-                if (\in_array($providerPullRequestId, $resource->getAttribute('providerPullRequestIds', []))) {
+                if (\in_array($providerPullRequestId, $repository->getAttribute('providerPullRequestIds', []))) {
                     $isAuthorized = true;
                 }
             }
@@ -108,7 +123,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $latestCommentId = '';
 
-            if (!empty($providerPullRequestId) && $function->getAttribute('providerSilentMode', false) === false) {
+            if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $latestComment = Authorization::skip(fn () => $dbForPlatform->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -117,14 +132,15 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
+
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
@@ -161,19 +177,19 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }
             }
 
             if (!$isAuthorized) {
-                $functionName = $function->getAttribute('name');
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Authorization required for external contributor.';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -193,18 +209,32 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
             }
 
-            $deployment = $dbForProject->createDocument('deployments', new Document([
+            $commands = [];
+            if (!empty($resource->getAttribute('installCommand', ''))) {
+                $commands[] = $resource->getAttribute('installCommand', '');
+            }
+            if (!empty($resource->getAttribute('buildCommand', ''))) {
+                $commands[] = $resource->getAttribute('buildCommand', '');
+            }
+            if (!empty($resource->getAttribute('commands', ''))) {
+                $commands[] = $resource->getAttribute('commands', '');
+            }
+
+            $deployment = Authorization::skip(fn () => $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-                'resourceId' => $functionId,
-                'resourceInternalId' => $functionInternalId,
-                'resourceType' => 'functions',
-                'entrypoint' => $function->getAttribute('entrypoint'),
-                'commands' => $function->getAttribute('commands'),
+                'resourceId' => $resourceId,
+                'resourceInternalId' => $resourceInternalId,
+                'resourceType' => $resourceCollection,
+                'entrypoint' => $resource->getAttribute('entrypoint', ''),
+                'buildCommands' => \implode(' && ', $commands),
+                'buildOutput' => $resource->getAttribute('outputDirectory', ''),
+                'adapter' => $resource->getAttribute('adapter', ''),
+                'fallbackFile' => $resource->getAttribute('fallbackFile', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -218,21 +248,120 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitHash' => $providerCommitHash,
                 'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
                 'providerCommitAuthor' => $providerCommitAuthor,
-                'providerCommitMessage' => $providerCommitMessage,
+                'providerCommitMessage' => mb_strimwidth($providerCommitMessage, 0, 255, '...'),
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+                'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
-            ]));
+            ])));
 
-            if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
-                $functionName = $function->getAttribute('name');
+            $resource = $resource
+                ->setAttribute('latestDeploymentId', $deployment->getId())
+                ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
+                ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
+            Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
+
+            if ($resource->getCollection() === 'sites') {
+                $projectId = $project->getId();
+
+                // Deployment preview
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = ID::unique() . "." . $sitesDomain;
+                $ruleId = md5($domain);
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getInternalId(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $resourceId,
+                        'deploymentResourceInternalId' => $resourceInternalId,
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+
+                // VCS branch preview
+                if (!empty($providerBranch)) {
+                    $domain = "branch-{$providerBranch}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+                    try {
+                        Authorization::skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getInternalId(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $resourceId,
+                                'deploymentResourceInternalId' => $resourceInternalId,
+                                'deploymentVcsProviderBranch' => $providerBranch,
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } catch (Duplicate $err) {
+                        // Ignore, rule already exists; will be updated by builds worker
+                    }
+                }
+
+                // VCS commit preview
+                if (!empty($providerCommitHash)) {
+                    $domain = "commit-{$providerCommitHash}-{$resource->getId()}-{$project->getId()}.{$sitesDomain}";
+                    $ruleId = md5($domain);
+                    try {
+                        Authorization::skip(
+                            fn () => $dbForPlatform->createDocument('rules', new Document([
+                                '$id' => $ruleId,
+                                'projectId' => $project->getId(),
+                                'projectInternalId' => $project->getInternalId(),
+                                'domain' => $domain,
+                                'type' => 'deployment',
+                                'trigger' => 'deployment',
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getInternalId(),
+                                'deploymentResourceType' => 'site',
+                                'deploymentResourceId' => $resourceId,
+                                'deploymentResourceInternalId' => $resourceInternalId,
+                                'deploymentVcsProviderBranch' => $providerBranch,
+                                'status' => 'verified',
+                                'certificateId' => '',
+                                'search' => implode(' ', [$ruleId, $domain]),
+                                'owner' => 'Appwrite',
+                                'region' => $project->getAttribute('region')
+                            ]))
+                        );
+                    } catch (Duplicate $err) {
+                        // Ignore, rule already exists; will be updated by builds worker
+                    }
+                }
+            }
+
+            if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Starting...';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -243,17 +372,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
+                ->setResource($resource)
                 ->setDeployment($deployment)
                 ->setProject($project); // set the project because it won't be set for git deployments
 
-            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
+            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
 
             //TODO: Add event?
         } catch (Throwable $e) {
@@ -269,12 +398,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub app')
+    ->desc('Create GitHub app installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'createGitHubInstallation',
         description: '/docs/references/vcs/create-github-installation.md',
         auth: [AuthType::ADMIN],
@@ -318,7 +448,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub app')
+    ->desc('Get installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -456,6 +586,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'getRepositoryContents',
         description: '/docs/references/vcs/get-repository-contents.md',
         auth: [AuthType::ADMIN],
@@ -516,30 +647,36 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_VCS_CONTENT_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
-    ->desc('Detect runtime settings from source code')
+App::post('/v1/vcs/github/installations/:installationId/detections')
+    ->alias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
+    ->desc('Create repository detection')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'createRepositoryDetection',
         description: '/docs/references/vcs/create-repository-detection.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_DETECTION,
+                model: Response::MODEL_DETECTION_RUNTIME,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DETECTION_FRAMEWORK,
             )
         ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $providerRepositoryId, string $type, string $providerRootDirectory, GitHub $github, Response $response, Database $dbForPlatform) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -565,32 +702,108 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
-        $detectorFactory = new Detector($files, $languages);
+        $detector = new Packager($files);
+        $detector
+            ->addOption(new Yarn())
+            ->addOption(new PNPM())
+            ->addOption(new NPM());
+        $detection = $detector->detect();
 
-        $detectorFactory
-            ->addDetector(new JavaScript())
-            ->addDetector(new Bun())
-            ->addDetector(new PHP())
-            ->addDetector(new Python())
-            ->addDetector(new Dart())
-            ->addDetector(new Swift())
-            ->addDetector(new Ruby())
-            ->addDetector(new Java())
-            ->addDetector(new CPP())
-            ->addDetector(new Deno())
-            ->addDetector(new Dotnet());
+        $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
-        $runtime = $detectorFactory->detect();
+        if ($type === 'framework') {
+            $output = new Document([
+                'framework' => '',
+                'installCommand' => '',
+                'buildCommand' => '',
+                'outputDirectory' => '',
+            ]);
 
-        $runtimes = Config::getParam('runtimes');
-        $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-            return $runtimes[$key]['key'] === $runtime;
-        }))[0] ?? '';
+            $detector = new Framework($files, $packager);
+            $detector
+                ->addOption(new Flutter())
+                ->addOption(new Nuxt())
+                ->addOption(new Astro())
+                ->addOption(new SvelteKit())
+                ->addOption(new NextJs())
+                ->addOption(new Remix());
 
-        $detection = [];
-        $detection['runtime'] = $runtimeDetail;
+            $framework = $detector->detect();
 
-        $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
+            if (!\is_null($framework)) {
+                $output->setAttribute('installCommand', $framework->getInstallCommand());
+                $output->setAttribute('buildCommand', $framework->getBuildCommand());
+                $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
+                $framework = $framework->getName();
+            } else {
+                $framework = 'other';
+                $output->setAttribute('installCommand', '');
+                $output->setAttribute('buildCommand', '');
+                $output->setAttribute('outputDirectory', '');
+            }
+
+            $frameworks = Config::getParam('frameworks');
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
+                $framework = 'other';
+            }
+            $output->setAttribute('framework', $framework);
+        } else {
+            $output = new Document([
+                'runtime' => '',
+                'commands' => '',
+                'entrypoint' => '',
+            ]);
+
+            $strategies = [
+                new Strategy(Strategy::FILEMATCH),
+                new Strategy(Strategy::LANGUAGES),
+                new Strategy(Strategy::EXTENSION),
+            ];
+
+            foreach ($strategies as $strategy) {
+                $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                $detector
+                    ->addOption(new Node())
+                    ->addOption(new Bun())
+                    ->addOption(new Deno())
+                    ->addOption(new PHP())
+                    ->addOption(new Python())
+                    ->addOption(new Dart())
+                    ->addOption(new Swift())
+                    ->addOption(new Ruby())
+                    ->addOption(new Java())
+                    ->addOption(new CPP())
+                    ->addOption(new Dotnet());
+
+                $runtime = $detector->detect();
+
+                if (!\is_null($runtime)) {
+                    $output->setAttribute('commands', $runtime->getCommands());
+                    $output->setAttribute('entrypoint', $runtime->getEntrypoint());
+                    $runtime = $runtime->getName();
+                    break;
+                }
+            }
+
+            if (!empty($runtime)) {
+                $runtimes = Config::getParam('runtimes');
+                $runtimeWithVersion = '';
+                foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                    if ($runtimeConfig['key'] === $runtime) {
+                        $runtimeWithVersion = $runtimeKey;
+                    }
+                }
+
+                if (empty($runtimeWithVersion)) {
+                    throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
+                }
+
+                $output->setAttribute('runtime', $runtimeWithVersion);
+            } else {
+                throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
+            }
+        }
+        $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -599,23 +812,28 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'listRepositories',
         description: '/docs/references/vcs/list-repositories.md',
         auth: [AuthType::ADMIN],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROVIDER_REPOSITORY_LIST,
+                model: Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST,
+            ),
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST,
             )
         ]
     ))
     ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('gitHub')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $type, string $search, GitHub $github, Response $response, Database $dbForPlatform) {
         if (empty($search)) {
             $search = "";
         }
@@ -645,39 +863,86 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return $repo;
         }, $repos);
 
-        $repos = batch(\array_map(function ($repo) use ($github) {
-            return function () use ($repo, $github) {
-                try {
-                    $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-                    $files = \array_column($files, 'name');
+        $repos = batch(\array_map(function ($repo) use ($type, $github) {
+            return function () use ($repo, $type, $github) {
+                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                $files = \array_column($files, 'name');
+
+                $detector = new Packager($files);
+                $detector
+                    ->addOption(new Yarn())
+                    ->addOption(new PNPM())
+                    ->addOption(new NPM());
+                $detection = $detector->detect();
+
+                $packager = !\is_null($detection) ? $detection->getName() : 'npm';
+
+                if ($type === 'framework') {
+                    $frameworkDetector = new Framework($files, $packager);
+                    $frameworkDetector
+                        ->addOption(new Flutter())
+                        ->addOption(new Nuxt())
+                        ->addOption(new Astro())
+                        ->addOption(new SvelteKit())
+                        ->addOption(new NextJs())
+                        ->addOption(new Remix());
+
+                    $detectedFramework = $frameworkDetector->detect();
+
+                    if (!\is_null($detectedFramework)) {
+                        $framework = $detectedFramework->getName();
+                    } else {
+                        $framework = 'other';
+                    }
+
+                    $frameworks = Config::getParam('frameworks');
+                    if (!\in_array($framework, \array_keys($frameworks), true)) {
+                        $framework = 'other';
+                    }
+                    $repo['framework'] = $framework;
+                } else {
                     $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
 
-                    $detectorFactory = new Detector($files, $languages);
+                    $strategies = [
+                        new Strategy(Strategy::FILEMATCH),
+                        new Strategy(Strategy::LANGUAGES),
+                        new Strategy(Strategy::EXTENSION),
+                    ];
 
-                    $detectorFactory
-                        ->addDetector(new JavaScript())
-                        ->addDetector(new Bun())
-                        ->addDetector(new PHP())
-                        ->addDetector(new Python())
-                        ->addDetector(new Dart())
-                        ->addDetector(new Swift())
-                        ->addDetector(new Ruby())
-                        ->addDetector(new Java())
-                        ->addDetector(new CPP())
-                        ->addDetector(new Deno())
-                        ->addDetector(new Dotnet());
+                    foreach ($strategies as $strategy) {
+                        $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        $detector
+                            ->addOption(new Node())
+                            ->addOption(new Bun())
+                            ->addOption(new Deno())
+                            ->addOption(new PHP())
+                            ->addOption(new Python())
+                            ->addOption(new Dart())
+                            ->addOption(new Swift())
+                            ->addOption(new Ruby())
+                            ->addOption(new Java())
+                            ->addOption(new CPP())
+                            ->addOption(new Dotnet());
 
-                    $runtime = $detectorFactory->detect();
+                        $runtime = $detector->detect();
 
-                    $runtimes = Config::getParam('runtimes');
-                    $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                        return $runtimes[$key]['key'] === $runtime;
-                    }))[0] ?? '';
+                        if (!\is_null($runtime)) {
+                            $runtime = $runtime->getName();
+                            break;
+                        }
+                    }
 
-                    $repo['runtime'] = $runtimeDetail;
-                } catch (Throwable $error) {
-                    $repo['runtime'] = "";
-                    Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                    if (!empty($runtime)) {
+                        $runtimes = Config::getParam('runtimes');
+                        $runtimeWithVersion = '';
+                        foreach ($runtimes as $runtimeKey => $runtimeConfig) {
+                            if ($runtimeConfig['key'] === $runtime) {
+                                $runtimeWithVersion = $runtimeKey;
+                            }
+                        }
+
+                        $repo['runtime'] = $runtimeWithVersion ?? '';
+                    }
                 }
                 return $repo;
             };
@@ -688,9 +953,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         }, $repos);
 
         $response->dynamic(new Document([
-            'providerRepositories' => $repos,
+            $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
             'total' => \count($repos),
-        ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
+        ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -699,6 +964,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'createRepository',
         description: '/docs/references/vcs/create-repository.md',
         auth: [AuthType::ADMIN],
@@ -811,6 +1077,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'getRepository',
         description: '/docs/references/vcs/get-repository.md',
         auth: [AuthType::ADMIN],
@@ -865,6 +1132,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'listRepositoryBranches',
         description: '/docs/references/vcs/list-repository-branches.md',
         auth: [AuthType::ADMIN],
@@ -957,7 +1225,7 @@ App::post('/v1/vcs/github/events')
 
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-                //find functionId from functions table
+                //find resourceId from relevant resources table
                 $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
@@ -969,7 +1237,7 @@ App::post('/v1/vcs/github/events')
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
-                    // TODO: Use worker for this job instead (update function as well)
+                    // TODO: Use worker for this job instead (update function/site as well)
                     $providerInstallationId = $parsedPayload["installationId"];
 
                     $installations = $dbForPlatform->find('installations', [
@@ -1058,6 +1326,7 @@ App::get('/v1/vcs/installations')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'listInstallations',
         description: '/docs/references/vcs/list-installations.md',
         auth: [AuthType::ADMIN],
@@ -1113,9 +1382,12 @@ App::get('/v1/vcs/installations')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForPlatform->find('installations', $queries);
-        $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForPlatform->find('installations', $queries);
+            $total = $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'installations' => $results,
@@ -1129,6 +1401,7 @@ App::get('/v1/vcs/installations/:installationId')
     ->label('scope', 'vcs.read')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'getInstallation',
         description: '/docs/references/vcs/get-installation.md',
         auth: [AuthType::ADMIN],
@@ -1163,6 +1436,7 @@ App::delete('/v1/vcs/installations/:installationId')
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'installations',
         name: 'deleteInstallation',
         description: '/docs/references/vcs/delete-installation.md',
         auth: [AuthType::ADMIN],
@@ -1198,11 +1472,12 @@ App::delete('/v1/vcs/installations/:installationId')
     });
 
 App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
-    ->desc('Authorize external deployment')
+    ->desc('Update external deployment (authorize)')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk', new Method(
         namespace: 'vcs',
+        group: 'repositories',
         name: 'updateExternalDeployments',
         description: '/docs/references/vcs/update-external-deployments.md',
         auth: [AuthType::ADMIN],

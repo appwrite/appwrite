@@ -87,7 +87,7 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    abstract public function getHeaders(): array;
+    abstract public function getHeaders(bool $devKey = true): array;
 
     /**
      * @return array

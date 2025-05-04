@@ -50,7 +50,7 @@ class Specs extends Action
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
             ->inject('register')
-            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $version, string $mode, Registry $register): void
@@ -290,6 +290,7 @@ class Specs extends Action
                     ->setParam('name', APP_NAME)
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
                     ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
+                    ->setParam('endpoint.docs', 'https://<REGION>.cloud.appwrite.io/v1')
                     ->setParam('version', APP_VERSION_STABLE)
                     ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)

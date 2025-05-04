@@ -3,7 +3,8 @@ mutation {
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
         key: "",
-        onDelete: "cascade"
+        onDelete: "cascade",
+        newKey: ""
     ) {
         key
         type
@@ -11,6 +12,8 @@ mutation {
         error
         required
         array
+        _createdAt
+        _updatedAt
         relatedCollection
         relationType
         twoWay

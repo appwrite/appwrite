@@ -178,6 +178,7 @@ class Session extends Model
                 'description' => 'Secret used to authenticate the user. Only included if the request was made with an API key',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
+                'sensitive' => true,
             ])
             ->addRule('mfaUpdatedAt', [
                 'type' => self::TYPE_DATETIME,

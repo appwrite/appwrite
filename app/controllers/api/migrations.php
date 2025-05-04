@@ -1,26 +1,39 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Transfer;
+use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
+use Utopia\Storage\Compression\Compression;
+use Utopia\Storage\Device;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -31,12 +44,13 @@ include_once __DIR__ . '/../shared/api.php';
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Appwrite data')
+    ->desc('Create Appwrite migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createAppwriteMigration',
         description: '/docs/references/migrations/migration-appwrite.md',
         auth: [AuthType::ADMIN],
@@ -89,15 +103,15 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase data')
+    ->desc('Create Firebase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createFirebaseMigration',
         description: '/docs/references/migrations/migration-firebase.md',
         auth: [AuthType::ADMIN],
@@ -158,12 +172,13 @@ App::post('/v1/migrations/firebase')
 
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Supabase data')
+    ->desc('Create Supabase migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createSupabaseMigration',
         description: '/docs/references/migrations/migration-supabase.md',
         auth: [AuthType::ADMIN],
@@ -224,12 +239,13 @@ App::post('/v1/migrations/supabase')
 
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate NHost data')
+    ->desc('Create NHost migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'createNHostMigration',
         description: '/docs/references/migrations/migration-nhost.md',
         auth: [AuthType::ADMIN],
@@ -290,12 +306,138 @@ App::post('/v1/migrations/nhost')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+App::post('/v1/migrations/csv')
+    ->groups(['api', 'migrations'])
+    ->desc('Import documents from a CSV')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createCsvMigration',
+        description: '/docs/references/migrations/migration-csv.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('deviceForFiles')
+    ->inject('deviceForImports')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (string $bucketId, string $fileId, string $resourceId, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForImports, Event $queueForEvents, Migration $queueForMigrations) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $path = $file->getAttribute('path', '');
+        if (!$deviceForFiles->exists($path)) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+        }
+
+        // no encryption, compression on files above 20MB.
+        $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
+        $compression = $file->getAttribute('algorithm', Compression::NONE);
+        $hasCompression = $compression !== Compression::NONE;
+
+        $migrationId = ID::unique();
+        $newPath = $deviceForImports->getPath('/' . $migrationId . '_' . $fileId . '.csv');
+
+        if ($hasEncryption || $hasCompression) {
+            $source = $deviceForFiles->read($path);
+
+            // 1. decrypt
+            if ($hasEncryption) {
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    hex2bin($file->getAttribute('openSSLIV')),
+                    hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            // 2. decompress
+            if ($hasCompression) {
+                switch ($compression) {
+                    case Compression::ZSTD:
+                        $source = (new Zstd())->decompress($source);
+                        break;
+                    case Compression::GZIP:
+                        $source = (new GZIP())->decompress($source);
+                        break;
+                }
+            }
+
+            // manual write after decryption and/or decompression
+            if (! $deviceForImports->write($newPath, $source, 'text/csv')) {
+                throw new \Exception("Unable to copy file");
+            }
+        } elseif (! $deviceForFiles->transfer($path, $newPath, $deviceForImports)) {
+            throw new \Exception("Unable to copy file");
+        }
+
+        $fileSize = $deviceForImports->getFileSize($newPath);
+        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => CSV::getName(),
+            'destination' => Appwrite::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => [],
+            'resourceData' => [],
+            'errors' => [],
+            'options' => [
+                'path' => $newPath,
+                'size' => $fileSize,
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
 App::get('/v1/migrations')
     ->groups(['api', 'migrations'])
     ->desc('List migrations')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'list',
         description: '/docs/references/migrations/list-migrations.md',
         auth: [AuthType::ADMIN],
@@ -347,10 +489,15 @@ App::get('/v1/migrations')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $migrations = $dbForProject->find('migrations', $queries);
+            $total = $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'migrations' => $dbForProject->find('migrations', $queries),
-            'total' => $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT),
+            'migrations' => $migrations,
+            'total' => $total,
         ]), Response::MODEL_MIGRATION_LIST);
     });
 
@@ -360,6 +507,7 @@ App::get('/v1/migrations/:migrationId')
     ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'get',
         description: '/docs/references/migrations/get-migration.md',
         auth: [AuthType::ADMIN],
@@ -385,10 +533,11 @@ App::get('/v1/migrations/:migrationId')
 
 App::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Appwrite data')
+    ->desc('Get Appwrite migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getAppwriteReport',
         description: '/docs/references/migrations/migration-appwrite-report.md',
         auth: [AuthType::ADMIN],
@@ -408,6 +557,7 @@ App::get('/v1/migrations/appwrite/report')
     ->inject('project')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+
         $appwrite = new Appwrite($projectID, $endpoint, $key);
 
         try {
@@ -432,10 +582,11 @@ App::get('/v1/migrations/appwrite/report')
 
 App::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Firebase data')
+    ->desc('Get Firebase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getFirebaseReport',
         description: '/docs/references/migrations/migration-firebase-report.md',
         auth: [AuthType::ADMIN],
@@ -484,10 +635,11 @@ App::get('/v1/migrations/firebase/report')
 
 App::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Supabase Data')
+    ->desc('Get Supabase migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getSupabaseReport',
         description: '/docs/references/migrations/migration-supabase-report.md',
         auth: [AuthType::ADMIN],
@@ -532,10 +684,11 @@ App::get('/v1/migrations/supabase/report')
 
 App::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on NHost Data')
+    ->desc('Get NHost migration report')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'getNHostReport',
         description: '/docs/references/migrations/migration-nhost-report.md',
         auth: [AuthType::ADMIN],
@@ -580,13 +733,14 @@ App::get('/v1/migrations/nhost/report')
 
 App::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Retry migration')
+    ->desc('Update retry migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'retry',
         description: '/docs/references/migrations/retry-migration.md',
         auth: [AuthType::ADMIN],
@@ -637,6 +791,7 @@ App::delete('/v1/migrations/:migrationId')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
+        group: null,
         name: 'delete',
         description: '/docs/references/migrations/delete-migration.md',
         auth: [AuthType::ADMIN],

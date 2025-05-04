@@ -24,6 +24,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -62,6 +63,7 @@ App::post('/v1/storage/buckets')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'createBucket',
         description: '/docs/references/storage/create-bucket.md',
         auth: [AuthType::KEY],
@@ -164,6 +166,7 @@ App::get('/v1/storage/buckets')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'listBuckets',
         description: '/docs/references/storage/list-buckets.md',
         auth: [AuthType::KEY],
@@ -216,10 +219,15 @@ App::get('/v1/storage/buckets')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
+        try {
+            $buckets = $dbForProject->find('buckets', $queries);
+            $total = $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', $queries),
-            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
+            'buckets' => $buckets,
+            'total' => $total,
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -230,6 +238,7 @@ App::get('/v1/storage/buckets/:bucketId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'getBucket',
         description: '/docs/references/storage/get-bucket.md',
         auth: [AuthType::KEY],
@@ -264,6 +273,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'updateBucket',
         description: '/docs/references/storage/update-bucket.md',
         auth: [AuthType::KEY],
@@ -334,6 +344,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('audits.resource', 'bucket/{request.bucketId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'buckets',
         name: 'deleteBucket',
         description: '/docs/references/storage/delete-bucket.md',
         auth: [AuthType::KEY],
@@ -387,6 +398,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
         type: MethodType::UPLOAD,
@@ -756,6 +768,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'listFiles',
         description: '/docs/references/storage/list-files.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -837,6 +850,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
@@ -853,6 +868,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFile',
         description: '/docs/references/storage/get-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -909,6 +925,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache.resource', 'file/{request.fileId}')
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFilePreview',
         description: '/docs/references/storage/get-file-preview.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -936,9 +953,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('resourceToken')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocal) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -953,17 +971,22 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getInternalId();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
+        if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {
@@ -1091,6 +1114,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileDownload',
         description: '/docs/references/storage/get-file-download.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1239,6 +1263,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'getFileView',
         description: '/docs/references/storage/get-file-view.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1396,9 +1421,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->groups(['api', 'storage'])
     ->label('scope', 'public')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', '*/*')
-    ->label('sdk.methodType', 'location')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('jwt', '', new Text(2048, 0), 'JSON Web Token to validate', true)
@@ -1559,6 +1581,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'updateFile',
         description: '/docs/references/storage/update-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1673,6 +1696,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: 'files',
         name: 'deleteFile',
         description: '/docs/references/storage/delete-file.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1765,6 +1789,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
+/** Storage usage */
 App::get('/v1/storage/usage')
     ->desc('Get storage usage stats')
     ->groups(['api', 'storage'])
@@ -1772,6 +1797,7 @@ App::get('/v1/storage/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getUsage',
         description: '/docs/references/storage/get-usage.md',
         auth: [AuthType::ADMIN],
@@ -1858,6 +1884,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk', new Method(
         namespace: 'storage',
+        group: null,
         name: 'getBucketUsage',
         description: '/docs/references/storage/get-bucket-usage.md',
         auth: [AuthType::ADMIN],

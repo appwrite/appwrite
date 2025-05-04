@@ -33,6 +33,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -51,6 +52,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
@@ -62,6 +64,7 @@ App::post('/v1/teams')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'create',
         description: '/docs/references/teams/create-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -152,6 +155,7 @@ App::get('/v1/teams')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'list',
         description: '/docs/references/teams/list-teams.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -204,9 +208,12 @@ App::get('/v1/teams')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $results = $dbForProject->find('teams', $queries);
+            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -220,6 +227,7 @@ App::get('/v1/teams/:teamId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'get',
         description: '/docs/references/teams/get-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -250,6 +258,7 @@ App::get('/v1/teams/:teamId/prefs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'getPrefs',
         description: '/docs/references/teams/get-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -285,6 +294,7 @@ App::put('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updateName',
         description: '/docs/references/teams/update-team-name.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -332,6 +342,7 @@ App::put('/v1/teams/:teamId/prefs')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'updatePrefs',
         description: '/docs/references/teams/update-team-prefs.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -371,6 +382,7 @@ App::delete('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'teams',
         name: 'delete',
         description: '/docs/references/teams/delete-team.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -429,6 +441,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'createMembership',
         description: '/docs/references/teams/create-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -455,7 +468,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -615,7 +628,10 @@ App::post('/v1/teams/:teamId/memberships')
             $membership = ($isPrivilegedUser || $isAppUser) ?
                 Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                 $dbForProject->createDocument('memberships', $membership);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            if ($isPrivilegedUser || $isAppUser) {
+                Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            }
 
         } elseif ($membership->getAttribute('confirm') === false) {
             $membership->setAttribute('secret', Auth::hash($secret));
@@ -794,6 +810,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/teams/list-team-members.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -857,17 +874,20 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $memberships = $dbForProject->find(
+                collection: 'memberships',
+                queries: $queries,
+            );
+            $total = $dbForProject->count(
+                collection: 'memberships',
+                queries: $filterQueries,
+                max: APP_LIMIT_COUNT
+            );
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
 
-        $memberships = $dbForProject->find(
-            collection: 'memberships',
-            queries: $queries,
-        );
-
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
@@ -932,6 +952,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'getMembership',
         description: '/docs/references/teams/get-team-member.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1018,6 +1039,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembership',
         description: '/docs/references/teams/update-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1032,7 +1054,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
@@ -1044,9 +1065,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -1066,6 +1088,21 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
+
+        if ($project->getId() === 'console') {
+            // Quick check: fetch up to 2 owners to determine if only one exists
+            $ownersCount = $dbForProject->count(
+                collection: 'memberships',
+                queries: [Query::contains('roles', ['owner'])],
+                max: 2
+            );
+
+            // Prevent role change if there's only one owner left,
+            // the requester is that owner, and the new `$roles` no longer include 'owner'!
+            if ($ownersCount === 1 && $isOwner && !\in_array('owner', $roles)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'There must be at least one owner in the organization.');
+            }
+        }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
@@ -1106,6 +1143,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'updateMembershipStatus',
         description: '/docs/references/teams/update-team-membership-status.md',
         auth: [AuthType::SESSION, AuthType::JWT],
@@ -1263,6 +1301,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'memberships',
         name: 'deleteMembership',
         description: '/docs/references/teams/delete-team-membership.md',
         auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -1333,6 +1372,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('scope', 'teams.read')
     ->label('sdk', new Method(
         namespace: 'teams',
+        group: 'logs',
         name: 'listLogs',
         description: '/docs/references/teams/get-team-logs.md',
         auth: [AuthType::ADMIN],

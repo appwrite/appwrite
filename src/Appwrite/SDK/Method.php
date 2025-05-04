@@ -16,6 +16,7 @@ class Method
      * Initialise a new SDK method
      *
      * @param string $namespace
+     * @param ?string $group
      * @param string $name
      * @param string $description
      * @param array<AuthType> $auth
@@ -33,6 +34,7 @@ class Method
      */
     public function __construct(
         protected string $namespace,
+        protected ?string $group,
         protected string $name,
         protected string $description,
         protected array $auth,
@@ -87,11 +89,13 @@ class Method
             return;
         }
 
-        $descPath = $this->getDescriptionFilePath();
+        if (\str_ends_with($desc, '.md')) {
+            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
 
-        if (empty($descPath)) {
-            self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
-            return;
+            if (empty($descPath)) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
+                return;
+            }
         }
     }
 
@@ -124,6 +128,11 @@ class Method
     public function getNamespace(): string
     {
         return $this->namespace;
+    }
+
+    public function getGroup(): ?string
+    {
+        return $this->group;
     }
 
     public function getMethodName(): string
