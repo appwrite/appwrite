@@ -28,7 +28,7 @@
     "emails.invitation.body": "Hai ricevuto questa email perché {{owner}} ti ha invitato a diventare un membro del team {{team}} di {{project}}.",
     "emails.invitation.footer": "Ignora questo messaggio se non sei interessatə.",
     "emails.invitation.thanks": "Grazie,",
-    "emails.invitation.buttonText": "Accetta invito a {{team}",
+    "emails.invitation.buttonText": "Accetta invito a {{team}}",
     "emails.invitation.signature": "Il team {{project}}",
     "locale.country.unknown": "Sconosciuto",
     "countries.af": "Afghanistan",

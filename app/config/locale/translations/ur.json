@@ -29,7 +29,7 @@
     "emails.invitation.footer": "اگر آپ دلچسپی نہیں رکھتے تو آپ اس پیغام کو نظر انداز کر سکتے ہیں۔",
     "emails.invitation.thanks": "شکریہ،",
     "emails.invitation.buttonText": "{{team}} کی دعوت قبول کریں",
-    "emails.invitation.signature": "ٹیم۔ {{project}",
+    "emails.invitation.signature": "ٹیم۔ {{project}}",
     "locale.country.unknown": "نامعلوم",
     "countries.af": "افغانستان",
     "countries.ao": "انگولا",
