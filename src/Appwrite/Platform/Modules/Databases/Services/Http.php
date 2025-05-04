@@ -30,6 +30,8 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
 use Appwrite\Platform\Modules\Databases\Http\Indexes\Create as CreateIndex;
 use Appwrite\Platform\Modules\Databases\Http\Indexes\Delete as DeleteIndex;
@@ -46,6 +48,7 @@ use Appwrite\Platform\Modules\Databases\Http\Tables\Delete as DeleteTable;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Get as GetTable;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Logs\XList as ListTableLogs;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Update as UpdateTable;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\Tables\XList as ListTables;
 use Utopia\Platform\Service;
 
@@ -70,6 +73,8 @@ class Http extends Service
         $this->addAction(DeleteDatabase::getName(), new DeleteDatabase());
         $this->addAction(ListDatabases::getName(), new ListDatabases());
         $this->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
+        $this->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
+        $this->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
     }
 
     private function registerTableActions(): void
@@ -80,6 +85,7 @@ class Http extends Service
         $this->addAction(DeleteTable::getName(), new DeleteTable());
         $this->addAction(ListTables::getName(), new ListTables());
         $this->addAction(ListTableLogs::getName(), new ListTableLogs());
+        $this->addAction(GetTableUsage::getName(), new GetTableUsage());
     }
 
     private function registerColumnActions(): void
