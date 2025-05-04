@@ -136,7 +136,7 @@ class Create extends ColumnAction
                 $column->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
                 $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Only one "manyToMany" relationship per table is allowed.');
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same table is currently not permitted.');
             }
         }
 

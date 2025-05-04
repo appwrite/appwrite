@@ -91,7 +91,7 @@ class Create extends Action
         }
 
         if (isset($data['$id'])) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new rows, try update instead');
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));

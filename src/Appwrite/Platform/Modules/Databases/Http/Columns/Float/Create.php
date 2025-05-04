@@ -91,7 +91,7 @@ class Create extends ColumnAction
         $max ??= INF;
 
         if ($min > $max) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum must be less than or equal to maximum');
+            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
         }
 
         $validator = new Range($min, $max, Database::VAR_FLOAT);
