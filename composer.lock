@@ -3705,16 +3705,16 @@
         },
         {
             "name": "utopia-php/fetch",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303"
+                "reference": "83986d1be75a2fae4e684107fe70dd78a8e19b77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/65095dac14037db0c822fb5e209e5bd3187a0303",
-                "reference": "65095dac14037db0c822fb5e209e5bd3187a0303",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/83986d1be75a2fae4e684107fe70dd78a8e19b77",
+                "reference": "83986d1be75a2fae4e684107fe70dd78a8e19b77",
                 "shasum": ""
             },
             "require": {
@@ -3738,9 +3738,9 @@
             "description": "A simple library that provides an interface for making HTTP Requests.",
             "support": {
                 "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.4.1"
+                "source": "https://github.com/utopia-php/fetch/tree/0.4.2"
             },
-            "time": "2025-04-14T07:34:27+00:00"
+            "time": "2025-04-25T13:48:02+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -5275,16 +5275,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.0",
+            "version": "1.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "024473a478be9df5fdaca2c793f2232fe788e414"
+                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/024473a478be9df5fdaca2c793f2232fe788e414",
-                "reference": "024473a478be9df5fdaca2c793f2232fe788e414",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/1720ddd719e16cf0db4eb1c6eca108031636d46c",
+                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c",
                 "shasum": ""
             },
             "require": {
@@ -5323,7 +5323,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.0"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.1"
             },
             "funding": [
                 {
@@ -5331,7 +5331,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-12T12:17:51+00:00"
+            "time": "2025-04-29T12:36:36+00:00"
         },
         {
             "name": "nikic/php-parser",
