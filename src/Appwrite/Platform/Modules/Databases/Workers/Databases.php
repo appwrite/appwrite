@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Workers;
+namespace Appwrite\Platform\Modules\Databases\Workers;
 
 use Appwrite\Event\Realtime;
 use Exception;

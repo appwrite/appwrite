@@ -1,0 +1,103 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Databases\Http\Columns\Relationship;
+
+use Appwrite\Event\Event;
+use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\WhiteList;
+
+class Update extends ColumnAction
+{
+    use HTTP;
+
+    public static function getName(): string
+    {
+        return 'updateRelationshipColumn';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/:key/relationship')
+            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/:key/relationship')
+            ->desc('Update relationship column')
+            ->groups(['api', 'database', 'schema'])
+            ->label('scope', 'collections.write')
+            ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+            ->label('audits.event', 'column.update')
+            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('sdk', new Method(
+                namespace: 'databases',
+                group: 'columns',
+                name: 'updateRelationshipColumn',
+                description: '/docs/references/databases/update-relationship-attribute.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: SwooleResponse::STATUS_CODE_OK,
+                        model: UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
+            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('tableId', '', new UID(), 'Table ID.')
+            ->param('key', '', new Key(), 'Column Key.')
+            ->param('onDelete', null, new WhiteList([
+                Database::RELATION_MUTATE_CASCADE,
+                Database::RELATION_MUTATE_RESTRICT,
+                Database::RELATION_MUTATE_SET_NULL
+            ], true), 'Constraints option', true)
+            ->param('newKey', null, new Key(), 'New Column Key.', true)
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->callback([$this, 'action']);
+    }
+
+    public function action(
+        string         $databaseId,
+        string         $tableId,
+        string         $key,
+        ?string        $onDelete,
+        ?string        $newKey,
+        UtopiaResponse $response,
+        Database       $dbForProject,
+        Event          $queueForEvents
+    ): void {
+        $column = $this->updateColumn(
+            $databaseId,
+            $tableId,
+            $key,
+            $dbForProject,
+            $queueForEvents,
+            type: Database::VAR_RELATIONSHIP,
+            required: false,
+            options: [
+                'onDelete' => $onDelete
+            ],
+            newKey: $newKey
+        );
+
+        foreach ($column->getAttribute('options', []) as $k => $option) {
+            $column->setAttribute($k, $option);
+        }
+
+        $response
+            ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP);
+    }
+}
