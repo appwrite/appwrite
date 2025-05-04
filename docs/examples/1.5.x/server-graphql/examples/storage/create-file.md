@@ -1,11 +1,11 @@
 POST /v1/storage/buckets/{bucketId}/files HTTP/1.1
-Host: cloud.appwrite.io
+Host: &lt;REGION&gt;.cloud.appwrite.io
 Content-Type: multipart/form-data; boundary="cec8e8123c05ba25"
-X-Appwrite-Response-Format: 1.5.0
-X-Appwrite-Project: 5df5acd0d48c2
+X-Appwrite-Response-Format: 1.6.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
 X-Appwrite-Session: 
-X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
-X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
+X-Appwrite-Key: <YOUR_API_KEY>
+X-Appwrite-JWT: <YOUR_JWT>
 Content-Length: *Length of your entity body in bytes*
 
 --cec8e8123c05ba25

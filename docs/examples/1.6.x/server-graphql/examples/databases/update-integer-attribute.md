@@ -4,9 +4,9 @@ mutation {
         collectionId: "<COLLECTION_ID>",
         key: "",
         required: false,
+        default: 0,
         min: 0,
         max: 0,
-        default: 0,
         newKey: ""
     ) {
         key

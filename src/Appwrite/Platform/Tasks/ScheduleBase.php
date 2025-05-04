@@ -37,13 +37,13 @@ abstract class ScheduleBase extends Action
             ->inject('pools')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
+            ->callback([$this, 'action']);
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
         if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
+            $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
                 Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
@@ -103,8 +103,15 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
 
+            // Temporarly accepting both 'fra' and 'default'
+            // When all migrated, only use _APP_REGION with 'default' as default value
+            $regions = [System::getEnv('_APP_REGION', 'default')];
+            if (!in_array('default', $regions)) {
+                $regions[] = 'default';
+            }
+
             $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', $regions),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -153,8 +160,15 @@ abstract class ScheduleBase extends Action
                         $paginationQueries[] = Query::cursorAfter($latestDocument);
                     }
 
+                    // Temporarly accepting both 'fra' and 'default'
+                    // When all migrated, only use _APP_REGION with 'default' as default value
+                    $regions = [System::getEnv('_APP_REGION', 'default')];
+                    if (!in_array('default', $regions)) {
+                        $regions[] = 'default';
+                    }
+
                     $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', $regions),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));

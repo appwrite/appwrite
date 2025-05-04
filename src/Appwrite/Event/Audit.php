@@ -12,6 +12,8 @@ class Audit extends Event
     protected string $ip = '';
     protected string $hostname = '';
 
+    protected bool $critical = false;
+
     public function __construct(protected Publisher $publisher)
     {
         parent::__construct($publisher);

@@ -7,6 +7,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Pools\Pool;
 
 class Realtime extends Adapter
 {
@@ -34,6 +35,14 @@ class Realtime extends Adapter
      *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
      */
     public array $subscriptions = [];
+
+    private Pool $pubsubPool;
+
+    public function __construct()
+    {
+        global $register;
+        $this->pubsubPool = $register->get('pools')->get('pubsub');
+    }
 
     /**
      * Adds a subscription.
@@ -129,7 +138,7 @@ class Realtime extends Adapter
      * @param array $options
      * @return void
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
@@ -138,26 +147,20 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        global $register;
-        $pubsub = $register->get('pools')->get('pubsub')->pop();
-        try {
-            /** @var \Appwrite\PubSub\Adapter $redis */
-            $redis = $pubsub->getResource();
-            $redis->publish('realtime', json_encode([
-                'project' => $projectId,
-                'roles' => $roles,
-                'permissionsChanged' => $permissionsChanged,
-                'userId' => $userId,
-                'data' => [
-                    'events' => $events,
-                    'channels' => $channels,
-                    'timestamp' => DateTime::formatTz(DateTime::now()),
-                    'payload' => $payload
-                ]
-            ]));
-        } finally {
-            $pubsub->reclaim();
-        }
+        $message = [
+            'project' => $projectId,
+            'roles' => $roles,
+            'permissionsChanged' => $permissionsChanged,
+            'userId' => $userId,
+            'data' => [
+                'events' => $events,
+                'channels' => $channels,
+                'timestamp' => DateTime::formatTz(DateTime::now()),
+                'payload' => $payload
+            ]
+        ];
+
+        $this->pubsubPool->use(fn (\Appwrite\PubSub\Adapter $pubsub) => $pubsub->publish('realtime', json_encode($message)));
     }
 
     /**
@@ -343,6 +346,16 @@ class Realtime extends Adapter
                         $roles = $payload->getRead();
                     }
                 } elseif ($parts[2] === 'deployments') {
+                    $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
+                    $projectId = 'console';
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                }
+
+                break;
+
+            case 'sites':
+                if ($parts[2] === 'deployments') {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';

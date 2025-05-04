@@ -38,7 +38,7 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('queueForRealtime')
             ->inject('log')
-            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Log $log) => $this->action($message, $project, $dbForPlatform, $dbForProject, $queueForRealtime, $log));
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -98,8 +98,15 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      */
-    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime): void
-    {
+    private function createAttribute(
+        Document $database,
+        Document $collection,
+        Document $attribute,
+        Document $project,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Realtime $queueForRealtime
+    ): void {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
@@ -563,21 +570,19 @@ class Databases extends Action
         $start = \microtime(true);
 
         try {
-            $documents = $database->deleteDocuments($collectionId, $queries);
+            $count = $database->deleteDocuments(
+                $collectionId,
+                $queries,
+                Database::DELETE_BATCH_SIZE,
+                $callback
+            );
         } catch (\Throwable $th) {
-            Console::error('Failed to delete documents for collection ' . $collectionId . ': ' . $th->getMessage());
+            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
+            Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
             return;
         }
 
-        if (\is_callable($callback)) {
-            foreach ($documents as $document) {
-                $callback($document);
-            }
-        }
-
         $end = \microtime(true);
-        $count = \count($documents);
-
         Console::info("Deleted {$count} documents by group in " . ($end - $start) . " seconds");
     }
 

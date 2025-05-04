@@ -37,7 +37,7 @@ class Webhooks extends Action
             ->inject('queueForMails')
             ->inject('queueForStatsUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log) => $this->action($message, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $log));
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -53,6 +53,8 @@ class Webhooks extends Action
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
+
+
 
         if (empty($payload)) {
             throw new Exception('Missing payload');

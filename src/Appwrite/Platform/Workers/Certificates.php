@@ -8,7 +8,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
-use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\DNS;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
@@ -28,6 +28,8 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
+use Utopia\Validator\IP;
 
 class Certificates extends Action
 {
@@ -52,10 +54,7 @@ class Certificates extends Action
             ->inject('queueForRealtime')
             ->inject('log')
             ->inject('certificates')
-            ->callback(
-                fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates) =>
-                    $this->action($message, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates)
-            );
+            ->callback([$this, 'action']);
     }
 
     /**
@@ -72,8 +71,17 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates): void
-    {
+    public function action(
+        Message $message,
+        Database $dbForPlatform,
+        Mail $queueForMails,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Log $log,
+        CertificatesAdapter $certificates
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -102,8 +110,18 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForPlatform, Mail $queueForMails, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
-    {
+    private function execute(
+        Domain $domain,
+        Database $dbForPlatform,
+        Mail $queueForMails,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
+        Log $log,
+        CertificatesAdapter $certificates,
+        bool $skipRenewCheck = false
+    ): void {
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
@@ -212,8 +230,16 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
-    {
+    private function saveCertificateDocument(
+        string $domain,
+        Document $certificate,
+        bool $success,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime
+    ): void {
         // Check if update or insert required
         $certificateDocument = $dbForPlatform->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!$certificateDocument->isEmpty()) {
@@ -266,22 +292,39 @@ class Certificates extends Action
         }
 
         if (!$isMainDomain) {
-            // TODO: Would be awesome to also support A/AAAA records here. Maybe dry run?
-            // Validate if domain target is properly configured
-            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
+            $validationStart = \microtime(true);
 
-            if (!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            $validators = [];
+            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            if (!$targetCNAME->isKnown() || $targetCNAME->isTest()) {
+                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+            }
+            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+            }
+            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+            }
+
+            // Validate if domain target is properly configured
+            if (empty($validators)) {
+                throw new Exception('At least one of domain targets environment variable must be configured.');
             }
 
             // Verify domain with DNS records
-            $validationStart = \microtime(true);
-            $validator = new CNAME($target->get());
+            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
             if (!$validator->isValid($domain->get())) {
                 $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());
 
-                $error = $validator->getLogs();
+                $errors = [];
+                foreach ($validators as $validator) {
+                    if (!empty($validator->getLogs())) {
+                        $errors[] = $validator->getLogs();
+                    }
+                }
+
+                $error = \implode("\n", $errors);
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
                 throw new Exception('Failed to verify domain DNS records.');
@@ -345,8 +388,16 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForPlatform, Event $queueForEvents, Webhook $queueForWebhooks, Func $queueForFunctions, Realtime $queueForRealtime): void
-    {
+    private function updateDomainDocuments(
+        string $certificateId,
+        string $domain,
+        bool $success,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime
+    ): void {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
             $rule = $dbForPlatform->getDocument('rules', md5($domain));
