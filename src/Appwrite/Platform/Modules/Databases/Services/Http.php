@@ -25,6 +25,12 @@ use Appwrite\Platform\Modules\Databases\Http\Columns\String\Update as UpdateStri
 use Appwrite\Platform\Modules\Databases\Http\Columns\URL\Create as CreateURL;
 use Appwrite\Platform\Modules\Databases\Http\Columns\URL\Update as UpdateURL;
 use Appwrite\Platform\Modules\Databases\Http\Columns\XList as ListColumns;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
+use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -40,12 +46,17 @@ class Http extends Service
         $this->registerRowActions();
     }
 
-    private function registerDatabaseActions()
+    private function registerDatabaseActions(): void
     {
-
+        $this->addAction(CreateDatabase::getName(), new CreateDatabase());
+        $this->addAction(GetDatabase::getName(), new GetDatabase());
+        $this->addAction(UpdateDatabase::getName(), new UpdateDatabase());
+        $this->addAction(DeleteDatabase::getName(), new DeleteDatabase());
+        $this->addAction(ListDatabases::getName(), new ListDatabases());
+        $this->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
     }
 
-    private function registerTableActions()
+    private function registerTableActions(): void
     {
 
     }
@@ -98,12 +109,12 @@ class Http extends Service
         $this->addAction(UpdateURL::getName(), new UpdateURL());
     }
 
-    private function registerIndexActions()
+    private function registerIndexActions(): void
     {
 
     }
 
-    private function registerRowActions()
+    private function registerRowActions(): void
     {
 
     }
