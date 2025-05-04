@@ -35,6 +35,12 @@ use Appwrite\Platform\Modules\Databases\Http\Indexes\Create as CreateIndex;
 use Appwrite\Platform\Modules\Databases\Http\Indexes\Delete as DeleteIndex;
 use Appwrite\Platform\Modules\Databases\Http\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\Indexes\XList as ListIndexes;
+use Appwrite\Platform\Modules\Databases\Http\Rows\Create as CreateRow;
+use Appwrite\Platform\Modules\Databases\Http\Rows\Delete as DeleteRow;
+use Appwrite\Platform\Modules\Databases\Http\Rows\Get as GetRow;
+use Appwrite\Platform\Modules\Databases\Http\Rows\Logs\XList as ListRowLogs;
+use Appwrite\Platform\Modules\Databases\Http\Rows\Update as UpdateRow;
+use Appwrite\Platform\Modules\Databases\Http\Rows\XList as ListRows;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Create as CreateTable;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Delete as DeleteTable;
 use Appwrite\Platform\Modules\Databases\Http\Tables\Get as GetTable;
@@ -134,6 +140,11 @@ class Http extends Service
 
     private function registerRowActions(): void
     {
-
+        $this->addAction(CreateRow::getName(), new CreateRow());
+        $this->addAction(GetRow::getName(), new GetRow());
+        $this->addAction(UpdateRow::getName(), new UpdateRow());
+        $this->addAction(DeleteRow::getName(), new DeleteRow());
+        $this->addAction(ListRows::getName(), new ListRows());
+        $this->addAction(ListRowLogs::getName(), new ListRowLogs());
     }
 }
