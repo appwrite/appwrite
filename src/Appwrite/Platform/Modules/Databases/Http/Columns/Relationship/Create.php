@@ -128,7 +128,7 @@ class Create extends ColumnAction
                 \strtolower($column->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique.');
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
             }
 
             if (
