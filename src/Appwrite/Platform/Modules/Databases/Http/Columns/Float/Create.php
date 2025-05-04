@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Columns\Float;
 
-use const INF;
-
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
