@@ -31,6 +31,16 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
+use Appwrite\Platform\Modules\Databases\Http\Indexes\Create as CreateIndex;
+use Appwrite\Platform\Modules\Databases\Http\Indexes\Delete as DeleteIndex;
+use Appwrite\Platform\Modules\Databases\Http\Indexes\Get as GetIndex;
+use Appwrite\Platform\Modules\Databases\Http\Indexes\XList as ListIndexes;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Create as CreateTable;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Delete as DeleteTable;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Get as GetTable;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Logs\XList as ListTableLogs;
+use Appwrite\Platform\Modules\Databases\Http\Tables\Update as UpdateTable;
+use Appwrite\Platform\Modules\Databases\Http\Tables\XList as ListTables;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -58,7 +68,12 @@ class Http extends Service
 
     private function registerTableActions(): void
     {
-
+        $this->addAction(CreateTable::getName(), new CreateTable());
+        $this->addAction(GetTable::getName(), new GetTable());
+        $this->addAction(UpdateTable::getName(), new UpdateTable());
+        $this->addAction(DeleteTable::getName(), new DeleteTable());
+        $this->addAction(ListTables::getName(), new ListTables());
+        $this->addAction(ListTableLogs::getName(), new ListTableLogs());
     }
 
     private function registerColumnActions(): void
@@ -111,7 +126,10 @@ class Http extends Service
 
     private function registerIndexActions(): void
     {
-
+        $this->addAction(CreateIndex::getName(), new CreateIndex());
+        $this->addAction(GetIndex::getName(), new GetIndex());
+        $this->addAction(DeleteIndex::getName(), new DeleteIndex());
+        $this->addAction(ListIndexes::getName(), new ListIndexes());
     }
 
     private function registerRowActions(): void
