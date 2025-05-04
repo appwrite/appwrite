@@ -87,8 +87,8 @@ class Create extends ColumnAction
         EventDatabase  $queueForDatabase,
         Event          $queueForEvents
     ): void {
-        $min ??= -INF;
-        $max ??= INF;
+        $min ??= -PHP_FLOAT_MAX;
+        $max ??= PHP_FLOAT_MAX;
 
         if ($min > $max) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
