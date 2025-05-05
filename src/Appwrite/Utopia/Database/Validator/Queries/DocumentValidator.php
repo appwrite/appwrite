@@ -45,10 +45,15 @@ class DocumentValidator extends Validator
         if (!\is_array($values)) {
             return false;
         }
+        var_dump("Documents validator");
+        var_dump($values);
         $queries = Query::parseQueries($values);
-        if (!$this->additionalValidator->isValid($values)) {
-            return false;
+        foreach ($values as $element) {
+            if (!$this->additionalValidator->isValid($element)) {
+                return false;
+            }
         }
+
 
         $attributes[] = new Document([
             '$id' => '$internalId',
