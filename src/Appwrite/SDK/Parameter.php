@@ -27,9 +27,10 @@ class Parameter
         return $this->name;
     }
 
-    public function setName(string $name): void
+    public function setName(string $name): static
     {
         $this->name = $name;
+        return $this;
     }
 
     public function getDescription(): string
@@ -37,9 +38,10 @@ class Parameter
         return $this->description;
     }
 
-    public function setDescription(string $description): void
+    public function setDescription(string $description): static
     {
         $this->description = $description;
+        return $this;
     }
 
     public function getDefault(): mixed
@@ -47,9 +49,10 @@ class Parameter
         return $this->default;
     }
 
-    public function setDefault(mixed $default): void
+    public function setDefault(mixed $default): static
     {
         $this->default = $default;
+        return $this;
     }
 
     public function getValidator(): mixed
@@ -57,9 +60,10 @@ class Parameter
         return $this->validator;
     }
 
-    public function setValidator(mixed $validator): void
+    public function setValidator(mixed $validator): static
     {
         $this->validator = $validator;
+        return $this;
     }
 
     public function getOptional(): bool
@@ -67,8 +71,9 @@ class Parameter
         return $this->optional;
     }
 
-    public function setOptional(bool $optional): void
+    public function setOptional(bool $optional): static
     {
         $this->optional = $optional;
+        return $this;
     }
 }
