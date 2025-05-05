@@ -114,7 +114,6 @@ class OpenAPI3 extends Format
 
             if (!empty($method) && \is_array($method)) {
                 $method = \array_keys($method)[0];
-                \var_dump('WEIRD METHOD: ' . $method);
             }
 
             $desc = $sdk->getDescriptionFilePath();
