@@ -843,7 +843,3 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 }, ['request', 'project']);
 
 App::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
-
-App::setResource('maxBatchSize', function () {
-    return APP_LIMIT_DATABASE_BATCH;
-});
