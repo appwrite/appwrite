@@ -16,9 +16,9 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('rowsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated  number of documents.',
+                'description' => 'Total aggregated  number of rows.',
                 'default' => 0,
                 'example' => 0,
             ])
