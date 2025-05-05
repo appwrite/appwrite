@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document as DatabaseDocument;
 
-class Document extends Any
+class Row extends Any
 {
     /**
      * Get Name
@@ -14,7 +14,7 @@ class Document extends Any
      */
     public function getName(): string
     {
-        return 'Document';
+        return 'Row';
     }
 
     /**
@@ -24,7 +24,7 @@ class Document extends Any
      */
     public function getType(): string
     {
-        return Response::MODEL_DOCUMENT;
+        return Response::MODEL_ROW;
     }
 
     public function __construct()
@@ -32,13 +32,13 @@ class Document extends Any
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document ID.',
+                'description' => 'Row ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
+                'description' => 'Table ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
             ])
@@ -50,19 +50,19 @@ class Document extends Any
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Document creation date in ISO 8601 format.',
+                'description' => 'Row creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Document update date in ISO 8601 format.',
+                'description' => 'Row update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'description' => 'Row permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true,
@@ -75,15 +75,15 @@ class Document extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
-        foreach ($document->getAttributes() as $attribute) {
-            if (\is_array($attribute)) {
-                foreach ($attribute as $subAttribute) {
+        foreach ($document->getAttributes() as $column) {
+            if (\is_array($column)) {
+                foreach ($column as $subAttribute) {
                     if ($subAttribute instanceof DatabaseDocument) {
                         $this->filter($subAttribute);
                     }
                 }
-            } elseif ($attribute instanceof DatabaseDocument) {
-                $this->filter($attribute);
+            } elseif ($column instanceof DatabaseDocument) {
+                $this->filter($column);
             }
         }
 

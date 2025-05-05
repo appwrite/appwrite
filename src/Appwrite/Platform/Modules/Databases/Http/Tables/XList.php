@@ -49,7 +49,7 @@ class XList extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLLECTION_LIST,
+                        model: UtopiaResponse::MODEL_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -110,8 +110,8 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'collections' => $tables, // TODO: consider renaming to 'tables'
+            'collections' => $tables,
             'total' => $total,
-        ]), UtopiaResponse::MODEL_COLLECTION_LIST);
+        ]), UtopiaResponse::MODEL_TABLE_LIST);
     }
 }

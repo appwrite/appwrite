@@ -56,7 +56,7 @@ class Create extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
-                        model: UtopiaResponse::MODEL_COLLECTION,
+                        model: UtopiaResponse::MODEL_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -111,6 +111,6 @@ class Create extends Action
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($table, UtopiaResponse::MODEL_COLLECTION);
+            ->dynamic($table, UtopiaResponse::MODEL_TABLE);
     }
 }

@@ -40,7 +40,6 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DevKey;
-use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -87,6 +86,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ResourceToken;
+use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
@@ -164,8 +164,8 @@ class Response extends SwooleResponse
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
-    public const MODEL_DOCUMENT = 'document';
-    public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_ROW = 'row';
+    public const MODEL_ROW_LIST = 'rowList';
 
     // Database Attributes
     public const MODEL_COLUMN = 'column';
@@ -376,7 +376,7 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
-            ->setModel(new BaseList('Rows List', self::MODEL_DOCUMENT_LIST, 'rows', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Rows List', self::MODEL_ROW_LIST, 'rows', self::MODEL_ROW))
             ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
@@ -442,7 +442,7 @@ class Response extends SwooleResponse
             ->setModel(new ColumnDatetime())
             ->setModel(new ColumnRelationship())
             ->setModel(new Index())
-            ->setModel(new ModelDocument())
+            ->setModel(new Row())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new AlgoMd5())

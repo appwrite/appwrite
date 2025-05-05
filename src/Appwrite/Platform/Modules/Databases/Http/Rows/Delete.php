@@ -160,7 +160,7 @@ class Delete extends Action
             ->setParam('rowId', $row->getId())
             ->setContext('table', $table)
             ->setContext('database', $database)
-            ->setPayload($response->output($row, UtopiaResponse::MODEL_DOCUMENT), sensitive: $relationships);
+            ->setPayload($response->output($row, UtopiaResponse::MODEL_ROW), sensitive: $relationships);
 
         $response->noContent();
     }

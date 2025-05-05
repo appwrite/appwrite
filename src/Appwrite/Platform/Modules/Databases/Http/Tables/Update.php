@@ -51,7 +51,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLLECTION,
+                        model: UtopiaResponse::MODEL_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -105,6 +105,6 @@ class Update extends Action
             ->setParam('databaseId', $databaseId)
             ->setParam('tableId', $table->getId());
 
-        $response->dynamic($table, UtopiaResponse::MODEL_COLLECTION);
+        $response->dynamic($table, UtopiaResponse::MODEL_TABLE);
     }
 }

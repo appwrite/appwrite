@@ -51,7 +51,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DOCUMENT,
+                        model: UtopiaResponse::MODEL_ROW,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -149,6 +149,6 @@ class Get extends Action
 
         $response->addHeader('X-Debug-Operations', $operations);
 
-        $response->dynamic($row, UtopiaResponse::MODEL_DOCUMENT);
+        $response->dynamic($row, UtopiaResponse::MODEL_ROW);
     }
 }

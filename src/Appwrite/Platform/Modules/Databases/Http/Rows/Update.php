@@ -62,7 +62,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DOCUMENT,
+                        model: UtopiaResponse::MODEL_ROW,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -281,7 +281,7 @@ class Update extends Action
 
         $processRow($table, $row);
 
-        $response->dynamic($row, UtopiaResponse::MODEL_DOCUMENT);
+        $response->dynamic($row, UtopiaResponse::MODEL_ROW);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),

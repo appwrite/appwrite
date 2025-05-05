@@ -96,11 +96,11 @@ return [
         '$resource' => true,
         '$description' => 'This event triggers on any database event.',
         'tables' => [
-            '$model' => Response::MODEL_COLLECTION,
+            '$model' => Response::MODEL_TABLE,
             '$resource' => true,
             '$description' => 'This event triggers on any table event.',
             'rows' => [
-                '$model' => Response::MODEL_DOCUMENT,
+                '$model' => Response::MODEL_ROW,
                 '$resource' => true,
                 '$description' => 'This event triggers on any rows event.',
                 'create' => [

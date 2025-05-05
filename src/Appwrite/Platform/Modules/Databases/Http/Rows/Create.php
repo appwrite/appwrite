@@ -63,7 +63,7 @@ class Create extends Action
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
-                            model: UtopiaResponse::MODEL_DOCUMENT,
+                            model: UtopiaResponse::MODEL_ROW,
                         )
                     ],
                     contentType: ContentType::JSON
@@ -293,7 +293,7 @@ class Create extends Action
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($row, UtopiaResponse::MODEL_DOCUMENT);
+            ->dynamic($row, UtopiaResponse::MODEL_ROW);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
