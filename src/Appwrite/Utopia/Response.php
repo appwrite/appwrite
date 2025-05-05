@@ -31,7 +31,7 @@ use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\Table;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
@@ -160,8 +160,8 @@ class Response extends SwooleResponse
     // Database
     public const MODEL_DATABASE = 'database';
     public const MODEL_DATABASE_LIST = 'databaseList';
-    public const MODEL_COLLECTION = 'collection';
-    public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_TABLE = 'table';
+    public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
     public const MODEL_DOCUMENT = 'document';
@@ -376,8 +376,8 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Rows List', self::MODEL_DOCUMENT_LIST, 'rows', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
@@ -428,7 +428,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
             // Entities
             ->setModel(new Database())
-            ->setModel(new Collection())
+            ->setModel(new Table())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
             ->setModel(new AttributeString())

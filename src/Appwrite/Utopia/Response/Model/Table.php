@@ -5,32 +5,32 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Collection extends Model
+class Table extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
+                'description' => 'Table ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Collection creation date in ISO 8601 format.',
+                'description' => 'Table creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Collection update date in ISO 8601 format.',
+                'description' => 'Table update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'description' => 'Table permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true
@@ -43,13 +43,13 @@ class Collection extends Model
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection name.',
+                'description' => 'Table name.',
                 'default' => '',
-                'example' => 'My Collection',
+                'example' => 'My Table',
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Collection enabled. Can be \'enabled\' or \'disabled\'. When disabled, the collection is inaccessible to users, but remains accessible to Server SDKs using API keys.',
+                'description' => 'Table enabled. Can be \'enabled\' or \'disabled\'. When disabled, the table is inaccessible to users, but remains accessible to Server SDKs using API keys.',
                 'default' => true,
                 'example' => false,
             ])
@@ -59,7 +59,7 @@ class Collection extends Model
                 'default' => '',
                 'example' => true,
             ])
-            ->addRule('attributes', [
+            ->addRule('columns', [
                 'type' => [
                     Response::MODEL_ATTRIBUTE_BOOLEAN,
                     Response::MODEL_ATTRIBUTE_INTEGER,
@@ -72,14 +72,14 @@ class Collection extends Model
                     Response::MODEL_ATTRIBUTE_RELATIONSHIP,
                     Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
-                'description' => 'Collection attributes.',
+                'description' => 'Table columns.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
-                'description' => 'Collection indexes.',
+                'description' => 'Table indexes.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true
@@ -94,7 +94,7 @@ class Collection extends Model
      */
     public function getName(): string
     {
-        return 'Collection';
+        return 'Table';
     }
 
     /**
@@ -104,6 +104,6 @@ class Collection extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_COLLECTION;
+        return Response::MODEL_TABLE;
     }
 }
