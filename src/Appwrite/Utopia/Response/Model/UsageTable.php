@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class UsageCollection extends Model
+class UsageTable extends Model
 {
     public function __construct()
     {
@@ -16,15 +16,15 @@ class UsageCollection extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('rowsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of of documents.',
+                'description' => 'Total aggregated number of of rows.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('documents', [
+            ->addRule('rows', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  number of documents per period.',
+                'description' => 'Aggregated  number of rows per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -39,7 +39,7 @@ class UsageCollection extends Model
      */
     public function getName(): string
     {
-        return 'UsageCollection';
+        return 'UsageTable';
     }
 
     /**
@@ -49,6 +49,6 @@ class UsageCollection extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_USAGE_COLLECTION;
+        return Response::MODEL_USAGE_TABLE;
     }
 }

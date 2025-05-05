@@ -12,7 +12,7 @@ class ColumnRelationship extends Column
         parent::__construct();
 
         $this
-            ->addRule('relatedCollection', [
+            ->addRule('relatedTable', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The ID of the related table.',
                 'default' => null,
@@ -84,7 +84,7 @@ class ColumnRelationship extends Column
     {
         $options = $document->getAttribute('options');
         if (!\is_null($options)) {
-            $document->setAttribute('relatedCollection', $options['relatedCollection']);
+            $document->setAttribute('relatedTable', $options['relatedCollection']);
             $document->setAttribute('relationType', $options['relationType']);
             $document->setAttribute('twoWay', $options['twoWay']);
             $document->setAttribute('twoWayKey', $options['twoWayKey']);

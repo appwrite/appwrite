@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Table extends Model
 {
@@ -105,5 +106,42 @@ class Table extends Model
     public function getType(): string
     {
         return Response::MODEL_TABLE;
+    }
+
+    /**
+     * Process Document before returning it to the client for backwards compatibility!
+     */
+    public function filter(Document $document): Document
+    {
+        $columns = $document->getAttribute('attributes', []);
+        if (!empty($columns) && \is_array($columns)) {
+            $columns = $this->remapNestedRelatedCollections($columns);
+        }
+
+        $document
+            ->setAttribute('columns', $columns)
+            ->removeAttribute('attributes');
+
+        $related = $document->getAttribute('relatedCollection');
+        if ($related !== null) {
+            $document
+                ->setAttribute('relatedTable', $related)
+                ->removeAttribute('relatedCollection');
+        }
+
+        return $document;
+    }
+
+    // 1.7 now sends back `relatedTable` instead of `relatedCollection`.
+    // This is necessary because the actual database underneath uses `relatedCollection`.
+    private function remapNestedRelatedCollections(array $columns): array
+    {
+        foreach ($columns as $i => $column) {
+            if (isset($column['relatedCollection'])) {
+                $columns[$i]['relatedTable'] = $column['relatedCollection'];
+                unset($columns[$i]['relatedCollection']);
+            }
+        }
+        return $columns;
     }
 }

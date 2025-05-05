@@ -22,15 +22,15 @@ class UsageDatabases extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('collectionsTotal', [
+            ->addRule('tablesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number  of collections.',
+                'description' => 'Total aggregated number  of tables.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('rowsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of documents.',
+                'description' => 'Total aggregated number of rows.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -59,16 +59,16 @@ class UsageDatabases extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('collections', [
+            ->addRule('tables', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of collections per period.',
+                'description' => 'Aggregated number of tables per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('documents', [
+            ->addRule('rows', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of documents per period.',
+                'description' => 'Aggregated number of rows per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

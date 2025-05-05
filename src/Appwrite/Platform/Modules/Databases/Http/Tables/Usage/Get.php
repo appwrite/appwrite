@@ -47,7 +47,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_USAGE_COLLECTION,
+                        model: UtopiaResponse::MODEL_USAGE_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON,
@@ -126,6 +126,6 @@ class Get extends Action
             'range' => $range,
             'rows' => $usage[$metrics[0]]['data'],
             'rowsTotal' => $usage[$metrics[0]]['total'],
-        ]), UtopiaResponse::MODEL_USAGE_COLLECTION);
+        ]), UtopiaResponse::MODEL_USAGE_TABLE);
     }
 }
