@@ -118,16 +118,17 @@ class Table extends Model
             $columns = $this->remapNestedRelatedCollections($columns);
         }
 
-        $document
-            ->setAttribute('columns', $columns)
-            ->removeAttribute('attributes');
+        $document->setAttribute('columns', $columns);
 
         $related = $document->getAttribute('relatedCollection');
         if ($related !== null) {
-            $document
-                ->setAttribute('relatedTable', $related)
-                ->removeAttribute('relatedCollection');
+            $document->setAttribute('relatedTable', $related);
         }
+
+        // remove anyways as they are already copied above.
+        $document
+            ->removeAttribute('attributes')
+            ->removeAttribute('relatedCollection');
 
         return $document;
     }
