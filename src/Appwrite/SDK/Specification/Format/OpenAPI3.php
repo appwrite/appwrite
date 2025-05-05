@@ -184,7 +184,7 @@ class OpenAPI3 extends Format
                     foreach ($method->getParameters() as $parameter) {
                         $additionalMethod['parameters'][] = $parameter->getName();
 
-                        if (!$parameter->isOptional()) {
+                        if (!$parameter->getOptional()) {
                             $additionalMethod['required'][] = $parameter->getName();
                         }
                     }

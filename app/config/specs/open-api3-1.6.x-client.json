@@ -4555,7 +4555,7 @@
                                     },
                                     "documents": {
                                         "type": "array",
-                                        "description": "Array of documents data as JSON object.",
+                                        "description": "Array of documents data as JSON objects.",
                                         "x-example": null,
                                         "items": {
                                             "type": "object"

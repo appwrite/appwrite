@@ -4692,7 +4692,7 @@
                                 },
                                 "documents": {
                                     "type": "array",
-                                    "description": "Array of documents data as JSON object.",
+                                    "description": "Array of documents data as JSON objects.",
                                     "default": [],
                                     "x-example": null,
                                     "items": {

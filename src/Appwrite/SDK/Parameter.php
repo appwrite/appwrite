@@ -62,7 +62,7 @@ class Parameter
         $this->validator = $validator;
     }
 
-    public function isOptional(): bool
+    public function getOptional(): bool
     {
         return $this->optional;
     }
