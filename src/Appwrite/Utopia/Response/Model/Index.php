@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Index extends Model
 {
@@ -34,7 +35,7 @@ class Index extends Model
                 'default' => '',
                 'example' => 'string',
             ])
-            ->addRule('attributes', [
+            ->addRule('columns', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index attributes.',
                 'default' => [],
@@ -77,5 +78,17 @@ class Index extends Model
     public function getType(): string
     {
         return Response::MODEL_INDEX;
+    }
+
+    public function filter(Document $document): Document
+    {
+
+        $columns = $document->getAttribute('attributes', []);
+        $document
+            ->removeAttribute('attributes')
+            ->setAttribute('columns', $columns);
+
+        return $document;
+
     }
 }
