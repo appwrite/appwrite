@@ -4611,6 +4611,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             return true;
         });
 
+        foreach ($documents as $document) {
+            $processDocument($collection, $document);
+        }
+
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);

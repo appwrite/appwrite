@@ -1285,7 +1285,7 @@ class DatabasesCustomClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(201, $collection1['headers']['status-code']);
+        $this->assertEquals(201, $collection2['headers']['status-code']);
 
         $collection1 = $collection1['body']['$id'];
         $collection2 = $collection2['body']['$id'];
