@@ -1176,7 +1176,7 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertIsArray($documents['body']['documents']);
+        $this->assertIsArray($documents['body']['rows']);
         $this->assertIsNumeric($documents['body']['total']);
         $this->assertEquals($documentsCountInCSV, $documents['body']['total']);
     }
