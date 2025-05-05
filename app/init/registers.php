@@ -14,6 +14,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -215,7 +216,7 @@ $register->set('pools', function () {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", "user", "password", array(
                             PDO::ATTR_TIMEOUT => 3, // Seconds
                             PDO::ATTR_PERSISTENT => false,
                             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -242,8 +243,8 @@ $register->set('pools', function () {
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
-                            'mariadb' => new MariaDB($resource()),
-                            'mysql' => new MySQL($resource()),
+                            'mariadb' => new Postgres($resource()),
+                            'mysql' => new Postgres($resource()),
                             default => null
                         };
 
@@ -286,9 +287,11 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
-
+    // var_dump($dbUser);
+    // var_dump($dbPass);
+    // var_dump("pgsql:host={$dbHost};port={$dbPort};dbname={$dbScheme}");
     return new PDO(
-        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
+        "pgsql:host={$dbHost};port={$dbPort};dbname={$dbScheme}",
         $dbUser,
         $dbPass,
         SQL::getPDOAttributes()
