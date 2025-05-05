@@ -121,7 +121,7 @@ class Mapper
 
                 if (!empty($sdkParameters)) {
                     $sdkMethodParameters = [];
-                    foreach($sdkParameters as $sdkParameter) {
+                    foreach ($sdkParameters as $sdkParameter) {
                         $sdkMethodParameters[$sdkParameter->getName()] = $sdkParameter;
                     }
 
