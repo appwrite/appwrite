@@ -1352,42 +1352,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['documents']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2 . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $document2 = $response['body']['documents'][0];
-
-        $this->assertEquals('Document 2', $document2['name']);
-        $this->assertEquals('Document 1 Updated', $document2['collection1']['name']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2 . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'data' => [
-                'name' => 'Document 2 Updated',
-            ]
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1 . '/documents/' . $document1, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Document 1 Updated', $response['body']['name']);
-
-        $document2 = $response['body']['collection2'][0];
-        $this->assertEquals('Document 2 Updated', $document2['name']);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testBulkDeletesPermissions(): void
