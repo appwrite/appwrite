@@ -309,11 +309,11 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        $collection1RelationAttribute = $collection1Attributes['body']['attributes'][0];
+        $collection1RelationAttribute = $collection1Attributes['body']['columns'][0];
 
         $this->assertEquals($relation['body']['side'], $collection1RelationAttribute['side']);
         $this->assertEquals($relation['body']['twoWayKey'], $collection1RelationAttribute['twoWayKey']);
-        $this->assertEquals($relation['body']['relatedCollection'], $collection1RelationAttribute['relatedCollection']);
+        $this->assertEquals($relation['body']['relatedTable'], $collection1RelationAttribute['relatedTable']);
         $this->assertEquals('restrict', $collection1RelationAttribute['onDelete']);
     }
 

@@ -174,7 +174,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
 
         if ($success) {
-            $this->assertCount(1, $documents['body']['documents']);
+            $this->assertCount(1, $documents['body']['rows']);
         } else {
             $this->assertEquals(401, $documents['headers']['status-code']);
         }

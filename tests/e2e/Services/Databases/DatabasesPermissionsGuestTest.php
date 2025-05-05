@@ -124,11 +124,11 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         $this->assertEquals(1, $publicDocuments['body']['total']);
-        $this->assertEquals($permissions, $publicDocuments['body']['documents'][0]['$permissions']);
+        $this->assertEquals($permissions, $publicDocuments['body']['rows'][0]['$permissions']);
 
         if (\in_array(Permission::read(Role::any()), $permissions)) {
             $this->assertEquals(1, $privateDocuments['body']['total']);
-            $this->assertEquals($permissions, $privateDocuments['body']['documents'][0]['$permissions']);
+            $this->assertEquals($permissions, $privateDocuments['body']['rows'][0]['$permissions']);
         } else {
             $this->assertEquals(0, $privateDocuments['body']['total']);
         }

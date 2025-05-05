@@ -186,7 +186,7 @@ class DatabasesPermissionsMemberTest extends Scope
 
         return [
             'users' => $this->users,
-            'collections' => $this->collections,
+            'tables' => $this->collections,
             'databaseId' => $databaseId
         ];
     }
@@ -199,7 +199,7 @@ class DatabasesPermissionsMemberTest extends Scope
     public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
     {
         $users = $data['users'];
-        $collections = $data['collections'];
+        $collections = $data['tables'];
         $databaseId = $data['databaseId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
