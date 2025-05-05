@@ -124,8 +124,8 @@ class Get extends Action
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsTotal' => $usage[$metrics[0]]['total'],
-            'documents' => $usage[$metrics[0]]['data'],
+            'rows' => $usage[$metrics[0]]['data'],
+            'rowsTotal' => $usage[$metrics[0]]['total'],
         ]), UtopiaResponse::MODEL_USAGE_COLLECTION);
     }
 }

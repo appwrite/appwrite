@@ -118,7 +118,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'attributes' => $columns,
+            'columns' => $columns,
             'total' => $total,
         ]), UtopiaResponse::MODEL_COLUMN_LIST);
     }

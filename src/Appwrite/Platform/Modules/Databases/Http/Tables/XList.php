@@ -110,7 +110,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'collections' => $tables,
+            'tables' => $tables,
             'total' => $total,
         ]), UtopiaResponse::MODEL_TABLE_LIST);
     }

@@ -217,7 +217,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'total' => $total,
-            'documents' => $rows,
+            'rows' => $rows,
         ]), UtopiaResponse::MODEL_ROW_LIST);
     }
 }

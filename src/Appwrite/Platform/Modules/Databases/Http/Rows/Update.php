@@ -150,17 +150,17 @@ class Update extends Action
 
         $operations = 0;
 
-        $setTable = (function (Document $collection, Document $document) use (&$setTable, $dbForProject, $database, &$operations) {
+        $setTable = (function (Document $table, Document $row) use (&$setTable, $dbForProject, $database, &$operations) {
 
             $operations++;
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
+                $table->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -212,9 +212,9 @@ class Update extends Action
                 }
 
                 if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
         });
