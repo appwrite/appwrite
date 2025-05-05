@@ -50,7 +50,7 @@ class Update extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
+                        model: UtopiaResponse::MODEL_COLUMN_EMAIL,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -93,6 +93,6 @@ class Update extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_EMAIL);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_EMAIL);
     }
 }

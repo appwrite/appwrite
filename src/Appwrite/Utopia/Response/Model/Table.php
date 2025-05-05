@@ -61,16 +61,16 @@ class Table extends Model
             ])
             ->addRule('columns', [
                 'type' => [
-                    Response::MODEL_ATTRIBUTE_BOOLEAN,
-                    Response::MODEL_ATTRIBUTE_INTEGER,
-                    Response::MODEL_ATTRIBUTE_FLOAT,
-                    Response::MODEL_ATTRIBUTE_EMAIL,
-                    Response::MODEL_ATTRIBUTE_ENUM,
-                    Response::MODEL_ATTRIBUTE_URL,
-                    Response::MODEL_ATTRIBUTE_IP,
-                    Response::MODEL_ATTRIBUTE_DATETIME,
-                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
+                    Response::MODEL_COLUMN_BOOLEAN,
+                    Response::MODEL_COLUMN_INTEGER,
+                    Response::MODEL_COLUMN_FLOAT,
+                    Response::MODEL_COLUMN_EMAIL,
+                    Response::MODEL_COLUMN_ENUM,
+                    Response::MODEL_COLUMN_URL,
+                    Response::MODEL_COLUMN_IP,
+                    Response::MODEL_COLUMN_DATETIME,
+                    Response::MODEL_COLUMN_RELATIONSHIP,
+                    Response::MODEL_COLUMN_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Table columns.',
                 'default' => [],

@@ -53,7 +53,7 @@ class Create extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_STRING
+                        model: UtopiaResponse::MODEL_COLUMN_STRING
                     )
                 ]
             ))
@@ -117,6 +117,6 @@ class Create extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_STRING);
     }
 }

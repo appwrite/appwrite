@@ -136,19 +136,19 @@ class Delete extends Action
         $format = $column->getAttribute('format');
 
         $model = match ($type) {
-            Database::VAR_BOOLEAN => UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
-            Database::VAR_INTEGER => UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
-            Database::VAR_FLOAT => UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_DATETIME => UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
-            Database::VAR_RELATIONSHIP => UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
+            Database::VAR_BOOLEAN => UtopiaResponse::MODEL_COLUMN_BOOLEAN,
+            Database::VAR_INTEGER => UtopiaResponse::MODEL_COLUMN_INTEGER,
+            Database::VAR_FLOAT => UtopiaResponse::MODEL_COLUMN_FLOAT,
+            Database::VAR_DATETIME => UtopiaResponse::MODEL_COLUMN_DATETIME,
+            Database::VAR_RELATIONSHIP => UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
-                APP_DATABASE_ATTRIBUTE_EMAIL => UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
-                APP_DATABASE_ATTRIBUTE_ENUM => UtopiaResponse::MODEL_ATTRIBUTE_ENUM,
-                APP_DATABASE_ATTRIBUTE_IP => UtopiaResponse::MODEL_ATTRIBUTE_IP,
-                APP_DATABASE_ATTRIBUTE_URL => UtopiaResponse::MODEL_ATTRIBUTE_URL,
-                default => UtopiaResponse::MODEL_ATTRIBUTE_STRING,
+                APP_DATABASE_ATTRIBUTE_EMAIL => UtopiaResponse::MODEL_COLUMN_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => UtopiaResponse::MODEL_COLUMN_ENUM,
+                APP_DATABASE_ATTRIBUTE_IP => UtopiaResponse::MODEL_COLUMN_IP,
+                APP_DATABASE_ATTRIBUTE_URL => UtopiaResponse::MODEL_COLUMN_URL,
+                default => UtopiaResponse::MODEL_COLUMN_STRING,
             },
-            default => UtopiaResponse::MODEL_ATTRIBUTE,
+            default => UtopiaResponse::MODEL_COLUMN,
         };
 
         $queueForEvents

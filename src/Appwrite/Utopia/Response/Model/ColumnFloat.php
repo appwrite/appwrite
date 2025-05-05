@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeEnum extends Attribute
+class ColumnFloat extends Column
 {
     public function __construct()
     {
@@ -13,42 +13,42 @@ class AttributeEnum extends Attribute
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
-                'example' => 'status',
+                'example' => 'percentageCompleted',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
-                'example' => 'string',
+                'example' => 'double',
             ])
-            ->addRule('elements', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Array of elements in enumerated type.',
+            ->addRule('min', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
-                'example' => 'element',
-                'array' => true,
+                'required' => false,
+                'example' => 1.5,
             ])
-            ->addRule('format', [
-                'type' => self::TYPE_STRING,
-                'description' => 'String format.',
-                'default' => APP_DATABASE_ATTRIBUTE_ENUM,
-                'example' => APP_DATABASE_ATTRIBUTE_ENUM,
+            ->addRule('max', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Maximum value to enforce for new documents.',
+                'default' => null,
+                'required' => false,
+                'example' => 10.5,
             ])
             ->addRule('default', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => 'element',
+                'example' => 2.5,
             ])
         ;
     }
 
     public array $conditions = [
-        'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_ENUM
+        'type' => self::TYPE_FLOAT,
     ];
 
     /**
@@ -58,7 +58,7 @@ class AttributeEnum extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeEnum';
+        return 'ColumnFloat';
     }
 
     /**
@@ -68,6 +68,6 @@ class AttributeEnum extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_ENUM;
+        return Response::MODEL_COLUMN_FLOAT;
     }
 }

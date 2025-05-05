@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 
-class AttributeRelationship extends Attribute
+class ColumnRelationship extends Column
 {
     public function __construct()
     {
@@ -14,9 +14,9 @@ class AttributeRelationship extends Attribute
         $this
             ->addRule('relatedCollection', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The ID of the related collection.',
+                'description' => 'The ID of the related table.',
                 'default' => null,
-                'example' => 'collection',
+                'example' => 'table',
             ])
             ->addRule('relationType', [
                 'type' => self::TYPE_STRING,
@@ -62,7 +62,7 @@ class AttributeRelationship extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeRelationship';
+        return 'ColumnRelationship';
     }
 
     /**
@@ -72,7 +72,7 @@ class AttributeRelationship extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_RELATIONSHIP;
+        return Response::MODEL_COLUMN_RELATIONSHIP;
     }
 
     /**

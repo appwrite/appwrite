@@ -5,57 +5,57 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Attribute extends Model
+class Column extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
                 'example' => 'fullName',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
                 'example' => 'string',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
+                'description' => 'Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Error message. Displays error generated on failure of creating or deleting an attribute.',
+                'description' => 'Error message. Displays error generated on failure of creating or deleting an column.',
                 'default' => '',
                 'example' => 'string',
             ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is attribute required?',
+                'description' => 'Is column required?',
                 'default' => false,
                 'example' => true,
             ])
             ->addRule('array', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is attribute an array?',
+                'description' => 'Is column an array?',
                 'default' => false,
                 'required' => false,
                 'example' => false,
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Attribute creation date in ISO 8601 format.',
+                'description' => 'Column creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Attribute update date in ISO 8601 format.',
+                'description' => 'Column update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
@@ -70,7 +70,7 @@ class Attribute extends Model
      */
     public function getName(): string
     {
-        return 'Attribute';
+        return 'Column';
     }
 
     /**
@@ -80,6 +80,6 @@ class Attribute extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE;
+        return Response::MODEL_COLUMN;
     }
 }

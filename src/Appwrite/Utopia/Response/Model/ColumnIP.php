@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeBoolean extends Attribute
+class ColumnIP extends Column
 {
     public function __construct()
     {
@@ -13,28 +13,35 @@ class AttributeBoolean extends Attribute
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
-                'example' => 'isEnabled',
+                'example' => 'ipAddress',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
-                'example' => 'boolean',
+                'example' => 'string',
+            ])
+            ->addRule('format', [
+                'type' => self::TYPE_STRING,
+                'description' => 'String format.',
+                'default' => APP_DATABASE_ATTRIBUTE_IP,
+                'example' => APP_DATABASE_ATTRIBUTE_IP,
             ])
             ->addRule('default', [
-                'type' => self::TYPE_BOOLEAN,
+                'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => false
+                'example' => '192.0.2.0',
             ])
         ;
     }
 
     public array $conditions = [
-        'type' => self::TYPE_BOOLEAN
+        'type' => self::TYPE_STRING,
+        'format' => \APP_DATABASE_ATTRIBUTE_IP
     ];
 
     /**
@@ -44,7 +51,7 @@ class AttributeBoolean extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeBoolean';
+        return 'ColumnIP';
     }
 
     /**
@@ -54,6 +61,6 @@ class AttributeBoolean extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_BOOLEAN;
+        return Response::MODEL_COLUMN_IP;
     }
 }

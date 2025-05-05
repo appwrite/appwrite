@@ -15,23 +15,22 @@ use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\Any;
-use Appwrite\Utopia\Response\Model\Attribute;
-use Appwrite\Utopia\Response\Model\AttributeBoolean;
-use Appwrite\Utopia\Response\Model\AttributeDatetime;
-use Appwrite\Utopia\Response\Model\AttributeEmail;
-use Appwrite\Utopia\Response\Model\AttributeEnum;
-use Appwrite\Utopia\Response\Model\AttributeFloat;
-use Appwrite\Utopia\Response\Model\AttributeInteger;
-use Appwrite\Utopia\Response\Model\AttributeIP;
-use Appwrite\Utopia\Response\Model\AttributeList;
-use Appwrite\Utopia\Response\Model\AttributeRelationship;
-use Appwrite\Utopia\Response\Model\AttributeString;
-use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\Table;
+use Appwrite\Utopia\Response\Model\Column;
+use Appwrite\Utopia\Response\Model\ColumnBoolean;
+use Appwrite\Utopia\Response\Model\ColumnDatetime;
+use Appwrite\Utopia\Response\Model\ColumnEmail;
+use Appwrite\Utopia\Response\Model\ColumnEnum;
+use Appwrite\Utopia\Response\Model\ColumnFloat;
+use Appwrite\Utopia\Response\Model\ColumnInteger;
+use Appwrite\Utopia\Response\Model\ColumnIP;
+use Appwrite\Utopia\Response\Model\ColumnList;
+use Appwrite\Utopia\Response\Model\ColumnRelationship;
+use Appwrite\Utopia\Response\Model\ColumnString;
+use Appwrite\Utopia\Response\Model\ColumnURL;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
@@ -94,6 +93,7 @@ use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Table;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
@@ -168,18 +168,18 @@ class Response extends SwooleResponse
     public const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Database Attributes
-    public const MODEL_ATTRIBUTE = 'attribute';
-    public const MODEL_ATTRIBUTE_LIST = 'attributeList';
-    public const MODEL_ATTRIBUTE_STRING = 'attributeString';
-    public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
-    public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
-    public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
-    public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
-    public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
-    public const MODEL_ATTRIBUTE_IP = 'attributeIp';
-    public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
-    public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
-    public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+    public const MODEL_COLUMN = 'column';
+    public const MODEL_COLUMN_LIST = 'columnList';
+    public const MODEL_COLUMN_STRING = 'columnString';
+    public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_FLOAT = 'columnFloat';
+    public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
+    public const MODEL_COLUMN_EMAIL = 'columnEmail';
+    public const MODEL_COLUMN_ENUM = 'columnEnum';
+    public const MODEL_COLUMN_IP = 'columnIp';
+    public const MODEL_COLUMN_URL = 'columnUrl';
+    public const MODEL_COLUMN_DATETIME = 'columnDatetime';
+    public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -429,18 +429,18 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Database())
             ->setModel(new Table())
-            ->setModel(new Attribute())
-            ->setModel(new AttributeList())
-            ->setModel(new AttributeString())
-            ->setModel(new AttributeInteger())
-            ->setModel(new AttributeFloat())
-            ->setModel(new AttributeBoolean())
-            ->setModel(new AttributeEmail())
-            ->setModel(new AttributeEnum())
-            ->setModel(new AttributeIP())
-            ->setModel(new AttributeURL())
-            ->setModel(new AttributeDatetime())
-            ->setModel(new AttributeRelationship())
+            ->setModel(new Column())
+            ->setModel(new ColumnList())
+            ->setModel(new ColumnString())
+            ->setModel(new ColumnInteger())
+            ->setModel(new ColumnFloat())
+            ->setModel(new ColumnBoolean())
+            ->setModel(new ColumnEmail())
+            ->setModel(new ColumnEnum())
+            ->setModel(new ColumnIP())
+            ->setModel(new ColumnURL())
+            ->setModel(new ColumnDatetime())
+            ->setModel(new ColumnRelationship())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
@@ -558,7 +558,7 @@ class Response extends SwooleResponse
      *
      * @return self
      */
-    public function setModel(Model $instance)
+    public function setModel(Model $instance): Response
     {
         $this->models[$instance->getType()] = $instance;
 
@@ -836,7 +836,7 @@ class Response extends SwooleResponse
     /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param $filter - the response filter to set
      *
      * @return void
      */

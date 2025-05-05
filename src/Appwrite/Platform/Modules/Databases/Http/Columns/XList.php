@@ -47,7 +47,7 @@ class XList extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_LIST
+                        model: UtopiaResponse::MODEL_COLUMN_LIST
                     )
                 ]
             ))
@@ -120,6 +120,6 @@ class XList extends Action
         $response->dynamic(new Document([
             'attributes' => $columns,
             'total' => $total,
-        ]), UtopiaResponse::MODEL_ATTRIBUTE_LIST);
+        ]), UtopiaResponse::MODEL_COLUMN_LIST);
     }
 }

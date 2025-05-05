@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeString extends Attribute
+class ColumnString extends Column
 {
     public function __construct()
     {
@@ -13,13 +13,13 @@ class AttributeString extends Attribute
         $this
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Attribute size.',
+                'description' => 'Column size.',
                 'default' => 0,
                 'example' => 128,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'description' => 'Default value for column when not provided. Cannot be set when column is required.',
                 'default' => null,
                 'required' => false,
                 'example' => 'default',
@@ -38,7 +38,7 @@ class AttributeString extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeString';
+        return 'ColumnString';
     }
 
     /**
@@ -48,6 +48,6 @@ class AttributeString extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_STRING;
+        return Response::MODEL_COLUMN_STRING;
     }
 }

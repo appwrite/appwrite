@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeURL extends Attribute
+class ColumnDatetime extends Column
 {
     public function __construct()
     {
@@ -13,35 +13,36 @@ class AttributeURL extends Attribute
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
-                'example' => 'githubUrl',
+                'example' => 'birthDay',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
-                'example' => 'string',
+                'example' => self::TYPE_DATETIME,
             ])
             ->addRule('format', [
-                'type' => self::TYPE_STRING,
-                'description' => 'String format.',
-                'default' => APP_DATABASE_ATTRIBUTE_URL,
-                'example' => APP_DATABASE_ATTRIBUTE_URL,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'ISO 8601 format.',
+                'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'array' => false,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'description' => 'Default value for attribute when not provided. Only null is optional',
                 'default' => null,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'array' => false,
                 'required' => false,
-                'example' => 'http://example.com',
             ])
         ;
     }
 
     public array $conditions = [
-        'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_URL
+        'type' => self::TYPE_DATETIME
     ];
 
     /**
@@ -51,7 +52,7 @@ class AttributeURL extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeURL';
+        return 'ColumnDatetime';
     }
 
     /**
@@ -61,6 +62,6 @@ class AttributeURL extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_URL;
+        return Response::MODEL_COLUMN_DATETIME;
     }
 }

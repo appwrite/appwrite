@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeFloat extends Attribute
+class ColumnInteger extends Column
 {
     public function __construct()
     {
@@ -13,52 +13,51 @@ class AttributeFloat extends Attribute
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
-                'example' => 'percentageCompleted',
+                'example' => 'count',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
-                'example' => 'double',
+                'example' => 'integer',
             ])
             ->addRule('min', [
-                'type' => self::TYPE_FLOAT,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
                 'required' => false,
-                'example' => 1.5,
+                'example' => 1,
             ])
             ->addRule('max', [
-                'type' => self::TYPE_FLOAT,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum value to enforce for new documents.',
                 'default' => null,
                 'required' => false,
-                'example' => 10.5,
+                'example' => 10,
             ])
             ->addRule('default', [
-                'type' => self::TYPE_FLOAT,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => 2.5,
+                'example' => 10,
             ])
         ;
     }
 
     public array $conditions = [
-        'type' => self::TYPE_FLOAT,
+        'type' => self::TYPE_INTEGER,
     ];
 
     /**
-     * Get Name
-     *
+     * Get Name *
      * @return string
      */
     public function getName(): string
     {
-        return 'AttributeFloat';
+        return 'ColumnInteger';
     }
 
     /**
@@ -68,6 +67,6 @@ class AttributeFloat extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_FLOAT;
+        return Response::MODEL_COLUMN_INTEGER;
     }
 }

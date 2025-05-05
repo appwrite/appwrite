@@ -125,7 +125,7 @@ return [
                 ]
             ],
             'columns' => [
-                '$model' => Response::MODEL_ATTRIBUTE,
+                '$model' => Response::MODEL_COLUMN,
                 '$resource' => true,
                 '$description' => 'This event triggers on any columns event.',
                 'create' => [

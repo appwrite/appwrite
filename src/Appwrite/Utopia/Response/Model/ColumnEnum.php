@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class AttributeIP extends Attribute
+class ColumnEnum extends Column
 {
     public function __construct()
     {
@@ -13,35 +13,42 @@ class AttributeIP extends Attribute
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
+                'description' => 'Column Key.',
                 'default' => '',
-                'example' => 'ipAddress',
+                'example' => 'status',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
+                'description' => 'Column type.',
                 'default' => '',
                 'example' => 'string',
+            ])
+            ->addRule('elements', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Array of elements in enumerated type.',
+                'default' => null,
+                'example' => 'element',
+                'array' => true,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => APP_DATABASE_ATTRIBUTE_IP,
-                'example' => APP_DATABASE_ATTRIBUTE_IP,
+                'default' => APP_DATABASE_ATTRIBUTE_ENUM,
+                'example' => APP_DATABASE_ATTRIBUTE_ENUM,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => '192.0.2.0',
+                'example' => 'element',
             ])
         ;
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_IP
+        'format' => \APP_DATABASE_ATTRIBUTE_ENUM
     ];
 
     /**
@@ -51,7 +58,7 @@ class AttributeIP extends Attribute
      */
     public function getName(): string
     {
-        return 'AttributeIP';
+        return 'ColumnEnum';
     }
 
     /**
@@ -61,6 +68,6 @@ class AttributeIP extends Attribute
      */
     public function getType(): string
     {
-        return Response::MODEL_ATTRIBUTE_IP;
+        return Response::MODEL_COLUMN_ENUM;
     }
 }
