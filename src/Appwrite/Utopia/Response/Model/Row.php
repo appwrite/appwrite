@@ -36,7 +36,7 @@ class Row extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$collectionId', [
+            ->addRule('$tableId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Table ID.',
                 'default' => '',
@@ -74,6 +74,13 @@ class Row extends Any
         $document->removeAttribute('$internalId');
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
+
+        $collectionId = $document->getAttribute('$collectionId', '');
+        if (!empty($collectionId)) {
+            $document
+                ->removeAttribute('$collectionId')
+                ->setAttribute('$tableId', $collectionId);
+        }
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {

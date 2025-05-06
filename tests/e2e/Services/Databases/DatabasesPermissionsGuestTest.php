@@ -32,7 +32,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $publicMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -42,7 +42,7 @@ class DatabasesPermissionsGuestTest extends Scope
             ],
         ]);
         $privateMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [],
             'documentSecurity' => true,
@@ -94,14 +94,14 @@ class DatabasesPermissionsGuestTest extends Scope
         $databaseId = $data['databaseId'];
 
         $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
             'permissions' => $permissions,
         ]);
         $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -152,7 +152,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ]
@@ -165,7 +165,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -175,7 +175,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         // Create a document in private collection with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -241,7 +241,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -263,7 +263,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Thor: Ragnarok',
             ],

@@ -79,7 +79,7 @@ class WebhooksCustomServerTest extends Scope
         ]), [
             'key' => 'fullname',
             'type' => 'key',
-            'attributes' => ['lastName', 'firstName'],
+            'columns' => ['lastName', 'firstName'],
             'orders' => ['ASC', 'ASC'],
         ]);
 
@@ -159,7 +159,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Demo',
             'permissions' => [
                 Permission::read(Role::any()),

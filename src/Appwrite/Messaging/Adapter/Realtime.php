@@ -312,8 +312,8 @@ class Realtime extends Adapter
                     }
 
                     $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$collectionId') . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$collectionId') . '.rows.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
+                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
 
                     $roles = $table->getAttribute('documentSecurity', false)
                         ? \array_merge($table->getRead(), $payload->getRead())

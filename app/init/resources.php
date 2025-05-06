@@ -721,8 +721,8 @@ App::setResource('schema', function ($utopia, $dbForProject) {
             // Order must be the same as the route params
             return [
                 'databaseId' => $databaseId,
-                'documentId' => $id,
-                'collectionId' => $collectionId,
+                'rowId' => $id,
+                'tableId' => $collectionId,
                 'data' => $args,
                 'permissions' => $permissions,
             ];
@@ -737,8 +737,8 @@ App::setResource('schema', function ($utopia, $dbForProject) {
             // Order must be the same as the route params
             return [
                 'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
-                'documentId' => $documentId,
+                'tableId' => $collectionId,
+                'rowId' => $documentId,
                 'data' => $args,
                 'permissions' => $permissions,
             ];

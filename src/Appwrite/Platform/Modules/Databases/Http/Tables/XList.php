@@ -49,7 +49,7 @@ class XList extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_TABLE,
+                        model: UtopiaResponse::MODEL_TABLE_LIST,
                     )
                 ],
                 contentType: ContentType::JSON

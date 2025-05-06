@@ -125,7 +125,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $databaseId = $db['body']['$id'];
 
         $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -146,7 +146,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(202, $response['headers']['status-code']);
 
         $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Private Movies',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -167,7 +167,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(202, $response['headers']['status-code']);
 
         $doconly = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Document Only Movies',
             'permissions' => [],
             'documentSecurity' => true,
@@ -203,7 +203,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $databaseId = $data['databaseId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -212,7 +212,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -221,7 +221,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],

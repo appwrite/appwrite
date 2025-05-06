@@ -358,7 +358,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => ID::custom('first'),
+            'tableId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -374,7 +374,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 2',
-            'collectionId' => ID::custom('second'),
+            'tableId' => ID::custom('second'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -579,7 +579,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => ID::custom('first'),
+            'tableId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -592,7 +592,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']);
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $test1['body']['$id'],
+            'tableId' => $test1['body']['$id'],
         ];
     }
 
@@ -602,7 +602,7 @@ class DatabasesCustomServerTest extends Scope
     public function testGetCollection(array $data): void
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -622,7 +622,7 @@ class DatabasesCustomServerTest extends Scope
     public function testUpdateCollection(array $data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -657,7 +657,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Encrypted Actors Data',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -719,7 +719,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Jonah',
                 'lastName' => 'Jameson',
@@ -767,7 +767,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -820,7 +820,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'lorem',
                 'lastName' => 'ipsum',
@@ -898,7 +898,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($collection['body']['columns'][1]['key'], $lastName['body']['key']);
 
         return [
-            'collectionId' => $actors['body']['$id'],
+            'tableId' => $actors['body']['$id'],
             'key' => $index['body']['key'],
             'databaseId' => $databaseId
         ];
@@ -910,7 +910,7 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteIndex($data): array
     {
         $databaseId = $data['databaseId'];
-        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/' . $data['key'], array_merge([
+        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes/' . $data['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -921,7 +921,7 @@ class DatabasesCustomServerTest extends Scope
         // Wait for database worker to finish deleting index
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['tableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -938,7 +938,7 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteIndexOnDeleteAttribute($data)
     {
         $databaseId = $data['databaseId'];
-        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -948,7 +948,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -965,7 +965,7 @@ class DatabasesCustomServerTest extends Scope
 
         sleep(2);
 
-        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -976,7 +976,7 @@ class DatabasesCustomServerTest extends Scope
             'orders' => ['ASC', 'ASC'],
         ]);
 
-        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -994,7 +994,7 @@ class DatabasesCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1005,7 +1005,7 @@ class DatabasesCustomServerTest extends Scope
         // wait for database worker to complete
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['tableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1020,7 +1020,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($attribute1['body']['key'], $collection['body']['indexes'][0]['columns'][0]);
 
         // Delete attribute
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1050,7 +1050,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1163,14 +1163,14 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteCollection($data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         // Add Documents to the collection
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
@@ -1186,7 +1186,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
@@ -1249,7 +1249,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Collection1',
             'documentSecurity' => false,
             'permissions' => [],
@@ -1260,7 +1260,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Collection2',
             'documentSecurity' => false,
             'permissions' => [],
@@ -1274,7 +1274,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'relatedCollectionId' => $collection2,
+            'relatedTableId' => $collection2,
             'type' => Database::RELATION_MANY_TO_ONE,
             'twoWay' => false,
             'key' => 'collection2'
@@ -1318,7 +1318,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('attributeRowWidthLimit'),
+            'tableId' => ID::custom('attributeRowWidthLimit'),
             'name' => 'attributeRowWidthLimit',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1384,7 +1384,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('testLimitException'),
+            'tableId' => ID::custom('testLimitException'),
             'name' => 'testLimitException',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1508,7 +1508,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('updateAttributes'),
+            'tableId' => ID::custom('updateAttributes'),
             'name' => 'updateAttributes'
         ]);
 
@@ -1642,7 +1642,7 @@ class DatabasesCustomServerTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $collectionId
+            'tableId' => $collectionId
         ];
     }
 
@@ -1653,7 +1653,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1795,7 +1795,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'email';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/email/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1938,7 +1938,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'ip';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/ip/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2080,7 +2080,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'url';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/url/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2222,7 +2222,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'integer';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2483,7 +2483,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'float';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2744,7 +2744,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'boolean';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/boolean/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2886,7 +2886,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'datetime';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -3028,7 +3028,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'enum';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -3244,7 +3244,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $document = $this->client->call(
             Client::METHOD_POST,
@@ -3255,7 +3255,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3287,7 +3287,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 2048)
                 ],
@@ -3373,7 +3373,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 10)
                 ],
@@ -3408,7 +3408,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 11)
                 ],
@@ -3426,7 +3426,7 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeUpdateNotFound(array $data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $attributes = [
             'string' => [
@@ -3514,7 +3514,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         // Create document to test against
         $document = $this->client->call(
@@ -3526,7 +3526,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3578,7 +3578,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'new_string' => 'string'
                 ],
@@ -3600,7 +3600,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3630,7 +3630,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'collection1',
+            'tableId' => 'collection1',
             'name' => 'level1',
             'documentSecurity' => false,
             'permissions' => [
@@ -3646,7 +3646,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'collection2',
+            'tableId' => 'collection2',
             'name' => 'level2',
             'documentSecurity' => false,
             'permissions' => [
@@ -3684,7 +3684,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'oneToMany',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3712,7 +3712,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [[
                     '$id' => 'unique()',
@@ -3794,7 +3794,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'oneToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3822,7 +3822,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',
@@ -3904,7 +3904,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3932,7 +3932,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',
@@ -4014,7 +4014,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -4042,7 +4042,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',

@@ -38,7 +38,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -69,7 +69,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TvShows',
             'permissions' => [
                 Permission::read(Role::any()),

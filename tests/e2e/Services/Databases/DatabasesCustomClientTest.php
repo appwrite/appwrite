@@ -40,7 +40,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Movies',
             'documentSecurity' => true,
             'permissions' => [
@@ -73,7 +73,7 @@ class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
             ],
@@ -95,7 +95,7 @@ class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
             ],
@@ -138,7 +138,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('permissionCheck'),
+            'tableId' => ID::custom('permissionCheck'),
             'name' => 'permissionCheck',
             'permissions' => [],
             'documentSecurity' => true,
@@ -166,7 +166,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::custom('permissionCheckDocument'),
+            'rowId' => ID::custom('permissionCheckDocument'),
             'data' => [
                 'name' => 'AppwriteBeginner',
             ],
@@ -247,7 +247,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'level1',
             'documentSecurity' => false,
             'permissions' => [
@@ -264,7 +264,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'level2',
             'documentSecurity' => false,
             'permissions' => [
@@ -283,7 +283,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => 'oneToMany',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -335,7 +335,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'c1',
             'documentSecurity' => false,
             'permissions' => [
@@ -351,7 +351,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'c2',
             'documentSecurity' => false,
             'permissions' => [
@@ -369,7 +369,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_ONE_TO_ONE,
             'twoWay' => false,
             'onDelete' => 'cascade',
@@ -387,7 +387,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => false,
             'onDelete' => 'cascade',
@@ -406,7 +406,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => false,
             'onDelete' => 'cascade',
@@ -424,7 +424,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => false,
             'onDelete' => 'cascade',
@@ -442,7 +442,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_MANY_TO_MANY,
             'twoWay' => true,
             'onDelete' => 'setNull',
@@ -461,7 +461,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => Database::RELATION_MANY_TO_MANY,
             'twoWay' => true,
             'onDelete' => 'setNull',
@@ -495,7 +495,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection1'),
+            'tableId' => ID::custom('collection1'),
             'name' => ID::custom('collection1'),
             'documentSecurity' => false,
             'permissions' => [
@@ -511,7 +511,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection2'),
+            'tableId' => ID::custom('collection2'),
             'name' => ID::custom('collection2'),
             'documentSecurity' => false,
             'permissions' => [
@@ -524,7 +524,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection3'),
+            'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
             'documentSecurity' => false,
             'permissions' => [
@@ -539,7 +539,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection4'),
+            'tableId' => ID::custom('collection4'),
             'name' => ID::custom('collection4'),
             'documentSecurity' => false,
             'permissions' => [
@@ -552,7 +552,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection5'),
+            'tableId' => ID::custom('collection5'),
             'name' => ID::custom('collection5'),
             'documentSecurity' => false,
             'permissions' => [
@@ -568,7 +568,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2['body']['$id'],
+            'relatedTableId' => $collection2['body']['$id'],
             'type' => 'oneToOne',
             'twoWay' => false,
             'onDelete' => 'setNull',
@@ -581,7 +581,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection3['body']['$id'],
+            'relatedTableId' => $collection3['body']['$id'],
             'type' => 'oneToOne',
             'twoWay' => false,
             'onDelete' => 'setNull',
@@ -594,7 +594,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection4['body']['$id'],
+            'relatedTableId' => $collection4['body']['$id'],
             'type' => 'oneToOne',
             'twoWay' => false,
             'onDelete' => 'setNull',
@@ -607,7 +607,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection5['body']['$id'],
+            'relatedTableId' => $collection5['body']['$id'],
             'type' => 'oneToOne',
             'twoWay' => false,
             'onDelete' => 'setNull',
@@ -681,7 +681,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::custom($collection1['body']['$id']),
+            'rowId' => ID::custom($collection1['body']['$id']),
             'data' => [
                 'Title' => 'Captain America',
                 $collection2['body']['$id'] => [
@@ -709,7 +709,7 @@ class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::custom($collection1['body']['$id']),
+            'rowId' => ID::custom($collection1['body']['$id']),
             'data' => [
                 'Title' => 'Captain America',
                 $collection2['body']['$id'] => [
@@ -739,7 +739,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection3'),
+            'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
             'documentSecurity' => false,
             'permissions' => [
@@ -814,7 +814,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection3'),
+            'tableId' => ID::custom('collection3'),
             'name' => ID::custom('collection3'),
             'documentSecurity' => false,
             'permissions' => [
@@ -830,7 +830,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('collection2'),
+            'tableId' => ID::custom('collection2'),
             'name' => ID::custom('collection2'),
             'documentSecurity' => false,
             'permissions' => [
@@ -847,7 +847,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::custom('collection3Doc1'),
+            'rowId' => ID::custom('collection3Doc1'),
             'data' => [
                 'Rating' => '20'
             ]
