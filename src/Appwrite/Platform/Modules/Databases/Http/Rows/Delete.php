@@ -112,7 +112,7 @@ class Delete extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -147,10 +147,10 @@ class Delete extends Action
         $response->addHeader('X-Debug-Operations', 1);
 
         $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
+            fn ($row) => $row->getAttribute('key'),
             \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 
