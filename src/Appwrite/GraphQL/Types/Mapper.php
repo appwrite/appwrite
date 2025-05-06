@@ -418,8 +418,8 @@ class Mapper
         // TODO: Find a better way to do this
 
         switch ($name) {
-            case 'Attributes':
-                return static::getAttributeImplementation($object);
+            case 'Columns':
+                return static::getColumnImplementation($object);
             case 'HashOptions':
                 return static::getHashOptionsImplementation($object);
         }
@@ -427,29 +427,29 @@ class Mapper
         throw new Exception('Unknown union type: ' . $name);
     }
 
-    private static function getAttributeImplementation(array $object): Type
+    private static function getColumnImplementation(array $object): Type
     {
         switch ($object['type']) {
             case 'string':
                 return match ($object['format'] ?? '') {
-                    'email' => static::model('AttributeEmail'),
-                    'url' => static::model('AttributeUrl'),
-                    'ip' => static::model('AttributeIp'),
-                    default => static::model('AttributeString'),
+                    'email' => static::model('ColumnEmail'),
+                    'url' => static::model('ColumnUrl'),
+                    'ip' => static::model('ColumnIp'),
+                    default => static::model('ColumnString'),
                 };
             case 'integer':
-                return static::model('AttributeInteger');
+                return static::model('ColumnInteger');
             case 'double':
-                return static::model('AttributeFloat');
+                return static::model('ColumnFloat');
             case 'boolean':
-                return static::model('AttributeBoolean');
+                return static::model('ColumnBoolean');
             case 'datetime':
-                return static::model('AttributeDatetime');
+                return static::model('ColumnDatetime');
             case 'relationship':
-                return static::model('AttributeRelationship');
+                return static::model('ColumnRelationship');
         }
 
-        throw new Exception('Unknown attribute implementation');
+        throw new Exception('Unknown column implementation');
     }
 
     private static function getHashOptionsImplementation(array $object): Type

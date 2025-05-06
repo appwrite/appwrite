@@ -12,7 +12,8 @@ class DatabaseAliases extends Filter
         'attributes' => 'columns',
         'collectionId' => 'tableId',
         'attributeId' => 'columnId',
-        'relatedCollectionId' => 'relatedTableId'
+        'relatedCollection' => 'relatedTable',
+        'relatedCollectionId' => 'relatedTableId',
     ];
 
     public function parse(array $content, string $model): array

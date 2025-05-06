@@ -259,8 +259,8 @@ trait Base
 
     // Fragments
     public static string $FRAGMENT_COLUMNS = '
-        fragment attributeProperties on Attributes {
-            ... on AttributeString {
+        fragment columnProperties on Columns {
+            ... on ColumnString {
                 key
                 required
                 array
@@ -268,7 +268,7 @@ trait Base
                 default
                 size
             }
-            ... on AttributeInteger {
+            ... on ColumnInteger {
                 key
                 required
                 array
@@ -277,7 +277,7 @@ trait Base
                 intMin: min
                 intMax: max
             }
-            ... on AttributeFloat {
+            ... on ColumnFloat {
                 key
                 required
                 array
@@ -286,35 +286,35 @@ trait Base
                 floatMin: min
                 floatMax: max
             }
-            ... on AttributeBoolean {
+            ... on ColumnBoolean {
                 key
                 required
                 array
                 status
                 boolDefault:default
             }
-            ... on AttributeUrl {
+            ... on ColumnUrl {
                 key
                 required
                 array
                 status
                 default
             }
-            ... on AttributeEmail {
+            ... on ColumnEmail {
                 key
                 required
                 array
                 status
                 default
             }
-            ... on AttributeIp {
+            ... on ColumnIp {
                 key
                 required
                 array
                 status
                 default
             }
-            ... on AttributeEnum {
+            ... on ColumnEnum {
                 key
                 required
                 array
@@ -322,7 +322,7 @@ trait Base
                 default
                 elements
             }
-            ... on AttributeDatetime {
+            ... on ColumnDatetime {
                 key
                 required
                 array
@@ -406,7 +406,7 @@ trait Base
                 return 'query listTables($databaseId: String!) {
                     databasesListTables(databaseId: $databaseId) {
                         total
-                        collections {
+                        tables {
                             _id
                             _permissions
                             documentSecurity
@@ -527,7 +527,7 @@ trait Base
             case self::$CREATE_RELATIONSHIP_COLUMN:
                 return 'mutation createRelationshipColumn($databaseId: String!, $tableId: String!, $relatedTableId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
                     databasesCreateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, relatedTableId: $relatedTableId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
-                        relatedCollection
+                        relatedTable
                         relationType
                         twoWay
                         key
@@ -606,7 +606,7 @@ trait Base
             case self::$UPDATE_RELATIONSHIP_COLUMN:
                 return 'mutation updateRelationshipColumn($databaseId: String!, $tableId: String!, $key: String!, $onDelete: String){
                         databasesUpdateRelationshipColumn(databaseId: $databaseId, tableId: $tableId, key: $key, onDelete: $onDelete) {
-                            relatedCollection
+                            relatedTable
                             relationType
                             twoWay
                             key
@@ -651,15 +651,15 @@ trait Base
                 return 'query listColumns($databaseId: String!, $tableId: String!) {
                     databasesListColumns(databaseId: $databaseId, tableId: $tableId) {
                         total
-                        attributes {
-                            ...attributeProperties
+                        columns {
+                            ...columnProperties
                         }
                     }
                 }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
             case self::$GET_COLUMN:
                 return 'query getColumn($databaseId: String!, $tableId: String!, $key: String!) {
                     databasesGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
-                        ...attributeProperties
+                        ...columnProperties
                     }
                 }' . PHP_EOL . self::$FRAGMENT_COLUMNS;
             case self::$DELETE_COLUMN:
@@ -681,7 +681,7 @@ trait Base
                 return 'query listRows($databaseId: String!, $tableId: String!){
                     databasesListRows(databaseId: $databaseId, tableId: $tableId) {
                         total
-                        documents {
+                        rows {
                             _id
                             _collectionId
                             _permissions
@@ -2259,8 +2259,8 @@ trait Base
                         _databaseId
                         name
                         documentSecurity
-                        attributes {
-                            ...attributeProperties
+                        columns {
+                            ...columnProperties
                         }
                         indexes {
                             key
