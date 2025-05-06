@@ -1424,6 +1424,13 @@ return [
                 'lengths' => [128],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_team_confirm'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['teamInternalId', 'confirm'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
