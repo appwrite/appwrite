@@ -4202,7 +4202,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_DOCUMENT_LIST,
+                model: Response::MODEL_BULK_OPERATION,
             )
         ],
         contentType: ContentType::JSON
@@ -4290,17 +4290,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $partialDocument = new Document($data);
 
-        $documents = [];
-
-        $dbForProject->updateDocuments(
-            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            $partialDocument,
-            $queries,
-            onNext: function (Document $document) use (&$documents) {
-                $documents[] = $document;
-            },
-        );
-
         $operations = 0;
 
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -4337,9 +4326,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
-        }
+        $modified = $dbForProject->updateDocuments(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $partialDocument,
+            $queries,
+            onNext: function (Document $document) use (&$processDocument) {
+                $processDocument($document);
+            },
+        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
@@ -4347,9 +4341,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $response
             ->dynamic(new Document([
-                'total' => \count($documents),
-                'documents' => $documents
-            ]), Response::MODEL_DOCUMENT_LIST);
+                'modified' => $modified
+            ]), Response::MODEL_BULK_OPERATION);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
@@ -4499,7 +4492,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_DOCUMENT_LIST,
+                model: Response::MODEL_BULK_OPERATION,
             )
         ],
         contentType: ContentType::JSON
@@ -4541,16 +4534,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        $documents = [];
-
-        $dbForProject->deleteDocuments(
-            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            $queries,
-            onNext: function (Document $document) use (&$documents) {
-                $documents[] = $document;
-            },
-        );
 
         $operations = 0;
 
@@ -4602,9 +4585,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             return true;
         });
 
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
-        }
+        $modified = $dbForProject->deleteDocuments(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $queries,
+            onNext: function (Document $document) use (&$processDocument) {
+                $processDocument($document);
+            },
+        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
@@ -4612,9 +4599,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $response
             ->dynamic(new Document([
-                'total' => \count($documents),
-                'documents' => $documents,
-            ]), Response::MODEL_DOCUMENT_LIST);
+                'modified' => $modified,
+            ]), Response::MODEL_BULK_OPERATION);
     });
 
 App::get('/v1/databases/usage')
