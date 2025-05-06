@@ -407,7 +407,7 @@ class OpenAPI3 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
