@@ -284,7 +284,7 @@ class Mapper
             case 'Utopia\Database\Validator\Authorization':
             case 'Appwrite\Utopia\Database\Validator\Queries\Base':
             case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
             case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
