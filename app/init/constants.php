@@ -29,6 +29,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
@@ -257,3 +258,10 @@ const RESOURCE_TYPE_PROVIDERS = 'providers';
 const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
+
+// Resource types for Tokens
+
+const TOKENS_RESOURCE_TYPE_FILES = 'files';
+const TOKENS_RESOURCE_TYPE_SITES = 'sites';
+const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
+const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
