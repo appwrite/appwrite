@@ -513,7 +513,7 @@ class Deletes extends Action
                     Console::info('DeleteProject deleteCollection "'.$collection->getId().'"');
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
-                    Console::info('DeleteProject deleteByGroup "'.$collection->getId().'"');
+                    Console::log('DeleteProject deleteByGroup "'.$collection->getId().'"');
                     $this->deleteByGroup(
                         $collection->getId(),
                         [
