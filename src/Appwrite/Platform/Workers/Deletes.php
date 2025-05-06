@@ -497,45 +497,33 @@ class Deletes extends Action
             AbuseDatabase::COLLECTION,
         ];
 
-        $limit = \count($projectCollectionIds) + 25;
-
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        while (true) {
-            $collections = $dbForProject->listCollections($limit);
+        /**
+         * Consider using cursor
+         */
+        $collections = $dbForProject->listCollections(PHP_INT_MAX);
 
-            foreach ($collections as $collection) {
-                try {
-                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                        $dbForProject->deleteCollection($collection->getId());
-                    } else {
-                        $this->deleteByGroup(
-                            $collection->getId(),
-                            [
-                                Query::orderAsc()
-                            ],
-                            database: $dbForProject
-                        );
-                    }
-                } catch (Throwable $e) {
-                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+        foreach ($collections as $collection) {
+            try {
+                if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    $dbForProject->deleteCollection($collection->getId());
+                } else {
+                    $this->deleteByGroup(
+                        $collection->getId(),
+                        [
+                            Query::orderAsc()
+                        ],
+                        database: $dbForProject
+                    );
                 }
-            }
-
-            if ($sharedTables) {
-                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
-
-                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
-                    break;
-                }
-            } elseif (empty($collections)) {
-                break;
+            } catch (Throwable $e) {
+                Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
             }
         }
 
