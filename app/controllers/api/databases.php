@@ -3342,7 +3342,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             $document->setAttribute('$permissions', $permissions);
         };
 
-        $operations = 1;
+        $operations = 0;
 
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
             $operations++;
@@ -3507,8 +3507,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations); // per collection
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -3610,7 +3610,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $operations = 1;
+        $operations = 0;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
@@ -3672,8 +3672,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), \max(1, $operations));
 
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
@@ -3763,7 +3763,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $operations = 1;
+        $operations = 0;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -3812,8 +3812,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $processDocument($collection, $document);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), \max(1, $operations));
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -4036,7 +4036,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $operations = 1;
+        $operations = 0;
 
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, &$operations) {
 
@@ -4110,8 +4110,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $setCollection($collection, $newDocument);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         try {
             $document = $dbForProject->updateDocument(
@@ -4301,7 +4301,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             },
         );
 
-        $operations = 1;
+        $operations = 0;
 
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
             $operations++;
@@ -4342,8 +4342,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         $response
             ->dynamic(new Document([
@@ -4418,7 +4418,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $operations = 1;
+        $operations = 0;
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
@@ -4458,8 +4458,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $processDocument($collection, $document);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
@@ -4552,7 +4552,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             },
         );
 
-        $operations = 1;
+        $operations = 0;
 
         $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
@@ -4607,8 +4607,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 
         $response
             ->dynamic(new Document([

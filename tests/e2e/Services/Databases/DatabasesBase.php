@@ -5287,6 +5287,7 @@ trait DatabasesBase
             ], $document['$permissions']);
             $this->assertEquals($collection['body']['$id'], $document['$collectionId']);
             $this->assertEquals($data['databaseId'], $document['$databaseId']);
+            $this->assertEquals($document['number'], 100);
         }
 
         // TEST: Check permissions persist
