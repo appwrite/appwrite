@@ -196,14 +196,14 @@ class Exception extends \Exception
     public const TABLE_ALREADY_EXISTS         = 'table_already_exists';
     public const TABLE_LIMIT_EXCEEDED         = 'table_limit_exceeded';
 
-    /** Documents */
-    public const DOCUMENT_NOT_FOUND                = 'document_not_found';
-    public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
-    public const DOCUMENT_MISSING_DATA             = 'document_missing_data';
-    public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
-    public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
-    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
-    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
+    /** Rows */
+    public const ROW_NOT_FOUND                = 'row_not_found';
+    public const ROW_INVALID_STRUCTURE        = 'row_invalid_structure';
+    public const ROW_MISSING_DATA             = 'row_missing_data';
+    public const ROW_MISSING_PAYLOAD          = 'row_missing_payload';
+    public const ROW_ALREADY_EXISTS           = 'row_already_exists';
+    public const ROW_UPDATE_CONFLICT          = 'row_update_conflict';
+    public const ROW_DELETE_RESTRICTED        = 'row_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';

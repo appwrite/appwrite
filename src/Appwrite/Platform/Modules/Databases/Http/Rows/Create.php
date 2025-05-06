@@ -87,11 +87,11 @@ class Create extends Action
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+            throw new Exception(Exception::ROW_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new rows, try update instead');
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, '$id is not allowed for creating new rows, try update instead');
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -242,9 +242,9 @@ class Create extends Action
         try {
             $row = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $row);
         } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::ROW_ALREADY_EXISTS);
         } catch (NotFoundException) {
             throw new Exception(Exception::TABLE_NOT_FOUND);
         }

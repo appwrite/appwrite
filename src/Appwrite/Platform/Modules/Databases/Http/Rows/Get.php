@@ -92,7 +92,7 @@ class Get extends Action
         }
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         $operations = 0;

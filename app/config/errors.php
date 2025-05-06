@@ -674,40 +674,40 @@ return [
         'code' => 400,
     ],
 
-    /** Documents */
-    Exception::DOCUMENT_NOT_FOUND => [
-        'name' => Exception::DOCUMENT_NOT_FOUND,
-        'description' => 'Document with the requested ID could not be found.',
+    /** Rows */
+    Exception::ROW_NOT_FOUND => [
+        'name' => Exception::ROW_NOT_FOUND,
+        'description' => 'Row with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::DOCUMENT_INVALID_STRUCTURE => [
-        'name' => Exception::DOCUMENT_INVALID_STRUCTURE,
-        'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
+    Exception::ROW_INVALID_STRUCTURE => [
+        'name' => Exception::ROW_INVALID_STRUCTURE,
+        'description' => 'The row structure is invalid. Please ensure the columns match the table definition.',
         'code' => 400,
     ],
-    Exception::DOCUMENT_MISSING_DATA => [
-        'name' => Exception::DOCUMENT_MISSING_DATA,
-        'description' => 'The document data is missing. Try again with document data populated',
+    Exception::ROW_MISSING_DATA => [
+        'name' => Exception::ROW_MISSING_DATA,
+        'description' => 'The row data is missing. Try again with row data populated',
         'code' => 400,
     ],
-    Exception::DOCUMENT_MISSING_PAYLOAD => [
-        'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document data and permissions are missing. You must provide either document data or permissions to be updated.',
+    Exception::ROW_MISSING_PAYLOAD => [
+        'name' => Exception::ROW_MISSING_PAYLOAD,
+        'description' => 'The row data and permissions are missing. You must provide either row data or permissions to be updated.',
         'code' => 400,
     ],
-    Exception::DOCUMENT_ALREADY_EXISTS => [
-        'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+    Exception::ROW_ALREADY_EXISTS => [
+        'name' => Exception::ROW_ALREADY_EXISTS,
+        'description' => 'Row with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::DOCUMENT_UPDATE_CONFLICT => [
-        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
-        'description' => 'Remote document is newer than local.',
+    Exception::ROW_UPDATE_CONFLICT => [
+        'name' => Exception::ROW_UPDATE_CONFLICT,
+        'description' => 'Remote row is newer than local.',
         'code' => 409,
     ],
-    Exception::DOCUMENT_DELETE_RESTRICTED => [
-        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
-        'description' => 'Document cannot be deleted because it is referenced by another document.',
+    Exception::ROW_DELETE_RESTRICTED => [
+        'name' => Exception::ROW_DELETE_RESTRICTED,
+        'description' => 'Row cannot be deleted because it is referenced by another document.',
         'code' => 403,
     ],
 

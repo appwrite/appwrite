@@ -3417,7 +3417,7 @@ class DatabasesCustomServerTest extends Scope
         );
 
         $this->assertEquals(400, $newDoc['headers']['status-code']);
-        $this->assertEquals(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $newDoc['body']['type']);
+        $this->assertEquals(AppwriteException::ROW_INVALID_STRUCTURE, $newDoc['body']['type']);
     }
 
     /**

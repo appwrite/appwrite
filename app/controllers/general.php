@@ -1161,7 +1161,7 @@ App::error()
                 }
                 break;
             case 'Utopia\Database\Exception\Conflict':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+                $error = new AppwriteException(AppwriteException::ROW_UPDATE_CONFLICT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
@@ -1170,13 +1170,13 @@ App::error()
                 $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Structure':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                $error = new AppwriteException(AppwriteException::ROW_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Duplicate':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                $error = new AppwriteException(AppwriteException::ROW_ALREADY_EXISTS);
                 break;
             case 'Utopia\Database\Exception\Restricted':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                $error = new AppwriteException(AppwriteException::ROW_DELETE_RESTRICTED);
                 break;
             case 'Utopia\Database\Exception\Authorization':
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);

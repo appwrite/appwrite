@@ -86,7 +86,7 @@ class Update extends Action
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::ROW_MISSING_PAYLOAD);
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -109,7 +109,7 @@ class Update extends Action
         $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -239,9 +239,9 @@ class Update extends Action
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::ROW_ALREADY_EXISTS);
         } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, $e->getMessage());
         } catch (NotFoundException) {
             throw new Exception(Exception::TABLE_NOT_FOUND);
         }

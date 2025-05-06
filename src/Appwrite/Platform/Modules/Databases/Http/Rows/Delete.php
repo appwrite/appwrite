@@ -91,7 +91,7 @@ class Delete extends Action
         $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         try {

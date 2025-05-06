@@ -2399,7 +2399,7 @@ trait DatabasesBase
 
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('Remote document is newer than local.', $response['body']['message']);
-        $this->assertEquals(Exception::DOCUMENT_UPDATE_CONFLICT, $response['body']['type']);
+        $this->assertEquals(Exception::ROW_UPDATE_CONFLICT, $response['body']['type']);
 
         return [];
     }
