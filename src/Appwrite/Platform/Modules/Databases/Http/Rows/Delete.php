@@ -84,7 +84,7 @@ class Delete extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
@@ -102,7 +102,7 @@ class Delete extends Action
                 );
             });
         } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Add $tableId and $databaseId for all rows

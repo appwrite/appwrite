@@ -1185,7 +1185,7 @@ App::error()
                 $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\NotFound':
-                $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
+                $error = new AppwriteException(AppwriteException::TABLE_NOT_FOUND, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Dependency':
                 $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);

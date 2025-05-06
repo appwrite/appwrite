@@ -657,20 +657,20 @@ return [
         'code' => 400,
     ],
 
-    /** Collections */
-    Exception::COLLECTION_NOT_FOUND => [
-        'name' => Exception::COLLECTION_NOT_FOUND,
-        'description' => 'Collection with the requested ID could not be found.',
+    /** Tables */
+    Exception::TABLE_NOT_FOUND => [
+        'name' => Exception::TABLE_NOT_FOUND,
+        'description' => 'Table with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::COLLECTION_ALREADY_EXISTS => [
-        'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+    Exception::TABLE_ALREADY_EXISTS => [
+        'name' => Exception::TABLE_ALREADY_EXISTS,
+        'description' => 'A table with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::COLLECTION_LIMIT_EXCEEDED => [
-        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of collections has been reached.',
+    Exception::TABLE_LIMIT_EXCEEDED => [
+        'name' => Exception::TABLE_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of tables has been reached.',
         'code' => 400,
     ],
 

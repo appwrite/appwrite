@@ -192,9 +192,9 @@ class Exception extends \Exception
     public const DATABASE_QUERY_ORDER_NULL         = 'database_query_order_null';
 
     /** Collections */
-    public const COLLECTION_NOT_FOUND              = 'collection_not_found';
-    public const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
-    public const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
+    public const TABLE_NOT_FOUND              = 'table_not_found';
+    public const TABLE_ALREADY_EXISTS         = 'table_already_exists';
+    public const TABLE_LIMIT_EXCEEDED         = 'table_limit_exceeded';
 
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';

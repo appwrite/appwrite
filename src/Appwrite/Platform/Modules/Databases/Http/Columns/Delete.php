@@ -81,7 +81,7 @@ class Delete extends Action
 
         $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
@@ -109,7 +109,7 @@ class Delete extends Action
             if ($options['twoWay']) {
                 $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
                 if ($relatedTable->isEmpty()) {
-                    throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                    throw new Exception(Exception::TABLE_NOT_FOUND);
                 }
 
                 $relatedColumn = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $options['twoWayKey']);

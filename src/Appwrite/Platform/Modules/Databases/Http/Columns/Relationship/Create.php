@@ -105,13 +105,13 @@ class Create extends ColumnAction
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
         $table = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId());
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $relatedTableDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId);
         $relatedTable = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedTableDocument->getInternalId());
         if ($relatedTable->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $columns = $table->getAttribute('attributes', []);

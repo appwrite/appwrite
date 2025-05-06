@@ -3491,7 +3491,7 @@ class DatabasesCustomServerTest extends Scope
             ]), $payload);
 
             $this->assertEquals(404, $update['headers']['status-code']);
-            $this->assertEquals(AppwriteException::COLLECTION_NOT_FOUND, $update['body']['type']);
+            $this->assertEquals(AppwriteException::TABLE_NOT_FOUND, $update['body']['type']);
 
             /**
              * Check if Attribute exists

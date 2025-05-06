@@ -106,7 +106,7 @@ class Create extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $allowedPermissions = [
@@ -246,7 +246,7 @@ class Create extends Action
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
 

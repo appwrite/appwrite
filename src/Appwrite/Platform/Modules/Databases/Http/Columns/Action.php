@@ -78,7 +78,7 @@ class Action extends UtopiaAction
         $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         if (!empty($format)) {
@@ -100,7 +100,7 @@ class Action extends UtopiaAction
             $options['side'] = Database::RELATION_SIDE_PARENT;
             $relatedTable = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
             if ($relatedTable->isEmpty()) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND, 'The related table was not found.');
+                throw new Exception(Exception::TABLE_NOT_FOUND, 'The related table was not found.');
             }
         }
 
@@ -229,7 +229,7 @@ class Action extends UtopiaAction
         $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);

@@ -68,7 +68,7 @@ class XList extends Action
 
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $queries = Query::parseQueries($queries);
