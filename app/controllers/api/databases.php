@@ -3510,9 +3510,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations); // per collection
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->addHeader('X-Debug-Operations', $operations);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
         if ($isBulk) {
             $response->dynamic(new Document([
@@ -3677,8 +3675,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
-        $response->addHeader('X-Debug-Operations', $operations);
-
         $select = \array_reduce($queries, function ($result, $query) {
             return $result || ($query->getMethod() === Query::TYPE_SELECT);
         }, false);
@@ -3818,8 +3814,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
-
-        $response->addHeader('X-Debug-Operations', $operations);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -4119,8 +4113,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $operations)
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
-        $response->addHeader('X-Debug-Operations', $operations);
-
         try {
             $document = $dbForProject->updateDocument(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
@@ -4354,7 +4346,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response
-            ->addHeader('X-Debug-Operations', $operations)
             ->dynamic(new Document([
                 'total' => \count($documents),
                 'documents' => $documents
@@ -4620,7 +4611,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         $response
-            ->addHeader('X-Debug-Operations', $operations)
             ->dynamic(new Document([
                 'total' => \count($documents),
                 'documents' => $documents,
