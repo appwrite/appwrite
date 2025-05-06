@@ -49,7 +49,7 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $version, string $mode): void
