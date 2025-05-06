@@ -2025,6 +2025,26 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
         $this->assertEquals('cli', $deployment['body']['type']);
 
+        // create another duplicate deployment with manual trigger
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId1,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId2 = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId2);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId2);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals($deployment['body']['sourceSize'], $deployment['body']['totalSize']);
+        $this->assertEquals('manual', $deployment['body']['type']);
+
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
