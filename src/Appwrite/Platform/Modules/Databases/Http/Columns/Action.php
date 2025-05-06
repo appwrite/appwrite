@@ -83,17 +83,17 @@ class Action extends UtopiaAction
 
         if (!empty($format)) {
             if (!Structure::hasFormat($format, $type)) {
-                throw new Exception(Exception::ATTRIBUTE_FORMAT_UNSUPPORTED, "Format {$format} not available for {$type} columns.");
+                throw new Exception(Exception::COLUMN_FORMAT_UNSUPPORTED, "Format {$format} not available for {$type} columns.");
             }
         }
 
         // Must throw here since dbForProject->createAttribute is performed by db worker
         if ($required && isset($default)) {
-            throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
+            throw new Exception(Exception::COLUMN_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
         }
 
         if ($array && isset($default)) {
-            throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
+            throw new Exception(Exception::COLUMN_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
         }
 
         if ($type === Database::VAR_RELATIONSHIP) {
@@ -128,9 +128,9 @@ class Action extends UtopiaAction
             $dbForProject->checkAttribute($table, $column);
             $column = $dbForProject->createDocument('attributes', $column);
         } catch (DuplicateException) {
-            throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+            throw new Exception(Exception::COLUMN_ALREADY_EXISTS);
         } catch (LimitException) {
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+            throw new Exception(Exception::COLUMN_LIMIT_EXCEEDED);
         } catch (Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $tableId);
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $table->getInternalId());
@@ -171,10 +171,10 @@ class Action extends UtopiaAction
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 $dbForProject->deleteDocument('attributes', $column->getId());
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+                throw new Exception(Exception::COLUMN_ALREADY_EXISTS);
             } catch (LimitException) {
                 $dbForProject->deleteDocument('attributes', $column->getId());
-                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+                throw new Exception(Exception::COLUMN_LIMIT_EXCEEDED);
             } catch (Throwable $e) {
                 $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedTable->getId());
                 $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedTable->getInternalId());
@@ -235,27 +235,27 @@ class Action extends UtopiaAction
         $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
 
         if ($column->isEmpty()) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            throw new Exception(Exception::COLUMN_NOT_FOUND);
         }
 
         if ($column->getAttribute('status') !== 'available') {
-            throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
+            throw new Exception(Exception::COLUMN_NOT_AVAILABLE);
         }
 
         if ($column->getAttribute(('type') !== $type)) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+            throw new Exception(Exception::COLUMN_TYPE_INVALID);
         }
 
         if ($column->getAttribute('type') === Database::VAR_STRING && $column->getAttribute(('filter') !== $filter)) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+            throw new Exception(Exception::COLUMN_TYPE_INVALID);
         }
 
         if ($required && isset($default)) {
-            throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
+            throw new Exception(Exception::COLUMN_DEFAULT_UNSUPPORTED, 'Cannot set default value for required column');
         }
 
         if ($column->getAttribute('array', false) && isset($default)) {
-            throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
+            throw new Exception(Exception::COLUMN_DEFAULT_UNSUPPORTED, 'Cannot set default value for array columns');
         }
 
         $tableId = 'database_' . $db->getInternalId() . '_collection_' . $table->getInternalId();
@@ -275,7 +275,7 @@ class Action extends UtopiaAction
                 $max ??= $column->getAttribute('formatOptions')['max'];
 
                 if ($min > $max) {
-                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+                    throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
                 }
 
                 if ($column->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
@@ -289,7 +289,7 @@ class Action extends UtopiaAction
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
-                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+                    throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
                 }
 
                 $options = [
@@ -301,17 +301,17 @@ class Action extends UtopiaAction
                 break;
             case APP_DATABASE_ATTRIBUTE_ENUM:
                 if (empty($elements)) {
-                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
+                    throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Enum elements must not be empty');
                 }
 
                 foreach ($elements as $element) {
                     if (\strlen($element) === 0) {
-                        throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
+                        throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Each enum element must not be empty');
                     }
                 }
 
                 if (!is_null($default) && !in_array($default, $elements)) {
-                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
+                    throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Default value not found in elements');
                 }
 
                 $options = [
@@ -334,7 +334,7 @@ class Action extends UtopiaAction
                     onDelete: $primaryRowOptions['onDelete'],
                 );
             } catch (NotFoundException) {
-                throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+                throw new Exception(Exception::COLUMN_NOT_FOUND);
             }
 
             if ($primaryRowOptions['twoWay']) {
@@ -364,11 +364,11 @@ class Action extends UtopiaAction
                     newKey: $newKey ?? null
                 );
             } catch (TruncateException) {
-                throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
+                throw new Exception(Exception::COLUMN_INVALID_RESIZE);
             } catch (NotFoundException) {
-                throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+                throw new Exception(Exception::COLUMN_NOT_FOUND);
             } catch (LimitException) {
-                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+                throw new Exception(Exception::COLUMN_LIMIT_EXCEEDED);
             } catch (IndexException $e) {
                 throw new Exception(Exception::INDEX_INVALID, $e->getMessage());
             }

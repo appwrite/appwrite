@@ -71,7 +71,7 @@ return [
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
+        'description' => 'Query limit exceeded for the current column. Usage of more than 100 query values on a single column is prohibited.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
@@ -653,7 +653,7 @@ return [
     ],
     Exception::DATABASE_QUERY_ORDER_NULL => [
         'name' => Exception::DATABASE_QUERY_ORDER_NULL,
-        'description' => 'The order attribute had a null value. Cursor pagination requires all documents order attribute values are non-null.',
+        'description' => 'The order column had a null value. Cursor pagination requires all rows order column values are non-null.',
         'code' => 400,
     ],
 
@@ -707,54 +707,54 @@ return [
     ],
     Exception::ROW_DELETE_RESTRICTED => [
         'name' => Exception::ROW_DELETE_RESTRICTED,
-        'description' => 'Row cannot be deleted because it is referenced by another document.',
+        'description' => 'Row cannot be deleted because it is referenced by another row.',
         'code' => 403,
     ],
 
-    /** Attributes */
-    Exception::ATTRIBUTE_NOT_FOUND => [
-        'name' => Exception::ATTRIBUTE_NOT_FOUND,
-        'description' => 'Attribute with the requested ID could not be found.',
+    /** Columns */
+    Exception::COLUMN_NOT_FOUND => [
+        'name' => Exception::COLUMN_NOT_FOUND,
+        'description' => 'Column with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::ATTRIBUTE_UNKNOWN => [
-        'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
+    Exception::COLUMN_UNKNOWN => [
+        'name' => Exception::COLUMN_UNKNOWN,
+        'description' => 'The column required for the index could not be found. Please confirm all your columns are in the available state.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_NOT_AVAILABLE => [
-        'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet available. Please try again later.',
+    Exception::COLUMN_NOT_AVAILABLE => [
+        'name' => Exception::COLUMN_NOT_AVAILABLE,
+        'description' => 'The requested column is not yet available. Please try again later.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
-        'name' => Exception::ATTRIBUTE_FORMAT_UNSUPPORTED,
-        'description' => 'The requested attribute format is not supported.',
+    Exception::COLUMN_FORMAT_UNSUPPORTED => [
+        'name' => Exception::COLUMN_FORMAT_UNSUPPORTED,
+        'description' => 'The requested column format is not supported.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
-        'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for array or required attributes.',
+    Exception::COLUMN_DEFAULT_UNSUPPORTED => [
+        'name' => Exception::COLUMN_DEFAULT_UNSUPPORTED,
+        'description' => 'Default values cannot be set for array or required columns.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_ALREADY_EXISTS => [
-        'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
+    Exception::COLUMN_ALREADY_EXISTS => [
+        'name' => Exception::COLUMN_ALREADY_EXISTS,
+        'description' => 'Column with the requested key already exists. Column keys must be unique, try again with a different key.',
         'code' => 409,
     ],
-    Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
-        'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number or size of attributes for this collection has been reached.',
+    Exception::COLUMN_LIMIT_EXCEEDED => [
+        'name' => Exception::COLUMN_LIMIT_EXCEEDED,
+        'description' => 'The maximum number or size of columns for this table has been reached.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_VALUE_INVALID => [
-        'name' => Exception::ATTRIBUTE_VALUE_INVALID,
-        'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+    Exception::COLUMN_VALUE_INVALID => [
+        'name' => Exception::COLUMN_VALUE_INVALID,
+        'description' => 'The column value is invalid. Please check the type, range and value of the column.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_TYPE_INVALID => [
-        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
-        'description' => 'The attribute type is invalid.',
+    Exception::COLUMN_TYPE_INVALID => [
+        'name' => Exception::COLUMN_TYPE_INVALID,
+        'description' => 'The column type is invalid.',
         'code' => 400,
     ],
     Exception::RELATIONSHIP_VALUE_INVALID => [
@@ -762,8 +762,8 @@ return [
         'description' => 'The relationship value is invalid.',
         'code' => 400,
     ],
-    Exception::ATTRIBUTE_INVALID_RESIZE => [
-        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+    Exception::COLUMN_INVALID_RESIZE => [
+        'name' => Exception::COLUMN_INVALID_RESIZE,
         'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],

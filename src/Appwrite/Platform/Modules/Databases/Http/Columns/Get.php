@@ -80,7 +80,7 @@ class Get extends Action
 
         $column = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
         if ($column->isEmpty()) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            throw new Exception(Exception::COLUMN_NOT_FOUND);
         }
 
         $type = $column->getAttribute('type');

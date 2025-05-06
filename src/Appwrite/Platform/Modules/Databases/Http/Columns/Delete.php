@@ -86,7 +86,7 @@ class Delete extends Action
 
         $column = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
         if ($column->isEmpty()) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            throw new Exception(Exception::COLUMN_NOT_FOUND);
         }
 
         $validator = new IndexDependencyValidator(
@@ -114,7 +114,7 @@ class Delete extends Action
 
                 $relatedColumn = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedTable->getInternalId() . '_' . $options['twoWayKey']);
                 if ($relatedColumn->isEmpty()) {
-                    throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+                    throw new Exception(Exception::COLUMN_NOT_FOUND);
                 }
 
                 if ($relatedColumn->getAttribute('status') === 'available') {

@@ -121,14 +121,14 @@ class Create extends ColumnAction
             }
 
             if (\strtolower($column->getId()) === \strtolower($key)) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+                throw new Exception(Exception::COLUMN_ALREADY_EXISTS);
             }
 
             if (
                 \strtolower($column->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+                throw new Exception(Exception::COLUMN_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
             }
 
             if (
@@ -136,7 +136,7 @@ class Create extends ColumnAction
                 $column->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
                 $column->getAttribute('options')['relatedCollection'] === $relatedTable->getId()
             ) {
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same table is currently not permitted.');
+                throw new Exception(Exception::COLUMN_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same table is currently not permitted.');
             }
         }
 
