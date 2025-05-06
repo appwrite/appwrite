@@ -30,7 +30,7 @@ class AbuseTest extends Scope
     {
         $data = $this->createCollection();
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_ROW);
         $max = 120;
@@ -40,8 +40,8 @@ class AbuseTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'tableId' => $collectionId,
+                    'rowId' => ID::unique(),
                     'data' => [
                         'name' => 'John Doe',
                     ],
@@ -73,7 +73,7 @@ class AbuseTest extends Scope
                 'password' => 'password',
                 'databaseId' => 'database',
                 'databaseName' => 'database',
-                'collectionId' => 'collection',
+                'tableId' => 'collection',
                 'collectionName' => 'collection',
                 'collectionPermissions' => [
                     Permission::read(Role::users()),
@@ -138,7 +138,7 @@ class AbuseTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'collectionId' => 'actors',
+                'tableId' => 'actors',
                 'name' => 'Actors',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -161,7 +161,7 @@ class AbuseTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
+                'tableId' => $collectionId,
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -178,7 +178,7 @@ class AbuseTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
+            'tableId' => $collectionId,
         ];
     }
 }

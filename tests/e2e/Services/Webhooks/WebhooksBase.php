@@ -61,7 +61,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -211,7 +211,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -254,7 +254,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
 
-        $data['documentId'] = $document['body']['$id'];
+        $data['rowId'] = $document['body']['$id'];
 
         return $data;
     }
@@ -270,7 +270,7 @@ trait WebhooksBase
         /**
          * Test for SUCCESS
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $data['documentId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $data['rowId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -335,7 +335,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -1119,7 +1119,7 @@ trait WebhooksBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'collectionId' => ID::unique(),
+                'tableId' => ID::unique(),
                 'name' => 'newCollection' . $i,
                 'permissions' => [
                     Permission::read(Role::any()),

@@ -672,7 +672,7 @@ trait Base
                 return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
                     databasesGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
                         _id
-                        _collectionId
+                        _tableId
                         _permissions
                         data
                     }
@@ -683,7 +683,7 @@ trait Base
                         total
                         rows {
                             _id
-                            _collectionId
+                            _tableId
                             _permissions
                             data
                         }
@@ -693,7 +693,7 @@ trait Base
                 return 'mutation createRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]){
                     databasesCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
-                        _collectionId
+                        _tableId
                         _permissions
                     }
                 }';
@@ -760,7 +760,7 @@ trait Base
                 return 'mutation updateRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!, $permissions: [String!]){
                     databasesUpdateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data, permissions: $permissions) {
                         _id
-                        _collectionId
+                        _tableId
                         data
                     }
                 }';

@@ -537,7 +537,7 @@ class UsageTest extends Scope
                     'x-appwrite-project' => $this->getProject()['$id']
                 ], $this->getHeaders()),
                 [
-                    'documentId' => 'unique()',
+                    'rowId' => 'unique()',
                     'data' => ['name' => $name]
                 ]
             );

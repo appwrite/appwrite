@@ -45,7 +45,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $db['headers']['status-code']);
 
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection1'),
+            'tableId' => ID::custom('collection1'),
             'name' => 'Collection 1',
             'permissions' => [
                 Permission::read(Role::team($teams['team1']['$id'])),
@@ -64,7 +64,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
 
         $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection2'),
+            'tableId' => ID::custom('collection2'),
             'name' => 'Collection 2',
             'permissions' => [
                 Permission::read(Role::team($teams['team2']['$id'])),
@@ -141,7 +141,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->createCollections($this->teams);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -149,7 +149,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],
@@ -192,7 +192,7 @@ class DatabasesPermissionsTeamTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
         ], [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],

@@ -162,7 +162,7 @@ class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -272,7 +272,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'key' => 'key_name',
             'type' => 'key',
-            'attributes' => [
+            'columns' => [
                 'name',
             ],
         ]);
