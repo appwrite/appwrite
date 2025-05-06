@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -118,7 +117,7 @@ class V16 extends Migration
                  * Set default authDuration
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
+                    'duration' => TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
 
                 /**

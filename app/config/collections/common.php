@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
@@ -173,7 +172,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO,
+                'default' => '',
                 'array' => false,
                 'filters' => [],
             ],
@@ -184,7 +183,7 @@ return [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO_OPTIONS,
+                'default' => new \stdClass(),
                 'array' => false,
                 'filters' => ['json'],
             ],
@@ -1100,6 +1099,27 @@ return [
                 'default' => [],
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
+            ],
+            [
+                '$id' => ID::custom('scopes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
+                'size' => 0,
+                'required' => true,
+                'signed' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
             ],
         ],
         'indexes' => [
