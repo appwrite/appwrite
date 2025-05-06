@@ -1372,7 +1372,7 @@ return [
                 '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 32,
+                'size' => 2048,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
