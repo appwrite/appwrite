@@ -18,7 +18,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Request\Filters\DatabaseAliases;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
@@ -834,9 +833,6 @@ App::init()
                 $request->addFilter(new RequestV19());
             }
         }
-
-        // process on all databases endpoints!
-        $request->addFilter(new DatabaseAliases());
 
         $domain = $request->getHostname();
         $domains = Config::getParam('domains', []);
