@@ -505,11 +505,11 @@ class Deletes extends Action
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
 
         /**
-         * Consider using cursor
+         * @var $dbForProject Database
          */
-        $collections = $dbForProject->listCollections(PHP_INT_MAX);
-
-        foreach ($collections as $collection) {
+        var_dump($projectTables);
+        var_dump($projectCollectionIds);
+        $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
             try {
                 if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
@@ -525,7 +525,26 @@ class Deletes extends Action
             } catch (Throwable $e) {
                 Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
             }
-        }
+        });
+
+        // $collections = $dbForProject->listCollections(PHP_INT_MAX);
+//        foreach ($collections as $collection) {
+//            try {
+//                if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+//                    $dbForProject->deleteCollection($collection->getId());
+//                } else {
+//                    $this->deleteByGroup(
+//                        $collection->getId(),
+//                        [
+//                            Query::orderAsc()
+//                        ],
+//                        database: $dbForProject
+//                    );
+//                }
+//            } catch (Throwable $e) {
+//                Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+//            }
+//        }
 
         // Delete Platforms
         $this->deleteByGroup('platforms', [
