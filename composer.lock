@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c5b154426325db3558d681d96991d09",
+    "content-hash": "49b9828ae72763d2a398358c28cebdd5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3499,16 +3499,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-collection-delete-v1",
+            "version": "0.67.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "dfda0e1521a75312e2fed93db5d49ee2cb43c930"
+                "reference": "cd55117beab0025fd0d3f945a5a004125600982c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/dfda0e1521a75312e2fed93db5d49ee2cb43c930",
-                "reference": "dfda0e1521a75312e2fed93db5d49ee2cb43c930",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cd55117beab0025fd0d3f945a5a004125600982c",
+                "reference": "cd55117beab0025fd0d3f945a5a004125600982c",
                 "shasum": ""
             },
             "require": {
@@ -3549,9 +3549,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-collection-delete-v1"
+                "source": "https://github.com/utopia-php/database/tree/0.67.2"
             },
-            "time": "2025-05-05T17:14:21+00:00"
+            "time": "2025-05-06T12:11:58+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8134,18 +8134,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-collection-delete-v1",
-            "alias": "0.66.99",
-            "alias_normalized": "0.66.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
