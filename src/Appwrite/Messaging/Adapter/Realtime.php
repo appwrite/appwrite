@@ -311,9 +311,15 @@ class Realtime extends Adapter
                         throw new \Exception('Table needs to be passed to Realtime for Row events in the Database.');
                     }
 
+                    // 1.7.x
                     $channels[] = 'rows';
                     $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
                     $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+
+                    // 1.6.x
+                    $channels[] = 'documents';
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$tableId') . '.documents';
+                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$tableId') . '.documents.' . $payload->getId();
 
                     $roles = $table->getAttribute('documentSecurity', false)
                         ? \array_merge($table->getRead(), $payload->getRead())
