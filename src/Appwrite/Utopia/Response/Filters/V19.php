@@ -10,8 +10,10 @@ class V19 extends Filter
     private const DATABASE_MAPPINGS = [
         'table' => 'collection',
         'tables' => 'collections',
+        '$tableId' => '$collectionId',
         'tablesTotal' => 'collectionsTotal',
         'relatedTable' => 'relatedCollection',
+        'relatedTableId' => 'relatedCollectionId',
 
         'column' => 'attribute',
         'columns' => 'attributes',
