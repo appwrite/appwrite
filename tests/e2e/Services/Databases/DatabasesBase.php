@@ -1542,7 +1542,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
-        $this->assertEquals($data['moviesId'], $document1['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document1['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document1['body']);
         $this->assertEquals($databaseId, $document1['body']['$databaseId']);
         $this->assertEquals($document1['body']['title'], 'Captain America');
@@ -1555,7 +1555,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
 
         $this->assertEquals(201, $document2['headers']['status-code']);
-        $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document2['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document2['body']);
         $this->assertEquals($databaseId, $document2['body']['$databaseId']);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
@@ -1572,7 +1572,7 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['integers'][1], 60);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
-        $this->assertEquals($data['moviesId'], $document3['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document3['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document3['body']);
         $this->assertEquals($databaseId, $document3['body']['$databaseId']);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
@@ -1621,7 +1621,8 @@ trait DatabasesBase
         $this->assertCount(3, $documents['body']['rows']);
 
         foreach ($documents['body']['rows'] as $document) {
-            $this->assertEquals($data['moviesId'], $document['$collectionId']);
+            print_r($document);
+            $this->assertEquals($data['moviesId'], $document['$tableId']);
             $this->assertArrayNotHasKey('$collection', $document);
             $this->assertEquals($databaseId, $document['$databaseId']);
         }
@@ -1696,14 +1697,14 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
         foreach ($data['rows'] as $document) {
-            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$tableId'] . '/documents/' . $document['$id'], array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($response['body']['$id'], $document['$id']);
-            $this->assertEquals($document['$collectionId'], $response['body']['$collectionId']);
+            $this->assertEquals($document['$tableId'], $response['body']['$tableId']);
             $this->assertArrayNotHasKey('$collection', $response['body']);
             $this->assertEquals($document['$databaseId'], $response['body']['$databaseId']);
             $this->assertEquals($response['body']['title'], $document['title']);
@@ -1723,7 +1724,7 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $document = $data['rows'][0];
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$tableId'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2305,7 +2306,7 @@ trait DatabasesBase
         $id = $document['body']['$id'];
 
         $this->assertEquals(201, $document['headers']['status-code']);
-        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document['body']);
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
@@ -2333,7 +2334,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['$id'], $id);
-        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document['body']);
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
@@ -2350,7 +2351,7 @@ trait DatabasesBase
         $id = $document['body']['$id'];
 
         $this->assertEquals(200, $document['headers']['status-code']);
-        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertEquals($data['moviesId'], $document['body']['$tableId']);
         $this->assertArrayNotHasKey('$collection', $document['body']);
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
@@ -4000,8 +4001,8 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $person1['body']['$databaseId']);
         $this->assertEquals($databaseId, $person1['body']['library']['$databaseId']);
 
-        $this->assertEquals($person['body']['$id'], $person1['body']['$collectionId']);
-        $this->assertEquals($library['body']['$id'], $person1['body']['library']['$collectionId']);
+        $this->assertEquals($person['body']['$id'], $person1['body']['$tableId']);
+        $this->assertEquals($library['body']['$id'], $person1['body']['library']['$tableId']);
 
         $this->assertArrayNotHasKey('$collection', $person1['body']);
         $this->assertArrayNotHasKey('$collection', $person1['body']['library']);
@@ -4562,7 +4563,7 @@ trait DatabasesBase
         $this->assertEquals(null, $response['body']['rows'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['rows'][0]);
         $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$collectionId', $response['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
     }
 
     /**
@@ -4583,7 +4584,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('libraries', $response['body']['rows'][0]);
         $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$collectionId', $response['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4597,7 +4598,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $document);
         $this->assertArrayNotHasKey('$databaseId', $document);
-        $this->assertArrayNotHasKey('$collectionId', $document);
+        $this->assertArrayNotHasKey('$tableId', $document);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
