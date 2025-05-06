@@ -46,7 +46,10 @@ $console = [
     'oAuthProviders' => [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
+        'googleEnabled' => true,
+        'googleSecret' => System::getEnv('_APP_CONSOLE_GOOGLE_SECRET', ''),
+        'googleAppid' => System::getEnv('_APP_CONSOLE_GOOGLE_APP_ID', ''),
     ],
 ];
 
