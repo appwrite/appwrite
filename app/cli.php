@@ -10,6 +10,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Executor\Executor;
+use Swoole\Timer;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -286,6 +287,10 @@ $cli
             'Task',
             $taskName,
         ]);
+
+        Timer::clearAll();
     });
+
+$cli->shutdown()->action(fn () => Timer::clearAll());
 
 $cli->run();
