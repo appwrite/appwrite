@@ -4293,7 +4293,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documents = [];
 
-        $dbForProject->updateDocuments(
+        $modified = $dbForProject->updateDocuments(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $partialDocument,
             $queries,
@@ -4350,7 +4350,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $response
             ->dynamic(new Document([
-                'total' => \count($documents),
+                'total' => $modified,
                 'documents' => $documents
             ]), Response::MODEL_DOCUMENT_LIST);
     });
@@ -4548,7 +4548,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documents = [];
 
-        $dbForProject->deleteDocuments(
+        $modified = $dbForProject->deleteDocuments(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $queries,
             onNext: function (Document $document) use ($plan, &$documents) {
@@ -4618,7 +4618,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $response
             ->dynamic(new Document([
-                'total' => \count($documents),
+                'total' => $modified,
                 'documents' => $documents,
             ]), Response::MODEL_DOCUMENT_LIST);
     });
