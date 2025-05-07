@@ -32,7 +32,7 @@ class Delete extends CollectionDelete
 
     public function __construct()
     {
-        $this->setContext(Action::TABLE);
+        $this->setContext(DATABASE_TABLES_CONTEXT);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)

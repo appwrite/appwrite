@@ -257,3 +257,13 @@ const RESOURCE_TYPE_PROVIDERS = 'providers';
 const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
+
+// Context constants for database
+
+const DATABASE_ROWS_CONTEXT = 'row';
+const DATABASE_TABLES_CONTEXT = 'table';
+const DATABASE_COLUMNS_CONTEXT = 'column';
+
+const DATABASE_DOCUMENTS_CONTEXT = 'document';
+const DATABASE_ATTRIBUTES_CONTEXT = 'attribute';
+const DATABASE_COLLECTIONS_CONTEXT = 'collection';

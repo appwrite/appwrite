@@ -40,8 +40,6 @@ class Create extends Action
 
     public function __construct()
     {
-        $this->setContext(Action::COLLECTION);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections')
@@ -80,8 +78,6 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
-        $this->validateContext();
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {

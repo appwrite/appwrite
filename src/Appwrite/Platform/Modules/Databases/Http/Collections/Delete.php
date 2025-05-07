@@ -32,8 +32,6 @@ class Delete extends Action
 
     public function __construct()
     {
-        $this->setContext(Action::COLLECTION);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId')
@@ -69,8 +67,6 @@ class Delete extends Action
 
     public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
-        $this->validateContext();
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

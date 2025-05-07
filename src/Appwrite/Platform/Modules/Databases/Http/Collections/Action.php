@@ -13,26 +13,21 @@ use Utopia\Platform\Action as UtopiaAction;
  */
 abstract class Action extends UtopiaAction
 {
-    /**
-     * Valid context identifiers.
-     */
-    public const TABLE = 'table';
-    public const COLLECTION = 'collection';
 
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = null;
+    private ?string $context = DATABASE_COLLECTIONS_CONTEXT;
 
     /**
      * Set the current API context.
      *
-     * @param string $context Must be either `self::TABLE` or `self::COLLECTION`.
+     * @param string $context Must be either `DATABASE_TABLES_CONTEXT` or `DATABASE_COLLECTIONS_CONTEXT`.
      */
     final protected function setContext(string $context): void
     {
-        if (!\in_array($context, [self::TABLE, self::COLLECTION], true)) {
-            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `Action::TABLE` or `Action::COLLECTION`.");
+        if (!\in_array($context, [DATABASE_TABLES_CONTEXT, DATABASE_COLLECTIONS_CONTEXT], true)) {
+            throw new \InvalidArgumentException("Invalid context '$context'. Must be either `DATABASE_TABLES_CONTEXT` or `DATABASE_COLLECTIONS_CONTEXT`.");
         }
 
         $this->context = $context;
@@ -45,10 +40,6 @@ abstract class Action extends UtopiaAction
      */
     final protected function getContext(): string
     {
-        if ($this->context === null) {
-            throw new \Exception('Missing context: you must call setContext() with either `Action::TABLE` or `Action::COLLECTION` before using this method.');
-        }
-
         return $this->context;
     }
 
@@ -70,7 +61,7 @@ abstract class Action extends UtopiaAction
      */
     final protected function isCollectionsAPI(): bool
     {
-        return $this->getContext() === self::COLLECTION;
+        return $this->getContext() === DATABASE_COLLECTIONS_CONTEXT;
     }
 
     /**
@@ -110,15 +101,4 @@ abstract class Action extends UtopiaAction
             ? Exception::COLLECTION_LIMIT_EXCEEDED
             : Exception::TABLE_LIMIT_EXCEEDED;
     }
-
-    /**
-     * Ensures that a valid context has been set.
-     *
-     * @throws \Exception if context is missing
-     */
-    final protected function validateContext(): void
-    {
-        $this->getContext(); // Triggers exception if not set
-    }
-
 }

@@ -36,8 +36,6 @@ class XList extends Action
 
     public function __construct()
     {
-        $this->setContext(Action::COLLECTION);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections')
@@ -69,8 +67,6 @@ class XList extends Action
 
     public function action(string $databaseId, array $queries, string $search, UtopiaResponse $response, Database $dbForProject): void
     {
-        $this->validateContext();
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {

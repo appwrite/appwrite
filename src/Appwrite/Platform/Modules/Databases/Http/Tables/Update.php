@@ -34,7 +34,7 @@ class Update extends CollectionUpdate
 
     public function __construct()
     {
-        $this->setContext(Action::TABLE);
+        $this->setContext(DATABASE_TABLES_CONTEXT);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)

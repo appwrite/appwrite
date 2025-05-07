@@ -35,8 +35,6 @@ class Get extends Action
 
     public function __construct()
     {
-        $this->setContext(Action::COLLECTION);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/usage')
@@ -68,8 +66,6 @@ class Get extends Action
 
     public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
     {
-        $this->validateContext();
-
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());

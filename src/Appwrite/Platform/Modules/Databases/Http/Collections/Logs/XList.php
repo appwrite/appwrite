@@ -42,8 +42,6 @@ class XList extends Action
 
     public function __construct()
     {
-        $this->setContext(Action::COLLECTION);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/logs')
@@ -77,8 +75,6 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
     {
-        $this->validateContext();
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
