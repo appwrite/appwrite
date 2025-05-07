@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Tables;
 
-use Appwrite\Platform\Modules\Databases\Http\Collections\Action;
 use Appwrite\Platform\Modules\Databases\Http\Collections\XList as CollectionXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;

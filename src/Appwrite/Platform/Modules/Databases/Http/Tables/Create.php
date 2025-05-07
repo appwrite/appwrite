@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Tables;
 
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Action;
 use Appwrite\Platform\Modules\Databases\Http\Collections\Create as CollectionCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;

@@ -13,7 +13,6 @@ use Utopia\Platform\Action as UtopiaAction;
  */
 abstract class Action extends UtopiaAction
 {
-
     /**
      * The current API context (either 'table' or 'collection').
      */

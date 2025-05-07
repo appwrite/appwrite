@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Columns\String;
+namespace Appwrite\Platform\Modules\Databases\Http\Attributes\String;
 
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
@@ -21,48 +20,50 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
-class Update extends ColumnAction
+class Update extends Action
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'updateStringColumn';
+        return 'updateStringAttribute';
     }
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/string/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/string/:key')
-            ->desc('Update string column')
+        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_STRING);
+
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
+            ->desc('Update string attribute')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
-            ->label('audits.event', 'column.update')
-            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+            ->label('audits.event', 'attribute.update')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'updateStringColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/update-string-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLUMN_STRING,
+                        model: $this->getResponseModel(),
                     )
                 ],
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('key', '', new Key(), 'Column Key.')
-            ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
-            ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Maximum size of the string column.', true)
-            ->param('newKey', null, new Key(), 'New Column Key.', true)
+            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('required', null, new Boolean(), 'Is attribute required?')
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+            ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Maximum size of the string attribute.', true)
+            ->param('newKey', null, new Key(), 'New Attribute Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -71,7 +72,7 @@ class Update extends ColumnAction
 
     public function action(
         string         $databaseId,
-        string         $tableId,
+        string         $collectionId,
         string         $key,
         ?bool          $required,
         ?string        $default,
@@ -81,9 +82,9 @@ class Update extends ColumnAction
         Database       $dbForProject,
         Event          $queueForEvents
     ): void {
-        $column = $this->updateColumn(
+        $attribute = $this->updateAttribute(
             databaseId: $databaseId,
-            tableId: $tableId,
+            collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
@@ -96,6 +97,6 @@ class Update extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_STRING);
+            ->dynamic($attribute, $this->getResponseModel());
     }
 }

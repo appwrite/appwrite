@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Tables\Logs;
 
-use Appwrite\Platform\Modules\Databases\Http\Collections\Action;
 use Appwrite\Platform\Modules\Databases\Http\Collections\Logs\XList as CollectionLogXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
