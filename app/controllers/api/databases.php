@@ -3235,7 +3235,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $permissions, ?array $documents, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4359,6 +4359,88 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             ]), Response::MODEL_DOCUMENT_LIST);
     });
 
+App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
+    ->desc('Create or update documents')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('audits.event', 'documents.upsert')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk', new Method(
+        namespace: 'databases',
+        group: 'documents',
+        name: 'upsertDocuments',
+        description: '/docs/references/databases/upsert-documents.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', true, ['plan'])
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForStatsUsage')
+    ->inject('plan')
+    ->action(function (string $databaseId, string $collectionId, array $documents, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $hasRelationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        if ($hasRelationships) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for collections with relationship attributes');
+        }
+
+        foreach ($documents as $key => $document) {
+            $documents[$key] = new Document($document);
+        }
+
+        $upserted = [];
+
+        $modified = $dbForProject->createOrUpdateDocuments(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $documents,
+            onNext: function (Document $document) use ($plan, &$upserted) {
+                if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                    $upserted[] = $document;
+                }
+            },
+        );
+
+        foreach ($upserted as $document) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+        }
+
+        $queueForStatsUsage
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+
+        $response->dynamic(new Document([
+            'total' => $modified,
+            'documents' => $upserted
+        ]), Response::MODEL_DOCUMENT_LIST);
+    });
+
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
     ->desc('Delete document')
@@ -4912,7 +4994,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsTotal'   => $usage[$metrics[0]]['total'],
-            'documents'   =>  $usage[$metrics[0]]['data'],
+            'documentsTotal' => $usage[$metrics[0]]['total'],
+            'documents' => $usage[$metrics[0]]['data'],
         ]), Response::MODEL_USAGE_COLLECTION);
     });
