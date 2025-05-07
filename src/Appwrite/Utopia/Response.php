@@ -154,7 +154,6 @@ class Response extends SwooleResponse
     public const MODEL_INDEX_LIST = 'indexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
-    public const MODEL_BULK_OPERATION = 'bulkOperation';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
