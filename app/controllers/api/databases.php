@@ -3180,6 +3180,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label(
         'sdk',
+        // Using multiple methods to abstract the complexity for SDK users
         [
             new Method(
                 namespace: 'databases',
@@ -3206,7 +3207,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 namespace: 'databases',
                 group: 'documents',
                 name: 'createDocuments',
-                description: '/docs/references/databases/create-document.md',
+                description: '/docs/references/databases/create-documents.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -3227,8 +3228,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.', true)
-    ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -3239,8 +3240,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ? \json_decode($data, true)
             : $data;
 
-        $isBulk = true;
-
+        /**
+         * Determine which internal path to call, single or bulk
+         */
         if (empty($data) && empty($documents)) {
             // No single or bulk documents provided
             throw new Exception(Exception::DOCUMENT_MISSING_DATA);
@@ -3261,6 +3263,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             // Bulk documents provided with permissions
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple documents, set "$permissions" in each document instead');
         }
+
+        $isBulk = true;
 
         if (!empty($data)) {
             // Single document provided, convert to single item array
