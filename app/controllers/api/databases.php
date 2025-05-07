@@ -4229,18 +4229,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
-
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -4257,36 +4252,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $permissions = $data['$permissions'] ?? null;
-
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-        ]);
-
-        // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
-                foreach ($permissions as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
-                        continue;
-                    }
-                    $role = (new Role(
-                        $permission->getRole(),
-                        $permission->getIdentifier(),
-                        $permission->getDimension()
-                    ))->toString();
-                    if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
-                    }
-                }
-            }
         }
 
         if (!\is_null($permissions)) {
@@ -4308,55 +4273,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             },
         );
 
-        $operations = 0;
-
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations) {
-            $operations++;
-
+        foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processDocument($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
 
-        $response
-            ->dynamic(new Document([
-                'total' => $modified,
-                'documents' => $documents
-            ]), Response::MODEL_DOCUMENT_LIST);
+        $response->dynamic(new Document([
+            'total' => $modified,
+            'documents' => $documents
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::put('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -4602,18 +4531,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
-
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
@@ -4644,69 +4568,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             },
         );
 
-        $operations = 0;
-
-        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
-            if ($document->isEmpty()) {
-                return false;
-            }
-
-            $operations++;
-
+        foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $relations = [$related];
-                } else {
-                    $relations = $related;
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
-
-                foreach ($relations as $index => $doc) {
-                    if ($doc instanceof Document) {
-                        if (!$processDocument($relatedCollection, $doc)) {
-                            unset($relations[$index]);
-                        }
-                    }
-                }
-
-                if (\is_array($related)) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } elseif (empty($relations)) {
-                    $document->setAttribute($relationship->getAttribute('key'), null);
-                }
-            }
-
-            return true;
-        });
-
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
 
-        $response
-            ->dynamic(new Document([
-                'total' => $modified,
-                'documents' => $documents,
-            ]), Response::MODEL_DOCUMENT_LIST);
+        $response->dynamic(new Document([
+            'total' => $modified,
+            'documents' => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::get('/v1/databases/usage')
