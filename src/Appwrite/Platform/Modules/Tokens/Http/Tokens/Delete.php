@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage\Http\Tokens;
+namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;

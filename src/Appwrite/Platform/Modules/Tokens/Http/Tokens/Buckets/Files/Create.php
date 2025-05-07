@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage\Http\Tokens\Buckets\Files;
+namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
@@ -98,7 +98,7 @@ class Create extends Action
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
-            'resourceType' => 'files',
+            'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
             '$permissions' => $permissions
         ]));

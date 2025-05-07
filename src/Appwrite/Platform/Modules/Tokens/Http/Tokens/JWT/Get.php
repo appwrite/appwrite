@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Storage\Http\Tokens\JWT;
+namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\JWT;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
