@@ -5279,6 +5279,11 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(10, $documents['body']['total']);
 
+        $returnedDocuments = $response['body']['documents'];
+        $refetchedDocuments = $documents['body']['documents'];
+
+        $this->assertEquals($returnedDocuments, $refetchedDocuments);
+
         foreach ($documents['body']['documents'] as $document) {
             $this->assertEquals([
                 Permission::read(Role::user($this->getUser()['$id'])),

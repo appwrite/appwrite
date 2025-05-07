@@ -4298,7 +4298,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             $partialDocument,
             $queries,
             onNext: function (Document $document) use ($plan, &$documents) {
-                if (\count($documents) < $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH) {
+                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
                     $documents[] = $document;
                 }
             },
@@ -4552,7 +4552,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $queries,
             onNext: function (Document $document) use ($plan, &$documents) {
-                if (\count($documents) < $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH) {
+                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
                     $documents[] = $document;
                 }
             },
