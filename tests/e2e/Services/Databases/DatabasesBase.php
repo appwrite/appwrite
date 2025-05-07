@@ -5267,7 +5267,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(10, $response['body']['modified']);
+        $this->assertCount(10, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5301,7 +5301,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(10, $response['body']['modified']);
+        $this->assertCount(10, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5335,7 +5335,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['modified']);
+        $this->assertCount(5, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5361,7 +5361,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['modified']);
+        $this->assertCount(5, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5387,7 +5387,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(10, $response['body']['modified']);
+        $this->assertCount(10, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5491,7 +5491,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(11, $response['body']['modified']);
+        $this->assertEquals(11, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5522,7 +5522,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['modified']);
+        $this->assertEquals(5, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5543,7 +5543,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['modified']);
+        $this->assertEquals(6, $response['body']['total']);
 
         // SUCCESS: Delete documents with query
         $createBulkDocuments();
@@ -5566,7 +5566,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['modified']);
+        $this->assertEquals(5, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5583,7 +5583,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['modified']);
+        $this->assertEquals(6, $response['body']['total']);
 
         // SUCCESS: Delete Documents with limit query
         $createBulkDocuments();
@@ -5606,7 +5606,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['modified']);
+        $this->assertEquals(2, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5623,7 +5623,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(9, $response['body']['modified']);
+        $this->assertEquals(9, $response['body']['total']);
 
         // SUCCESS: Delete Documents with offset query
         $createBulkDocuments();
@@ -5646,7 +5646,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['modified']);
+        $this->assertEquals(6, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5668,7 +5668,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['modified']);
+        $this->assertEquals(5, $response['body']['total']);
 
         // SUCCESS: Delete 100 documents
         $createBulkDocuments(100);
@@ -5687,7 +5687,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(100, $response['body']['modified']);
+        $this->assertEquals(100, $response['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5698,7 +5698,7 @@ trait DatabasesBase
         $this->assertEquals(0, $documents['body']['total']);
 
         // Delete Database
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

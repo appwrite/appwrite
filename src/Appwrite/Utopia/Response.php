@@ -32,7 +32,6 @@ use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Build;
-use Appwrite\Utopia\Response\Model\BulkOperation;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -407,7 +406,6 @@ class Response extends SwooleResponse
             ->setModel(new AttributeURL())
             ->setModel(new AttributeDatetime())
             ->setModel(new AttributeRelationship())
-            ->setModel(new BulkOperation())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())

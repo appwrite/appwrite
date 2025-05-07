@@ -4554,7 +4554,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $operations = 0;
 
-        $processDocument  = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
+        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
             }
