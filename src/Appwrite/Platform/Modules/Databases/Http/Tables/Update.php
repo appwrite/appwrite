@@ -3,24 +3,22 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Tables;
 
 use Appwrite\Event\Event;
-use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Action;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Update as CollectionUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class Update extends Action
+class Update extends CollectionUpdate
 {
     use HTTP;
 
@@ -29,12 +27,18 @@ class Update extends Action
         return 'updateTable';
     }
 
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_TABLE;
+    }
+
     public function __construct()
     {
+        $this->setContext(Action::TABLE);
+
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId')
             ->desc('Update table')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
@@ -44,8 +48,8 @@ class Update extends Action
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'tables',
-                name: 'updateTable',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/update-collection.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -65,46 +69,8 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
-    {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
-        if ($table->isEmpty()) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
-        }
-
-        $permissions ??= $table->getPermissions() ?? [];
-
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions);
-
-        $enabled ??= $table->getAttribute('enabled', true);
-
-        $table = $dbForProject->updateDocument(
-            'database_' . $database->getInternalId(),
-            $tableId,
-            $table
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('documentSecurity', $documentSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', \implode(' ', [$tableId, $name]))
-        );
-
-        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $permissions, $documentSecurity);
-
-        $queueForEvents
-            ->setContext('database', $database)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('tableId', $table->getId());
-
-        $response->dynamic($table, UtopiaResponse::MODEL_TABLE);
+            ->callback(function (string $databaseId, string $tableId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $name, $permissions, $documentSecurity, $enabled, $response, $dbForProject, $queueForEvents);
+            });
     }
 }

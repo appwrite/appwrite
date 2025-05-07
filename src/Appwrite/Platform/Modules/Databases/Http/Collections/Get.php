@@ -1,41 +1,41 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\Tables;
+namespace Appwrite\Platform\Modules\Databases\Http\Collections;
 
-use Appwrite\Platform\Modules\Databases\Http\Collections\Action;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Get as CollectionGet;
+use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
-class Get extends CollectionGet
+class Get extends Action
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'getTable';
+        return 'getCollection';
     }
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_TABLE;
+        return UtopiaResponse::MODEL_COLLECTION;
     }
 
     public function __construct()
     {
-        $this->setContext(Action::TABLE);
+        $this->setContext(Action::COLLECTION);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/databases/:databaseId/tables/:tableId')
-            ->desc('Get table')
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId')
+            ->desc('Get collection')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -54,11 +54,28 @@ class Get extends CollectionGet
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID.')
+            ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback(function (string $databaseId, string $tableId, UtopiaResponse $response, Database $dbForProject) {
-                parent::action($databaseId, $tableId, $response, $dbForProject);
-            });
+            ->callback([$this, 'action']);
+    }
+
+    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
+    {
+        $this->validateContext();
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception($this->getNotFoundException());
+        }
+
+        $response->dynamic($collection, $this->getResponseModel());
     }
 }

@@ -2,6 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services;
 
+use Appwrite\Platform\Modules\Databases\Http\Collections\Create as CreateCollection;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Delete as DeleteCollection;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Get as GetCollection;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Logs\XList as ListCollectionLogs;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Update as UpdateCollection;
+use Appwrite\Platform\Modules\Databases\Http\Collections\Usage\Get as GetCollectionUsage;
+use Appwrite\Platform\Modules\Databases\Http\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\Columns\Boolean\Create as CreateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\Columns\Boolean\Update as UpdateBoolean;
 use Appwrite\Platform\Modules\Databases\Http\Columns\Datetime\Create as CreateDatetime;
@@ -59,7 +66,7 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         $this->registerDatabaseActions();
-        $this->registerTableActions();
+        $this->registerCollectionAndTableActions();
         $this->registerColumnActions();
         $this->registerIndexActions();
         $this->registerRowActions();
@@ -77,8 +84,18 @@ class Http extends Service
         $this->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
     }
 
-    private function registerTableActions(): void
+    private function registerCollectionAndTableActions(): void
     {
+        // Collections
+        $this->addAction(CreateCollection::getName(), new CreateCollection());
+        $this->addAction(GetCollection::getName(), new GetCollection());
+        $this->addAction(UpdateCollection::getName(), new UpdateCollection());
+        $this->addAction(DeleteCollection::getName(), new DeleteCollection());
+        $this->addAction(ListCollections::getName(), new ListCollections());
+        $this->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
+        $this->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
+
+        // Tables
         $this->addAction(CreateTable::getName(), new CreateTable());
         $this->addAction(GetTable::getName(), new GetTable());
         $this->addAction(UpdateTable::getName(), new UpdateTable());

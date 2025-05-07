@@ -1,0 +1,109 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Databases\Http\Collections;
+
+use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Swoole\Response as SwooleResponse;
+
+class Delete extends Action
+{
+    use HTTP;
+
+    public static function getName(): string
+    {
+        return 'deleteCollection';
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_COLLECTION;
+    }
+
+    public function __construct()
+    {
+        $this->setContext(Action::COLLECTION);
+
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId')
+            ->desc('Delete collection')
+            ->groups(['api', 'database', 'schema'])
+            ->label('scope', 'collections.write')
+            ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
+            ->label('audits.event', 'collection.delete')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('sdk', new Method(
+                namespace: 'databases',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
+                description: '/docs/references/databases/delete-collection.md',
+                auth: [AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: SwooleResponse::STATUS_CODE_NOCONTENT,
+                        model: UtopiaResponse::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
+            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('queueForDatabase')
+            ->inject('queueForEvents')
+            ->callback([$this, 'action']);
+    }
+
+    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
+        $this->validateContext();
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        if ($collection->isEmpty()) {
+            throw new Exception($this->getNotFoundException());
+        }
+
+        if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $collectionId)) {
+            $type = $this->getContext();
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Failed to remove $type from DB");
+        }
+
+        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        $queueForDatabase
+            ->setType(DATABASE_TYPE_DELETE_COLLECTION)
+            ->setDatabase($database);
+
+        if ($this->isCollectionsAPI()) {
+            $queueForDatabase->setCollection($collection);
+        } else {
+            $queueForDatabase->setTable($collection);
+        }
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setContext('database', $database)
+            ->setParam($this->getEventsParamKey(), $collection->getId())
+            ->setPayload($response->output($collection, $this->getResponseModel()));
+
+        $response->noContent();
+    }
+}
