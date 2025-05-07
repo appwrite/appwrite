@@ -769,7 +769,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows.' . $documentId, $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows', $response['data']['channels']);
@@ -813,7 +813,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -867,7 +867,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -987,7 +987,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -1026,7 +1026,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -1076,7 +1076,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);

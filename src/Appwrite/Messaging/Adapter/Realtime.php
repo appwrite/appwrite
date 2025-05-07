@@ -303,17 +303,23 @@ class Realtime extends Adapter
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                } elseif (($parts[4] ?? '') === 'rows') {
+                } elseif (($parts[4] ?? '') === 'rows' || ($parts[4] ?? '') === 'documents') {
                     if ($database->isEmpty()) {
-                        throw new \Exception('Database needs to be passed to Realtime for Row events in the Database.');
+                        throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
                     }
                     if ($table->isEmpty()) {
-                        throw new \Exception('Table needs to be passed to Realtime for Row events in the Database.');
+                        throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
+                    // 1.7.x - Tables API
                     $channels[] = 'rows';
                     $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
                     $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+
+                    // 1.6.x - Collections API
+                    $channels[] = 'documents';
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
+                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
 
                     $roles = $table->getAttribute('documentSecurity', false)
                         ? \array_merge($table->getRead(), $payload->getRead())
