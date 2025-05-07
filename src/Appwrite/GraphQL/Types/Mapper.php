@@ -285,7 +285,9 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Base':
             case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
             case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
             case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
@@ -418,8 +420,10 @@ class Mapper
         // TODO: Find a better way to do this
 
         switch ($name) {
-            case 'Columns':
+            case 'Attributes':
                 return static::getColumnImplementation($object);
+            case 'Columns':
+                return static::getColumnImplementation($object, true);
             case 'HashOptions':
                 return static::getHashOptionsImplementation($object);
         }
@@ -427,29 +431,24 @@ class Mapper
         throw new Exception('Unknown union type: ' . $name);
     }
 
-    private static function getColumnImplementation(array $object): Type
+    private static function getColumnImplementation(array $object, bool $isColumns = false): Type
     {
-        switch ($object['type']) {
-            case 'string':
-                return match ($object['format'] ?? '') {
-                    'email' => static::model('ColumnEmail'),
-                    'url' => static::model('ColumnUrl'),
-                    'ip' => static::model('ColumnIp'),
-                    default => static::model('ColumnString'),
-                };
-            case 'integer':
-                return static::model('ColumnInteger');
-            case 'double':
-                return static::model('ColumnFloat');
-            case 'boolean':
-                return static::model('ColumnBoolean');
-            case 'datetime':
-                return static::model('ColumnDatetime');
-            case 'relationship':
-                return static::model('ColumnRelationship');
-        }
+        $prefix = $isColumns ? 'Column' : 'Attribute';
 
-        throw new Exception('Unknown column implementation');
+        return match ($object['type']) {
+            'string' => match ($object['format'] ?? '') {
+                'email' => static::model("{$prefix}Email"),
+                'url' => static::model("{$prefix}Url"),
+                'ip' => static::model("{$prefix}Ip"),
+                default => static::model("{$prefix}String"),
+            },
+            'integer' => static::model("{$prefix}Integer"),
+            'double' => static::model("{$prefix}Float"),
+            'boolean' => static::model("{$prefix}Boolean"),
+            'datetime' => static::model("{$prefix}Datetime"),
+            'relationship' => static::model("{$prefix}Relationship"),
+            default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
+        };
     }
 
     private static function getHashOptionsImplementation(array $object): Type

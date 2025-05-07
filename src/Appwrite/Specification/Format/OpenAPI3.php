@@ -408,8 +408,10 @@ class OpenAPI3 extends Format
                         ];
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':

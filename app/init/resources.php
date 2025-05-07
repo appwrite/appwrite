@@ -707,6 +707,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         },
     ];
 
+    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
             return [ 'queries' => $args['queries']];
@@ -721,8 +722,8 @@ App::setResource('schema', function ($utopia, $dbForProject) {
             // Order must be the same as the route params
             return [
                 'databaseId' => $databaseId,
-                'rowId' => $id,
-                'tableId' => $collectionId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
                 'data' => $args,
                 'permissions' => $permissions,
             ];
@@ -737,8 +738,8 @@ App::setResource('schema', function ($utopia, $dbForProject) {
             // Order must be the same as the route params
             return [
                 'databaseId' => $databaseId,
-                'tableId' => $collectionId,
-                'rowId' => $documentId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
                 'data' => $args,
                 'permissions' => $permissions,
             ];
