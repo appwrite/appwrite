@@ -123,13 +123,13 @@ class Get extends Action
 
         $response->dynamic(new Document([
             'range' => $range,
-            'tablesTotal' => $usage[$metrics[0]]['total'],
-            'rowsTotal' => $usage[$metrics[1]]['total'],
+            'collectionsTotal' => $usage[$metrics[0]]['total'],
+            'documentsTotal' => $usage[$metrics[1]]['total'],
             'storageTotal' => $usage[$metrics[2]]['total'],
             'databaseReadsTotal' => $usage[$metrics[3]]['total'],
             'databaseWritesTotal' => $usage[$metrics[4]]['total'],
-            'tables' => $usage[$metrics[0]]['data'],
-            'rows' => $usage[$metrics[1]]['data'],
+            'collections' => $usage[$metrics[0]]['data'],
+            'documents' => $usage[$metrics[1]]['data'],
             'storage' => $usage[$metrics[2]]['data'],
             'databaseReads' => $usage[$metrics[3]]['data'],
             'databaseWrites' => $usage[$metrics[4]]['data'],

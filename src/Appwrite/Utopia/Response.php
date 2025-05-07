@@ -38,6 +38,7 @@ use Appwrite\Utopia\Response\Model\ColumnDatetime;
 use Appwrite\Utopia\Response\Model\ColumnEmail;
 use Appwrite\Utopia\Response\Model\ColumnEnum;
 use Appwrite\Utopia\Response\Model\ColumnFloat;
+use Appwrite\Utopia\Response\Model\ColumnIndex;
 use Appwrite\Utopia\Response\Model\ColumnInteger;
 use Appwrite\Utopia\Response\Model\ColumnIP;
 use Appwrite\Utopia\Response\Model\ColumnList;
@@ -182,6 +183,8 @@ class Response extends SwooleResponse
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_COLUMN_INDEX = 'columnIndex';
+    public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
     public const MODEL_ROW = 'row';
@@ -416,6 +419,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
+            ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Identities List', self::MODEL_IDENTITY_LIST, 'identities', self::MODEL_IDENTITY))
@@ -493,6 +497,7 @@ class Response extends SwooleResponse
             ->setModel(new ColumnDatetime())
             ->setModel(new ColumnRelationship())
             ->setModel(new Index())
+            ->setModel(new ColumnIndex())
             ->setModel(new Row())
             ->setModel(new ModelDocument())
             ->setModel(new Log())

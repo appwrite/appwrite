@@ -79,7 +79,7 @@ class Table extends Model
                 'array' => true,
             ])
             ->addRule('indexes', [
-                'type' => Response::MODEL_INDEX,
+                'type' => Response::MODEL_COLUMN_INDEX,
                 'description' => 'Table indexes.',
                 'default' => [],
                 'example' => new \stdClass(),

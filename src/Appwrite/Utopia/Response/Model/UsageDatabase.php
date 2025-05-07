@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
+// TODO: check what do we use for - collectionsTotal, documentsTotal, collections, documents
 class UsageDatabase extends Model
 {
     public function __construct()
@@ -16,15 +17,15 @@ class UsageDatabase extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('tablesTotal', [
+            ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of tables.',
+                'description' => 'Total aggregated number of collections.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('rowsTotal', [
+            ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of rows.',
+                'description' => 'Total aggregated number of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -46,16 +47,16 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('tables', [
+            ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  number of tables per period.',
+                'description' => 'Aggregated  number of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('rows', [
+            ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  number of rows per period.',
+                'description' => 'Aggregated  number of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

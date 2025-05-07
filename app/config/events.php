@@ -114,7 +114,7 @@ return [
                 ],
             ],
             'indexes' => [
-                '$model' => Response::MODEL_INDEX,
+                '$model' => Response::MODEL_COLUMN_INDEX,
                 '$resource' => true,
                 '$description' => 'This event triggers on any indexes event.',
                 'create' => [

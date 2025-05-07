@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
+// TODO: check what do we use for - documents.
 class UsageProject extends Model
 {
     public function __construct()
@@ -16,9 +17,9 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('rowsTotal', [
+            ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated  number of rows.',
+                'description' => 'Total aggregated  number of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
