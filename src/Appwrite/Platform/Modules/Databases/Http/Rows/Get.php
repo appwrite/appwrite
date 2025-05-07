@@ -79,7 +79,7 @@ class Get extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         try {
@@ -92,7 +92,7 @@ class Get extends Action
         }
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         $operations = 0;
@@ -110,7 +110,7 @@ class Get extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {

@@ -89,12 +89,12 @@ class Create extends ColumnAction
         $max ??= PHP_FLOAT_MAX;
 
         if ($min > $max) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
         }
 
         $validator = new Range($min, $max, Database::VAR_FLOAT);
         if (!\is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
         }
 
         $column = $this->createColumn($databaseId, $tableId, new Document([

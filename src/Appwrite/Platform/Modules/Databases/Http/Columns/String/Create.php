@@ -89,7 +89,7 @@ class Create extends ColumnAction
         // Ensure default fits in the given size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
         }
 
         $filters = [];

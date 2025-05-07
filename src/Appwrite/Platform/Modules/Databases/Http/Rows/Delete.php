@@ -84,14 +84,14 @@ class Delete extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
         $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         try {
@@ -102,7 +102,7 @@ class Delete extends Action
                 );
             });
         } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Add $tableId and $databaseId for all rows
@@ -112,7 +112,7 @@ class Delete extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -147,10 +147,10 @@ class Delete extends Action
         $response->addHeader('X-Debug-Operations', 1);
 
         $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
+            fn ($row) => $row->getAttribute('key'),
             \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 

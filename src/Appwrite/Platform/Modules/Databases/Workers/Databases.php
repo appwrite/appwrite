@@ -539,9 +539,9 @@ class Databases extends Action
                 Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],
             $dbForProject,
-            function ($attribute) use ($dbForProject, $databaseInternalId) {
-                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+            function ($column) use ($dbForProject, $databaseInternalId) {
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $column->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $column->getAttribute('collectionInternalId'));
             }
         );
 

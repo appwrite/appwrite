@@ -84,7 +84,7 @@ class Create extends ColumnAction
         Event                     $queueForEvents
     ): void {
         if (!is_null($default) && !in_array($default, $elements, true)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Default value not found in elements');
         }
 
         $column = $this->createColumn(

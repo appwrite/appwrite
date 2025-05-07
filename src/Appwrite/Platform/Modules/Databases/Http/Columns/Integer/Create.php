@@ -89,12 +89,12 @@ class Create extends ColumnAction
         $max ??= \PHP_INT_MAX;
 
         if ($min > $max) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
         }
 
         $validator = new Range($min, $max, Database::VAR_INTEGER);
         if (!\is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
         }
 
         $size = $max > 2147483647 ? 8 : 4;
