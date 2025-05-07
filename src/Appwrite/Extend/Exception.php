@@ -192,9 +192,23 @@ class Exception extends \Exception
     public const DATABASE_QUERY_ORDER_NULL         = 'database_query_order_null';
 
     /** Collections */
+    public const COLLECTION_NOT_FOUND              = 'collection_not_found';
+    public const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
+    public const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
+
+    /** Tables */
     public const TABLE_NOT_FOUND              = 'table_not_found';
     public const TABLE_ALREADY_EXISTS         = 'table_already_exists';
     public const TABLE_LIMIT_EXCEEDED         = 'table_limit_exceeded';
+
+    /** Documents */
+    public const DOCUMENT_NOT_FOUND                = 'document_not_found';
+    public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
+    public const DOCUMENT_MISSING_DATA             = 'document_missing_data';
+    public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
+    public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
+    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Rows */
     public const ROW_NOT_FOUND                = 'row_not_found';
@@ -204,6 +218,18 @@ class Exception extends \Exception
     public const ROW_ALREADY_EXISTS           = 'row_already_exists';
     public const ROW_UPDATE_CONFLICT          = 'row_update_conflict';
     public const ROW_DELETE_RESTRICTED        = 'row_delete_restricted';
+
+    /** Attributes */
+    public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
+    public const ATTRIBUTE_UNKNOWN                 = 'attribute_unknown';
+    public const ATTRIBUTE_NOT_AVAILABLE           = 'attribute_not_available';
+    public const ATTRIBUTE_FORMAT_UNSUPPORTED      = 'attribute_format_unsupported';
+    public const ATTRIBUTE_DEFAULT_UNSUPPORTED     = 'attribute_default_unsupported';
+    public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
+    public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
+    public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
+    public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
 
     /** Columns */
     public const COLUMN_NOT_FOUND               = 'column_not_found';

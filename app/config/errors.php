@@ -71,7 +71,7 @@ return [
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current column. Usage of more than 100 query values on a single column is prohibited.',
+        'description' => 'Query limit exceeded for the current attribute/column. Usage of more than 100 query values on a single column is prohibited.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
@@ -653,7 +653,24 @@ return [
     ],
     Exception::DATABASE_QUERY_ORDER_NULL => [
         'name' => Exception::DATABASE_QUERY_ORDER_NULL,
-        'description' => 'The order column had a null value. Cursor pagination requires all rows order column values are non-null.',
+        'description' => 'The order attribute/column had a null value. Cursor pagination requires all documents/rows order attribute/column values are non-null.',
+        'code' => 400,
+    ],
+
+    /** Collections */
+    Exception::COLLECTION_NOT_FOUND => [
+        'name' => Exception::COLLECTION_NOT_FOUND,
+        'description' => 'Collection with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::COLLECTION_ALREADY_EXISTS => [
+        'name' => Exception::COLLECTION_ALREADY_EXISTS,
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::COLLECTION_LIMIT_EXCEEDED => [
+        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of collections has been reached.',
         'code' => 400,
     ],
 
@@ -672,6 +689,43 @@ return [
         'name' => Exception::TABLE_LIMIT_EXCEEDED,
         'description' => 'The maximum number of tables has been reached.',
         'code' => 400,
+    ],
+
+    /** Documents */
+    Exception::DOCUMENT_NOT_FOUND => [
+        'name' => Exception::DOCUMENT_NOT_FOUND,
+        'description' => 'Document with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DOCUMENT_INVALID_STRUCTURE => [
+        'name' => Exception::DOCUMENT_INVALID_STRUCTURE,
+        'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
+        'code' => 400,
+    ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing. Try again with document data populated',
+        'code' => 400,
+    ],
+    Exception::DOCUMENT_MISSING_PAYLOAD => [
+        'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
+        'description' => 'The document data and permissions are missing. You must provide either document data or permissions to be updated.',
+        'code' => 400,
+    ],
+    Exception::DOCUMENT_ALREADY_EXISTS => [
+        'name' => Exception::DOCUMENT_ALREADY_EXISTS,
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::DOCUMENT_UPDATE_CONFLICT => [
+        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
+        'description' => 'Remote document is newer than local.',
+        'code' => 409,
+    ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
     ],
 
     /** Rows */
@@ -709,6 +763,65 @@ return [
         'name' => Exception::ROW_DELETE_RESTRICTED,
         'description' => 'Row cannot be deleted because it is referenced by another row.',
         'code' => 403,
+    ],
+
+    /** Attributes */
+    Exception::ATTRIBUTE_NOT_FOUND => [
+        'name' => Exception::ATTRIBUTE_NOT_FOUND,
+        'description' => 'Attribute with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::ATTRIBUTE_UNKNOWN => [
+        'name' => Exception::ATTRIBUTE_UNKNOWN,
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_NOT_AVAILABLE => [
+        'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
+        'description' => 'The requested attribute is not yet available. Please try again later.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
+        'name' => Exception::ATTRIBUTE_FORMAT_UNSUPPORTED,
+        'description' => 'The requested attribute format is not supported.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
+        'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
+        'description' => 'Default values cannot be set for array or required attributes.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_ALREADY_EXISTS => [
+        'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
+        'code' => 409,
+    ],
+    Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
+        'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_VALUE_INVALID => [
+        'name' => Exception::ATTRIBUTE_VALUE_INVALID,
+        'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
+        'code' => 400,
+    ],
+
+    /** Exists for both Attributes & Columns */
+    Exception::RELATIONSHIP_VALUE_INVALID => [
+        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
+        'description' => 'The relationship value is invalid.',
+        'code' => 400,
     ],
 
     /** Columns */
@@ -755,11 +868,6 @@ return [
     Exception::COLUMN_TYPE_INVALID => [
         'name' => Exception::COLUMN_TYPE_INVALID,
         'description' => 'The column type is invalid.',
-        'code' => 400,
-    ],
-    Exception::RELATIONSHIP_VALUE_INVALID => [
-        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
-        'description' => 'The relationship value is invalid.',
         'code' => 400,
     ],
     Exception::COLUMN_INVALID_RESIZE => [

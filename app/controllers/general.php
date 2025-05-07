@@ -1148,6 +1148,9 @@ App::error()
             Console::error('[Error] Line: ' . $line);
         }
 
+        // routes like /tables, /tables/:tableId, etc.
+        $isTablesAPI = str_contains($route->getPath(), '/databases/:databaseId/tables');
+
         switch ($class) {
             case 'Utopia\Exception':
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
@@ -1161,7 +1164,12 @@ App::error()
                 }
                 break;
             case 'Utopia\Database\Exception\Conflict':
-                $error = new AppwriteException(AppwriteException::ROW_UPDATE_CONFLICT, previous: $error);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::ROW_UPDATE_CONFLICT
+                        : AppwriteException::DOCUMENT_UPDATE_CONFLICT,
+                    previous: $error
+                );
                 break;
             case 'Utopia\Database\Exception\Timeout':
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
@@ -1170,13 +1178,27 @@ App::error()
                 $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Structure':
-                $error = new AppwriteException(AppwriteException::ROW_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::ROW_INVALID_STRUCTURE
+                        : AppwriteException::DOCUMENT_INVALID_STRUCTURE,
+                    $error->getMessage(),
+                    previous: $error
+                );
                 break;
             case 'Utopia\Database\Exception\Duplicate':
-                $error = new AppwriteException(AppwriteException::ROW_ALREADY_EXISTS);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::ROW_ALREADY_EXISTS
+                        : AppwriteException::DOCUMENT_ALREADY_EXISTS
+                );
                 break;
             case 'Utopia\Database\Exception\Restricted':
-                $error = new AppwriteException(AppwriteException::ROW_DELETE_RESTRICTED);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::ROW_DELETE_RESTRICTED
+                        : AppwriteException::DOCUMENT_DELETE_RESTRICTED
+                );
                 break;
             case 'Utopia\Database\Exception\Authorization':
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
@@ -1185,7 +1207,13 @@ App::error()
                 $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\NotFound':
-                $error = new AppwriteException(AppwriteException::TABLE_NOT_FOUND, $error->getMessage(), previous: $error);
+                $error = new AppwriteException(
+                    $isTablesAPI
+                        ? AppwriteException::TABLE_NOT_FOUND
+                        : AppwriteException::COLLECTION_NOT_FOUND,
+                    $error->getMessage(),
+                    previous: $error
+                );
                 break;
             case 'Utopia\Database\Exception\Dependency':
                 $error = new AppwriteException(AppwriteException::INDEX_DEPENDENCY, null, previous: $error);
