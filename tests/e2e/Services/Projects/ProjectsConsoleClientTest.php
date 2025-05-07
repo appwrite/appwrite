@@ -483,7 +483,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
         $this->assertIsNumeric($response['body']['executionsTotal']);
-        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['rowsTotal']);
         $this->assertIsNumeric($response['body']['databasesTotal']);
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);

@@ -52,7 +52,7 @@ class Create extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_ENUM,
+                        model: UtopiaResponse::MODEL_COLUMN_ENUM,
                     )
                 ]
             ))
@@ -84,7 +84,7 @@ class Create extends ColumnAction
         Event                     $queueForEvents
     ): void {
         if (!is_null($default) && !in_array($default, $elements, true)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Default value not found in elements');
         }
 
         $column = $this->createColumn(
@@ -108,6 +108,6 @@ class Create extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_ENUM);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_ENUM);
     }
 }

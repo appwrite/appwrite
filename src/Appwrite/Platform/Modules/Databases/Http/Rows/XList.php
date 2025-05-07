@@ -52,7 +52,7 @@ class XList extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DOCUMENT_LIST,
+                        model: UtopiaResponse::MODEL_ROW_LIST,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -79,7 +79,7 @@ class XList extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         try {
@@ -136,7 +136,7 @@ class XList extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -217,7 +217,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'total' => $total,
-            'documents' => $rows,
-        ]), UtopiaResponse::MODEL_DOCUMENT_LIST);
+            'rows' => $rows,
+        ]), UtopiaResponse::MODEL_ROW_LIST);
     }
 }

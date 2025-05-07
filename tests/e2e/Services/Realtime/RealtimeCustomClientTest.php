@@ -714,7 +714,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -749,7 +749,7 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -769,7 +769,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows.' . $documentId, $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.tables.' . $actorsId . '.rows', $response['data']['channels']);
@@ -795,7 +795,7 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -813,7 +813,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -840,7 +840,7 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -867,7 +867,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -934,7 +934,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -971,7 +971,7 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -987,7 +987,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -1026,7 +1026,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);
@@ -1053,7 +1053,7 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -1076,7 +1076,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']); // includes old and new channels
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.tables.{$actorsId}.rows", $response['data']['channels']);

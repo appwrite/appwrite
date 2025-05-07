@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
+// TODO: check what do we use for - collectionsTotal, documentsTotal, collections, documents
 class UsageDatabase extends Model
 {
     public function __construct()
@@ -22,7 +23,7 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of documents.',
                 'default' => 0,

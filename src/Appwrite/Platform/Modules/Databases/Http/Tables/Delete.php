@@ -71,7 +71,7 @@ class Delete extends Action
 
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $tableId)) {
@@ -89,7 +89,7 @@ class Delete extends Action
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('tableId', $table->getId())
-            ->setPayload($response->output($table, UtopiaResponse::MODEL_COLLECTION));
+            ->setPayload($response->output($table, UtopiaResponse::MODEL_TABLE));
 
         $response->noContent();
     }

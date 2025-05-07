@@ -63,7 +63,7 @@ class Create extends Action
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
-                            model: UtopiaResponse::MODEL_DOCUMENT,
+                            model: UtopiaResponse::MODEL_ROW,
                         )
                     ],
                     contentType: ContentType::JSON
@@ -87,11 +87,11 @@ class Create extends Action
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+            throw new Exception(Exception::ROW_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new rows, try update instead');
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, '$id is not allowed for creating new rows, try update instead');
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -106,7 +106,7 @@ class Create extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $allowedPermissions = [
@@ -175,7 +175,7 @@ class Create extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -242,11 +242,11 @@ class Create extends Action
         try {
             $row = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $row);
         } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::ROW_ALREADY_EXISTS);
         } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
 
@@ -257,7 +257,7 @@ class Create extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -293,13 +293,13 @@ class Create extends Action
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($row, UtopiaResponse::MODEL_DOCUMENT);
+            ->dynamic($row, UtopiaResponse::MODEL_ROW);
 
         $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
+            fn ($row) => $row->getAttribute('key'),
             \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 

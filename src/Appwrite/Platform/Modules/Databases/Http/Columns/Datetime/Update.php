@@ -50,7 +50,7 @@ class Update extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
+                        model: UtopiaResponse::MODEL_COLUMN_DATETIME,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -92,6 +92,6 @@ class Update extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_DATETIME);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_DATETIME);
     }
 }

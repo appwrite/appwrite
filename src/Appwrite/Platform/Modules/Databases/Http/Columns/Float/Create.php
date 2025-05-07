@@ -52,7 +52,7 @@ class Create extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
+                        model: UtopiaResponse::MODEL_COLUMN_FLOAT,
                     )
                 ]
             ))
@@ -89,12 +89,12 @@ class Create extends ColumnAction
         $max ??= PHP_FLOAT_MAX;
 
         if ($min > $max) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
         }
 
         $validator = new Range($min, $max, Database::VAR_FLOAT);
         if (!\is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
         }
 
         $column = $this->createColumn($databaseId, $tableId, new Document([
@@ -116,6 +116,6 @@ class Create extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_FLOAT);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_FLOAT);
     }
 }

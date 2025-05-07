@@ -51,7 +51,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLLECTION,
+                        model: UtopiaResponse::MODEL_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -77,7 +77,7 @@ class Update extends Action
 
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $permissions ??= $table->getPermissions() ?? [];
@@ -105,6 +105,6 @@ class Update extends Action
             ->setParam('databaseId', $databaseId)
             ->setParam('tableId', $table->getId());
 
-        $response->dynamic($table, UtopiaResponse::MODEL_COLLECTION);
+        $response->dynamic($table, UtopiaResponse::MODEL_TABLE);
     }
 }

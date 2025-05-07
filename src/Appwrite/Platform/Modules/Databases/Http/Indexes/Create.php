@@ -85,7 +85,7 @@ class Create extends Action
         $table = $dbForProject->getDocument('database_' . $db->getInternalId(), $tableId);
 
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
@@ -142,7 +142,7 @@ class Create extends Action
             $columnIndex = \array_search($column, array_column($oldColumns, 'key'));
 
             if ($columnIndex === false) {
-                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown column: ' . $column . '. Verify the column name or create the column.');
+                throw new Exception(Exception::COLUMN_UNKNOWN, 'Unknown column: ' . $column . '. Verify the column name or create the column.');
             }
 
             $columnStatus = $oldColumns[$columnIndex]['status'];
@@ -150,12 +150,12 @@ class Create extends Action
             $columnArray = $oldColumns[$columnIndex]['array'] ?? false;
 
             if ($columnType === Database::VAR_RELATIONSHIP) {
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship column: ' . $oldColumns[$columnIndex]['key']);
+                throw new Exception(Exception::COLUMN_TYPE_INVALID, 'Cannot create an index for a relationship column: ' . $oldColumns[$columnIndex]['key']);
             }
 
             // ensure attribute is available
             if ($columnStatus !== 'available') {
-                throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Column not available: ' . $oldColumns[$columnIndex]['key']);
+                throw new Exception(Exception::COLUMN_NOT_AVAILABLE, 'Column not available: ' . $oldColumns[$columnIndex]['key']);
             }
 
             $lengths[$i] = null;

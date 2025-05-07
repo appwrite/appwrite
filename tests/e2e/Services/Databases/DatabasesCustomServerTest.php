@@ -358,7 +358,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => ID::custom('first'),
+            'tableId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -374,7 +374,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 2',
-            'collectionId' => ID::custom('second'),
+            'tableId' => ID::custom('second'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -390,12 +390,12 @@ class DatabasesCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(2, $collections['body']['total']);
-        $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
-        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
-        $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
-        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
+        $this->assertEquals($test1['body']['$id'], $collections['body']['tables'][0]['$id']);
+        $this->assertEquals($test1['body']['enabled'], $collections['body']['tables'][0]['enabled']);
+        $this->assertEquals($test2['body']['$id'], $collections['body']['tables'][1]['$id']);
+        $this->assertEquals($test1['body']['enabled'], $collections['body']['tables'][0]['enabled']);
 
-        $base = array_reverse($collections['body']['collections']);
+        $base = array_reverse($collections['body']['tables']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -407,7 +407,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
-        $this->assertCount(1, $collections['body']['collections']);
+        $this->assertCount(1, $collections['body']['tables']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -419,7 +419,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
-        $this->assertCount(1, $collections['body']['collections']);
+        $this->assertCount(1, $collections['body']['tables']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -431,7 +431,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
-        $this->assertCount(2, $collections['body']['collections']);
+        $this->assertCount(2, $collections['body']['tables']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -443,7 +443,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
-        $this->assertCount(0, $collections['body']['collections']);
+        $this->assertCount(0, $collections['body']['tables']);
 
         /**
          * Test for Order
@@ -458,8 +458,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(2, $collections['body']['total']);
-        $this->assertEquals($base[0]['$id'], $collections['body']['collections'][0]['$id']);
-        $this->assertEquals($base[1]['$id'], $collections['body']['collections'][1]['$id']);
+        $this->assertEquals($base[0]['$id'], $collections['body']['tables'][0]['$id']);
+        $this->assertEquals($base[1]['$id'], $collections['body']['tables'][1]['$id']);
 
         /**
          * Test for After
@@ -474,24 +474,24 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorAfter(new Document(['$id' => $base['body']['collections'][0]['$id']]))->toString(),
+                Query::cursorAfter(new Document(['$id' => $base['body']['tables'][0]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertCount(1, $collections['body']['collections']);
-        $this->assertEquals($base['body']['collections'][1]['$id'], $collections['body']['collections'][0]['$id']);
+        $this->assertCount(1, $collections['body']['tables']);
+        $this->assertEquals($base['body']['tables'][1]['$id'], $collections['body']['tables'][0]['$id']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorAfter(new Document(['$id' => $base['body']['collections'][1]['$id']]))->toString(),
+                Query::cursorAfter(new Document(['$id' => $base['body']['tables'][1]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertCount(0, $collections['body']['collections']);
-        $this->assertEmpty($collections['body']['collections']);
+        $this->assertCount(0, $collections['body']['tables']);
+        $this->assertEmpty($collections['body']['tables']);
 
         /**
          * Test for Before
@@ -506,24 +506,24 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorBefore(new Document(['$id' => $base['body']['collections'][1]['$id']]))->toString(),
+                Query::cursorBefore(new Document(['$id' => $base['body']['tables'][1]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertCount(1, $collections['body']['collections']);
-        $this->assertEquals($base['body']['collections'][0]['$id'], $collections['body']['collections'][0]['$id']);
+        $this->assertCount(1, $collections['body']['tables']);
+        $this->assertEquals($base['body']['tables'][0]['$id'], $collections['body']['tables'][0]['$id']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorBefore(new Document(['$id' => $base['body']['collections'][0]['$id']]))->toString(),
+                Query::cursorBefore(new Document(['$id' => $base['body']['tables'][0]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertCount(0, $collections['body']['collections']);
-        $this->assertEmpty($collections['body']['collections']);
+        $this->assertCount(0, $collections['body']['tables']);
+        $this->assertEmpty($collections['body']['tables']);
 
         /**
          * Test for Search
@@ -536,7 +536,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(1, $collections['body']['total']);
-        $this->assertEquals('first', $collections['body']['collections'][0]['$id']);
+        $this->assertEquals('first', $collections['body']['tables'][0]['$id']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -546,8 +546,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(2, $collections['body']['total']);
-        $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
-        $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
+        $this->assertEquals('Test 1', $collections['body']['tables'][0]['name']);
+        $this->assertEquals('Test 2', $collections['body']['tables'][1]['name']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -579,7 +579,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => ID::custom('first'),
+            'tableId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -592,7 +592,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']);
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $test1['body']['$id'],
+            'tableId' => $test1['body']['$id'],
         ];
     }
 
@@ -602,7 +602,7 @@ class DatabasesCustomServerTest extends Scope
     public function testGetCollection(array $data): void
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -622,7 +622,7 @@ class DatabasesCustomServerTest extends Scope
     public function testUpdateCollection(array $data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -657,7 +657,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Encrypted Actors Data',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -719,7 +719,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Jonah',
                 'lastName' => 'Jameson',
@@ -767,7 +767,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -820,7 +820,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'lorem',
                 'lastName' => 'ipsum',
@@ -840,7 +840,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'key' => 'key_lastName',
             'type' => 'key',
-            'attributes' => [
+            'columns' => [
                 'lastName',
             ],
         ]);
@@ -857,11 +857,11 @@ class DatabasesCustomServerTest extends Scope
         $unneededId = $unneeded['body']['key'];
 
         $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertIsArray($collection['body']['attributes']);
-        $this->assertCount(3, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][2]['key'], $unneeded['body']['key']);
+        $this->assertIsArray($collection['body']['columns']);
+        $this->assertCount(3, $collection['body']['columns']);
+        $this->assertEquals($collection['body']['columns'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['columns'][1]['key'], $lastName['body']['key']);
+        $this->assertEquals($collection['body']['columns'][2]['key'], $unneeded['body']['key']);
         $this->assertCount(1, $collection['body']['indexes']);
         $this->assertEquals($collection['body']['indexes'][0]['key'], $index['body']['key']);
 
@@ -892,13 +892,13 @@ class DatabasesCustomServerTest extends Scope
         ]), []);
 
         $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertIsArray($collection['body']['attributes']);
-        $this->assertCount(2, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
+        $this->assertIsArray($collection['body']['columns']);
+        $this->assertCount(2, $collection['body']['columns']);
+        $this->assertEquals($collection['body']['columns'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['columns'][1]['key'], $lastName['body']['key']);
 
         return [
-            'collectionId' => $actors['body']['$id'],
+            'tableId' => $actors['body']['$id'],
             'key' => $index['body']['key'],
             'databaseId' => $databaseId
         ];
@@ -910,7 +910,7 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteIndex($data): array
     {
         $databaseId = $data['databaseId'];
-        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/' . $data['key'], array_merge([
+        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes/' . $data['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -921,7 +921,7 @@ class DatabasesCustomServerTest extends Scope
         // Wait for database worker to finish deleting index
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['tableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -938,7 +938,7 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteIndexOnDeleteAttribute($data)
     {
         $databaseId = $data['databaseId'];
-        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -948,7 +948,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -965,25 +965,25 @@ class DatabasesCustomServerTest extends Scope
 
         sleep(2);
 
-        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'index1',
             'type' => 'key',
-            'attributes' => ['attribute1', 'attribute2'],
+            'columns' => ['attribute1', 'attribute2'],
             'orders' => ['ASC', 'ASC'],
         ]);
 
-        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'index2',
             'type' => 'key',
-            'attributes' => ['attribute2'],
+            'columns' => ['attribute2'],
         ]);
 
         $this->assertEquals(202, $index1['headers']['status-code']);
@@ -994,7 +994,7 @@ class DatabasesCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1005,7 +1005,7 @@ class DatabasesCustomServerTest extends Scope
         // wait for database worker to complete
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['tableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1015,12 +1015,12 @@ class DatabasesCustomServerTest extends Scope
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(1, $collection['body']['indexes']);
         $this->assertEquals($index1['body']['key'], $collection['body']['indexes'][0]['key']);
-        $this->assertIsArray($collection['body']['indexes'][0]['attributes']);
-        $this->assertCount(1, $collection['body']['indexes'][0]['attributes']);
-        $this->assertEquals($attribute1['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
+        $this->assertIsArray($collection['body']['indexes'][0]['columns']);
+        $this->assertCount(1, $collection['body']['indexes'][0]['columns']);
+        $this->assertEquals($attribute1['body']['key'], $collection['body']['indexes'][0]['columns'][0]);
 
         // Delete attribute
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['tableId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1050,7 +1050,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1100,7 +1100,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'key' => 'index1',
             'type' => 'key',
-            'attributes' => ['attribute1', 'attribute2'],
+            'columns' => ['attribute1', 'attribute2'],
             'orders' => ['ASC', 'ASC'],
         ]);
 
@@ -1111,7 +1111,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'key' => 'index2',
             'type' => 'key',
-            'attributes' => ['attribute2'],
+            'columns' => ['attribute2'],
         ]);
 
         $this->assertEquals(202, $index1['headers']['status-code']);
@@ -1143,9 +1143,9 @@ class DatabasesCustomServerTest extends Scope
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(1, $collection['body']['indexes']);
         $this->assertEquals($index2['body']['key'], $collection['body']['indexes'][0]['key']);
-        $this->assertIsArray($collection['body']['indexes'][0]['attributes']);
-        $this->assertCount(1, $collection['body']['indexes'][0]['attributes']);
-        $this->assertEquals($attribute2['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
+        $this->assertIsArray($collection['body']['indexes'][0]['columns']);
+        $this->assertCount(1, $collection['body']['indexes'][0]['columns']);
+        $this->assertEquals($attribute2['body']['key'], $collection['body']['indexes'][0]['columns'][0]);
 
         // Delete attribute
         $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $attribute2['body']['key'], array_merge([
@@ -1163,14 +1163,14 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteCollection($data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         // Add Documents to the collection
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
@@ -1186,7 +1186,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'rowId' => ID::unique(),
             'data' => [
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
@@ -1249,7 +1249,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Collection1',
             'documentSecurity' => false,
             'permissions' => [],
@@ -1260,7 +1260,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'tableId' => ID::unique(),
             'name' => 'Collection2',
             'documentSecurity' => false,
             'permissions' => [],
@@ -1274,7 +1274,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'relatedCollectionId' => $collection2,
+            'relatedTableId' => $collection2,
             'type' => Database::RELATION_MANY_TO_ONE,
             'twoWay' => false,
             'key' => 'collection2'
@@ -1318,7 +1318,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('attributeRowWidthLimit'),
+            'tableId' => ID::custom('attributeRowWidthLimit'),
             'name' => 'attributeRowWidthLimit',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1384,7 +1384,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('testLimitException'),
+            'tableId' => ID::custom('testLimitException'),
             'name' => 'testLimitException',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1426,12 +1426,12 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'testLimitException');
-        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['columns']);
         $this->assertIsArray($collection['body']['indexes']);
-        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(64, $collection['body']['columns']);
         $this->assertCount(0, $collection['body']['indexes']);
 
-        foreach ($collection['body']['attributes'] as $attribute) {
+        foreach ($collection['body']['columns'] as $attribute) {
             $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
         }
 
@@ -1446,7 +1446,7 @@ class DatabasesCustomServerTest extends Scope
             ]), [
                 'key' => "key_attribute{$i}",
                 'type' => 'key',
-                'attributes' => ["attribute{$i}"],
+                'columns' => ["attribute{$i}"],
             ]);
 
             $this->assertEquals(202, $index['headers']['status-code']);
@@ -1463,9 +1463,9 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'testLimitException');
-        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['columns']);
         $this->assertIsArray($collection['body']['indexes']);
-        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(64, $collection['body']['columns']);
         $this->assertCount(58, $collection['body']['indexes']);
 
         $tooMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
@@ -1475,7 +1475,7 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'key' => 'tooMany',
             'type' => 'key',
-            'attributes' => ['attribute61'],
+            'columns' => ['attribute61'],
         ]);
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
@@ -1508,7 +1508,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('updateAttributes'),
+            'tableId' => ID::custom('updateAttributes'),
             'name' => 'updateAttributes'
         ]);
 
@@ -1642,7 +1642,7 @@ class DatabasesCustomServerTest extends Scope
 
         return [
             'databaseId' => $databaseId,
-            'collectionId' => $collectionId
+            'tableId' => $collectionId
         ];
     }
 
@@ -1653,7 +1653,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1681,7 +1681,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
@@ -1785,7 +1785,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1795,7 +1795,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'email';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/email/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1823,7 +1823,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('torsten@appwrite.io', $attribute['default']);
@@ -1928,7 +1928,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1938,7 +1938,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'ip';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/ip/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1966,7 +1966,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('127.0.0.1', $attribute['default']);
@@ -2070,7 +2070,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -2080,7 +2080,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'url';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/url/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2108,7 +2108,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('http://appwrite.io', $attribute['default']);
@@ -2212,7 +2212,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -2222,7 +2222,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'integer';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2254,7 +2254,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123, $attribute['default']);
@@ -2430,7 +2430,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2444,7 +2444,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2458,7 +2458,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
@@ -2473,7 +2473,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
     }
 
     /**
@@ -2483,7 +2483,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'float';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2515,7 +2515,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123.456, $attribute['default']);
@@ -2691,7 +2691,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2705,7 +2705,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2719,7 +2719,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
@@ -2734,7 +2734,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
     }
 
     /**
@@ -2744,7 +2744,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'boolean';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/boolean/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2772,7 +2772,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(true, $attribute['default']);
@@ -2876,7 +2876,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -2886,7 +2886,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'datetime';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2914,7 +2914,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('1975-06-12 14:12:55+02:00', $attribute['default']);
@@ -3018,7 +3018,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -3028,7 +3028,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'enum';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -3061,7 +3061,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['columns'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
@@ -3133,7 +3133,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -3146,7 +3146,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -3234,7 +3234,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -3244,7 +3244,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $document = $this->client->call(
             Client::METHOD_POST,
@@ -3255,7 +3255,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3287,7 +3287,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 2048)
                 ],
@@ -3324,7 +3324,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-        $this->assertEquals(AppwriteException::ATTRIBUTE_INVALID_RESIZE, $attribute['body']['type']);
+        $this->assertEquals(AppwriteException::COLUMN_INVALID_RESIZE, $attribute['body']['type']);
 
         // original documents to original size, remove new document
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document['body']['$id'], array_merge([
@@ -3373,7 +3373,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 10)
                 ],
@@ -3408,7 +3408,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => str_repeat('a', 11)
                 ],
@@ -3417,7 +3417,7 @@ class DatabasesCustomServerTest extends Scope
         );
 
         $this->assertEquals(400, $newDoc['headers']['status-code']);
-        $this->assertEquals(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $newDoc['body']['type']);
+        $this->assertEquals(AppwriteException::ROW_INVALID_STRUCTURE, $newDoc['body']['type']);
     }
 
     /**
@@ -3426,7 +3426,7 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeUpdateNotFound(array $data)
     {
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         $attributes = [
             'string' => [
@@ -3491,7 +3491,7 @@ class DatabasesCustomServerTest extends Scope
             ]), $payload);
 
             $this->assertEquals(404, $update['headers']['status-code']);
-            $this->assertEquals(AppwriteException::COLLECTION_NOT_FOUND, $update['body']['type']);
+            $this->assertEquals(AppwriteException::TABLE_NOT_FOUND, $update['body']['type']);
 
             /**
              * Check if Attribute exists
@@ -3503,7 +3503,7 @@ class DatabasesCustomServerTest extends Scope
             ]), $payload);
 
             $this->assertEquals(404, $update['headers']['status-code']);
-            $this->assertEquals(AppwriteException::ATTRIBUTE_NOT_FOUND, $update['body']['type']);
+            $this->assertEquals(AppwriteException::COLUMN_NOT_FOUND, $update['body']['type']);
         }
     }
 
@@ -3514,7 +3514,7 @@ class DatabasesCustomServerTest extends Scope
     {
         $key = 'string';
         $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $collectionId = $data['tableId'];
 
         // Create document to test against
         $document = $this->client->call(
@@ -3526,7 +3526,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3578,7 +3578,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'new_string' => 'string'
                 ],
@@ -3600,7 +3600,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'documentId' => 'unique()',
+                'rowId' => 'unique()',
                 'data' => [
                     'string' => 'string'
                 ],
@@ -3630,7 +3630,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'collection1',
+            'tableId' => 'collection1',
             'name' => 'level1',
             'documentSecurity' => false,
             'permissions' => [
@@ -3646,7 +3646,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'collection2',
+            'tableId' => 'collection2',
             'name' => 'level2',
             'documentSecurity' => false,
             'permissions' => [
@@ -3684,7 +3684,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'oneToMany',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3700,11 +3700,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        $collection1RelationAttribute = $collection1Attributes['body']['attributes'][0];
+        $collection1RelationAttribute = $collection1Attributes['body']['columns'][0];
 
         $this->assertEquals($relation['body']['side'], $collection1RelationAttribute['side']);
         $this->assertEquals($relation['body']['twoWayKey'], $collection1RelationAttribute['twoWayKey']);
-        $this->assertEquals($relation['body']['relatedCollection'], $collection1RelationAttribute['relatedCollection']);
+        $this->assertEquals($relation['body']['relatedTable'], $collection1RelationAttribute['relatedTable']);
 
         // Create a document for checking later
         $originalDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1Id . '/documents', array_merge([
@@ -3712,7 +3712,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [[
                     '$id' => 'unique()',
@@ -3764,8 +3764,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection1Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection1Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection1Attributes['body']['attributes'][0]['key']);
+        $this->assertEquals(1, count($collection1Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection1Attributes['body']['columns'][0]['key']);
 
         // Check if attribute was renamed on the child's side
         $collection2Attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2Id, [
@@ -3775,8 +3775,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection2Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection2Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection2Attributes['body']['attributes'][0]['twoWayKey']);
+        $this->assertEquals(1, count($collection2Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection2Attributes['body']['columns'][0]['twoWayKey']);
 
         $this->cleanupRelationshipCollection();
     }
@@ -3794,7 +3794,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'oneToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3810,11 +3810,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        $collection1RelationAttribute = $collection1Attributes['body']['attributes'][0];
+        $collection1RelationAttribute = $collection1Attributes['body']['columns'][0];
 
         $this->assertEquals($relation['body']['side'], $collection1RelationAttribute['side']);
         $this->assertEquals($relation['body']['twoWayKey'], $collection1RelationAttribute['twoWayKey']);
-        $this->assertEquals($relation['body']['relatedCollection'], $collection1RelationAttribute['relatedCollection']);
+        $this->assertEquals($relation['body']['relatedTable'], $collection1RelationAttribute['relatedTable']);
 
         // Create a document for checking later
         $originalDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1Id . '/documents', array_merge([
@@ -3822,7 +3822,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',
@@ -3874,8 +3874,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection1Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection1Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection1Attributes['body']['attributes'][0]['key']);
+        $this->assertEquals(1, count($collection1Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection1Attributes['body']['columns'][0]['key']);
 
         // Check if attribute was renamed on the child's side
         $collection2Attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2Id, [
@@ -3885,8 +3885,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection2Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection2Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection2Attributes['body']['attributes'][0]['twoWayKey']);
+        $this->assertEquals(1, count($collection2Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection2Attributes['body']['columns'][0]['twoWayKey']);
 
         $this->cleanupRelationshipCollection();
     }
@@ -3904,7 +3904,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -3920,11 +3920,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        $collection1RelationAttribute = $collection1Attributes['body']['attributes'][0];
+        $collection1RelationAttribute = $collection1Attributes['body']['columns'][0];
 
         $this->assertEquals($relation['body']['side'], $collection1RelationAttribute['side']);
         $this->assertEquals($relation['body']['twoWayKey'], $collection1RelationAttribute['twoWayKey']);
-        $this->assertEquals($relation['body']['relatedCollection'], $collection1RelationAttribute['relatedCollection']);
+        $this->assertEquals($relation['body']['relatedTable'], $collection1RelationAttribute['relatedTable']);
 
         // Create a document for checking later
         $originalDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1Id . '/documents', array_merge([
@@ -3932,7 +3932,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',
@@ -3984,8 +3984,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection1Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection1Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection1Attributes['body']['attributes'][0]['key']);
+        $this->assertEquals(1, count($collection1Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection1Attributes['body']['columns'][0]['key']);
 
         // Check if attribute was renamed on the child's side
         $collection2Attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2Id, [
@@ -3995,8 +3995,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection2Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection2Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection2Attributes['body']['attributes'][0]['twoWayKey']);
+        $this->assertEquals(1, count($collection2Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection2Attributes['body']['columns'][0]['twoWayKey']);
 
         $this->cleanupRelationshipCollection();
     }
@@ -4014,7 +4014,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'relatedCollectionId' => $collection2Id,
+            'relatedTableId' => $collection2Id,
             'type' => 'manyToOne',
             'twoWay' => true,
             'onDelete' => 'cascade',
@@ -4030,11 +4030,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        $collection1RelationAttribute = $collection1Attributes['body']['attributes'][0];
+        $collection1RelationAttribute = $collection1Attributes['body']['columns'][0];
 
         $this->assertEquals($relation['body']['side'], $collection1RelationAttribute['side']);
         $this->assertEquals($relation['body']['twoWayKey'], $collection1RelationAttribute['twoWayKey']);
-        $this->assertEquals($relation['body']['relatedCollection'], $collection1RelationAttribute['relatedCollection']);
+        $this->assertEquals($relation['body']['relatedTable'], $collection1RelationAttribute['relatedTable']);
 
         // Create a document for checking later
         $originalDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1Id . '/documents', array_merge([
@@ -4042,7 +4042,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'rowId' => 'unique()',
             'data' => [
                 'level2' => [
                     '$id' => 'unique()',
@@ -4094,8 +4094,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection1Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection1Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection1Attributes['body']['attributes'][0]['key']);
+        $this->assertEquals(1, count($collection1Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection1Attributes['body']['columns'][0]['key']);
 
         // Check if attribute was renamed on the child's side
         $collection2Attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2Id, [
@@ -4105,8 +4105,8 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $collection2Attributes['headers']['status-code']);
-        $this->assertEquals(1, count($collection2Attributes['body']['attributes']));
-        $this->assertEquals('new_level_2', $collection2Attributes['body']['attributes'][0]['twoWayKey']);
+        $this->assertEquals(1, count($collection2Attributes['body']['columns']));
+        $this->assertEquals('new_level_2', $collection2Attributes['body']['columns'][0]['twoWayKey']);
 
         $this->cleanupRelationshipCollection();
     }

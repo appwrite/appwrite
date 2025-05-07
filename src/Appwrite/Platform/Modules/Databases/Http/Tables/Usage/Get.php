@@ -47,7 +47,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_USAGE_COLLECTION,
+                        model: UtopiaResponse::MODEL_USAGE_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON,
@@ -68,7 +68,7 @@ class Get extends Action
         $table = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $tableDocument->getInternalId());
 
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $periods = Config::getParam('usage', []);
@@ -124,8 +124,8 @@ class Get extends Action
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsTotal' => $usage[$metrics[0]]['total'],
-            'documents' => $usage[$metrics[0]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_COLLECTION);
+            'rows' => $usage[$metrics[0]]['data'],
+            'rowsTotal' => $usage[$metrics[0]]['total'],
+        ]), UtopiaResponse::MODEL_USAGE_TABLE);
     }
 }

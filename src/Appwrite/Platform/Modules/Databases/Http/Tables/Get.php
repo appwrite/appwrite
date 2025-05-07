@@ -43,7 +43,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLLECTION,
+                        model: UtopiaResponse::MODEL_TABLE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -66,9 +66,9 @@ class Get extends Action
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
 
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
-        $response->dynamic($table, UtopiaResponse::MODEL_COLLECTION);
+        $response->dynamic($table, UtopiaResponse::MODEL_TABLE);
     }
 }

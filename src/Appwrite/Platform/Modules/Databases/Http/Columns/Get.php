@@ -44,16 +44,16 @@ class Get extends Action
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
                         model: [
-                            UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
-                            UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
-                            UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
-                            UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
-                            UtopiaResponse::MODEL_ATTRIBUTE_ENUM,
-                            UtopiaResponse::MODEL_ATTRIBUTE_URL,
-                            UtopiaResponse::MODEL_ATTRIBUTE_IP,
-                            UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
-                            UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
-                            UtopiaResponse::MODEL_ATTRIBUTE_STRING,
+                            UtopiaResponse::MODEL_COLUMN_BOOLEAN,
+                            UtopiaResponse::MODEL_COLUMN_INTEGER,
+                            UtopiaResponse::MODEL_COLUMN_FLOAT,
+                            UtopiaResponse::MODEL_COLUMN_EMAIL,
+                            UtopiaResponse::MODEL_COLUMN_ENUM,
+                            UtopiaResponse::MODEL_COLUMN_URL,
+                            UtopiaResponse::MODEL_COLUMN_IP,
+                            UtopiaResponse::MODEL_COLUMN_DATETIME,
+                            UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
+                            UtopiaResponse::MODEL_COLUMN_STRING,
                         ]
                     )
                 ]
@@ -75,12 +75,12 @@ class Get extends Action
 
         $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
         if ($table->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         $column = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $table->getInternalId() . '_' . $key);
         if ($column->isEmpty()) {
-            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+            throw new Exception(Exception::COLUMN_NOT_FOUND);
         }
 
         $type = $column->getAttribute('type');
@@ -92,19 +92,19 @@ class Get extends Action
         }
 
         $model = match ($type) {
-            Database::VAR_BOOLEAN => UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
-            Database::VAR_INTEGER => UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
-            Database::VAR_FLOAT => UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_DATETIME => UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
-            Database::VAR_RELATIONSHIP => UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
+            Database::VAR_BOOLEAN => UtopiaResponse::MODEL_COLUMN_BOOLEAN,
+            Database::VAR_INTEGER => UtopiaResponse::MODEL_COLUMN_INTEGER,
+            Database::VAR_FLOAT => UtopiaResponse::MODEL_COLUMN_FLOAT,
+            Database::VAR_DATETIME => UtopiaResponse::MODEL_COLUMN_DATETIME,
+            Database::VAR_RELATIONSHIP => UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
-                APP_DATABASE_ATTRIBUTE_EMAIL => UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
-                APP_DATABASE_ATTRIBUTE_ENUM => UtopiaResponse::MODEL_ATTRIBUTE_ENUM,
-                APP_DATABASE_ATTRIBUTE_IP => UtopiaResponse::MODEL_ATTRIBUTE_IP,
-                APP_DATABASE_ATTRIBUTE_URL => UtopiaResponse::MODEL_ATTRIBUTE_URL,
-                default => UtopiaResponse::MODEL_ATTRIBUTE_STRING,
+                APP_DATABASE_ATTRIBUTE_EMAIL => UtopiaResponse::MODEL_COLUMN_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => UtopiaResponse::MODEL_COLUMN_ENUM,
+                APP_DATABASE_ATTRIBUTE_IP => UtopiaResponse::MODEL_COLUMN_IP,
+                APP_DATABASE_ATTRIBUTE_URL => UtopiaResponse::MODEL_COLUMN_URL,
+                default => UtopiaResponse::MODEL_COLUMN_STRING,
             },
-            default => UtopiaResponse::MODEL_ATTRIBUTE,
+            default => UtopiaResponse::MODEL_COLUMN,
         };
 
         $response->dynamic($column, $model);

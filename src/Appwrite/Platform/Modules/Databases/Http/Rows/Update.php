@@ -62,7 +62,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_DOCUMENT,
+                        model: UtopiaResponse::MODEL_ROW,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -86,7 +86,7 @@ class Update extends Action
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::ROW_MISSING_PAYLOAD);
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -101,7 +101,7 @@ class Update extends Action
         $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
 
         if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Read permission should not be required for update
@@ -109,7 +109,7 @@ class Update extends Action
         $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
 
         if ($row->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::ROW_NOT_FOUND);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -150,17 +150,17 @@ class Update extends Action
 
         $operations = 0;
 
-        $setTable = (function (Document $collection, Document $document) use (&$setTable, $dbForProject, $database, &$operations) {
+        $setTable = (function (Document $table, Document $row) use (&$setTable, $dbForProject, $database, &$operations) {
 
             $operations++;
 
             $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                $table->getAttribute('attributes', []),
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
+                $related = $row->getAttribute($relationship->getAttribute('key'));
 
                 if (empty($related)) {
                     continue;
@@ -212,9 +212,9 @@ class Update extends Action
                 }
 
                 if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
+                    $row->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
         });
@@ -239,11 +239,11 @@ class Update extends Action
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::ROW_ALREADY_EXISTS);
         } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            throw new Exception(Exception::ROW_INVALID_STRUCTURE, $e->getMessage());
         } catch (NotFoundException) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::TABLE_NOT_FOUND);
         }
 
         // Add $tableId and $databaseId for all rows
@@ -253,7 +253,7 @@ class Update extends Action
 
             $relationships = \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -281,13 +281,13 @@ class Update extends Action
 
         $processRow($table, $row);
 
-        $response->dynamic($row, UtopiaResponse::MODEL_DOCUMENT);
+        $response->dynamic($row, UtopiaResponse::MODEL_ROW);
 
         $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
+            fn ($row) => $row->getAttribute('key'),
             \array_filter(
                 $table->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
 

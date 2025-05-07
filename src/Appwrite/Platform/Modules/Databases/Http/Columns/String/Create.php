@@ -53,7 +53,7 @@ class Create extends ColumnAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_ATTRIBUTE_STRING
+                        model: UtopiaResponse::MODEL_COLUMN_STRING
                     )
                 ]
             ))
@@ -89,7 +89,7 @@ class Create extends ColumnAction
         // Ensure default fits in the given size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
         }
 
         $filters = [];
@@ -117,6 +117,6 @@ class Create extends ColumnAction
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_ATTRIBUTE_STRING);
+            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_STRING);
     }
 }

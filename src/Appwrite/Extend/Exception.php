@@ -196,6 +196,11 @@ class Exception extends \Exception
     public const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
     public const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
 
+    /** Tables */
+    public const TABLE_NOT_FOUND              = 'table_not_found';
+    public const TABLE_ALREADY_EXISTS         = 'table_already_exists';
+    public const TABLE_LIMIT_EXCEEDED         = 'table_limit_exceeded';
+
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
@@ -205,7 +210,16 @@ class Exception extends \Exception
     public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
     public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
-    /** Attribute */
+    /** Rows */
+    public const ROW_NOT_FOUND                = 'row_not_found';
+    public const ROW_INVALID_STRUCTURE        = 'row_invalid_structure';
+    public const ROW_MISSING_DATA             = 'row_missing_data';
+    public const ROW_MISSING_PAYLOAD          = 'row_missing_payload';
+    public const ROW_ALREADY_EXISTS           = 'row_already_exists';
+    public const ROW_UPDATE_CONFLICT          = 'row_update_conflict';
+    public const ROW_DELETE_RESTRICTED        = 'row_delete_restricted';
+
+    /** Attributes */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
     public const ATTRIBUTE_UNKNOWN                 = 'attribute_unknown';
     public const ATTRIBUTE_NOT_AVAILABLE           = 'attribute_not_available';
@@ -216,6 +230,18 @@ class Exception extends \Exception
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
     public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
+
+    /** Columns */
+    public const COLUMN_NOT_FOUND               = 'column_not_found';
+    public const COLUMN_UNKNOWN                 = 'column_unknown';
+    public const COLUMN_NOT_AVAILABLE           = 'column_not_available';
+    public const COLUMN_FORMAT_UNSUPPORTED      = 'column_format_unsupported';
+    public const COLUMN_DEFAULT_UNSUPPORTED     = 'column_default_unsupported';
+    public const COLUMN_ALREADY_EXISTS          = 'column_already_exists';
+    public const COLUMN_LIMIT_EXCEEDED          = 'column_limit_exceeded';
+    public const COLUMN_VALUE_INVALID           = 'column_value_invalid';
+    public const COLUMN_TYPE_INVALID            = 'column_type_invalid';
+    public const COLUMN_INVALID_RESIZE          = 'column_invalid_resize';
 
     /** Relationship */
     public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
