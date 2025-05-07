@@ -76,8 +76,10 @@ class Realtime extends Event
         $payload = new Document($this->getPayload());
 
         $db = $this->getContext('database');
-        $table = $this->getContext('table');
         $bucket = $this->getContext('bucket');
+
+        // can be Tables API or Collections API, generated channels include both!
+        $tableOrCollection = $this->getContext('table') ?? $this->getContext('collection');
 
         $target = RealtimeAdapter::fromPayload(
             // Pass first, most verbose event pattern
@@ -85,7 +87,7 @@ class Realtime extends Event
             payload: $payload,
             project: $this->getProject(),
             database: $db,
-            table: $table,
+            table: $tableOrCollection,
             bucket: $bucket,
         );
 

@@ -483,26 +483,10 @@ App::init()
         /*
         * Background Jobs
         */
-        $events = $route->getLabel('event', '');
         $queueForEvents
-            ->setUser($user)
-            ->setEvent($events)
-            ->setProject($project);
-
-        if (str_contains($events, '.tables.')) {
-            $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-            if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
-                $map = [
-                    'rows' => 'documents',
-                    'tables' => 'collections',
-                    'columns' => 'attributes',
-                ];
-
-                $compatibleEvents = str_replace(array_keys($map), array_values($map), $events);
-                // override the events
-                $queueForEvents->setEvent($compatibleEvents);
-            }
-        }
+            ->setEvent($route->getLabel('event', ''))
+            ->setProject($project)
+            ->setUser($user);
 
         $queueForAudits
             ->setMode($mode)
