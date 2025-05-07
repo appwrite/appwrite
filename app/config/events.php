@@ -152,7 +152,7 @@ return [
             'documents' => [
                 '$model' => Response::MODEL_DOCUMENT,
                 '$resource' => true,
-                '$description' => 'This event triggers on any document event.',
+                '$description' => 'This event triggers on any documents event.',
                 'create' => [
                     '$description' => 'This event triggers when a document is created.',
                 ],

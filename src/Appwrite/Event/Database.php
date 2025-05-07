@@ -10,8 +10,15 @@ class Database extends Event
 {
     protected string $type = '';
     protected ?Document $database = null;
-    protected ?Document $table = null;
+
+    // tables api
     protected ?Document $row = null;
+    protected ?Document $table = null;
+
+    // collections api
+    protected ?Document $document = null;
+    protected ?Document $collection = null;
+
 
     public function __construct(protected Publisher $publisher)
     {
@@ -99,6 +106,51 @@ class Database extends Event
         return $this->row;
     }
 
+    /**
+     * Set the collection for this database event.
+     *
+     * @param Document $collection
+     * @return self
+     */
+    public function setCollection(Document $collection): self
+    {
+        $this->collection = $collection;
+
+        return $this;
+    }
+
+    /**
+     * Returns set collection for this event.
+     *
+     * @return null|Document
+     */
+    public function getCollection(): ?Document
+    {
+        return $this->collection;
+    }
+
+    /**
+     * Set the document for this database event.
+     *
+     * @param Document $document
+     * @return self
+     */
+    public function setDocument(Document $document): self
+    {
+        $this->document = $document;
+
+        return $this;
+    }
+
+    /**
+     * Returns set document for this database event.
+     * @return null|Document
+     */
+    public function getDocument(): ?Document
+    {
+        return $this->document;
+    }
+
     public function getQueue(): string
     {
         try {
@@ -125,6 +177,8 @@ class Database extends Event
             'type' => $this->type,
             'table' => $this->table,
             'row' => $this->row,
+            'collection' => $this->collection,
+            'document' => $this->document,
             'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];

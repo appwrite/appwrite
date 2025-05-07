@@ -71,7 +71,7 @@ return [
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current attribute/column. Usage of more than 100 query values on a single column is prohibited.',
+        'description' => 'Query limit exceeded for the current attribute/column. Usage of more than 100 query values on a single attribute/column is prohibited.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [

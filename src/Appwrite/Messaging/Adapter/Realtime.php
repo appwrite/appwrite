@@ -230,7 +230,7 @@ class Realtime extends Adapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case strpos($key, 'account.') === 0:
+                case str_starts_with($key, 'account.'):
                     unset($channels[$key]);
                     break;
 
@@ -298,12 +298,13 @@ class Realtime extends Adapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
-                if (in_array($parts[4] ?? [], ['columns', 'indexes'])) {
+                $resource = $parts[4] ?? '';
+                if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                } elseif (($parts[4] ?? '') === 'rows' || ($parts[4] ?? '') === 'documents') {
+                } elseif (in_array($resource, ['rows', 'documents'])) {
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
                     }
