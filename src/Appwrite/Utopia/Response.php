@@ -15,10 +15,23 @@ use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\Any;
+use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeRelationship;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Column;
 use Appwrite\Utopia\Response\Model\ColumnBoolean;
 use Appwrite\Utopia\Response\Model\ColumnDatetime;
@@ -40,6 +53,7 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DevKey;
+use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -106,6 +120,7 @@ use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
 use Appwrite\Utopia\Response\Model\UsageFunction;
@@ -148,6 +163,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_TABLE = 'usageTable';
+    public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
@@ -160,14 +176,32 @@ class Response extends SwooleResponse
     // Database
     public const MODEL_DATABASE = 'database';
     public const MODEL_DATABASE_LIST = 'databaseList';
+    public const MODEL_COLLECTION = 'collection';
+    public const MODEL_COLLECTION_LIST = 'collectionList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_DOCUMENT = 'document';
+    public const MODEL_DOCUMENT_LIST = 'documentList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
     // Database Attributes
+    public const MODEL_ATTRIBUTE = 'attribute';
+    public const MODEL_ATTRIBUTE_LIST = 'attributeList';
+    public const MODEL_ATTRIBUTE_STRING = 'attributeString';
+    public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+    public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+    public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+    public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+    public const MODEL_ATTRIBUTE_IP = 'attributeIp';
+    public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
+    public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
+    public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+
+    // Database Columns
     public const MODEL_COLUMN = 'column';
     public const MODEL_COLUMN_LIST = 'columnList';
     public const MODEL_COLUMN_STRING = 'columnString';
@@ -377,7 +411,9 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Rows List', self::MODEL_ROW_LIST, 'rows', self::MODEL_ROW))
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
+            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
@@ -428,6 +464,21 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
             // Entities
             ->setModel(new Database())
+            // Collection API Models
+            ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
+            ->setModel(new AttributeRelationship())
+            // Table API Models
             ->setModel(new Table())
             ->setModel(new Column())
             ->setModel(new ColumnList())
@@ -443,6 +494,7 @@ class Response extends SwooleResponse
             ->setModel(new ColumnRelationship())
             ->setModel(new Index())
             ->setModel(new Row())
+            ->setModel(new ModelDocument())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new AlgoMd5())
@@ -509,6 +561,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageTable())
+            ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())
             ->setModel(new UsageStorage())
             ->setModel(new UsageBuckets())

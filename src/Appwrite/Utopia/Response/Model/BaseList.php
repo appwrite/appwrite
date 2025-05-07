@@ -32,9 +32,11 @@ class BaseList extends Model
 
         if ($paging) {
             $namesWithCap = [
-                'rows', 'tables', 'users', 'files', 'buckets', 'functions',
-                'deployments', 'executions', 'projects', 'webhooks', 'keys',
-                'platforms', 'rules', 'memberships', 'teams'
+                'rows', 'tables', // new api
+                'documents', 'collections', // legacy api
+                'users', 'files', 'buckets', 'functions',
+                'deployments', 'executions', 'projects',
+                'webhooks', 'keys', 'platforms', 'rules', 'memberships', 'teams'
             ];
 
             if (\in_array($name, $namesWithCap)) {
