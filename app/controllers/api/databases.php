@@ -4330,8 +4330,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $partialDocument,
             $queries,
-            onNext: function (Document $document) use (&$processDocument) {
-                $processDocument($document);
+            onNext: function (Document $document) use ($collection, &$processDocument) {
+                $processDocument($collection, $document);
             },
         );
 
@@ -4537,7 +4537,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $operations = 0;
 
-        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
+        $processDocument  = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, &$operations): bool {
             if ($document->isEmpty()) {
                 return false;
             }
@@ -4588,8 +4588,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         $modified = $dbForProject->deleteDocuments(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $queries,
-            onNext: function (Document $document) use (&$processDocument) {
-                $processDocument($document);
+            onNext: function (Document $document) use ($collection, &$processDocument) {
+                $processDocument($collection, $document);
             },
         );
 
