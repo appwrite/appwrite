@@ -4215,7 +4215,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
+    ->inject('plan')
+    ->action(function (string $databaseId, string $collectionId, string|array $data, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -4296,8 +4297,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $partialDocument,
             $queries,
-            onNext: function (Document $document) use (&$documents) {
-                $documents[] = $document;
+            onNext: function (Document $document) use ($plan, &$documents) {
+                if (\count($documents) < $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH) {
+                    $documents[] = $document;
+                }
             },
         );
 
@@ -4511,7 +4514,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForStatsUsage')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage) {
+    ->inject('plan')
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -4547,8 +4551,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         $dbForProject->deleteDocuments(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
             $queries,
-            onNext: function (Document $document) use (&$documents) {
-                $documents[] = $document;
+            onNext: function (Document $document) use ($plan, &$documents) {
+                if (\count($documents) < $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH) {
+                    $documents[] = $document;
+                }
             },
         );
 
