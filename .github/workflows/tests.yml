@@ -156,6 +156,7 @@ jobs:
           Sites,
           Proxy,
           Storage,
+          Tokens,
           Teams,
           Users,
           Webhooks,
