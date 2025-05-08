@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-// TODO: check what do we use for - collectionsTotal, documentsTotal, collections, documents
 class UsageDatabase extends Model
 {
     public function __construct()
@@ -23,9 +22,15 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('collectionsTotal', [
+            ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('rowsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of rows.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -54,9 +59,23 @@ class UsageDatabase extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('tables', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated  number of tables per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('rows', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated  number of rows per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
