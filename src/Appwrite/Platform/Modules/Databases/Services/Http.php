@@ -2,61 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services;
 
-use Appwrite\Platform\Modules\Databases\Http\Collections\Create as CreateCollection;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Delete as DeleteCollection;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Get as GetCollection;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Logs\XList as ListCollectionLogs;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Update as UpdateCollection;
-use Appwrite\Platform\Modules\Databases\Http\Collections\Usage\Get as GetCollectionUsage;
-use Appwrite\Platform\Modules\Databases\Http\Collections\XList as ListCollections;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Boolean\Create as CreateBoolean;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Boolean\Update as UpdateBoolean;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Datetime\Create as CreateDatetime;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Datetime\Update as UpdateDatetime;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Delete as DeleteColumn;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Email\Create as CreateEmail;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Email\Update as UpdateEmail;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Enum\Create as CreateEnum;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Enum\Update as UpdateEnum;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Float\Create as CreateFloat;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Float\Update as UpdateFloat;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Get as GetColumn;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Integer\Create as CreateInteger;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Integer\Update as UpdateInteger;
-use Appwrite\Platform\Modules\Databases\Http\Columns\IP\Create as CreateIP;
-use Appwrite\Platform\Modules\Databases\Http\Columns\IP\Update as UpdateIP;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Relationship\Create as CreateRelationship;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Relationship\Update as UpdateRelationship;
-use Appwrite\Platform\Modules\Databases\Http\Columns\String\Create as CreateString;
-use Appwrite\Platform\Modules\Databases\Http\Columns\String\Update as UpdateString;
-use Appwrite\Platform\Modules\Databases\Http\Columns\URL\Create as CreateURL;
-use Appwrite\Platform\Modules\Databases\Http\Columns\URL\Update as UpdateURL;
-use Appwrite\Platform\Modules\Databases\Http\Columns\XList as ListColumns;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
-use Appwrite\Platform\Modules\Databases\Http\Indexes\Create as CreateIndex;
-use Appwrite\Platform\Modules\Databases\Http\Indexes\Delete as DeleteIndex;
-use Appwrite\Platform\Modules\Databases\Http\Indexes\Get as GetIndex;
-use Appwrite\Platform\Modules\Databases\Http\Indexes\XList as ListIndexes;
-use Appwrite\Platform\Modules\Databases\Http\Rows\Create as CreateRow;
-use Appwrite\Platform\Modules\Databases\Http\Rows\Delete as DeleteRow;
-use Appwrite\Platform\Modules\Databases\Http\Rows\Get as GetRow;
-use Appwrite\Platform\Modules\Databases\Http\Rows\Logs\XList as ListRowLogs;
-use Appwrite\Platform\Modules\Databases\Http\Rows\Update as UpdateRow;
-use Appwrite\Platform\Modules\Databases\Http\Rows\XList as ListRows;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Create as CreateTable;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Delete as DeleteTable;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Get as GetTable;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Logs\XList as ListTableLogs;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Update as UpdateTable;
-use Appwrite\Platform\Modules\Databases\Http\Tables\Usage\Get as GetTableUsage;
-use Appwrite\Platform\Modules\Databases\Http\Tables\XList as ListTables;
+use Appwrite\Platform\Modules\Databases\Services\Registry\Collections as CollectionsRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\Databases as DatabasesRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\Tables as TablesRegistry;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -65,109 +13,12 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->registerDatabaseActions();
-        $this->registerCollectionAndTableActions();
-        $this->registerColumnActions();
-        $this->registerIndexActions();
-        $this->registerRowActions();
-    }
-
-    private function registerDatabaseActions(): void
-    {
-        $this->addAction(CreateDatabase::getName(), new CreateDatabase());
-        $this->addAction(GetDatabase::getName(), new GetDatabase());
-        $this->addAction(UpdateDatabase::getName(), new UpdateDatabase());
-        $this->addAction(DeleteDatabase::getName(), new DeleteDatabase());
-        $this->addAction(ListDatabases::getName(), new ListDatabases());
-        $this->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
-        $this->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
-        $this->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
-    }
-
-    private function registerCollectionAndTableActions(): void
-    {
-        // Collections
-        $this->addAction(CreateCollection::getName(), new CreateCollection());
-        $this->addAction(GetCollection::getName(), new GetCollection());
-        $this->addAction(UpdateCollection::getName(), new UpdateCollection());
-        $this->addAction(DeleteCollection::getName(), new DeleteCollection());
-        $this->addAction(ListCollections::getName(), new ListCollections());
-        $this->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
-        $this->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
-
-        // Tables
-        $this->addAction(CreateTable::getName(), new CreateTable());
-        $this->addAction(GetTable::getName(), new GetTable());
-        $this->addAction(UpdateTable::getName(), new UpdateTable());
-        $this->addAction(DeleteTable::getName(), new DeleteTable());
-        $this->addAction(ListTables::getName(), new ListTables());
-        $this->addAction(ListTableLogs::getName(), new ListTableLogs());
-        $this->addAction(GetTableUsage::getName(), new GetTableUsage());
-    }
-
-    private function registerColumnActions(): void
-    {
-        // Column top level actions
-        $this->addAction(GetColumn::getName(), new GetColumn());
-        $this->addAction(DeleteColumn::getName(), new DeleteColumn());
-        $this->addAction(ListColumns::getName(), new ListColumns());
-
-        // Column: Boolean
-        $this->addAction(CreateBoolean::getName(), new CreateBoolean());
-        $this->addAction(UpdateBoolean::getName(), new UpdateBoolean());
-
-        // Column: Datetime
-        $this->addAction(CreateDatetime::getName(), new CreateDatetime());
-        $this->addAction(UpdateDatetime::getName(), new UpdateDatetime());
-
-        // Column: Email
-        $this->addAction(CreateEmail::getName(), new CreateEmail());
-        $this->addAction(UpdateEmail::getName(), new UpdateEmail());
-
-        // Column: Enum
-        $this->addAction(CreateEnum::getName(), new CreateEnum());
-        $this->addAction(UpdateEnum::getName(), new UpdateEnum());
-
-        // Column: Float
-        $this->addAction(CreateFloat::getName(), new CreateFloat());
-        $this->addAction(UpdateFloat::getName(), new UpdateFloat());
-
-        // Column: Integer
-        $this->addAction(CreateInteger::getName(), new CreateInteger());
-        $this->addAction(UpdateInteger::getName(), new UpdateInteger());
-
-        // Column: IP
-        $this->addAction(CreateIP::getName(), new CreateIP());
-        $this->addAction(UpdateIP::getName(), new UpdateIP());
-
-        // Column: Relationship
-        $this->addAction(CreateRelationship::getName(), new CreateRelationship());
-        $this->addAction(UpdateRelationship::getName(), new UpdateRelationship());
-
-        // Column: String
-        $this->addAction(CreateString::getName(), new CreateString());
-        $this->addAction(UpdateString::getName(), new UpdateString());
-
-        // Column: URL
-        $this->addAction(CreateURL::getName(), new CreateURL());
-        $this->addAction(UpdateURL::getName(), new UpdateURL());
-    }
-
-    private function registerIndexActions(): void
-    {
-        $this->addAction(CreateIndex::getName(), new CreateIndex());
-        $this->addAction(GetIndex::getName(), new GetIndex());
-        $this->addAction(DeleteIndex::getName(), new DeleteIndex());
-        $this->addAction(ListIndexes::getName(), new ListIndexes());
-    }
-
-    private function registerRowActions(): void
-    {
-        $this->addAction(CreateRow::getName(), new CreateRow());
-        $this->addAction(GetRow::getName(), new GetRow());
-        $this->addAction(UpdateRow::getName(), new UpdateRow());
-        $this->addAction(DeleteRow::getName(), new DeleteRow());
-        $this->addAction(ListRows::getName(), new ListRows());
-        $this->addAction(ListRowLogs::getName(), new ListRowLogs());
+        foreach ([
+            DatabasesRegistry::class,
+            CollectionsRegistry::class,
+            TablesRegistry::class,
+        ] as $registrar) {
+            new $registrar($this);
+        }
     }
 }
