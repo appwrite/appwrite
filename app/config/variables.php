@@ -1038,6 +1038,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MAINTENANCE_START_TIME',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'introduction' => '1.6.2',
+                'default' => '00:00',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
                 'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
                 'introduction' => '1.0.0',
