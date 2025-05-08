@@ -22,6 +22,11 @@ class Create extends IndexCreate
 {
     use HTTP;
 
+    public static function getName(): string
+    {
+        return 'createColumnIndex';
+    }
+
     protected function getResponseModel(): string
     {
         return UtopiaResponse::MODEL_COLUMN_INDEX;
@@ -44,7 +49,7 @@ class Create extends IndexCreate
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'createIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/create-index.md',
                 auth: [AuthType::KEY],
                 responses: [

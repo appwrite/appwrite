@@ -20,7 +20,7 @@ class Get extends Action
 
     public static function getName(): string
     {
-        return 'getColumn';
+        return 'getAttribute';
     }
 
     protected function getResponseModel(): string|array
@@ -44,7 +44,7 @@ class Get extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
-            ->desc('Get column')
+            ->desc('Get attribute')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -63,7 +63,7 @@ class Get extends Action
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
-            ->param('key', '', new Key(), 'Column Key.')
+            ->param('key', '', new Key(), 'Attribute Key.')
             ->inject('response')
             ->inject('dbForProject')
             ->callback([$this, 'action']);

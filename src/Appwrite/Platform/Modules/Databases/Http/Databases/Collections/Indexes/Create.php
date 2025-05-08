@@ -150,23 +150,23 @@ class Create extends Action
                 throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
             }
 
-            $columnStatus = $oldAttributes[$attributeIndex]['status'];
-            $columnType = $oldAttributes[$attributeIndex]['type'];
-            $columnArray = $oldAttributes[$attributeIndex]['array'] ?? false;
+            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
+            $attributeType = $oldAttributes[$attributeIndex]['type'];
+            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
-            if ($columnType === Database::VAR_RELATIONSHIP) {
+            if ($attributeType === Database::VAR_RELATIONSHIP) {
                 throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
             // ensure attribute is available
-            if ($columnStatus !== 'available') {
+            if ($attributeStatus !== 'available') {
                 $contextType = ucfirst($contextType);
                 throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
             }
 
             $lengths[$i] = null;
 
-            if ($columnArray === true) {
+            if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }

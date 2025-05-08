@@ -23,7 +23,7 @@ class Update extends Action
 
     public static function getName(): string
     {
-        return 'updateBooleanColumn';
+        return 'updateBooleanAttribute';
     }
 
     protected function getResponseModel(): string|array

@@ -18,6 +18,11 @@ class Get extends IndexGet
 {
     use HTTP;
 
+    public static function getName(): string
+    {
+        return 'getColumnIndex';
+    }
+
     protected function getResponseModel(): string
     {
         return UtopiaResponse::MODEL_COLUMN_INDEX;
@@ -37,7 +42,7 @@ class Get extends IndexGet
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/get-index.md',
                 auth: [AuthType::KEY],
                 responses: [

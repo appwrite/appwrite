@@ -59,7 +59,7 @@ class Tables extends Base
     {
         $this->registerTableActions($service);
         $this->registerColumnActions($service);
-        $this->registerColumnIndexActions($service);
+        $this->registerIndexActions($service);
         $this->registerRowActions($service);
     }
 
@@ -122,7 +122,7 @@ class Tables extends Base
         $service->addAction(UpdateURL::getName(), new UpdateURL());
     }
 
-    private function registerColumnIndexActions(Service $service): void
+    private function registerIndexActions(Service $service): void
     {
         $service->addAction(CreateColumnIndex::getName(), new CreateColumnIndex());
         $service->addAction(GetColumnIndex::getName(), new GetColumnIndex());

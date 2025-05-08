@@ -18,6 +18,11 @@ class XList extends IndexXList
 {
     use HTTP;
 
+    public static function getName(): string
+    {
+        return 'listColumnIndexes';
+    }
+
     protected function getResponseModel(): string
     {
         return UtopiaResponse::MODEL_COLUMN_INDEX_LIST;
@@ -37,7 +42,7 @@ class XList extends IndexXList
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'listIndexes', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/list-indexes.md',
                 auth: [AuthType::KEY],
                 responses: [

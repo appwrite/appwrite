@@ -212,12 +212,12 @@ class XList extends Action
         }
 
         if ($select) {
-            foreach ($documents as $row) {
+            foreach ($documents as $document) {
                 if (!$hasDatabaseId) {
-                    $row->removeAttribute('$databaseId');
+                    $document->removeAttribute('$databaseId');
                 }
                 if (!$hasCollectionId) {
-                    $row->removeAttribute('$collectionId');
+                    $document->removeAttribute('$collectionId');
                 }
             }
         }

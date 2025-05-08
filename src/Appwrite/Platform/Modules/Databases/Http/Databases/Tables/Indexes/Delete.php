@@ -20,6 +20,11 @@ class Delete extends IndexDelete
 {
     use HTTP;
 
+    public static function getName(): string
+    {
+        return 'updateColumnIndex';
+    }
+
     /**
      * 1. `SDKResponse` uses `UtopiaResponse::MODEL_NONE`.
      * 2. But we later need the actual return type for events queue below!
@@ -46,7 +51,7 @@ class Delete extends IndexDelete
             ->label('sdk', new Method(
                 namespace: $this->getSdkNamespace(),
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/databases/delete-index.md',
                 auth: [AuthType::KEY],
                 responses: [

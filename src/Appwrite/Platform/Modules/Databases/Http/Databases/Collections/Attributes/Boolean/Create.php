@@ -23,7 +23,7 @@ class Create extends Action
 
     public static function getName(): string
     {
-        return 'createBooleanColumn';
+        return 'createBooleanAttribute';
     }
 
     protected function getResponseModel(): string|array
