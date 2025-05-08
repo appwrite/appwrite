@@ -41,11 +41,11 @@ class Update extends Action
         return UtopiaResponse::MODEL_DOCUMENT;
     }
 
-
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
             ->desc('Update document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
