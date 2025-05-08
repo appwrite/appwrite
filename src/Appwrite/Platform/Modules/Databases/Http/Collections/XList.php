@@ -97,8 +97,7 @@ class XList extends Action
             $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionIdId);
 
             if ($cursorDocument->isEmpty()) {
-                $message =
-                    throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, ucfirst($this->getContext()) . " '$collectionIdId' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, ucfirst($this->getContext()) . " '$collectionIdId' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);

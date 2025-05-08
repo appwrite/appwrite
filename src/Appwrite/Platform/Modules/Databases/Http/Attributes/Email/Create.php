@@ -55,7 +55,7 @@ class Create extends Action
                 ]
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Collection ID.')
+            ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -68,20 +68,20 @@ class Create extends Action
     }
 
     public function action(
-        string                    $databaseId,
-        string                    $tableId,
-        string                    $key,
-        ?bool                     $required,
-        ?string                   $default,
-        bool                      $array,
+        string         $databaseId,
+        string         $collectionId,
+        string         $key,
+        ?bool          $required,
+        ?string        $default,
+        bool           $array,
         UtopiaResponse $response,
-        Database                  $dbForProject,
-        EventDatabase             $queueForDatabase,
-        Event                     $queueForEvents
+        Database       $dbForProject,
+        EventDatabase  $queueForDatabase,
+        Event          $queueForEvents
     ): void {
         $attribute = $this->createAttribute(
             $databaseId,
-            $tableId,
+            $collectionId,
             new Document([
                 'key' => $key,
                 'type' => Database::VAR_STRING,

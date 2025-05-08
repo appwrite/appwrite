@@ -34,7 +34,7 @@ class Create extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
             ->desc('Create boolean attribute')
             ->groups(['api', 'database', 'schema'])
-            ->label('event', 'databases.[databaseId].collections.[collectionId].collections.[attributeId].create')
+            ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'attribute.create')
