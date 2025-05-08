@@ -494,7 +494,7 @@ abstract class Action extends UtopiaAction
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
-                    throw new Exception($this->getTypeInvalidException(), $validator->getDescription());
+                    throw new Exception($this->getInvalidValueException(), $validator->getDescription());
                 }
 
                 $options = [
