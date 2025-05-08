@@ -22,6 +22,12 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('tablesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of tables.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of documents.',
