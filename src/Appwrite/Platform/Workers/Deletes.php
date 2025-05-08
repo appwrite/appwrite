@@ -510,10 +510,8 @@ class Deletes extends Action
         $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
             try {
                 if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    Console::info('DeleteProject deleteCollection "'.$collection->getId().'"');
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
-                    Console::log('DeleteProject deleteByGroup "'.$collection->getId().'"');
                     $this->deleteByGroup(
                         $collection->getId(),
                         [
