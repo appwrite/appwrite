@@ -50,8 +50,6 @@ abstract class Action extends UtopiaAction
 
     /**
      * Get the current context.
-     *
-     * @throws \LogicException If context has not been set.
      */
     final protected function getContext(): string
     {

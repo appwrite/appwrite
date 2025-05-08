@@ -2,25 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Rows;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
-use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Documents\Delete as DocumentDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 
-class Delete extends Action
+class Delete extends DocumentDelete
 {
     use HTTP;
 
@@ -29,12 +24,24 @@ class Delete extends Action
         return 'deleteRow';
     }
 
+    /**
+     * Same explanation as the parent action.
+     *
+     * 1. `SDKResponse` uses `UtopiaResponse::MODEL_NONE`.
+     * 2. But we later need the actual return type for events queue below!
+     */
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_ROW;
+    }
+
     public function __construct()
     {
+        $this->setContext(DATABASE_ROWS_CONTEXT);
+
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
             ->desc('Delete row')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
@@ -47,8 +54,8 @@ class Delete extends Action
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'rows',
-                name: 'deleteRow',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/delete-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -67,101 +74,8 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(string $databaseId, string $tableId, string $rowId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
-    {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $table = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId));
-
-        if ($table->isEmpty() || (!$table->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
-        }
-
-        // Read permission should not be required for delete
-        $row = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(), $rowId));
-
-        if ($row->isEmpty()) {
-            throw new Exception(Exception::ROW_NOT_FOUND);
-        }
-
-        try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $table, $rowId) {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $table->getInternalId(),
-                    $rowId
-                );
+            ->callback(function (string $databaseId, string $tableId, string $rowId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
+                parent::action($databaseId, $tableId, $rowId, $requestTimestamp, $response, $dbForProject, $queueForEvents, $queueForStatsUsage);
             });
-        } catch (NotFoundException) {
-            throw new Exception(Exception::TABLE_NOT_FOUND);
-        }
-
-        // Add $tableId and $databaseId for all rows
-        $processRow = function (Document $table, Document $row) use (&$processRow, $dbForProject, $database) {
-            $row->setAttribute('$databaseId', $database->getId());
-            $row->setAttribute('$collectionId', $table->getId());
-
-            $relationships = \array_filter(
-                $table->getAttribute('attributes', []),
-                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $row->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedTableId = $relationship->getAttribute('relatedCollection');
-                $relatedTable = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedTableId)
-                );
-
-                foreach ($related as $relation) {
-                    if ($relation instanceof Document) {
-                        $processRow($relatedTable, $relation);
-                    }
-                }
-            }
-        };
-
-        $processRow($table, $row);
-
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
-
-        $response->addHeader('X-Debug-Operations', 1);
-
-        $relationships = \array_map(
-            fn ($row) => $row->getAttribute('key'),
-            \array_filter(
-                $table->getAttribute('attributes', []),
-                fn ($column) => $column->getAttribute('type') === Database::VAR_RELATIONSHIP
-            )
-        );
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('tableId', $table->getId())
-            ->setParam('rowId', $row->getId())
-            ->setContext('table', $table)
-            ->setContext('database', $database)
-            ->setPayload($response->output($row, UtopiaResponse::MODEL_ROW), sensitive: $relationships);
-
-        $response->noContent();
     }
 }

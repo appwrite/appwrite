@@ -27,11 +27,6 @@ class XList extends CollectionLogXList
         return 'listTableLogs';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_LOG_LIST;
-    }
-
     public function __construct()
     {
         $this->setContext(DATABASE_TABLES_CONTEXT);
