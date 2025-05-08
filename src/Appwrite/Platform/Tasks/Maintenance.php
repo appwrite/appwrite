@@ -36,7 +36,6 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
-        $delay = (int) System::getEnv('_APP_MAINTENANCE_DELAY', '0'); // 0 seconds
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
