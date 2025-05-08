@@ -719,7 +719,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 continue;
             }
 
-            $dbForProject->deleteDocument('sessions', $session->getId());
+            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
+                return $dbForProject->deleteDocument('sessions', $session->getId());
+            });
 
             unset($sessions[$key]);
 
@@ -1999,7 +2001,6 @@ App::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2768,7 +2769,7 @@ App::patch('/v1/account/name')
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2843,7 +2844,7 @@ App::patch('/v1/account/password')
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2928,7 +2929,7 @@ App::patch('/v1/account/email')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
             /**
              * @var Document $oldTarget
              */
@@ -3014,7 +3015,7 @@ App::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
             /**
              * @var Document $oldTarget
              */
@@ -3064,7 +3065,7 @@ App::patch('/v1/account/prefs')
 
         $user->setAttribute('prefs', $prefs);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3102,7 +3103,7 @@ App::patch('/v1/account/status')
 
         $user->setAttribute('status', false);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3866,7 +3867,7 @@ App::patch('/v1/account/mfa')
 
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         if ($mfa) {
             $factors = $session->getAttribute('factors', []);

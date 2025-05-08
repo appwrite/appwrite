@@ -144,6 +144,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     )
                 ],
                 contentType: ContentType::MULTIPART,
+                requestType: 'application/json',
             ));
         } else {
             /** @var Method $method */

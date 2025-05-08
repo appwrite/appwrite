@@ -65,6 +65,9 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/databases.png',
+        'globalAttributes' => [
+            'databaseId'
+        ]
     ],
     'locale' => [
         'key' => 'locale',

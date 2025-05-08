@@ -1285,7 +1285,7 @@ App::post('/v1/functions/:functionId/deployments')
         ],
         type: MethodType::UPLOAD,
         packaging: true,
-        requestType: ContentType::MULTIPART,
+        requestType: 'multipart/form-data',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
@@ -1899,6 +1899,7 @@ App::post('/v1/functions/:functionId/executions')
             )
         ],
         contentType: ContentType::MULTIPART,
+        requestType: 'application/json',
     ))
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
