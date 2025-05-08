@@ -37,7 +37,6 @@ class XList extends DocumentXList
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/documents')
             ->desc('List rows')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')

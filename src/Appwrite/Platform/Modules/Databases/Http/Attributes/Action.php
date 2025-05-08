@@ -30,9 +30,9 @@ abstract class Action extends UtopiaAction
     private ?string $context = DATABASE_ATTRIBUTES_CONTEXT;
 
     /**
-     * @var string|array|null The current response model for the attribute/column type.
+     * Get the correct response model.
      */
-    private string|array|null $responseModel = null;
+    abstract protected function getResponseModel(): string|array;
 
     /**
      * Set the context to either `column` or `attribute`.
@@ -90,26 +90,6 @@ abstract class Action extends UtopiaAction
     final protected function getEventsParamKey(): string
     {
         return $this->getContext() . 'Id';
-    }
-
-    /**
-     * Set the correct response model.
-     */
-    final protected function setResponseModel(string|array $model): void
-    {
-        $this->responseModel = $model;
-    }
-
-    /**
-     * Get the correct response model.
-     */
-    final protected function getResponseModel(): string|array
-    {
-        if ($this->responseModel === null) {
-            throw new \LogicException("Missing response model: you must call setResponseModel() before using it.");
-        }
-
-        return $this->responseModel;
     }
 
     /**

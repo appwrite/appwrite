@@ -29,10 +29,13 @@ class Create extends Action
         return 'createEnumAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_ENUM;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_ENUM);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
@@ -70,19 +73,8 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        array          $elements,
-        ?bool          $required,
-        ?string        $default,
-        bool           $array,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         if (!is_null($default) && !\in_array($default, $elements, true)) {
             throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
         }

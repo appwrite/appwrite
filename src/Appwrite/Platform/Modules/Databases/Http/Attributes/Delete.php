@@ -27,11 +27,14 @@ class Delete extends Action
         return 'deleteAttribute';
     }
 
-    public function __construct()
+    protected function getResponseModel(): string|array
     {
         // we should correctly & carefully set the context later.
-        $this->setResponseModel(UtopiaResponse::MODEL_NONE);
+        return UtopiaResponse::MODEL_NONE;
+    }
 
+    public function __construct()
+    {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
@@ -44,8 +47,8 @@ class Delete extends Action
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'attributes',
-                name: 'deleteAttribute',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/delete-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -66,15 +69,8 @@ class Delete extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

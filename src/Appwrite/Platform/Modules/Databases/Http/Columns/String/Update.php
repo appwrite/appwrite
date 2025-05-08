@@ -29,10 +29,14 @@ class Update extends StringUpdate
         return 'updateStringColumn';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_STRING;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_STRING);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)

@@ -27,15 +27,18 @@ class Update extends URLUpdate
         return 'updateUrlColumn';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_URL;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_URL);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/url/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/url/:key')
             ->desc('Update URL column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')

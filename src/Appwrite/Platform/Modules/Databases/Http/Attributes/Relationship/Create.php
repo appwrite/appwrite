@@ -29,10 +29,13 @@ class Create extends Action
         return 'createRelationshipAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
@@ -80,20 +83,8 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $relatedCollectionId,
-        string         $type,
-        bool           $twoWay,
-        ?string        $key,
-        ?string        $twoWayKey,
-        string         $onDelete,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 

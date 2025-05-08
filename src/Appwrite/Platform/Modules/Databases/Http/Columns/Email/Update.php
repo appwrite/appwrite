@@ -27,10 +27,14 @@ class Update extends EmailUpdate
         return 'updateEmailColumn';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_EMAIL;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_EMAIL);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)

@@ -27,10 +27,13 @@ class Create extends Action
         return 'createIpAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_IP;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_IP);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
@@ -67,18 +70,8 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        ?bool          $required,
-        ?string        $default,
-        bool           $array,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         $attribute = $this->createAttribute(
             $databaseId,
             $collectionId,

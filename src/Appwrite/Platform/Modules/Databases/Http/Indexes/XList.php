@@ -34,7 +34,6 @@ class XList extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/indexes')
             ->desc('List indexes')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')

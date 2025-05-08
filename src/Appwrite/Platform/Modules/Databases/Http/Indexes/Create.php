@@ -39,13 +39,13 @@ class Create extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/indexes')
             ->desc('Create index')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].create')
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
+            // TODO: audits table or collections, check the context type if possible, move into another module.
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',

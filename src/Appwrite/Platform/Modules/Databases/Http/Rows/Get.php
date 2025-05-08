@@ -37,7 +37,6 @@ class Get extends DocumentGet
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
             ->desc('Get row')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')

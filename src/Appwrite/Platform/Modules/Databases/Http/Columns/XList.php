@@ -22,10 +22,14 @@ class XList extends AttributesXList
         return 'listColumns';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_LIST;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_LIST);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)

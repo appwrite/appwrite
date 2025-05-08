@@ -23,9 +23,9 @@ class Get extends Action
         return 'getColumn';
     }
 
-    public function __construct()
+    protected function getResponseModel(): string|array
     {
-        $this->setResponseModel([
+        return [
             UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
             UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
             UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
@@ -36,8 +36,11 @@ class Get extends Action
             UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
             UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
             UtopiaResponse::MODEL_ATTRIBUTE_STRING,
-        ]);
+        ];
+    }
 
+    public function __construct()
+    {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
@@ -47,8 +50,8 @@ class Get extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'getColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/get-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -66,13 +69,8 @@ class Get extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $tableId,
-        string         $key,
-        UtopiaResponse $response,
-        Database       $dbForProject
-    ): void {
+    public function action(string $databaseId, string $tableId, string $key, UtopiaResponse $response, Database $dbForProject): void
+    {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

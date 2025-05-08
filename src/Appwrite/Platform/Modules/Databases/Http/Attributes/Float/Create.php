@@ -29,10 +29,13 @@ class Create extends Action
         return 'createFloatAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_FLOAT;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_FLOAT);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
@@ -71,20 +74,8 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        ?bool          $required,
-        ?float         $min,
-        ?float         $max,
-        ?float         $default,
-        bool           $array,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         $min ??= -PHP_FLOAT_MAX;
         $max ??= PHP_FLOAT_MAX;
 

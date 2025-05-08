@@ -22,11 +22,9 @@ class Get extends AttributesGet
         return 'getColumn';
     }
 
-    public function __construct()
+    protected function getResponseModel(): string|array
     {
-        $this->setContext(DATABASE_COLUMNS_CONTEXT);
-
-        $this->setResponseModel([
+        return [
             UtopiaResponse::MODEL_COLUMN_BOOLEAN,
             UtopiaResponse::MODEL_COLUMN_INTEGER,
             UtopiaResponse::MODEL_COLUMN_FLOAT,
@@ -37,7 +35,12 @@ class Get extends AttributesGet
             UtopiaResponse::MODEL_COLUMN_DATETIME,
             UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
             UtopiaResponse::MODEL_COLUMN_STRING,
-        ]);
+        ];
+    }
+
+    public function __construct()
+    {
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)

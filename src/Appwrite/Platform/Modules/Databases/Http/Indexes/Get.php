@@ -30,7 +30,6 @@ class Get extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/indexes/:key')
             ->desc('Get index')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')

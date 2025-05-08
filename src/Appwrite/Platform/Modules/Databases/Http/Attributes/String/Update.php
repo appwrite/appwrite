@@ -29,10 +29,13 @@ class Update extends Action
         return 'updateStringAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_STRING;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_STRING);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')

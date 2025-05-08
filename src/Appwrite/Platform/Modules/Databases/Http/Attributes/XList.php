@@ -28,10 +28,13 @@ class XList extends Action
         return 'listAttributes';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_LIST;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_LIST);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes')
@@ -67,8 +70,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $table = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
-        if ($table->isEmpty()) {
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $tableId);
+        if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException());
         }
 
@@ -77,7 +80,7 @@ class XList extends Action
         \array_push(
             $queries,
             Query::equal('databaseInternalId', [$database->getInternalId()]),
-            Query::equal('collectionInternalId', [$table->getInternalId()])
+            Query::equal('collectionInternalId', [$collection->getInternalId()])
         );
 
         $cursor = \array_filter(
@@ -96,7 +99,7 @@ class XList extends Action
             $cursorDocument = Authorization::skip(
                 fn () => $dbForProject->find('attributes', [
                     Query::equal('databaseInternalId', [$database->getInternalId()]),
-                    Query::equal('collectionInternalId', [$table->getInternalId()]),
+                    Query::equal('collectionInternalId', [$collection->getInternalId()]),
                     Query::equal('key', [$attributeId]),
                     Query::limit(1),
                 ])
@@ -104,7 +107,7 @@ class XList extends Action
 
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 $type = ucfirst($this->getContext());
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$attributeId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '$attributeId' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument[0]);

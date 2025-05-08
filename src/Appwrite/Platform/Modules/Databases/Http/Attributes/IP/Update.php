@@ -27,10 +27,13 @@ class Update extends Action
         return 'updateIpAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_IP;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_IP);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
@@ -67,17 +70,8 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        ?bool          $required,
-        ?string        $default,
-        ?string        $newKey,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    {
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,

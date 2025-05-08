@@ -27,10 +27,14 @@ class Create extends EnumCreate
         return 'createEnumColumn';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_ENUM;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_ENUM);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)

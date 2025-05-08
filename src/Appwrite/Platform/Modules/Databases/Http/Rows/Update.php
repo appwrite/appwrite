@@ -38,7 +38,6 @@ class Update extends DocumentUpdate
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/rows/:rowId')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/documents/:rowId')
             ->desc('Update row')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].update')

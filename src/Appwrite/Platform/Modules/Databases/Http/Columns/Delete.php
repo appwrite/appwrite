@@ -25,12 +25,15 @@ class Delete extends AttributesDelete
         return 'deleteColumn';
     }
 
+    // parent handles multiple model types internally
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_NONE;
+    }
+
     public function __construct()
     {
         $this->setContext(DATABASE_COLUMNS_CONTEXT);
-
-        // parent action handles multiple model types internally
-        $this->setResponseModel(UtopiaResponse::MODEL_NONE);
 
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)

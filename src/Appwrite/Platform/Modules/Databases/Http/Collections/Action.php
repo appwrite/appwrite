@@ -19,6 +19,11 @@ abstract class Action extends UtopiaAction
     private ?string $context = DATABASE_COLLECTIONS_CONTEXT;
 
     /**
+     * Get the response model used in the SDK and HTTP responses.
+     */
+    abstract protected function getResponseModel(): string;
+
+    /**
      * Set the current API context.
      *
      * @param string $context Must be either `DATABASE_TABLES_CONTEXT` or `DATABASE_COLLECTIONS_CONTEXT`.
@@ -49,11 +54,6 @@ abstract class Action extends UtopiaAction
     {
         return $this->getContext() . 'Id';
     }
-
-    /**
-     * Get the response model used in the SDK and HTTP responses.
-     */
-    abstract protected function getResponseModel(): string;
 
     /**
      * Determine if the current action is for the Collections API.

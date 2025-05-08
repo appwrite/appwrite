@@ -28,10 +28,13 @@ class Update extends Action
         return 'updateEnumAttribute';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_ENUM;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_ENUM);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
@@ -69,18 +72,8 @@ class Update extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string         $databaseId,
-        string         $collectionId,
-        string         $key,
-        ?array         $elements,
-        ?bool          $required,
-        ?string        $default,
-        ?string        $newKey,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        Event          $queueForEvents
-    ): void {
+    public function action(string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    {
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,

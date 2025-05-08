@@ -26,10 +26,13 @@ class Create extends Action
         return 'createBooleanColumn';
     }
 
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN;
+    }
+
     public function __construct()
     {
-        $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN);
-
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
@@ -66,19 +69,8 @@ class Create extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(
-        string $databaseId,
-        string $collectionId,
-        string $key,
-        ?bool $required,
-        ?bool $default,
-        bool $array,
-        UtopiaResponse $response,
-        Database $dbForProject,
-        EventDatabase $queueForDatabase,
-        Event $queueForEvents
-    ): void {
-
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    {
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_BOOLEAN,

@@ -32,13 +32,13 @@ class Delete extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/indexes/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
+            // TODO: audits table or collections, check the context type if possible
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
