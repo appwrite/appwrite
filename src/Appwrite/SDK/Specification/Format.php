@@ -12,12 +12,12 @@ abstract class Format
     protected App $app;
 
     /**
-     * @var array<Route>
+     * @var Route[]
      */
     protected array $routes;
 
     /**
-     * @var array<Model>
+     * @var Model[]
      */
     protected array $models;
 
@@ -414,25 +414,5 @@ abstract class Format
                 break;
         }
         return $values;
-    }
-
-    protected function getNestedModels(Model $model, array &$usedModels): void
-    {
-        foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
-                continue;
-            }
-            $types = (array)$rule['type'];
-            foreach ($types as $ruleType) {
-                if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
-                    $usedModels[] = $ruleType;
-                    foreach ($this->models as $m) {
-                        if ($m->getType() === $ruleType) {
-                            $this->getNestedModels($m, $usedModels);
-                        }
-                    }
-                }
-            }
-        }
     }
 }
