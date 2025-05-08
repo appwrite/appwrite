@@ -3982,7 +3982,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('queueForEvents')
     ->inject('queueForStatsUsage')
     ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage) {
-
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -3999,7 +3998,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
-
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
