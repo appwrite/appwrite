@@ -36,6 +36,7 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -3472,6 +3473,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (NotFoundException) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (TimeoutException) {
+            throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
         $queueForEvents
@@ -4271,16 +4276,26 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documents = [];
 
-        $modified = $dbForProject->updateDocuments(
-            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            new Document($data),
-            $queries,
-            onNext: function (Document $document) use ($plan, &$documents) {
-                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                    $documents[] = $document;
-                }
-            },
-        );
+        try {
+            $modified = $dbForProject->updateDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                new Document($data),
+                $queries,
+                onNext: function (Document $document) use ($plan, &$documents) {
+                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                        $documents[] = $document;
+                    }
+                },
+            );
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        } catch (NotFoundException) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (TimeoutException) {
+            throw new Exception(Exception::DATABASE_TIMEOUT);
+        }
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
@@ -4567,15 +4582,23 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documents = [];
 
-        $modified = $dbForProject->deleteDocuments(
-            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            $queries,
-            onNext: function (Document $document) use ($plan, &$documents) {
-                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                    $documents[] = $document;
-                }
-            },
-        );
+        try {
+            $modified = $dbForProject->deleteDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $queries,
+                onNext: function (Document $document) use ($plan, &$documents) {
+                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                        $documents[] = $document;
+                    }
+                },
+            );
+        } catch (NotFoundException) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (TimeoutException) {
+            throw new Exception(Exception::DATABASE_TIMEOUT);
+        }
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
