@@ -4,24 +4,21 @@ namespace Appwrite\Platform\Modules\Databases\Http\Columns\Enum;
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Enum\Create as EnumCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class Create extends ColumnAction
+class Create extends EnumCreate
 {
     use HTTP;
 
@@ -32,10 +29,12 @@ class Create extends ColumnAction
 
     public function __construct()
     {
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_ENUM);
+
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/enum')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/enum')
             ->desc('Create enum column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
@@ -45,14 +44,14 @@ class Create extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'createEnumColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/create-attribute-enum.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_COLUMN_ENUM,
+                        model: $this->getResponseModel(),
                     )
                 ]
             ))
@@ -67,47 +66,8 @@ class Create extends ColumnAction
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(
-        string                    $databaseId,
-        string                    $tableId,
-        string                    $key,
-        array                     $elements,
-        ?bool                     $required,
-        ?string                   $default,
-        bool                      $array,
-        \Appwrite\Utopia\Response $response,
-        Database                  $dbForProject,
-        EventDatabase             $queueForDatabase,
-        Event                     $queueForEvents
-    ): void {
-        if (!is_null($default) && !in_array($default, $elements, true)) {
-            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Default value not found in elements');
-        }
-
-        $column = $this->createColumn(
-            $databaseId,
-            $tableId,
-            new Document([
-                'key' => $key,
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => $required,
-                'default' => $default,
-                'array' => $array,
-                'format' => APP_DATABASE_ATTRIBUTE_ENUM,
-                'formatOptions' => ['elements' => $elements],
-            ]),
-            $response,
-            $dbForProject,
-            $queueForDatabase,
-            $queueForEvents
-        );
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_ENUM);
+            ->callback(function (string $databaseId, string $tableId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $elements, $required, $default, $array, $response, $dbForProject, $queueForDatabase, $queueForEvents);
+            });
     }
 }

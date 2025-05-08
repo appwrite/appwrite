@@ -4,21 +4,19 @@ namespace Appwrite\Platform\Modules\Databases\Http\Columns\Boolean;
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Boolean\Create as BooleanCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 
-class Create extends ColumnAction
+class Create extends BooleanCreate
 {
     use HTTP;
 
@@ -29,9 +27,12 @@ class Create extends ColumnAction
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_BOOLEAN);
+
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/boolean')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/boolean')
             ->desc('Create boolean column')
             ->groups(['api', 'database', 'schema'])
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
@@ -41,14 +42,14 @@ class Create extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'createBooleanColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/create-boolean-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_COLUMN_BOOLEAN,
+                        model: $this->getResponseModel(),
                     )
                 ]
             ))
@@ -62,23 +63,8 @@ class Create extends ColumnAction
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(string $databaseId, string $tableId, string $key, ?bool $required, ?bool $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
-    {
-
-        $column = $this->createColumn($databaseId, $tableId, new Document([
-            'key' => $key,
-            'type' => Database::VAR_BOOLEAN,
-            'size' => 0,
-            'required' => $required,
-            'default' => $default,
-            'array' => $array,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_BOOLEAN);
+            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?bool $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $required, $default, $array, $response, $dbForProject, $queueForDatabase, $queueForEvents);
+            });
     }
 }

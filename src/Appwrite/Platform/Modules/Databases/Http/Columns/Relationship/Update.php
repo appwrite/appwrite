@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Columns\Relationship;
 
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Relationship\Update as RelationshipUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,12 +12,11 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
 
-class Update extends ColumnAction
+class Update extends RelationshipUpdate
 {
     use HTTP;
 
@@ -28,8 +27,11 @@ class Update extends ColumnAction
 
     public function __construct()
     {
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_RELATIONSHIP);
+
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/:key/relationship')
             ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/:key/relationship')
             ->desc('Update relationship column')
@@ -41,14 +43,14 @@ class Update extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'updateRelationshipColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/update-relationship-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLUMN_RELATIONSHIP
+                        model: $this->getResponseModel()
                     )
                 ],
                 contentType: ContentType::JSON
@@ -65,39 +67,8 @@ class Update extends ColumnAction
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(
-        string         $databaseId,
-        string         $tableId,
-        string         $key,
-        ?string        $onDelete,
-        ?string        $newKey,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        Event          $queueForEvents
-    ): void {
-        $column = $this->updateColumn(
-            $databaseId,
-            $tableId,
-            $key,
-            $dbForProject,
-            $queueForEvents,
-            type: Database::VAR_RELATIONSHIP,
-            required: false,
-            options: [
-                'onDelete' => $onDelete
-            ],
-            newKey: $newKey
-        );
-
-        foreach ($column->getAttribute('options', []) as $k => $option) {
-            $column->setAttribute($k, $option);
-        }
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_RELATIONSHIP);
+            ->callback(function (string $databaseId, string $tableId, string $key, ?string $onDelete, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $onDelete, $newKey, $response, $dbForProject, $queueForEvents);
+            });
     }
 }

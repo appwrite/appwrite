@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Columns\Float;
 
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Float\Update as FloatUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,14 +12,13 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
 
-class Update extends ColumnAction
+class Update extends FloatUpdate
 {
     use HTTP;
 
@@ -30,10 +29,12 @@ class Update extends ColumnAction
 
     public function __construct()
     {
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_FLOAT);
+
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/float/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/float/:key')
             ->desc('Update float column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
@@ -43,14 +44,14 @@ class Update extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'updateFloatColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/update-float-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLUMN_FLOAT,
+                        model: $this->getResponseModel(),
                     )
                 ],
                 contentType: ContentType::JSON
@@ -66,44 +67,8 @@ class Update extends ColumnAction
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(
-        string $databaseId,
-        string $tableId,
-        string $key,
-        ?bool $required,
-        ?float $min,
-        ?float $max,
-        ?float $default,
-        ?string $newKey,
-        UtopiaResponse $response,
-        Database $dbForProject,
-        Event $queueForEvents
-    ): void {
-        $column = $this->updateColumn(
-            databaseId: $databaseId,
-            tableId: $tableId,
-            key: $key,
-            dbForProject: $dbForProject,
-            queueForEvents: $queueForEvents,
-            type: Database::VAR_FLOAT,
-            default: $default,
-            required: $required,
-            min: $min,
-            max: $max,
-            newKey: $newKey
-        );
-
-        $formatOptions = $column->getAttribute('formatOptions', []);
-        if (!empty($formatOptions)) {
-            $column->setAttribute('min', \floatval($formatOptions['min']));
-            $column->setAttribute('max', \floatval($formatOptions['max']));
-        }
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_FLOAT);
+            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $required, $min, $max, $default, $newKey, $response, $dbForProject, $queueForEvents);
+            });
     }
 }

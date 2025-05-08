@@ -4,24 +4,20 @@ namespace Appwrite\Platform\Modules\Databases\Http\Columns\Integer;
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\Integer\Create as IntegerCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
-use Utopia\Validator\Range;
 
-class Create extends ColumnAction
+class Create extends IntegerCreate
 {
     use HTTP;
 
@@ -32,10 +28,12 @@ class Create extends ColumnAction
 
     public function __construct()
     {
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_INTEGER);
+
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/integer')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/integer')
             ->desc('Create integer column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
@@ -45,14 +43,14 @@ class Create extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'createIntegerColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/create-integer-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
-                        model: UtopiaResponse::MODEL_COLUMN_INTEGER,
+                        model: $this->getResponseModel(),
                     )
                 ]
             ))
@@ -68,56 +66,8 @@ class Create extends ColumnAction
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(
-        string         $databaseId,
-        string         $tableId,
-        string         $key,
-        ?bool          $required,
-        ?int           $min,
-        ?int           $max,
-        ?int           $default,
-        bool           $array,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
-        Event          $queueForEvents
-    ): void {
-        $min ??= \PHP_INT_MIN;
-        $max ??= \PHP_INT_MAX;
-
-        if ($min > $max) {
-            throw new Exception(Exception::COLUMN_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
-        }
-
-        $validator = new Range($min, $max, Database::VAR_INTEGER);
-        if (!\is_null($default) && !$validator->isValid($default)) {
-            throw new Exception(Exception::COLUMN_VALUE_INVALID, $validator->getDescription());
-        }
-
-        $size = $max > 2147483647 ? 8 : 4;
-
-        $column = $this->createColumn($databaseId, $tableId, new Document([
-            'key' => $key,
-            'type' => Database::VAR_INTEGER,
-            'size' => $size,
-            'required' => $required,
-            'default' => $default,
-            'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-            'formatOptions' => ['min' => $min, 'max' => $max],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-
-        $formatOptions = $column->getAttribute('formatOptions', []);
-        if (!empty($formatOptions)) {
-            $column->setAttribute('min', \intval($formatOptions['min']));
-            $column->setAttribute('max', \intval($formatOptions['max']));
-        }
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_INTEGER);
+            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $queueForDatabase, $queueForEvents);
+            });
     }
 }

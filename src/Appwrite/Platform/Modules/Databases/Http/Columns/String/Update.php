@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Columns\String;
 
 use Appwrite\Event\Event;
-use Appwrite\Platform\Modules\Databases\Http\Columns\Action as ColumnAction;
+use Appwrite\Platform\Modules\Databases\Http\Attributes\String\Update as StringUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
@@ -21,7 +20,7 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
-class Update extends ColumnAction
+class Update extends StringUpdate
 {
     use HTTP;
 
@@ -32,9 +31,12 @@ class Update extends ColumnAction
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+        $this->setContext(DATABASE_COLUMNS_CONTEXT);
+        $this->setResponseModel(UtopiaResponse::MODEL_COLUMN_STRING);
+
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/tables/:tableId/columns/string/:key')
-            ->httpAlias('/v1/databases/:databaseId/collections/:tableId/attributes/string/:key')
             ->desc('Update string column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')
@@ -44,14 +46,14 @@ class Update extends ColumnAction
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: 'columns',
-                name: 'updateStringColumn',
+                group: $this->getSdkGroup(),
+                name: self::getName(),
                 description: '/docs/references/databases/update-string-attribute.md',
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_COLUMN_STRING,
+                        model: $this->getResponseModel(),
                     )
                 ],
                 contentType: ContentType::JSON
@@ -66,36 +68,8 @@ class Update extends ColumnAction
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
-    }
-
-    public function action(
-        string         $databaseId,
-        string         $tableId,
-        string         $key,
-        ?bool          $required,
-        ?string        $default,
-        ?int           $size,
-        ?string        $newKey,
-        UtopiaResponse $response,
-        Database       $dbForProject,
-        Event          $queueForEvents
-    ): void {
-        $column = $this->updateColumn(
-            databaseId: $databaseId,
-            tableId: $tableId,
-            key: $key,
-            dbForProject: $dbForProject,
-            queueForEvents: $queueForEvents,
-            type: Database::VAR_STRING,
-            size: $size,
-            default: $default,
-            required: $required,
-            newKey: $newKey
-        );
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($column, UtopiaResponse::MODEL_COLUMN_STRING);
+            ->callback(function (string $databaseId, string $tableId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents) {
+                parent::action($databaseId, $tableId, $key, $required, $default, $size, $newKey, $response, $dbForProject, $queueForEvents);
+            });
     }
 }

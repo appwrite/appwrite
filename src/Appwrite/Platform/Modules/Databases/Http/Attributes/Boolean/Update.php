@@ -30,7 +30,8 @@ class Update extends Action
     {
         $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN);
 
-        $this->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
             ->desc('Update boolean attribute')
             ->groups(['api', 'database', 'schema'])

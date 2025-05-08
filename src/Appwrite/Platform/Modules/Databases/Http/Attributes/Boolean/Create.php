@@ -30,7 +30,8 @@ class Create extends Action
     {
         $this->setResponseModel(UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN);
 
-        $this->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
             ->desc('Create boolean attribute')
             ->groups(['api', 'database', 'schema'])
