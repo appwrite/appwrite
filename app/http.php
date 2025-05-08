@@ -496,7 +496,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on('Task', function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
