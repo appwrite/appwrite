@@ -47,7 +47,7 @@ class Create extends CollectionCreate
             ->label('audits.event', 'table.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'databases',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-collection.md',

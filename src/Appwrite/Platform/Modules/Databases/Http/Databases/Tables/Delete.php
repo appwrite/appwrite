@@ -44,7 +44,7 @@ class Delete extends CollectionDelete
             ->label('audits.event', 'table.delete')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'databases',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/delete-collection.md',
